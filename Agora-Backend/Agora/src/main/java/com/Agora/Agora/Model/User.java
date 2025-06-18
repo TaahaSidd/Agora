@@ -12,6 +12,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,14 +47,8 @@ public class User {
     private String mobileNumber;
     @Column(nullable = false, length = 255)
     private String password;
-
-    // College Id and Details.
     @Column(nullable = false)
-    private String collegeId;
-    @Column(nullable = false)
-    private String collegeEmail;
-    @Column(nullable = false)
-    private String collegeName;
+    private String idCardNo; // will be adding college id images url. will be using cloudinary for that.
 
     // Role = Student.
     @Enumerated(EnumType.STRING)
@@ -69,4 +65,7 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime tokenExpiryDate;// Token Expiry Date.
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "college_id", nullable = false)
+    private College college;
 }

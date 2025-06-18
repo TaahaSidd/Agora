@@ -30,11 +30,32 @@ public class SecurityConfig {
     private final CustomUserDetailService customUserDetailsService;
 
     @Bean
+    @SuppressWarnings("unused")
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/Agora/auth/**").permitAll())
+                        // Auth endpoints (public)
+                        .requestMatchers(HttpMethod.POST, "/Agora/auth/**").permitAll()
+
+                        // Listing.
+                        .requestMatchers(HttpMethod.POST, "/Agora/listing/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/Agora/listing/**").permitAll()   
+                        .requestMatchers(HttpMethod.PUT, "/Agora/listing/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/listing/**").authenticated()
+
+                        // Profile.
+                        .requestMatchers(HttpMethod.GET, "/Agora/profile/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/Agora/profile/**").authenticated()
+
+                        // College - Admin only.
+                        .requestMatchers(HttpMethod.POST, "/Agora/college/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/Agora/college/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/Agora/college/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/college/**").authenticated()
+
+                )
+
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -56,6 +77,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("unused")
     AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }

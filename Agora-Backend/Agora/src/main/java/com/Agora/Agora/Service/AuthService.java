@@ -15,12 +15,16 @@ import com.Agora.Agora.Dto.Request.RegistrationReqDto;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
 import com.Agora.Agora.Jwt.JwtTokenProvider;
+import com.Agora.Agora.Mapper.DtoMapper;
 import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
+import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.RefreshToken;
 import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.UserRepo;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -29,11 +33,13 @@ import lombok.RequiredArgsConstructor;
 public class AuthService {
 
         private final UserRepo userRepo;
+        private final CollegeRepo collegeRepo;
         private final JwtTokenProvider jwtTokenProvider;
         private final RefreshTokenService refreshTokenService;
         private final PasswordEncoder passwordEncoder;
         private final EmailService emailService;
         private final AuthenticationManager authenticationManager;
+        private final DtoMapper dto;
         // private final UserDetailsService userDetailsService;
 
         // Registering New Users.(Sign-Up).
@@ -43,25 +49,30 @@ public class AuthService {
                         throw new RuntimeException("Email already exists");
                 }
 
+                if (userRepo.findByUserName(req.getUserName()).isPresent()) {
+                        throw new IllegalArgumentException("Username already in use.");
+                }
+                College college = collegeRepo.findById(req.getCollegeId())
+                                .orElseThrow(() -> new EntityNotFoundException(
+                                                "College not found with id: " + req.getCollegeId()));
+
                 // building the new user.
-                var user = User.builder()
-                                .userName(req.getUserName())
-                                .userEmail(req.getUserEmail())
-                                .firstName(req.getFirstName())
-                                .lastName(req.getLastName())
-                                .mobileNumber(req.getMobileNumber())
-                                .password(passwordEncoder.encode(req.getPassword()))
-                                .collegeId(req.getCollegeId())
-                                .collegeEmail(req.getCollegeEmail())
-                                .collegeName(req.getCollegeName())
-                                .role(UserRole.STUDENT)
-                                .verificationStatus(VerificationStatus.PENDING_EMAIL)
-                                .verificationToken(UUID.randomUUID().toString())
-                                .tokenExpiryDate(LocalDateTime.now().plusHours(24))
-                                .build();
+                User user = new User();
+                user.setUserName(req.getUserName());
+                user.setUserEmail(req.getUserEmail());
+                user.setFirstName(req.getFirstName());
+                user.setLastName(req.getLastName());
+                user.setMobileNumber(req.getMobileNumber());
+                user.setPassword(passwordEncoder.encode(req.getPassword()));
+                user.setIdCardNo(req.getIdCardNo());
+                user.setCollege(college);
+                user.setRole(UserRole.STUDENT);
+                user.setVerificationStatus(VerificationStatus.PENDING_EMAIL);
+                user.setVerificationToken(UUID.randomUUID().toString());
+                user.setTokenExpiryDate(LocalDateTime.now().plusHours(24));
 
                 // save the user.
-                var savedUser = userRepo.save(user);
+                User savedUser = userRepo.save(user);
 
                 // Sending welcome email.
                 String verificationLink = "http://localhost:8080/api/auth/verify-email?token="
@@ -69,18 +80,8 @@ public class AuthService {
                 emailService.sendWelcomeEmail(savedUser.getUserEmail(), savedUser.getUserName(), verificationLink);
 
                 // prepare and return the registrationresponseDto
-                return new RegistrationResponseDto(
-                                savedUser.getId(),
-                                savedUser.getUserName(),
-                                savedUser.getUserEmail(),
-                                savedUser.getFirstName(),
-                                savedUser.getLastName(),
-                                savedUser.getMobileNumber(),
-                                savedUser.getCollegeId(),
-                                savedUser.getCollegeEmail(),
-                                savedUser.getCollegeName(),
-                                savedUser.getVerificationStatus(), // Will be PENDING_EMAIL
-                                "Registration successful! Please check your email to verify your account.");
+                RegistrationResponseDto responseDto = dto.mapToRegistrationResponseDto(savedUser);
+                return responseDto;
 
         }
 
@@ -109,11 +110,11 @@ public class AuthService {
                                 .firstName(user.getFirstName())
                                 .lastName(user.getLastName())
                                 .mobileNumber(user.getMobileNumber())
-                                .collegeId(user.getCollegeId())
-                                .collegeEmail(user.getCollegeEmail())
-                                .collegeName(user.getCollegeName())
+                                .idCardNo(user.getIdCardNo())
                                 .verificationStatus(user.getVerificationStatus())
                                 .message("Login successful!")
                                 .build();
         }
 }
+// edit the code to supportmapToResponseDto.
+// for both service and controller.

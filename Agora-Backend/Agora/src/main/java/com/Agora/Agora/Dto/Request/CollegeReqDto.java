@@ -1,6 +1,8 @@
 package com.Agora.Agora.Dto.Request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +17,9 @@ public class CollegeReqDto {
     @NotBlank(message = "College name cannot be blank")
     private String collegeName;
 
+    @Email(message = "Invalid Email format")
+    private String collegeEmail;
+
     @NotBlank(message = "Address cannot be Blank")
     private String address;
 
@@ -27,6 +32,7 @@ public class CollegeReqDto {
     @NotBlank(message = "Country cannot be blank")
     private String country;
 
+    @Pattern(regexp = "^(https?://)?[\\w.-]+(\\.[\\w\\.-]+)+[/#?]?.*$", message = "Invalid website URL")
     private String website;
 
 }

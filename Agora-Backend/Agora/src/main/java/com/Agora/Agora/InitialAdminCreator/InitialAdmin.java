@@ -12,7 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
+import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.UserRepo;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class InitialAdmin {
     private static final Logger log = LoggerFactory.getLogger(InitialAdmin.class);
 
     private final UserRepo userRepo;
+    private final CollegeRepo collegeRepo;
     private final PasswordEncoder passwordEncoder;
 
     @Bean
@@ -34,6 +37,18 @@ public class InitialAdmin {
             if (userRepo.findByUserEmail("admin@gmail.com").isEmpty()) {
                 log.info("Creating Initial Admin User...");
 
+                College college = collegeRepo.findById(1L)
+                        .orElseGet(() -> collegeRepo.save(
+                                College.builder()
+                                        .collegeName("Default Admin College")
+                                        .collegeEmail("admincollege@example.com")
+                                        .address("Admin Address")
+                                        .city("Admin City")
+                                        .state("Admin State")
+                                        .country("Admin Country")
+                                        .website("https://admincollege.example.com")
+                                        .build()));
+
                 User adminUser = User.builder()
                         .userName("Admin")
                         .firstName("System")
@@ -42,9 +57,8 @@ public class InitialAdmin {
                         .mobileNumber("1234598760")
                         .password(passwordEncoder.encode("ADMINPASSWORD"))
                         .role(UserRole.ADMIN)
-                        .collegeId("SYS_ADMIN_CLG")
-                        .collegeEmail("admin@sys.com")
-                        .collegeName("System University")
+                        .idCardNo("testIdCardno")
+                        .college(college)
                         .verificationStatus(VerificationStatus.VERIFIED)
                         .verificationToken(UUID.randomUUID().toString())
                         .tokenExpiryDate(LocalDateTime.now().plusYears(100))

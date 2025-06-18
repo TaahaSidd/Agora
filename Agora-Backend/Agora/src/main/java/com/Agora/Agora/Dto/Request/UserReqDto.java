@@ -1,6 +1,4 @@
-package com.Agora.Agora.Dto.Response;
-
-import com.Agora.Agora.Model.Enums.VerificationStatus;
+package com.Agora.Agora.Dto.Request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,15 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-//this class is used to return the response of the user.
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegistrationResponseDto {
-
-    private Long id;
+public class UserReqDto {
 
     // User Details.
     private String userName;
@@ -24,15 +19,8 @@ public class RegistrationResponseDto {
     private String firstName;
     private String lastName;
     private String mobileNumber;
+    private String password;
     private String idCardNo;
-
-    // College Id and Details.
     private Long collegeId;
-    private String collegeEmail;
-    private String collegeName;
-
-    private VerificationStatus verificationStatus;
-
-    private String message;
 
 }

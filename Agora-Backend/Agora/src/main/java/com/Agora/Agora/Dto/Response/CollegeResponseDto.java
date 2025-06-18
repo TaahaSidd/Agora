@@ -12,6 +12,7 @@ import lombok.Setter;
 public class CollegeResponseDto {
 
     private String collegeName;
+    private String collegeEmail;
     private String address;
     private String city;
     private String state;
