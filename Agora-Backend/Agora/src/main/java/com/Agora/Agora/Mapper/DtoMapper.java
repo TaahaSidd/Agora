@@ -2,16 +2,26 @@ package com.Agora.Agora.Mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.Agora.Agora.Dto.Response.ChatRoomResponseDto;
 import com.Agora.Agora.Dto.Response.CollegeResponseDto;
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
+import com.Agora.Agora.Dto.Response.MessageResponseDto;
 import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
 import com.Agora.Agora.Dto.Response.UserResponseDto;
+import com.Agora.Agora.Model.ChatRoom;
 import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.Listings;
+import com.Agora.Agora.Model.Message;
 import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Service.MessageService;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class DtoMapper {
+
+    private final MessageService messageService;
 
     // Dto mapping for User.
     public UserResponseDto mapToUserResponseDto(User user) {
@@ -90,6 +100,38 @@ public class DtoMapper {
         if (listing.getSeller() != null && listing.getSeller().getCollege() != null) {
             dto.setCollege(mapToCollegeResponseDto(listing.getSeller().getCollege()));
         }
+        return dto;
+    }
+
+    // Dto mapper for ChatRoom
+    public ChatRoomResponseDto mapToChatRoomResponseDto(ChatRoom chatRoom, User currentUser) {
+        ChatRoomResponseDto dto = new ChatRoomResponseDto();
+        dto.setId(chatRoom.getId());
+        dto.setListingId(chatRoom.getListing().getId());
+        dto.setSellerId(chatRoom.getSeller().getId());
+        dto.setBuyerId(chatRoom.getBuyer().getId());
+        dto.setListingTitle(chatRoom.getListing().getTitle());
+        dto.setBuyerUserName(chatRoom.getBuyer().getUserName());
+        dto.setSellerUserName(chatRoom.getSeller().getUserName());
+        dto.setLastMessageAt(chatRoom.getLastMessageAt());
+        dto.setCreatedAt(chatRoom.getCreatedAt());
+        dto.setLastMessageAt(chatRoom.getLastMessageAt());
+        int unreadCount = messageService.UnreadMessageCounter(chatRoom, currentUser);
+        dto.setUnreadMessageCounter(unreadCount);
+
+        return dto;
+    }
+
+    // Dto mapper for Message.
+    public MessageResponseDto mapToMessageResponseDto(Message message) {
+        MessageResponseDto dto = new MessageResponseDto();
+        dto.setId(message.getId());
+        dto.setChatRoomId(message.getChatRoom().getId());
+        dto.setSenderId(message.getSender().getId());
+        dto.setSenderUserName(message.getSender().getUserName());
+        dto.setMessage(message.getMessage());
+        dto.setSendAt(message.getSentAt());
+        dto.setIsRead(message.getIsRead());
         return dto;
     }
 }
