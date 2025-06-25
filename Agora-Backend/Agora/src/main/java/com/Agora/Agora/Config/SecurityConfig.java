@@ -40,13 +40,17 @@ public class SecurityConfig {
 
                         // Listing.
                         .requestMatchers(HttpMethod.POST, "/Agora/listing/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/Agora/listing/**").permitAll()   
+                        .requestMatchers(HttpMethod.GET, "/Agora/listing/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/Agora/listing/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/Agora/listing/**").authenticated()
 
                         // Profile.
                         .requestMatchers(HttpMethod.GET, "/Agora/profile/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/Agora/profile/**").authenticated()
+
+                        // ChatRoom
+                        .requestMatchers(HttpMethod.POST, "/Agora/ChatRoom/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/Agora/ChatRoom/**").authenticated()
 
                         // College - Admin only.
                         .requestMatchers(HttpMethod.POST, "/Agora/college/**").permitAll()

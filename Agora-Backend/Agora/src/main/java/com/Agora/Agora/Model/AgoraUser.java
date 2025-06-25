@@ -3,6 +3,7 @@ package com.Agora.Agora.Model;
 import java.time.LocalDateTime;
 
 import com.Agora.Agora.Model.Enums.UserRole;
+import com.Agora.Agora.Model.Enums.UserStatus;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
 
 import jakarta.persistence.Column;
@@ -14,7 +15,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,13 +22,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "agora_users")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class AgoraUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,4 +67,10 @@ public class User {
     @ManyToOne(optional = false)
     @JoinColumn(name = "college_id", nullable = false)
     private College college;
+
+    private UserStatus userStatus;
+
+    public boolean isAdmin() {
+        return UserRole.ADMIN.equals(this.role);
+    }
 }

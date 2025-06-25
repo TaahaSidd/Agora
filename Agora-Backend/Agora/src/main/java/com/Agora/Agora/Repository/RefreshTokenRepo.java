@@ -4,16 +4,16 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.RefreshToken;
-import com.Agora.Agora.Model.User;
 
 public interface RefreshTokenRepo extends JpaRepository<RefreshToken, Long> {
 
     Optional<RefreshToken> findByToken(String token);
 
-    Optional<RefreshToken> findByUser(User user);
+    Optional<RefreshToken> findByUser(AgoraUser user);
 
-    void deleteByUser(User user);
+    void deleteByUser(AgoraUser user);
 
     void deleteByToken(String token);
 

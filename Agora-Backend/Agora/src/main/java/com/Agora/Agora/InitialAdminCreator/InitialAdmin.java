@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
 import com.Agora.Agora.Model.College;
-import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.UserRepo;
 
@@ -49,7 +49,7 @@ public class InitialAdmin {
                                         .website("https://admincollege.example.com")
                                         .build()));
 
-                User adminUser = User.builder()
+                AgoraUser adminUser = AgoraUser.builder()
                         .userName("Admin")
                         .firstName("System")
                         .lastName("Admin")

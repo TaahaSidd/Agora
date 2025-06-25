@@ -36,9 +36,9 @@ public class ChatRoom {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
-    private User seller;
+    private AgoraUser seller;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "buyer_id")
-    private User buyer;
+    private AgoraUser buyer;
 }

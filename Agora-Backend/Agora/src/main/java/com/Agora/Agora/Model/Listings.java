@@ -63,7 +63,7 @@ public class Listings {
     // Relations.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
-    private User seller;
+    private AgoraUser seller;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "college_id")

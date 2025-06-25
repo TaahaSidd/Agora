@@ -18,7 +18,7 @@ import com.Agora.Agora.Model.Enums.MessageType;
 import com.Agora.Agora.Model.Enums.OfferAction;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Model.Message;
-import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.ChatRoomRepo;
 import com.Agora.Agora.Repository.ListingsRepo;
 import com.Agora.Agora.Repository.MessageRepo;
@@ -40,12 +40,12 @@ public class ChatService {
     // Checking existing room if not present creating a new one.
     @Transactional
     public ChatRoomResponseDto getOrCreateChatRoom(Long listingId) {
-        User currentUser = userService.getCurrentUser();
+        AgoraUser currentUser = userService.getCurrentUser();
 
         Listings listing = listingsRepo.findById(listingId)
                 .orElseThrow(() -> new EntityNotFoundException("Listings not found"));
 
-        User seller = listing.getSeller();
+        AgoraUser seller = listing.getSeller();
 
         // Prevent seller from chatting with themselves.
         if (seller.getId().equals(currentUser.getId())) {
@@ -76,7 +76,7 @@ public class ChatService {
     @Transactional
     public MessageResponseDto sendMessage(MessageRequestDto req) {
         // Find current User.
-        User sender = userService.getCurrentUser();
+        AgoraUser sender = userService.getCurrentUser();
 
         // Find chatroom.
         ChatRoom chatRoom = chatRoomRepo.findById(req.getChatRoomId())
@@ -108,7 +108,7 @@ public class ChatService {
     // make getMessagesInChatRoom(Long chatRoomId).
     public List<MessageResponseDto> getMessagesInChatRoom(Long chatRoomId) {
         // Get current User.
-        User currentUser = userService.getCurrentUser();
+        AgoraUser currentUser = userService.getCurrentUser();
 
         ChatRoom chatRoom = chatRoomRepo.findById(chatRoomId)
                 .orElseThrow(() -> new EntityNotFoundException("Chat room not found"));
@@ -128,7 +128,7 @@ public class ChatService {
 
     // Get user ChatRoom.
     public List<ChatRoomResponseDto> getUserChatRooms() {
-        User user = userService.getCurrentUser();
+        AgoraUser user = userService.getCurrentUser();
 
         List<ChatRoom> chatRooms = chatRoomRepo.findByBuyerOrSeller(user, user);
 
@@ -141,7 +141,7 @@ public class ChatService {
     // Make offer.
     @Transactional
     public MessageResponseDto makeOffer(OfferReqDto req) {
-        User sender = userService.getCurrentUser();
+        AgoraUser sender = userService.getCurrentUser();
 
         // Fetch chatroom.
         ChatRoom chatRoom = chatRoomRepo.findById(req.getChatRoomId())
@@ -185,7 +185,7 @@ public class ChatService {
     // Accepting or rejecting offer.
     @Transactional
     public MessageResponseDto acceptOrRejectOffer(Long messageId, OfferAction action) {
-        User currentUser = userService.getCurrentUser();
+        AgoraUser currentUser = userService.getCurrentUser();
 
         Message offerMessage = messageRepo.findById(messageId)
                 .orElseThrow(() -> new EntityNotFoundException("Offer message not found"));

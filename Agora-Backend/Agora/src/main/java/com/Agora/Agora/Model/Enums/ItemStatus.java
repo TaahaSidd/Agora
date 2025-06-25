@@ -5,5 +5,6 @@ public enum ItemStatus {
     SOLD,
     RESERVED,
     RENTED,
-    EXCHANGED
+    EXCHANGED,
+    DEACTIVATED
 }

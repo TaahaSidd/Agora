@@ -1,10 +1,12 @@
 package com.Agora.Agora.Model;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 
-import com.Agora.Agora.Model.Enums.MessageType;
+import com.Agora.Agora.Model.Enums.ReportReason;
+import com.Agora.Agora.Model.Enums.ReportStatus;
+import com.Agora.Agora.Model.Enums.ReportType;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -25,23 +27,38 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Message {
+public class Report {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String message;
-    private Instant sentAt;
-    private Boolean isRead;
-    private BigDecimal offerPrice;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private ChatRoom chatRoom;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private AgoraUser sender;
+    @Enumerated(EnumType.STRING)
+    private ReportType reportType;
 
     @Enumerated(EnumType.STRING)
-    private MessageType messageType;
+    private ReportReason reason;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private AgoraUser reporter;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private AgoraUser reportedUser;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Listings listings;
+
+    @Column(nullable = false)
+    private Long targetId;
+
+    @Enumerated(EnumType.STRING)
+    private ReportStatus status;
+
+    @Column(nullable = false)
+    private Instant reportedAt;
+    @Column(nullable = false)
+    private Instant resolvedAt;
+
+    private String moderationNotes;
 
 }

@@ -20,7 +20,7 @@ import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
 import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.RefreshToken;
-import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.UserRepo;
 
@@ -57,7 +57,7 @@ public class AuthService {
                                                 "College not found with id: " + req.getCollegeId()));
 
                 // building the new user.
-                User user = new User();
+                AgoraUser user = new AgoraUser();
                 user.setUserName(req.getUserName());
                 user.setUserEmail(req.getUserEmail());
                 user.setFirstName(req.getFirstName());
@@ -72,7 +72,7 @@ public class AuthService {
                 user.setTokenExpiryDate(LocalDateTime.now().plusHours(24));
 
                 // save the user.
-                User savedUser = userRepo.save(user);
+                AgoraUser savedUser = userRepo.save(user);
 
                 // Sending welcome email.
                 String verificationLink = "http://localhost:8080/api/auth/verify-email?token="
@@ -93,7 +93,7 @@ public class AuthService {
 
                 UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-                User user = userRepo.findByUserEmail(userDetails.getUsername()).get();
+                AgoraUser user = userRepo.findByUserEmail(userDetails.getUsername()).get();
 
                 // Generate the JWT (access token)
                 String jwt = jwtTokenProvider.generateToken(userDetails);

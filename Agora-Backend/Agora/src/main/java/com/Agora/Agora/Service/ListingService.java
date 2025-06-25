@@ -14,7 +14,8 @@ import com.Agora.Agora.Dto.Response.ListingResponseDto;
 import com.Agora.Agora.Mapper.DtoMapper;
 import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.Listings;
-import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Model.Enums.ItemStatus;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.ListingSearchRepo;
 import com.Agora.Agora.Repository.ListingsRepo;
 
@@ -35,7 +36,7 @@ public class ListingService {
     // a new listing.
     @Transactional
     public ListingResponseDto createListing(ListingReqDto req) {
-        User currentUser = userService.getCurrentUser();
+        AgoraUser currentUser = userService.getCurrentUser();
 
         // Get the College entity directly from the user
         College college = currentUser.getCollege();
@@ -85,7 +86,7 @@ public class ListingService {
     // Updating Listings. This method will be used by the user to update.
     @Transactional
     public ListingResponseDto updateListing(Long listingId, ListingReqDto req) {
-        User currentUser = userService.getCurrentUser();
+        AgoraUser currentUser = userService.getCurrentUser();
 
         // fetch existing listing.
         Listings updatedListings = listingRepo.findById(listingId)
@@ -130,6 +131,7 @@ public class ListingService {
     }
 
     // Listing searching.
+    @SuppressWarnings("removal")
     public List<ListingResponseDto> searchListings(ListingFilterReqDto req) {
         Specification<Listings> spec = Specification.where(null);
 
@@ -168,6 +170,14 @@ public class ListingService {
                 .collect(Collectors.toList());
 
         return responseDtos;
+    }
+
+    @Transactional
+    public void deactivateListing(Long listingId) {
+        Listings listing = listingRepo.findById(listingId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+        listing.setItemStatus(ItemStatus.DEACTIVATED);
+        listingRepo.save(listing);
     }
 
 }

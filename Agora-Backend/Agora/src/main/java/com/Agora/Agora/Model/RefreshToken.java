@@ -37,6 +37,6 @@ public class RefreshToken {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false) // Foreign key column
-    private User user;
+    private AgoraUser user;
 
 }

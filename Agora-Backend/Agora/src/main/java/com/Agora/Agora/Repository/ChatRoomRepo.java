@@ -5,14 +5,14 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.ChatRoom;
 import com.Agora.Agora.Model.Listings;
-import com.Agora.Agora.Model.User;
 
 public interface ChatRoomRepo extends JpaRepository<ChatRoom, Long> {
 
-    Optional<ChatRoom> findByListingIdAndBuyerId(Listings listing, User buyer, User seller);
+    Optional<ChatRoom> findByListingIdAndBuyerId(Listings listing, AgoraUser buyer, AgoraUser seller);
 
-    List<ChatRoom> findByBuyerOrSeller(User buyer, User seller); // to find all chats for a user.
+    List<ChatRoom> findByBuyerOrSeller(AgoraUser buyer, AgoraUser seller); // to find all chats for a user.
 
 }

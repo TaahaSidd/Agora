@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.Agora.Agora.Dto.Request.UserReqDto;
 import com.Agora.Agora.Dto.Response.UserResponseDto;
-import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Service.UserService;
 
 import jakarta.validation.Valid;
@@ -27,8 +27,8 @@ public class ProfileController {
 
     @GetMapping("/myProfile")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<User> myProfile() {
-        User currentUser = userService.getCurrentUser();
+    public ResponseEntity<AgoraUser> myProfile() {
+        AgoraUser currentUser = userService.getCurrentUser();
 
         return ResponseEntity.ok(currentUser);
     }

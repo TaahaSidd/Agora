@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.Agora.Agora.Model.RefreshToken;
-import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.RefreshTokenRepo;
 
 import jakarta.transaction.Transactional;
@@ -33,7 +33,7 @@ public class RefreshTokenService {
      */
 
     @Transactional
-    public RefreshToken createRefreshToken(User user) {
+    public RefreshToken createRefreshToken(AgoraUser user) {
         Optional<RefreshToken> existingTokenOpt = refreshTokenRepo.findByUser(user);
 
         RefreshToken refreshToken;
@@ -98,7 +98,7 @@ public class RefreshTokenService {
      * @param user The AppUser whose refresh tokens should be deleted.
      */
     @Transactional
-    public void deleteRefreshTokenByUser(User user) {
+    public void deleteRefreshTokenByUser(AgoraUser user) {
         refreshTokenRepo.deleteByUser(user);
         System.out.println("All refresh tokens deleted for user: " + user.getUserEmail());
     }

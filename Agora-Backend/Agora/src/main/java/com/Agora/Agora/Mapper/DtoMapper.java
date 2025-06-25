@@ -2,17 +2,21 @@ package com.Agora.Agora.Mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.Agora.Agora.Dto.Request.ReportResolveReqDto;
 import com.Agora.Agora.Dto.Response.ChatRoomResponseDto;
 import com.Agora.Agora.Dto.Response.CollegeResponseDto;
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
 import com.Agora.Agora.Dto.Response.MessageResponseDto;
 import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
+import com.Agora.Agora.Dto.Response.ReportResolveResponse;
+import com.Agora.Agora.Dto.Response.ReportResponseDto;
 import com.Agora.Agora.Dto.Response.UserResponseDto;
 import com.Agora.Agora.Model.ChatRoom;
 import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Model.Message;
-import com.Agora.Agora.Model.User;
+import com.Agora.Agora.Model.Report;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Service.MessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +28,7 @@ public class DtoMapper {
     private final MessageService messageService;
 
     // Dto mapping for User.
-    public UserResponseDto mapToUserResponseDto(User user) {
+    public UserResponseDto mapToUserResponseDto(AgoraUser user) {
         UserResponseDto dto = new UserResponseDto();
         dto.setId(user.getId());
         dto.setUserName(user.getUserName());
@@ -46,7 +50,7 @@ public class DtoMapper {
     }
 
     // Dto mapper for Registration.
-    public RegistrationResponseDto mapToRegistrationResponseDto(User user) {
+    public RegistrationResponseDto mapToRegistrationResponseDto(AgoraUser user) {
         RegistrationResponseDto dto = new RegistrationResponseDto();
         dto.setId(user.getId());
         dto.setUserName(user.getUserName());
@@ -104,7 +108,7 @@ public class DtoMapper {
     }
 
     // Dto mapper for ChatRoom
-    public ChatRoomResponseDto mapToChatRoomResponseDto(ChatRoom chatRoom, User currentUser) {
+    public ChatRoomResponseDto mapToChatRoomResponseDto(ChatRoom chatRoom, AgoraUser currentUser) {
         ChatRoomResponseDto dto = new ChatRoomResponseDto();
         dto.setId(chatRoom.getId());
         dto.setListingId(chatRoom.getListing().getId());
@@ -133,5 +137,50 @@ public class DtoMapper {
         dto.setSendAt(message.getSentAt());
         dto.setIsRead(message.getIsRead());
         return dto;
+    }
+
+    // Dto mapper for Moderation
+    public ReportResponseDto mapToReportResponseDto(Report report) {
+        ReportResponseDto dto = new ReportResponseDto();
+        dto.setId(report.getId());
+
+        // Reporter details
+        if (report.getReporter() != null) {
+            dto.setReporterId(report.getReporter().getId());
+            dto.setReporterUserName(report.getReporter().getUserName());
+        }
+
+        // Reported user details (if applicable)
+        if (report.getReportedUser() != null) {
+            dto.setReportedId(report.getReportedUser().getId());
+            dto.setReportedUserName(report.getReportedUser().getUserName());
+        }
+
+        // Listing details (if applicable)
+        if (report.getListings() != null) {
+            dto.setListingId(report.getListings().getId());
+            dto.setReportedListingTitle(report.getListings().getTitle());
+        }
+
+        dto.setReportType(report.getReportType());
+        dto.setReportStatus(report.getStatus());
+        dto.setReportReason(report.getReason()); // Assuming this is an enum or field in Report
+
+        dto.setReportedAt(report.getReportedAt());
+        dto.setResolvedAt(report.getResolvedAt());
+
+        return dto;
+    }
+
+    // For Admin.
+    public ReportResolveResponse mapToReportResolveResponse(Report report, ReportResolveReqDto req) {
+        ReportResolveResponse response = new ReportResolveResponse();
+        response.setReportId(report.getId());
+        response.setStatus(report.getStatus());
+        response.setModerationNotes(report.getModerationNotes()); // Assuming you store notes in the entity
+        response.setActionOnUser(req.getActionOnUser());
+        response.setActionOnListing(req.getActionOnListing());
+        response.setResolvedAt(report.getResolvedAt());
+        return response;
     }
 }
