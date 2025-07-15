@@ -52,11 +52,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/Agora/ChatRoom/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/Agora/ChatRoom/**").authenticated()
 
+                        // Reporting
+                        .requestMatchers(HttpMethod.POST, "/Agora/report/**").authenticated()
+
+                        // Moderation - Admin
+                        .requestMatchers(HttpMethod.PUT, "/Agora/Admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/Agora/Admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/Agora/Admin/**").hasRole("  ADMIN")
+
                         // College - Admin only.
-                        .requestMatchers(HttpMethod.POST, "/Agora/college/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/Agora/college/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/Agora/college/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/Agora/college/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/Agora/college/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/Agora/college/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/college/**").hasRole("ADMIN")
 
                 )
 

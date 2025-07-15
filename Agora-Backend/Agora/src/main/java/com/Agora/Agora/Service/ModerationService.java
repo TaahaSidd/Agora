@@ -20,6 +20,7 @@ import com.Agora.Agora.Repository.UserRepo;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +32,16 @@ public class ModerationService {
     private final ListingsRepo listingsRepo;
     private final UserRepo userRepo;
     private final DtoMapper dto;
+
+    @Transactional
+    public List<Report> getAllReports() {
+        AgoraUser admin = userService.getCurrentUser();
+
+        if (!admin.isAdmin()) {
+            throw new AccessDeniedException("Only admins can view all reports");
+        }
+        return reportRepo.findAll();
+    }
 
     @Transactional
     public ReportResolveResponse resolveReport(Long reportId, ReportResolveReqDto req) {
@@ -74,7 +85,7 @@ public class ModerationService {
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
 
         // Set status to DEACTIVATED or BANNED
-        listing.setItemStatus(ItemStatus.DEACTIVATED); // or ItemStatus.BANNED
+        listing.setItemStatus(ItemStatus.DEACTIVATED);
 
         // Save the updated listing
         listingsRepo.save(listing);

@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.Agora.Agora.Model.Report;
 import com.Agora.Agora.Model.Enums.ReportStatus;
+import com.Agora.Agora.Model.Report;
 
 public interface ReportRepo extends JpaRepository<Report, Long> {
 
@@ -13,5 +13,5 @@ public interface ReportRepo extends JpaRepository<Report, Long> {
 
     List<Report> findByReportedUserId(Long userId);
 
-    List<Report> findByReportedListingId(Long listingId);
+    List<Report> findByListings_Id(Long listingId);
 }

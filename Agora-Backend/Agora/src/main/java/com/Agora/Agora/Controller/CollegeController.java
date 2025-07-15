@@ -31,7 +31,7 @@ public class CollegeController {
     // Add college.
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<CollegeResponseDto> addCollege(@RequestBody CollegeReqDto req) {
+    public ResponseEntity<CollegeResponseDto> addCollege(@Valid @RequestBody CollegeReqDto req) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(collegeService.addCollege(req));
     }
@@ -46,14 +46,14 @@ public class CollegeController {
     // Get college by id.
     @GetMapping("/college/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<CollegeResponseDto> getCollegeById(@PathVariable Long id) {
+    public ResponseEntity<CollegeResponseDto> getCollegeById(@Valid @PathVariable Long id) {
         return ResponseEntity.ok(collegeService.getCollegeById(id));
     }
 
     // Update College.
     @PutMapping("/college/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<CollegeResponseDto> updateCollege(@PathVariable Long id,
+    public ResponseEntity<CollegeResponseDto> updateCollege(@Valid @PathVariable Long id,
             @Valid @RequestBody CollegeReqDto req) {
         return ResponseEntity.ok(collegeService.updateCollege(id, req));
     }
@@ -61,7 +61,7 @@ public class CollegeController {
     // Delete College.
     @DeleteMapping("/college/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteCollege(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCollege(@Valid @PathVariable Long id) {
         collegeService.deleteCollege(id);
         return ResponseEntity.noContent().build();
     }

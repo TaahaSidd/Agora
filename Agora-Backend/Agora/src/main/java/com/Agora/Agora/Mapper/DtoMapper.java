@@ -11,12 +11,12 @@ import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
 import com.Agora.Agora.Dto.Response.ReportResolveResponse;
 import com.Agora.Agora.Dto.Response.ReportResponseDto;
 import com.Agora.Agora.Dto.Response.UserResponseDto;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.ChatRoom;
 import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Model.Message;
 import com.Agora.Agora.Model.Report;
-import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Service.MessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -136,6 +136,7 @@ public class DtoMapper {
         dto.setMessage(message.getMessage());
         dto.setSendAt(message.getSentAt());
         dto.setIsRead(message.getIsRead());
+        dto.setMessageType(message.getMessageType());
         return dto;
     }
 

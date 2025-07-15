@@ -11,7 +11,7 @@ import com.Agora.Agora.Model.Listings;
 
 public interface ChatRoomRepo extends JpaRepository<ChatRoom, Long> {
 
-    Optional<ChatRoom> findByListingIdAndBuyerId(Listings listing, AgoraUser buyer, AgoraUser seller);
+    Optional<ChatRoom> findByListingAndBuyerAndSeller(Listings listing, AgoraUser buyer, AgoraUser seller);
 
     List<ChatRoom> findByBuyerOrSeller(AgoraUser buyer, AgoraUser seller); // to find all chats for a user.
 

@@ -16,11 +16,12 @@ import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
 import com.Agora.Agora.Jwt.JwtTokenProvider;
 import com.Agora.Agora.Mapper.DtoMapper;
-import com.Agora.Agora.Model.Enums.UserRole;
-import com.Agora.Agora.Model.Enums.VerificationStatus;
-import com.Agora.Agora.Model.College;
-import com.Agora.Agora.Model.RefreshToken;
 import com.Agora.Agora.Model.AgoraUser;
+import com.Agora.Agora.Model.College;
+import com.Agora.Agora.Model.Enums.UserRole;
+import com.Agora.Agora.Model.Enums.UserStatus;
+import com.Agora.Agora.Model.Enums.VerificationStatus;
+import com.Agora.Agora.Model.RefreshToken;
 import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.UserRepo;
 
@@ -67,6 +68,7 @@ public class AuthService {
                 user.setIdCardNo(req.getIdCardNo());
                 user.setCollege(college);
                 user.setRole(UserRole.STUDENT);
+                user.setUserStatus(UserStatus.ACTIVE);
                 user.setVerificationStatus(VerificationStatus.PENDING_EMAIL);
                 user.setVerificationToken(UUID.randomUUID().toString());
                 user.setTokenExpiryDate(LocalDateTime.now().plusHours(24));
@@ -116,5 +118,3 @@ public class AuthService {
                                 .build();
         }
 }
-// edit the code to supportmapToResponseDto.
-// for both service and controller.

@@ -19,6 +19,7 @@ import com.Agora.Agora.Dto.Request.ListingReqDto;
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
 import com.Agora.Agora.Service.ListingService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -31,14 +32,14 @@ public class ListingController {
     // Create.
     @PostMapping("/create")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ListingResponseDto> createListing(@RequestBody ListingReqDto req) {
+    public ResponseEntity<ListingResponseDto> createListing(@Valid @RequestBody ListingReqDto req) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(listingService.createListing(req));
     }
 
     // Get Listing by ID.
-    @GetMapping("/id")
-    public ResponseEntity<ListingResponseDto> getListingById(Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ListingResponseDto> getListingById(@Valid @PathVariable Long id) {
         return ResponseEntity.ok(listingService.getListingById(id));
     }
 
@@ -51,21 +52,21 @@ public class ListingController {
     // Updating
     @PutMapping("update/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ListingResponseDto> updateListing(@PathVariable Long id, @RequestBody ListingReqDto req) {
+    public ResponseEntity<ListingResponseDto> updateListing(@Valid @PathVariable Long id, @Valid @RequestBody ListingReqDto req) {
         return ResponseEntity.ok(listingService.updateListing(id, req));
     }
 
     // Delete.
     @DeleteMapping("delete/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteListing(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteListing(@Valid @PathVariable Long id) {
         listingService.deleteListing(id);
         return ResponseEntity.noContent().build();
     }
 
     // Searching.
     @PostMapping("/search")
-    public ResponseEntity<List<ListingResponseDto>> searchListings(@RequestBody ListingFilterReqDto req) {
+    public ResponseEntity<List<ListingResponseDto>> searchListings(@Valid @RequestBody ListingFilterReqDto req) {
         List<ListingResponseDto> results = listingService.searchListings(req);
         return ResponseEntity.ok(results);
     }

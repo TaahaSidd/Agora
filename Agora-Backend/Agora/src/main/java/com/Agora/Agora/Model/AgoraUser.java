@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,6 +26,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@Table(name = "Agora_Users")
 @NoArgsConstructor
 @AllArgsConstructor
 public class AgoraUser {
@@ -68,6 +70,8 @@ public class AgoraUser {
     @JoinColumn(name = "college_id", nullable = false)
     private College college;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserStatus userStatus;
 
     public boolean isAdmin() {

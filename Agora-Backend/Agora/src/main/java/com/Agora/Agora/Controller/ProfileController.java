@@ -36,7 +36,7 @@ public class ProfileController {
     // Updating profile for authenticated users.
     @PutMapping("/update/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserResponseDto> updateProfile(@PathVariable Long id, @Valid @RequestBody UserReqDto req) {
+    public ResponseEntity<UserResponseDto> updateProfile(@Valid @PathVariable Long id, @Valid @RequestBody UserReqDto req) {
 
         UserResponseDto responseDTO = userService.updateUser(id, req);
 

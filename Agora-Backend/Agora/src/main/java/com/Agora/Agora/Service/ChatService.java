@@ -8,17 +8,18 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+
 import com.Agora.Agora.Dto.Request.MessageRequestDto;
 import com.Agora.Agora.Dto.Request.OfferReqDto;
 import com.Agora.Agora.Dto.Response.ChatRoomResponseDto;
 import com.Agora.Agora.Dto.Response.MessageResponseDto;
 import com.Agora.Agora.Mapper.DtoMapper;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.ChatRoom;
 import com.Agora.Agora.Model.Enums.MessageType;
 import com.Agora.Agora.Model.Enums.OfferAction;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Model.Message;
-import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.ChatRoomRepo;
 import com.Agora.Agora.Repository.ListingsRepo;
 import com.Agora.Agora.Repository.MessageRepo;
@@ -52,7 +53,7 @@ public class ChatService {
             throw new IllegalArgumentException("Seller cannot start their chat on their listings");
         }
 
-        Optional<ChatRoom> existingChatRoom = chatRoomRepo.findByListingIdAndBuyerId(listing, currentUser, seller);
+        Optional<ChatRoom> existingChatRoom = chatRoomRepo.findByListingAndBuyerAndSeller(listing, currentUser, seller);
 
         ChatRoom chatRoom;
 
@@ -83,8 +84,8 @@ public class ChatService {
                 .orElseThrow(() -> new EntityNotFoundException("Chat room not found"));
 
         // Validate sender is a participant
-        if (!chatRoom.getBuyer().getId().equals(sender.getId()) &&
-                !chatRoom.getSeller().getId().equals(sender.getId())) {
+        if (!chatRoom.getBuyer().getId().equals(sender.getId())
+                && !chatRoom.getSeller().getId().equals(sender.getId())) {
             throw new AccessDeniedException("You are not a participant of this chat room");
         }
 
@@ -94,6 +95,7 @@ public class ChatService {
         message.setMessage(req.getMessage());
         message.setSentAt(Instant.now());
         message.setIsRead(false);
+        message.setMessageType(req.getMessageType());
 
         // Updating last message.
         chatRoom.setLastMessageAt(message.getSentAt());
@@ -113,8 +115,8 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepo.findById(chatRoomId)
                 .orElseThrow(() -> new EntityNotFoundException("Chat room not found"));
 
-        if (!chatRoom.getBuyer().getId().equals(currentUser.getId()) &&
-                !chatRoom.getSeller().getId().equals(currentUser.getId())) {
+        if (!chatRoom.getBuyer().getId().equals(currentUser.getId())
+                && !chatRoom.getSeller().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You are not a participant of this chat room");
         }
 

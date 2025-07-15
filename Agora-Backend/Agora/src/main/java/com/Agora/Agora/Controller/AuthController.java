@@ -13,6 +13,7 @@ import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
 import com.Agora.Agora.Service.AuthService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -24,14 +25,14 @@ public class AuthController {
     // private final UserRepo userRepo;
 
     @PostMapping("/register")
-    public ResponseEntity<RegistrationResponseDto> Register(@RequestBody RegistrationReqDto req) {
+    public ResponseEntity<RegistrationResponseDto> Register(@Valid @RequestBody RegistrationReqDto req) {
         // return ResponseEntity.ok(authService.register(req));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(authService.register(req));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> Login(@RequestBody LoginRequestDto req) {
+    public ResponseEntity<LoginResponseDto> Login(@Valid @RequestBody LoginRequestDto req) {
         return ResponseEntity.ok(authService.login(req));
     }
 

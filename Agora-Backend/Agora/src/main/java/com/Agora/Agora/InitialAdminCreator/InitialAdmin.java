@@ -10,10 +10,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.Agora.Agora.Model.Enums.UserRole;
-import com.Agora.Agora.Model.Enums.VerificationStatus;
-import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.AgoraUser;
+import com.Agora.Agora.Model.College;
+import com.Agora.Agora.Model.Enums.UserRole;
+import com.Agora.Agora.Model.Enums.UserStatus;
+import com.Agora.Agora.Model.Enums.VerificationStatus;
 import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.UserRepo;
 
@@ -59,6 +60,7 @@ public class InitialAdmin {
                         .role(UserRole.ADMIN)
                         .idCardNo("testIdCardno")
                         .college(college)
+                        .userStatus(UserStatus.ACTIVE)
                         .verificationStatus(VerificationStatus.VERIFIED)
                         .verificationToken(UUID.randomUUID().toString())
                         .tokenExpiryDate(LocalDateTime.now().plusYears(100))
