@@ -35,4 +35,6 @@ public class RegistrationResponseDto {
 
     private String message;
 
+    private String token;
+
 }

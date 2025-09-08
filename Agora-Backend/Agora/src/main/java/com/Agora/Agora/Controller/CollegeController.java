@@ -37,7 +37,7 @@ public class CollegeController {
     }
 
     // Get all colleges
-    @GetMapping("/college")
+    @GetMapping("/colleges")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<CollegeResponseDto>> getAllColleges() {
         return ResponseEntity.ok(collegeService.getAllColleges());

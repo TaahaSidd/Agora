@@ -79,10 +79,13 @@ public class AuthService {
                 // Sending welcome email.
                 String verificationLink = "http://localhost:8080/api/auth/verify-email?token="
                                 + savedUser.getVerificationToken();
-                emailService.sendWelcomeEmail(savedUser.getUserEmail(), savedUser.getUserName(), verificationLink);
+                emailService.sendWelcomeEmail(savedUser.getUserEmail(), savedUser.getUsername(),
+                                verificationLink);
 
-                // prepare and return the registrationresponseDto
+                String token = jwtTokenProvider.generateToken(savedUser);
+
                 RegistrationResponseDto responseDto = dto.mapToRegistrationResponseDto(savedUser);
+                responseDto.setToken(token);
                 return responseDto;
 
         }
@@ -107,7 +110,7 @@ public class AuthService {
                                 .jwt(jwt)
                                 .refreshToken(refreshTokenString)
                                 .id(user.getId())
-                                .userName(user.getUserName())
+                                .userName(user.getUsername())
                                 .userEmail(user.getUserEmail())
                                 .firstName(user.getFirstName())
                                 .lastName(user.getLastName())

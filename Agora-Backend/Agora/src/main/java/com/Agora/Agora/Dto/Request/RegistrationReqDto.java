@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-//this class is used for registration request.
 @Getter
 @Setter
 @NoArgsConstructor

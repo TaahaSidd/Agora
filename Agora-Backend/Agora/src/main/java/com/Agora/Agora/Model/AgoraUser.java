@@ -1,6 +1,12 @@
 package com.Agora.Agora.Model;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.UserStatus;
@@ -29,7 +35,7 @@ import lombok.Setter;
 @Table(name = "Agora_Users")
 @NoArgsConstructor
 @AllArgsConstructor
-public class AgoraUser {
+public class AgoraUser implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -76,5 +82,41 @@ public class AgoraUser {
 
     public boolean isAdmin() {
         return UserRole.ADMIN.equals(this.role);
+    }
+
+    // Methods for User Details
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.userName;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.userStatus == UserStatus.ACTIVE;
     }
 }

@@ -31,7 +31,7 @@ public class DtoMapper {
     public UserResponseDto mapToUserResponseDto(AgoraUser user) {
         UserResponseDto dto = new UserResponseDto();
         dto.setId(user.getId());
-        dto.setUserName(user.getUserName());
+        dto.setUserName(user.getUsername());
         dto.setUserEmail(user.getUserEmail());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
@@ -53,7 +53,7 @@ public class DtoMapper {
     public RegistrationResponseDto mapToRegistrationResponseDto(AgoraUser user) {
         RegistrationResponseDto dto = new RegistrationResponseDto();
         dto.setId(user.getId());
-        dto.setUserName(user.getUserName());
+        dto.setUserName(user.getUsername());
         dto.setUserEmail(user.getUserEmail());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
@@ -115,8 +115,8 @@ public class DtoMapper {
         dto.setSellerId(chatRoom.getSeller().getId());
         dto.setBuyerId(chatRoom.getBuyer().getId());
         dto.setListingTitle(chatRoom.getListing().getTitle());
-        dto.setBuyerUserName(chatRoom.getBuyer().getUserName());
-        dto.setSellerUserName(chatRoom.getSeller().getUserName());
+        dto.setBuyerUserName(chatRoom.getBuyer().getUsername());
+        dto.setSellerUserName(chatRoom.getSeller().getUsername());
         dto.setLastMessageAt(chatRoom.getLastMessageAt());
         dto.setCreatedAt(chatRoom.getCreatedAt());
         dto.setLastMessageAt(chatRoom.getLastMessageAt());
@@ -132,7 +132,7 @@ public class DtoMapper {
         dto.setId(message.getId());
         dto.setChatRoomId(message.getChatRoom().getId());
         dto.setSenderId(message.getSender().getId());
-        dto.setSenderUserName(message.getSender().getUserName());
+        dto.setSenderUserName(message.getSender().getUsername());
         dto.setMessage(message.getMessage());
         dto.setSendAt(message.getSentAt());
         dto.setIsRead(message.getIsRead());
@@ -148,13 +148,13 @@ public class DtoMapper {
         // Reporter details
         if (report.getReporter() != null) {
             dto.setReporterId(report.getReporter().getId());
-            dto.setReporterUserName(report.getReporter().getUserName());
+            dto.setReporterUserName(report.getReporter().getUsername());
         }
 
         // Reported user details (if applicable)
         if (report.getReportedUser() != null) {
             dto.setReportedId(report.getReportedUser().getId());
-            dto.setReportedUserName(report.getReportedUser().getUserName());
+            dto.setReportedUserName(report.getReportedUser().getUsername());
         }
 
         // Listing details (if applicable)

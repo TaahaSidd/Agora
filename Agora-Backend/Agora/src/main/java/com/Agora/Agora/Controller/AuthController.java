@@ -26,7 +26,6 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<RegistrationResponseDto> Register(@Valid @RequestBody RegistrationReqDto req) {
-        // return ResponseEntity.ok(authService.register(req));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(authService.register(req));
     }
@@ -37,3 +36,4 @@ public class AuthController {
     }
 
 }
+    
