@@ -38,7 +38,6 @@ public class ListingService {
     public ListingResponseDto createListing(ListingReqDto req) {
         AgoraUser currentUser = userService.getCurrentUser();
 
-        // Get the College entity directly from the user
         College college = currentUser.getCollege();
         if (college == null) {
             throw new EntityNotFoundException("User is not linked to any college");
@@ -46,7 +45,6 @@ public class ListingService {
 
         Listings listing = new Listings();
 
-        // Create and populate listing entity.
         listing.setTitle(req.getTitle());
         listing.setDescription(req.getDescription());
         listing.setPrice(req.getPrice());
@@ -55,18 +53,15 @@ public class ListingService {
         listing.setItemCondition(req.getItemCondition());
         listing.setItemStatus(req.getItemStatus());
 
-        // Setting the Relationship.
         listing.setSeller(currentUser);
         listing.setCollege(college);
 
         Listings savedListing = listingRepo.save(listing);
 
-        // Save.
         ListingResponseDto responseDto = dto.mapToListingResponseDto(savedListing);
         return responseDto;
     }
 
-    // Getting Listing by id.
     public ListingResponseDto getListingById(Long id) {
         Listings listing = listingRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with id: " + id));
@@ -74,7 +69,6 @@ public class ListingService {
         return dto.mapToListingResponseDto(listing);
     }
 
-    // Getting all Listings
     public List<ListingResponseDto> getAllListings() {
         List<Listings> listing = listingRepo.findAll();
 
@@ -83,16 +77,13 @@ public class ListingService {
                 .collect(Collectors.toList());
     }
 
-    // Updating Listings. This method will be used by the user to update.
     @Transactional
     public ListingResponseDto updateListing(Long listingId, ListingReqDto req) {
         AgoraUser currentUser = userService.getCurrentUser();
 
-        // fetch existing listing.
         Listings updatedListings = listingRepo.findById(listingId)
                 .orElseThrow(() -> new EntityNotFoundException("Cant update listing"));
 
-        //
         if (!updatedListings.getSeller().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("Permission Denied");
         }
@@ -117,7 +108,6 @@ public class ListingService {
         return responseDto;
     }
 
-    // Deleting listing.
     public void deleteListing(Long listingId) {
 
         if (listingId == null) {
@@ -130,7 +120,6 @@ public class ListingService {
         listingRepo.deleteById(listingId);
     }
 
-    // Listing searching.
     @SuppressWarnings("removal")
     public List<ListingResponseDto> searchListings(ListingFilterReqDto req) {
         Specification<Listings> spec = Specification.where(null);

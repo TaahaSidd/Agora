@@ -34,7 +34,8 @@ public class RegistrationResponseDto {
     private VerificationStatus verificationStatus;
 
     private String message;
-
+    
+    //
     private String token;
 
 }
