@@ -38,6 +38,9 @@ public class SecurityConfig {
                         // Auth endpoints (public)
                         .requestMatchers(HttpMethod.POST, "/Agora/auth/**").permitAll()
 
+                        // Token validation (public so frontend can check token)
+                        .requestMatchers(HttpMethod.POST, "/Agora/Token/validate").permitAll()
+
                         // Listing.
                         .requestMatchers(HttpMethod.POST, "/Agora/listing/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/Agora/listing/**").permitAll()

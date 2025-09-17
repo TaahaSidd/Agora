@@ -35,11 +35,11 @@ export default function SignUpStep4({ navigation }) {
             const body = {
                 firstName: form.firstName,
                 lastName: form.lastName,
-                username: form.username,
-                email: form.email,
-                mobile: form.mobile,
-                idCard: form.idCard,
-                college: form.college,
+                userName: form.username,
+                mobileNumber: form.mobile,
+                userEmail: form.email,
+                idCardNo: form.idCard,
+                collegeId: form.college,
                 password: form.password,
             };
             const data = await apiPost('/auth/register', body);

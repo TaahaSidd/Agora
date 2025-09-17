@@ -13,7 +13,6 @@ import { COLORS } from '../utils/colors';
 import { apiPost } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -32,13 +31,16 @@ export default function LoginScreen({ navigation }) {
 
         setLoading(true);
         try {
-            const body = { email, password };
-            const data = await apiPost("/auth/login", { email, password });
-            // Save token for future requests
-            await AsyncStorage.setItem("token", data.jwt);
-            navigation.replace("Explore");
+            const data = await apiPost('/auth/login', { email, password });
+
+            await AsyncStorage.setItem('token', data.jwt);
+
+            navigation.replace('MainLayout');
         } catch (error) {
-            Alert.alert('Login Failed', error.response?.data?.message || error.message);
+            Alert.alert(
+                'Login Failed',
+                error.response?.data?.message || error.message || 'Something went wrong.'
+            );
         } finally {
             setLoading(false);
         }
@@ -70,7 +72,14 @@ export default function LoginScreen({ navigation }) {
                     autoCapitalize="none"
                 />
 
-                <TouchableOpacity onPress={() => Alert.alert('Forgot Password', 'Reset password flow here')}>
+                <TouchableOpacity
+                    onPress={() =>
+                        Alert.alert(
+                            'Forgot Password',
+                            'This will trigger your reset password flow.'
+                        )
+                    }
+                >
                     <Text style={styles.forgotText}>Forgot Password?</Text>
                 </TouchableOpacity>
 
@@ -84,7 +93,7 @@ export default function LoginScreen({ navigation }) {
 
                 <View style={styles.signupContainer}>
                     <Text style={styles.signupText}>Don't have an account? </Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('SignUpFlow')}>
                         <Text style={styles.signupLink}>Sign Up</Text>
                     </TouchableOpacity>
                 </View>
@@ -157,3 +166,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
