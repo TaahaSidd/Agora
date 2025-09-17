@@ -2,6 +2,8 @@ import React from 'react';
 import { ScrollView, Text, View, Image, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
+import Card from '../components/Cards';
 
 const ExploreScreen = () => {
     const categories = ['Vehicles', 'Devices', 'Furniture', 'Stationery'];
@@ -12,29 +14,42 @@ const ExploreScreen = () => {
         { id: 4, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
         { id: 5, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
         { id: 6, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
-
+        { id: 7, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
+        { id: 8, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
     ];
+
+    const navigation = useNavigation();
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
             <ScrollView contentContainerStyle={{ padding: 16 }}>
-
-                {/* Header: Welcome + Icons */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                {/* Header */}
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 16,
+                    }}
+                >
                     <Text style={{ fontWeight: 'bold', fontSize: 24 }}>Welcome Back</Text>
                     <View style={{ flexDirection: 'row' }}>
-                        <TouchableOpacity style={{ marginRight: 16 }}>
+                        <TouchableOpacity
+                            style={{ marginRight: 16 }}
+                            onPress={() => navigation.navigate('Search')}
+                        >
                             <Icon name="search-outline" size={24} color="#000" />
                         </TouchableOpacity>
-                        <TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
                             <Icon name="notifications-outline" size={24} color="#000" />
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Banner Image */}
+                {/* Banner */}
                 <Image
                     source={require('../assets/banner.jpg')}
                     style={{ width: '100%', height: 150, borderRadius: 10, marginBottom: 20 }}
@@ -65,7 +80,7 @@ const ExploreScreen = () => {
                     ))}
                 </ScrollView>
 
-                {/* Recommended Section */}
+                {/* Recommended */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
                     <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Recommended</Text>
                     <TouchableOpacity>
@@ -73,28 +88,9 @@ const ExploreScreen = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Recommended Items */}
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                    {recommendedItems.map((item) => (
-                        <View
-                            key={item.id}
-                            style={{
-                                width: '47%',
-                                borderRadius: 10,
-                                borderWidth: 1,
-                                borderColor: '#ddd',
-                                marginBottom: 15,
-                                padding: 12,
-                                backgroundColor: '#fff',
-                            }}
-                        >
-                            <Image
-                                source={item.image}
-                                style={{ width: '100%', height: 100, borderRadius: 10, marginBottom: 8 }}
-                            />
-                            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.price}</Text>
-                            <Text>{item.name}</Text>
-                        </View>
+                    {recommendedItems.map(item => (
+                        <Card key={item.id} item={item} />
                     ))}
                 </View>
             </ScrollView>
