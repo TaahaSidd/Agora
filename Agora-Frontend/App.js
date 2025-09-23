@@ -15,6 +15,7 @@ import SettingsScreen from './screens/SettingsScreen';
 import SearchScreen from './screens/SearchScreen'
 import NotificationScreen from './screens/NotificationScreen';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
+import ProfileScreen from './screens/ProfileScreen';
 
 import BottomNavBar from './components/BottomNavBar';
 
@@ -66,6 +67,7 @@ export default function App() {
           <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="Notification" component={NotificationScreen} />
           <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
