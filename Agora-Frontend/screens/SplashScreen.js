@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, Easing, Alert } from 'react-native';
+import { View, Animated, StyleSheet, Easing, Alert, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../utils/colors';
 
@@ -78,6 +78,7 @@ export default function SplashScreen({ navigation }) {
             >
                 Agora
             </Animated.Text>
+            <Text style={styles.tagline}>India's First Student Marketplace</Text>
         </View>
     );
 }
@@ -88,11 +89,21 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.darkBlue,
         alignItems: 'center',
         justifyContent: 'center',
+        position: 'relative',
     },
     title: {
         color: COLORS.white,
         fontSize: 36,
         fontWeight: 'bold',
         letterSpacing: 2,
+    },
+    tagline: {
+        position: 'absolute',
+        bottom: 60,
+        color: COLORS.white,
+        fontSize: 16,
+        opacity: 0.8,
+        textAlign: 'center',
+        width: '100%',
     },
 });

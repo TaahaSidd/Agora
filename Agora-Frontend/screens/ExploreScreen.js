@@ -4,9 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import Card from '../components/Cards';
+import Tag from '../components/Tag';
 
 const ExploreScreen = () => {
-    const categories = ['Vehicles', 'Devices', 'Furniture', 'Stationery'];
+    const categories = ['Vehicles', 'Devices', 'Furniture', 'Stationery', 'Clothes', 'Random'];
     const recommendedItems = [
         { id: 1, price: '₹ 5,000', name: 'Nike Shoes', image: require('../assets/nikeshoes.jpg') },
         { id: 2, price: '₹ 1200', name: 'Sofa Seat', image: require('../assets/sofaseat.jpg') },
@@ -43,7 +44,7 @@ const ExploreScreen = () => {
                             <Icon name="search-outline" size={24} color="#000" />
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
                             <Icon name="notifications-outline" size={24} color="#000" />
                         </TouchableOpacity>
                     </View>
@@ -65,18 +66,7 @@ const ExploreScreen = () => {
 
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
                     {categories.map((category) => (
-                        <TouchableOpacity
-                            key={category}
-                            style={{
-                                backgroundColor: '#66BBFF',
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
-                                borderRadius: 20,
-                                marginRight: 12,
-                            }}
-                        >
-                            <Text style={{ color: '#fff', fontWeight: '600' }}>{category}</Text>
-                        </TouchableOpacity>
+                        <Tag key={category} label={category} />
                     ))}
                 </ScrollView>
 

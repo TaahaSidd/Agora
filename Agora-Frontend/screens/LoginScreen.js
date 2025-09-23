@@ -12,11 +12,14 @@ import {
 import { COLORS } from '../utils/colors';
 import { apiPost } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const onLogin = async () => {
         if (!email.trim() || !password) {
@@ -32,9 +35,7 @@ export default function LoginScreen({ navigation }) {
         setLoading(true);
         try {
             const data = await apiPost('/auth/login', { email, password });
-
             await AsyncStorage.setItem('token', data.jwt);
-
             navigation.replace('MainLayout');
         } catch (error) {
             Alert.alert(
@@ -63,14 +64,27 @@ export default function LoginScreen({ navigation }) {
                     autoCapitalize="none"
                     autoComplete="email"
                 />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    autoCapitalize="none"
-                />
+
+                <View style={styles.passwordContainer}>
+                    <TextInput
+                        style={[styles.input, { paddingRight: 50 }]}
+                        placeholder="Password"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                    />
+                    <TouchableOpacity
+                        style={styles.showHideButton}
+                        onPress={() => setShowPassword((prev) => !prev)}
+                    >
+                        <MaterialCommunityIcons
+                            name={showPassword ? 'eye' : 'eye-off'}
+                            size={24}
+                            color={COLORS.primary}
+                        />
+                    </TouchableOpacity>
+                </View>
 
                 <TouchableOpacity
                     onPress={() =>
@@ -125,6 +139,17 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
+    passwordContainer: {
+        position: 'relative',
+        justifyContent: 'center',
+    },
+    showHideButton: {
+        position: 'absolute',
+        right: 18,
+        top: 10,
+        zIndex: 1,
+        padding: 5,
+    },
     forgotText: {
         color: COLORS.primary,
         textAlign: 'right',
@@ -166,4 +191,3 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
-
