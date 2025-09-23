@@ -1,19 +1,19 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
 const Button = ({ title, onPress, variant = 'primary', style, textStyle }) => {
     const buttonStyles = [
         styles.button,
         variant === 'primary' && styles.primary,
         variant === 'secondary' && styles.secondary,
-        variant === 'outline' && styles.outline,
         style,
     ];
 
     const titleStyles = [
         styles.title,
-        variant === 'outline' && styles.outlineText,
+        variant === 'secondary' && styles.secondaryText,
         textStyle,
     ];
 
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     button: {
         paddingVertical: 14,
         paddingHorizontal: 20,
-        borderRadius: 12,
+        borderRadius: THEME.borderRadius.md,
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 5,
@@ -37,19 +37,16 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.primary,
     },
     secondary: {
-        backgroundColor: COLORS.secondary,
-    },
-    outline: {
         backgroundColor: 'transparent',
         borderWidth: 2,
         borderColor: COLORS.primary,
     },
     title: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: '600',
     },
-    outlineText: {
+    secondaryText: {
         color: COLORS.primary,
     },
 });
