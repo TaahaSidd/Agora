@@ -11,11 +11,16 @@ import SignUpNavigator from './navigation/SignUpNavigator';
 import ExploreScreen from './screens/ExploreScreen';
 import ActivityScreen from './screens/ActivityScreen';
 import ChatsScreen from './screens/ChatsScreen';
+import ChatRoomScreen from './screens/ChatRoomScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import SearchScreen from './screens/SearchScreen'
 import NotificationScreen from './screens/NotificationScreen';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import UserProfileScreen from './screens/UserProfileScreen';
+import EditProfileScreen from './screens/EditProfileScreen';
+import AddListingScreen from './screens/AddListingScreen';
+import MakeOfferScreen from './screens/MakeOfferScreen';
 
 import BottomNavBar from './components/BottomNavBar';
 
@@ -64,10 +69,25 @@ export default function App() {
           </Stack.Screen>
 
           <Stack.Screen name="MainLayout" component={MainLayout} />
+
           <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="Notification" component={NotificationScreen} />
-          <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
+            <Stack.Screen name="MakeOfferScreen" component={MakeOfferScreen} />
+          </Stack.Navigator>
+
           <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
+          <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+
+          <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
+
+          <Stack.Screen name="AddListingScreen" component={AddListingScreen} />
+
+
+
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
