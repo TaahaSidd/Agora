@@ -9,14 +9,66 @@ import Tag from '../components/Tag';
 const ExploreScreen = () => {
     const categories = ['Vehicles', 'Devices', 'Furniture', 'Stationery', 'Clothes', 'Random'];
     const recommendedItems = [
-        { id: 1, price: '₹ 5,000', name: 'Nike Shoes', image: require('../assets/nikeshoes.jpg') },
-        { id: 2, price: '₹ 1200', name: 'Sofa Seat', image: require('../assets/sofaseat.jpg') },
-        { id: 3, price: '₹ 20000', name: 'Ps5 Console', image: require('../assets/ps5console.jpg') },
-        { id: 4, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
-        { id: 5, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
-        { id: 6, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
-        { id: 7, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
-        { id: 8, price: '₹ 4500', name: 'Headphones', image: require('../assets/headphones.jpg') },
+        {
+            id: 1,
+            price: '₹ 5,000',
+            name: 'Nike Air Max',
+            images: [
+                require('../assets/nikeshoes.jpg'),
+                require('../assets/nikeshoes2.jpg'),
+                require('../assets/nikeshoes3.jpg'),
+            ]
+        },
+        {
+            id: 2,
+            price: '₹ 1200',
+            name: 'Sofa Seat',
+            images: [
+                require('../assets/sofaseat.jpg'),
+                require('../assets/nikeshoes.jpg'),
+                require('../assets/headphones.jpg'),
+            ]
+        },
+        {
+            id: 3,
+            price: '₹ 20,000',
+            name: 'PS5 Console',
+            images: [
+                require('../assets/ps5console.jpg'),
+                require('../assets/sofaseat.jpg'),
+                require('../assets/nikeshoes.jpg'),
+            ]
+        },
+        {
+            id: 4,
+            price: '₹ 2,500',
+            name: 'Used Textbooks Set',
+            images: [
+                require('../assets/textbooks.jpg'),
+                require('../assets/sofaseat.jpg'),
+                require('../assets/nikeshoes.jpg'),
+            ],
+        },
+        {
+            id: 5,
+            price: '₹ 1,200',
+            name: 'Laptop Backpack',
+            images: [
+                require('../assets/laptopbag.jpg'),
+                require('../assets/sofaseat.jpg'),
+                require('../assets/nikeshoes.jpg'),
+            ],
+        },
+        {
+            id: 6,
+            price: '₹ 800',
+            name: 'Wireless Earbuds',
+            images: [
+                require('../assets/earbuds.jpg'),
+                require('../assets/sofaseat.jpg'),
+                require('../assets/nikeshoes.jpg'),
+            ],
+        },
     ];
 
     const navigation = useNavigation();

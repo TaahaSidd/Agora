@@ -55,19 +55,23 @@ export default function ProductDetailsScreen() {
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
+                snapToInterval={width}
+                decelerationRate="fast"
             >
-                {images.map((img, idx) => (
-                    <Image
-                        key={idx}
-                        source={
-                            typeof img === "string"
-                                ? { uri: img }
-                                : img || require("../assets/adaptive-icon.png")
-                        }
-                        style={styles.image}
-                        resizeMode="cover"
-                    />
-                ))}
+                {(images && images.length > 0 ? images : [require("../assets/adaptive-icon.png")]).map(
+                    (img, idx) => (
+                        <Image
+                            key={idx}
+                            source={
+                                typeof img === "string"
+                                    ? { uri: img }
+                                    : img || require("../assets/adaptive-icon.png")
+                            }
+                            style={styles.image}
+                            resizeMode="cover"
+                        />
+                    )
+                )}
             </ScrollView>
 
             {/* Bottom Sheet */}
@@ -135,36 +139,27 @@ export default function ProductDetailsScreen() {
                                 }
                                 style={styles.sellerAvatar}
                             />
-                            <View style={{ flex: 1, marginLeft: 12 }}>
-                                {/* Name + Verified Tag */}
-                                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                            <View style={{ flex: 1, marginLeft: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                                <View>
+                                    {/* Name */}
                                     <Text style={styles.sellerName}>
                                         {product.seller?.name || "Seller Name"}
                                     </Text>
-                                    {product.seller?.verified && (
-                                        <Ionicons
-                                            name="checkmark-circle"
-                                            size={16}
-                                            color={COLORS.primary}
-                                            style={{ marginLeft: 6 }}
-                                        />
-                                    )}
+                                    {/* Member Since */}
+                                    <Text style={styles.sellerInfo}>
+                                        Member since {product.seller?.memberSince || "2023"}
+                                    </Text>
                                 </View>
-
-                                <Text style={styles.sellerInfo}>
-                                    Member since {product.seller?.memberSince || "2023"}
-                                </Text>
+                                {/* Arrow Icon */}
+                                <Ionicons
+                                    name="chevron-forward"
+                                    size={22}
+                                    color="#888"
+                                    style={{ marginLeft: 10 }}
+                                />
                             </View>
-
-                            {/* Small Chat Button */}
-                            <Button
-                                onPress={() => { }}
-                                variant="primary"
-                                style={styles.chatButtonSmall}
-                                textStyle={{ fontSize: 14 }}
-                                title="Chat"
-                            />
                         </TouchableOpacity>
+
                     </ScrollView>
 
                     {/* Sticky Buttons */}
@@ -178,6 +173,7 @@ export default function ProductDetailsScreen() {
                             variant="primary"
                             style={styles.offerButton}
                             title="Make Offer"
+                            onPress={() => navigation.navigate('MakeOfferScreen', { item: product })}
                         />
                     </View>
                 </View>
@@ -226,7 +222,6 @@ const styles = StyleSheet.create({
     sellerAvatar: { width: 50, height: 50, borderRadius: 25 },
     sellerName: { fontSize: 16, fontWeight: "600", color: "#000", marginBottom: 2 },
     sellerInfo: { fontSize: 12, color: "#555" },
-    chatButtonSmall: { width: 70, height: 36, borderRadius: 8 },
     buttons: {
         position: "absolute",
         bottom: 16,

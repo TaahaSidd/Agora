@@ -19,16 +19,22 @@ const SettingsScreen = ({ navigation }) => {
                 {/* Account Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Account</Text>
-                    <View style={styles.accountItem}>
+
+                    <TouchableOpacity
+                        style={styles.accountItem}
+                        onPress={() => navigation.navigate('UserProfileScreen')}
+                        activeOpacity={0.7}
+                    >
                         <Image
                             source={{ uri: 'https://i.pravatar.cc/100' }}
                             style={styles.profilePic}
                         />
-                        <View style={{ marginLeft: 12 }}>
+                        <View style={{ marginLeft: 12, flex: 1 }}>
                             <Text style={styles.accountName}>John Doe</Text>
                             <Text style={styles.accountEmail}>john@example.com</Text>
                         </View>
-                    </View>
+                        <Ionicons name="chevron-forward" size={24} color="#999" />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Options */}
