@@ -1,18 +1,15 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { THEME } from '../utils/theme';
+import { COLORS } from '../utils/colors';
+import FavoriteButton from './FavoriteButton';
 
 const Card = ({ item }) => {
     const navigation = useNavigation();
 
     const handlePress = () => {
         navigation.navigate('ProductDetails', { item });
-    };
-
-    const handleFavorite = () => {
-        console.log('Favorited:', item.name);
     };
 
     return (
@@ -22,10 +19,12 @@ const Card = ({ item }) => {
             activeOpacity={0.9}
         >
             <View style={styles.imageWrapper}>
-                <Image source={item.image} style={styles.image} />
-                <TouchableOpacity style={styles.heartButton} onPress={handleFavorite}>
-                    <Icon name="heart-outline" size={20} color="#fff" />
-                </TouchableOpacity>
+                <Image
+                    source={item.images ? item.images[0] : item.image}
+                    style={styles.image}
+                />
+                {/* Use our reusable FavoriteButton */}
+                <FavoriteButton size={20} />
             </View>
             <View style={styles.info}>
                 <Text style={styles.price}>{item.price}</Text>
@@ -41,10 +40,10 @@ const styles = StyleSheet.create({
     card: {
         width: '47%',
         borderRadius: THEME.borderRadius.md,
-        backgroundColor: '#fff',
-        marginBottom: 16,
+        backgroundColor: COLORS.white,
+        marginBottom: THEME.spacing.md,
         elevation: 3.5,
-        shadowColor: '#000',
+        shadowColor: COLORS.black,
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 1 },
         shadowRadius: 2,
@@ -58,26 +57,18 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: THEME.borderRadius.md,
         borderTopRightRadius: THEME.borderRadius.md,
     },
-    heartButton: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        padding: 6,
-        borderRadius: THEME.borderRadius.full,
-    },
     info: {
-        padding: 10,
+        padding: THEME.spacing.sm,
     },
     price: {
         fontWeight: 'bold',
         fontSize: 16,
         marginBottom: 4,
-        color: '#000',
+        color: COLORS.black,
     },
     name: {
         fontSize: 14,
-        color: '#555',
+        color: COLORS.gray,
     },
 });
 

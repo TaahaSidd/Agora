@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons, Feather } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 const BottomNavBar = ({ active, setActive }) => {
+    const navigation = useNavigation();
     return (
         <View style={styles.container}>
             {/* Home */}
@@ -25,18 +27,16 @@ const BottomNavBar = ({ active, setActive }) => {
                 />
                 <Text style={[styles.label, active === 'Activity' && styles.activeLabel]}>Activity</Text>
             </TouchableOpacity>
-
             {/* Center Plus Button */}
             <View style={styles.centerButtonWrapper}>
                 <TouchableOpacity
                     style={styles.centerButton}
-                    onPress={() => alert('Plus Action!')}
+                    onPress={() => navigation.navigate('AddListingScreen')}
                     activeOpacity={0.8}
                 >
                     <Ionicons name="add" size={32} color="#fff" />
                 </TouchableOpacity>
             </View>
-
             {/* Chats */}
             <TouchableOpacity style={styles.navItem} onPress={() => setActive('Chats')}>
                 <Feather
@@ -113,3 +113,5 @@ const styles = StyleSheet.create({
 });
 
 export default BottomNavBar;
+
+//extra white space in bottomnav bar***

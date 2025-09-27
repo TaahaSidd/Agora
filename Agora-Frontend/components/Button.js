@@ -35,6 +35,8 @@ const styles = StyleSheet.create({
     },
     primary: {
         backgroundColor: COLORS.primary,
+        borderWidth:2,
+        borderColor: COLORS.primary,
     },
     secondary: {
         backgroundColor: 'transparent',
