@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, THEME } from '../utils/colors';
+import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
 const SuccessModal = ({ visible, message, onClose }) => {
     return (

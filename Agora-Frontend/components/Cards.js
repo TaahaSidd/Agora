@@ -9,8 +9,12 @@ const Card = ({ item }) => {
     const navigation = useNavigation();
 
     const handlePress = () => {
-        navigation.navigate('ProductDetails', { item });
+        navigation.navigate('ProductStack', {
+            screen: 'ProductDetailsScreen',
+            params: { item },
+        });
     };
+
 
     return (
         <TouchableOpacity
