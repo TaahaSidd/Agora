@@ -2,18 +2,21 @@ import React, { useState } from 'react';
 import {
     View,
     Text,
-    TextInput,
     StyleSheet,
     TouchableOpacity,
-    Alert,
     KeyboardAvoidingView,
     Platform,
+    Dimensions,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { COLORS } from '../utils/colors';
 import { apiPost } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import InputField from '../components/InputField';
+import ToastMessage from '../components/ToastMessage';
 
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
@@ -21,14 +24,19 @@ export default function LoginScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+
+    const showToast = ({ type, title, message }) => {
+        setToast({ visible: true, type, title, message });
+    };
+
     const onLogin = async () => {
         if (!email.trim() || !password) {
-            Alert.alert('Validation Error', 'Please enter email and password.');
-            return;
-        }
-        const emailRegex = /\S+@\S+\.\S+/;
-        if (!emailRegex.test(email)) {
-            Alert.alert('Validation Error', 'Please enter a valid email address.');
+            showToast({
+                type: 'error',
+                title: 'Validation Error',
+                message: 'Please enter email and password',
+            });
             return;
         }
 
@@ -38,10 +46,11 @@ export default function LoginScreen({ navigation }) {
             await AsyncStorage.setItem('token', data.jwt);
             navigation.replace('MainLayout');
         } catch (error) {
-            Alert.alert(
-                'Login Failed',
-                error.response?.data?.message || error.message || 'Something went wrong.'
-            );
+            showToast({
+                type: 'error',
+                title: 'Login Failed',
+                message: error.response?.data?.message || error.message || 'Something went wrong.',
+            });
         } finally {
             setLoading(false);
         }
@@ -52,46 +61,54 @@ export default function LoginScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
         >
+            {/* Background Wavy Shape */}
+            <Svg
+                height="400"
+                width={width}
+                viewBox={`0 0 ${width} 400`}
+                style={styles.wavyBackground}
+            >
+                <Path
+                    d={`M0 250 C ${width * 0.25} 350, ${width * 0.75} 150, ${width} 250 L ${width} 0 L0 0 Z`}
+                    fill={COLORS.primary}
+                />
+            </Svg>
+
             <View style={styles.inner}>
                 <Text style={styles.title}>Welcome Back</Text>
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
+                <InputField
+                    label="Email"
+                    placeholder="Enter your email"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
                 />
 
-                <View style={styles.passwordContainer}>
-                    <TextInput
-                        style={[styles.input, { paddingRight: 50 }]}
-                        placeholder="Password"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry={!showPassword}
-                        autoCapitalize="none"
-                    />
-                    <TouchableOpacity
-                        style={styles.showHideButton}
-                        onPress={() => setShowPassword((prev) => !prev)}
-                    >
-                        <MaterialCommunityIcons
-                            name={showPassword ? 'eye' : 'eye-off'}
-                            size={24}
-                            color={COLORS.primary}
-                        />
-                    </TouchableOpacity>
-                </View>
+                <InputField
+                    label="Password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    rightIcon={
+                        <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+                            <MaterialCommunityIcons
+                                name={showPassword ? 'eye' : 'eye-off'}
+                                size={22}
+                                color={COLORS.primary}
+                            />
+                        </TouchableOpacity>
+                    }
+                />
 
                 <TouchableOpacity
                     onPress={() =>
-                        Alert.alert(
-                            'Forgot Password',
-                            'This will trigger your reset password flow.'
-                        )
+                        showToast({
+                            type: 'info',
+                            title: 'Forgot Password',
+                            message: 'This will trigger your reset password flow.',
+                        })
                     }
                 >
                     <Text style={styles.forgotText}>Forgot Password?</Text>
@@ -112,43 +129,37 @@ export default function LoginScreen({ navigation }) {
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {toast.visible && (
+                <ToastMessage
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                    onHide={() => setToast({ ...toast, visible: false })}
+                />
+            )}
         </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.darkBlue, justifyContent: 'center' },
-    inner: { padding: 20 },
+    container: { flex: 1, backgroundColor: COLORS.white },
+    wavyBackground: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+    },
+    inner: {
+        flex: 1,
+        padding: 20,
+        justifyContent: 'center',
+    },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
         color: COLORS.white,
         marginBottom: 30,
         alignSelf: 'center',
-    },
-    input: {
-        backgroundColor: COLORS.white,
-        borderRadius: 12,
-        paddingHorizontal: 18,
-        paddingVertical: 14,
-        marginBottom: 15,
-        fontSize: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    passwordContainer: {
-        position: 'relative',
-        justifyContent: 'center',
-    },
-    showHideButton: {
-        position: 'absolute',
-        right: 18,
-        top: 10,
-        zIndex: 1,
-        padding: 5,
     },
     forgotText: {
         color: COLORS.primary,
@@ -181,9 +192,9 @@ const styles = StyleSheet.create({
         marginTop: 25,
     },
     signupText: {
-        color: COLORS.white,
+        color: COLORS.black,
         fontSize: 16,
-        opacity: 0.5,
+        opacity: 0.7,
     },
     signupLink: {
         color: COLORS.primary,

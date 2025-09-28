@@ -9,10 +9,13 @@ import {
     Image,
     StatusBar,
     ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
+import Button from '../components/Button';
 
 const MakeOfferScreen = ({ navigation, route }) => {
     const { item } = route.params; // item = { name, image, price, sellerName }
@@ -24,17 +27,18 @@ const MakeOfferScreen = ({ navigation, route }) => {
 
     const handlePresetPress = (percent) => {
         setSelectedPreset(percent);
-        setCustomOffer(''); // clear custom input when preset selected
+        setCustomOffer('');
     };
 
     const handleCustomChange = (value) => {
         setCustomOffer(value);
-        setSelectedPreset(null); // deselect presets if typing custom
+        setSelectedPreset(null);
     };
 
     const handleMakeOffer = () => {
+        const basePrice = Number(item.price);
         const offer = selectedPreset
-            ? (item.price * selectedPreset) / 100
+            ? (basePrice * selectedPreset) / 100
             : parseFloat(customOffer);
 
         if (!offer || offer <= 0) {
@@ -42,13 +46,8 @@ const MakeOfferScreen = ({ navigation, route }) => {
             return;
         }
 
-        // TODO: send offer to backend
-        console.log('Offer sent:', offer);
-
-        // success modal / feedback
-        alert(`Offer of $${offer.toFixed(2)} sent to seller!`);
-
-        navigation.goBack(); // or navigate to "Your Offers"
+        alert(`Offer of ₹${offer.toFixed(2)} sent to seller!`);
+        navigation.goBack();
     };
 
     return (
@@ -59,59 +58,73 @@ const MakeOfferScreen = ({ navigation, route }) => {
                     <Ionicons name="arrow-back" size={24} color={COLORS.black} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{item.sellerName}</Text>
-                <View style={{ width: 24 }} /> {/* placeholder for alignment */}
+                <View style={{ width: 24 }} />
             </View>
 
+            {/* Main Content */}
             <ScrollView contentContainerStyle={styles.container}>
                 {/* Item Box */}
                 <View style={styles.itemBox}>
-                    <Image source={{ uri: item.image }} style={styles.itemImage} />
+                    <Image
+                        source={item.image || require('../assets/bike.jpg')}
+                        style={styles.itemImage}
+                    />
                     <View style={{ flex: 1, marginLeft: 12 }}>
                         <Text style={styles.itemName}>{item.name}</Text>
-                        <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                        <Text style={styles.itemPrice}>₹ {Number(item.price).toLocaleString()}</Text>
                     </View>
                 </View>
-
-                {/* Offer Box */}
-                <Text style={styles.sectionTitle}>Make an Offer</Text>
-
-                {/* Preset Buttons */}
-                <View style={styles.presetsContainer}>
-                    {presetPercentages.map((percent) => (
-                        <TouchableOpacity
-                            key={percent}
-                            style={[
-                                styles.presetButton,
-                                selectedPreset === percent && { backgroundColor: COLORS.primary },
-                            ]}
-                            onPress={() => handlePresetPress(percent)}
-                        >
-                            <Text
-                                style={[
-                                    styles.presetText,
-                                    selectedPreset === percent && { color: COLORS.white },
-                                ]}
-                            >
-                                {percent}%
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-
-                {/* Custom Input */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Enter custom price"
-                    keyboardType="numeric"
-                    value={customOffer}
-                    onChangeText={handleCustomChange}
-                />
-
-                {/* Make Offer Button */}
-                <TouchableOpacity style={styles.makeOfferButton} onPress={handleMakeOffer}>
-                    <Text style={styles.makeOfferText}>Make Offer</Text>
-                </TouchableOpacity>
             </ScrollView>
+
+            {/* Offer Section at Bottom */}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={80}
+            >
+                <View style={styles.offerSection}>
+                    <Text style={styles.sectionTitle}>Make an Offer</Text>
+
+                    {/* Preset Buttons */}
+                    <View style={styles.presetsContainer}>
+                        {presetPercentages.map((percent) => (
+                            <TouchableOpacity
+                                key={percent}
+                                style={[
+                                    styles.presetButton,
+                                    selectedPreset === percent && { backgroundColor: COLORS.primary },
+                                ]}
+                                onPress={() => handlePresetPress(percent)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.presetText,
+                                        selectedPreset === percent && { color: COLORS.white },
+                                    ]}
+                                >
+                                    {percent}%
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Custom Input */}
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter custom price"
+                        keyboardType="numeric"
+                        value={customOffer}
+                        onChangeText={handleCustomChange}
+                    />
+
+                    {/* Make Offer Button */}
+                    <Button
+                        title="Make Offer"
+                        onPress={handleMakeOffer}
+                        variant="primary"
+                        style={{ marginTop: 10 }}
+                    />
+                </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -132,29 +145,44 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         backgroundColor: '#f5f5f5',
         padding: THEME.spacing.md,
-        borderRadius: 12,
-        marginBottom: 24,
-        alignItems: 'center',
+        borderRadius: THEME.borderRadius.md,
+        marginBottom: THEME.spacing.lg,
+        alignItems: 'flex-start', // top align text
     },
-    itemImage: { width: 80, height: 80, borderRadius: 12 },
+    itemImage: { width: 80, height: 80, borderRadius: THEME.borderRadius.md },
     itemName: { fontSize: 18, fontWeight: '700', color: COLORS.black },
     itemPrice: { fontSize: 16, color: COLORS.gray, marginTop: 4 },
     sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12, color: COLORS.black },
-    presetsContainer: { flexDirection: 'row', marginBottom: 12, justifyContent: 'space-between' },
+    offerSection: {
+        padding: THEME.spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+        backgroundColor: COLORS.white,
+    },
+    presetsContainer: {
+        flexDirection: 'row',
+        marginBottom: 16,
+        justifyContent: 'space-between'
+    },
     presetButton: {
         flex: 1,
-        marginHorizontal: 4,
-        paddingVertical: 14,
-        borderRadius: 12,
+        marginHorizontal: 6,
+        paddingVertical: 28,
+        borderRadius: THEME.borderRadius.lg,
         borderWidth: 1,
         borderColor: COLORS.primary,
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    presetText: { color: COLORS.primary, fontWeight: '700', fontSize: 16 },
+    presetText: {
+        color: COLORS.primary,
+        fontWeight: '700',
+        fontSize: 16,
+    },
     input: {
         borderWidth: 1,
         borderColor: '#ddd',
-        borderRadius: 12,
+        borderRadius: THEME.borderRadius.md,
         paddingVertical: 12,
         paddingHorizontal: 16,
         fontSize: 16,
@@ -162,13 +190,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         color: COLORS.black,
     },
-    makeOfferButton: {
-        backgroundColor: COLORS.primary,
+    bigButton: {
         paddingVertical: 16,
-        borderRadius: 12,
-        alignItems: 'center',
+        borderRadius: THEME.borderRadius.lg,
     },
-    makeOfferText: { color: COLORS.white, fontSize: 18, fontWeight: '700' },
+    bigButtonText: {
+        fontSize: 20,
+        fontWeight: '700',
+    },
 });
 
 export default MakeOfferScreen;
