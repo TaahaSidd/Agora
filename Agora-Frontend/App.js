@@ -4,6 +4,7 @@ import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SignUpProvider } from './context/SignUpContext';
+import Toast from 'react-native-toast-message';
 
 import SplashScreen from './screens/SplashScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -25,10 +26,19 @@ import MakeOfferScreen from './screens/MakeOfferScreen';
 import BottomNavBar from './components/BottomNavBar';
 
 const Stack = createNativeStackNavigator();
+const ProductStack = createNativeStackNavigator();
+
+function ProductStackScreen() {
+  return (
+    <ProductStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProductStack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
+      <ProductStack.Screen name="MakeOfferScreen" component={MakeOfferScreen} />
+    </ProductStack.Navigator>
+  );
+}
 
 function MainLayout({ navigation }) {
   const [activeScreen, setActiveScreen] = useState('Home');
-
 
   const renderScreen = () => {
     switch (activeScreen) {
@@ -73,22 +83,16 @@ export default function App() {
           <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="Notification" component={NotificationScreen} />
 
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
-            <Stack.Screen name="MakeOfferScreen" component={MakeOfferScreen} />
-          </Stack.Navigator>
+          {/* Wrap the nested stack navigator inside a screen */}
+          <Stack.Screen name="ProductStack" component={ProductStackScreen} />
 
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
           <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-
           <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
-
           <Stack.Screen name="AddListingScreen" component={AddListingScreen} />
-
-
-
         </Stack.Navigator>
+        <Toast />
       </NavigationContainer>
     </GestureHandlerRootView>
   );
