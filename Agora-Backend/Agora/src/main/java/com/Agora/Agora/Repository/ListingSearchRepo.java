@@ -19,9 +19,10 @@ public class ListingSearchRepo {
             }
             String pattern = "%" + keyword.toLowerCase() + "%";
 
-            return cb.or(cb.like(root.get("title"), pattern),
-                    cb.like(root.get("category"), pattern),
-                    cb.like(root.get("condition"), pattern));
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), pattern),
+                    cb.like(cb.lower(root.get("category")), pattern),
+                    cb.like(cb.lower(root.get("itemCondition")), pattern));
         });
     }
 
@@ -43,12 +44,9 @@ public class ListingSearchRepo {
             if (category == null || category.isEmpty()) {
                 return null;
             }
-
             String pattern = "%" + category.toLowerCase() + "%";
-
-            return cb.like(root.get(category), pattern);
+            return cb.like(cb.lower(root.get("category")), pattern);
         });
-
     }
 
     // Searching by min and max price;
@@ -69,13 +67,13 @@ public class ListingSearchRepo {
     }
 
     // Searching by Condition.
-    public static Specification<Listings> searchByCondition(ItemCondition condition) {
+    public static Specification<Listings> searchByCondition(ItemCondition itemCondition) {
         return (((root, cq, cb) -> {
-            if (condition == null) {
+            if (itemCondition == null) {
                 return null;
             }
 
-            String pattern = "%" + condition.name().toLowerCase() + "%";
+            String pattern = "%" + itemCondition.name().toLowerCase() + "%";
 
             return cb.like(root.get("condition"), pattern);
         }));

@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service;
 import com.Agora.Agora.Dto.Request.UserReqDto;
 import com.Agora.Agora.Dto.Response.UserResponseDto;
 import com.Agora.Agora.Mapper.DtoMapper;
+import com.Agora.Agora.Model.AgoraUser;
+import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.UserStatus;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
-import com.Agora.Agora.Model.College;
-import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.UserRepo;
 
@@ -58,7 +58,7 @@ public class UserService {
         user.setMobileNumber(req.getMobileNumber());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
         user.setIdCardNo(req.getIdCardNo());
-        user.setCollege(college); // Set the College relationship
+        user.setCollege(college);
         user.setRole(UserRole.STUDENT);
         user.setVerificationStatus(VerificationStatus.PENDING_EMAIL);
         user.setVerificationToken(UUID.randomUUID().toString());
@@ -73,7 +73,7 @@ public class UserService {
     // Getting current User.
     public AgoraUser getCurrentUser() {
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepo.findByUserEmail(userName)
+        return userRepo.findByUserName(userName)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found " + userName));
     }
 

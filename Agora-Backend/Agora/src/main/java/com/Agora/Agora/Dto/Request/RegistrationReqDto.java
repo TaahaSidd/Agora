@@ -36,7 +36,6 @@ public class RegistrationReqDto {
 
     @NotBlank(message = "Password cannot be blank")
     @Size(min = 6, max = 20)
-    // will use regex later.
     private String password;
 
     @NotNull(message = "College id cannot be blank")

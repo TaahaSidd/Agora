@@ -57,9 +57,8 @@ public class AgoraUser implements UserDetails {
     @Column(nullable = false)
     private String idCardNo; // will be adding college id images url. will be using cloudinary for that.
 
-    // Role = Student.
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false) // Mandatory.
+    @Column(nullable = false)
     private UserRole role;
 
     @Enumerated(EnumType.STRING)

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.Agora.Agora.Dto.Request.ListingFilterReqDto;
 import com.Agora.Agora.Dto.Request.ListingReqDto;
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Service.ListingService;
+import com.Agora.Agora.Service.UserService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class ListingController {
 
     private final ListingService listingService;
+    private final UserService userService;
 
     // Create.
     @PostMapping("/create")
@@ -52,7 +56,8 @@ public class ListingController {
     // Updating
     @PutMapping("update/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ListingResponseDto> updateListing(@Valid @PathVariable Long id, @Valid @RequestBody ListingReqDto req) {
+    public ResponseEntity<ListingResponseDto> updateListing(@Valid @PathVariable Long id,
+            @Valid @RequestBody ListingReqDto req) {
         return ResponseEntity.ok(listingService.updateListing(id, req));
     }
 
@@ -69,6 +74,13 @@ public class ListingController {
     public ResponseEntity<List<ListingResponseDto>> searchListings(@Valid @RequestBody ListingFilterReqDto req) {
         List<ListingResponseDto> results = listingService.searchListings(req);
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/my-listings")
+    public ResponseEntity<List<ListingResponseDto>> getMyListings(Authentication authentication) {
+        AgoraUser currentUser = userService.getCurrentUser();
+        List<ListingResponseDto> listings = listingService.getListingByUserId(currentUser.getId());
+        return ResponseEntity.ok(listings);
     }
 
 }

@@ -35,13 +35,17 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
+
                         // Auth endpoints (public)
                         .requestMatchers(HttpMethod.POST, "/Agora/auth/**").permitAll()
 
                         // Token validation (public so frontend can check token)
                         .requestMatchers(HttpMethod.POST, "/Agora/Token/validate").permitAll()
 
-                        // Listing.
+                        // Search endpoint — allow anyone
+                        .requestMatchers(HttpMethod.POST, "/Agora/listing/search").permitAll()
+
+                        // Listing endpoints
                         .requestMatchers(HttpMethod.POST, "/Agora/listing/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/Agora/listing/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/Agora/listing/**").authenticated()
@@ -65,11 +69,9 @@ public class SecurityConfig {
 
                         // College - Admin only.
                         .requestMatchers(HttpMethod.POST, "/Agora/college/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/Agora/college/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/Agora/college/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/Agora/college/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/Agora/college/**").hasRole("ADMIN")
-
-                )
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/college/**").hasRole("ADMIN"))
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

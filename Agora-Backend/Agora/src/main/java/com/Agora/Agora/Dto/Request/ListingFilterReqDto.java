@@ -20,7 +20,7 @@ public class ListingFilterReqDto {
     private String category;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
-    private ItemCondition condition;
+    private ItemCondition itemCondition;
 
     private Long collegeId;
     private String collegeName;

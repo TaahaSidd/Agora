@@ -32,7 +32,6 @@ public class ListingReqDto {
 
     @NotNull(message = "Item condition is required")
     private ItemCondition itemCondition;
-    @NotNull(message = "Item status is required")
     private ItemStatus itemStatus;
     // private ItemAvailability itemAvailability; will be added once testing is done
     // and tables are dropped and created again.

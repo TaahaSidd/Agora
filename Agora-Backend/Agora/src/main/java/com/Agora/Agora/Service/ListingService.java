@@ -12,10 +12,10 @@ import com.Agora.Agora.Dto.Request.ListingFilterReqDto;
 import com.Agora.Agora.Dto.Request.ListingReqDto;
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
 import com.Agora.Agora.Mapper.DtoMapper;
-import com.Agora.Agora.Model.College;
-import com.Agora.Agora.Model.Listings;
-import com.Agora.Agora.Model.Enums.ItemStatus;
 import com.Agora.Agora.Model.AgoraUser;
+import com.Agora.Agora.Model.College;
+import com.Agora.Agora.Model.Enums.ItemStatus;
+import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Repository.ListingSearchRepo;
 import com.Agora.Agora.Repository.ListingsRepo;
 
@@ -32,8 +32,6 @@ public class ListingService {
     private final ListingsRepo listingRepo;
     private final DtoMapper dto;
 
-    // Method for creating listings. This method will be used by the user to create
-    // a new listing.
     @Transactional
     public ListingResponseDto createListing(ListingReqDto req) {
         AgoraUser currentUser = userService.getCurrentUser();
@@ -51,7 +49,7 @@ public class ListingService {
         listing.setCategory(req.getCategory());
         listing.setPostDate(Instant.now());
         listing.setItemCondition(req.getItemCondition());
-        listing.setItemStatus(req.getItemStatus());
+        listing.setItemStatus(ItemStatus.AVAILABLE);
 
         listing.setSeller(currentUser);
         listing.setCollege(college);
@@ -140,8 +138,8 @@ public class ListingService {
             spec = spec.and(ListingSearchRepo.searchByPrice(req.getMinPrice(), req.getMaxPrice()));
         }
 
-        if (req.getCondition() != null) {
-            spec = spec.and(ListingSearchRepo.searchByCondition(req.getCondition()));
+        if (req.getItemCondition() != null) {
+            spec = spec.and(ListingSearchRepo.searchByCondition(req.getItemCondition()));
         }
 
         if (req.getCollegeId() != null) {
@@ -167,6 +165,13 @@ public class ListingService {
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
         listing.setItemStatus(ItemStatus.DEACTIVATED);
         listingRepo.save(listing);
+    }
+
+    public List<ListingResponseDto> getListingByUserId(Long userId) {
+        List<Listings> listings = listingRepo.findAllBySellerId(userId);
+        List<ListingResponseDto> responseDto = listings.stream().map(dto::mapToListingResponseDto)
+                .collect(Collectors.toList());
+        return responseDto;
     }
 
 }
