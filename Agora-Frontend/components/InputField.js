@@ -13,6 +13,7 @@ const InputField = ({
     keyboardType = 'default',
     style,
     inputStyle,
+    error,
 }) => {
     const [isFocused, setIsFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +27,7 @@ const InputField = ({
                     style={[
                         styles.input,
                         {
-                            borderColor: isFocused ? COLORS.primary : '#E5E5E5',
+                            borderColor: error ? 'red' : (isFocused ? COLORS.primary : '#E5E5E5'),
                             shadowOpacity: isFocused ? 0.15 : 0.08,
                         },
                         inputStyle,
@@ -55,6 +56,8 @@ const InputField = ({
                     </TouchableOpacity>
                 )}
             </View>
+
+            {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
     );
 };
@@ -83,6 +86,12 @@ const styles = StyleSheet.create({
         top: 12,
         zIndex: 1,
         padding: 5,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: 2,
+        marginLeft: 4,
     },
 });
 

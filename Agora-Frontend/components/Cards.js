@@ -9,10 +9,7 @@ const Card = ({ item }) => {
     const navigation = useNavigation();
 
     const handlePress = () => {
-        navigation.navigate('ProductStack', {
-            screen: 'ProductDetailsScreen',
-            params: { item },
-        });
+        navigation.navigate('ProductDetailsScreen', { item });
     };
 
 
@@ -27,7 +24,6 @@ const Card = ({ item }) => {
                     source={item.images ? item.images[0] : item.image}
                     style={styles.image}
                 />
-                {/* Use our reusable FavoriteButton */}
                 <FavoriteButton size={20} />
             </View>
             <View style={styles.info}>
