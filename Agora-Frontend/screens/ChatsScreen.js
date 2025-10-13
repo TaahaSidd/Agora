@@ -2,8 +2,7 @@ import React from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS } from '../utils/colors';
-
-const isAndroid = Platform.OS === 'android';
+import AppHeader from '../components/AppHeader';
 
 const chats = [
     {
@@ -51,7 +50,7 @@ const ChatScreen = () => {
         <TouchableOpacity
             style={styles.chatItem}
             onPress={() =>
-                navigation.navigate('ChatRoomScreen', { // fix the issue with chatroom not opening
+                navigation.navigate('ChatRoomScreen', {
                     chatId: item.id,
                     name: item.name,
                     avatar: item.avatar,
@@ -84,9 +83,7 @@ const ChatScreen = () => {
         <SafeAreaView style={styles.safeArea} edges={['top']}>
             <View style={styles.container}>
                 {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Chats</Text>
-                </View>
+                <AppHeader title="Chats" />
 
                 {/* Chats List */}
                 <FlatList
@@ -106,20 +103,8 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: COLORS.white,
-        paddingTop: isAndroid ? StatusBar.currentHeight : 0,
     },
     container: { flex: 1, backgroundColor: COLORS.white },
-    header: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: COLORS.darkBlue,
-    },
     chatItem: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -132,8 +117,8 @@ const styles = StyleSheet.create({
     chatContent: { flex: 1 },
     name: { fontSize: 16, fontWeight: '600', color: '#000', marginBottom: 2 },
     lastMessage: { fontSize: 14 },
-    sentMessage: { color: '#777' }, // lighter for sent
-    receivedMessage: { color: '#111' }, // darker for received
+    sentMessage: { color: '#777' },
+    receivedMessage: { color: '#111' },
     rightSection: { alignItems: 'flex-end', justifyContent: 'center' },
     time: { fontSize: 12, color: '#999', marginBottom: 4 },
     unreadDot: {
@@ -143,5 +128,4 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.primary,
     },
 });
-
 export default ChatScreen;

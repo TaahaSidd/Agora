@@ -9,12 +9,17 @@ import {
     Image,
     ScrollView,
     StatusBar,
+    ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
 import SuccessModal from '../components/Modal';
+import { apiPost } from '../services/api';
+
+import AppHeader from '../components/AppHeader';
 
 const AddListingScreen = ({ navigation }) => {
     const [listing, setListing] = useState({
@@ -26,33 +31,71 @@ const AddListingScreen = ({ navigation }) => {
         image: null,
     });
     const [modalVisible, setModalVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
 
     const handleChange = (key, value) => {
         setListing({ ...listing, [key]: value });
+        setErrors((prev) => ({ ...prev, [key]: null }));
     };
 
-    const handleCreate = () => {
-        // TODO: replace with API call
-        console.log('New listing:', listing);
-        setModalVisible(true);
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.7,
+        });
+
+        if (!result.canceled) {
+            handleChange('image', result.assets[0].uri);
+        }
+    };
+
+    const validateFields = () => {
+        const validationErrors = {};
+        if (!listing.title.trim()) validationErrors.title = 'Title is required';
+        if (!listing.description.trim()) validationErrors.description = 'Description is required';
+        if (!listing.price.trim() || isNaN(listing.price)) validationErrors.price = 'Valid price is required';
+        if (!listing.category) validationErrors.category = 'Category is required';
+        if (!listing.condition) validationErrors.condition = 'Condition is required';
+        if (!listing.image) validationErrors.image = 'Product image is required';
+        setErrors(validationErrors);
+        return Object.keys(validationErrors).length === 0;
+    };
+
+    const handleCreate = async () => {
+        if (!validateFields()) return;
+
+        setLoading(true);
+        try {
+            const payload = {
+                title: listing.title,
+                description: listing.description,
+                price: Number(listing.price),
+                category: listing.category,
+                itemCondition: listing.condition.toUpperCase(),
+                image: listing.image,
+            };
+
+            await apiPost('/listing/create', payload);
+
+            setModalVisible(true);
+        } catch (error) {
+            console.log('Error creating listing:', error);
+            alert('Failed to create listing');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white, paddingTop: StatusBar.currentHeight || 20 }}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color={COLORS.black} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Add Your Listing</Text>
-                <View style={{ width: 24 }} />
-            </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
+            <AppHeader title="Add Your Listing" onBack={() => navigation.goBack()} />
 
             <ScrollView contentContainerStyle={styles.container}>
-                {/* Image Selector */}
                 <TouchableOpacity
-                    style={styles.imageBox}
-                    onPress={() => alert('Image picker logic here')}
+                    style={[styles.imageBox, errors.image && { borderColor: 'red' }]}
+                    onPress={pickImage}
                 >
                     {listing.image ? (
                         <Image source={{ uri: listing.image }} style={styles.imagePreview} />
@@ -63,34 +106,36 @@ const AddListingScreen = ({ navigation }) => {
                         </View>
                     )}
                 </TouchableOpacity>
+                {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
 
-                {/* Inputs */}
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, errors.title && { borderColor: 'red' }]}
                     placeholder="Title"
                     value={listing.title}
                     onChangeText={(text) => handleChange('title', text)}
                 />
+                {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
 
                 <TextInput
-                    style={[styles.input, styles.textArea]}
+                    style={[styles.input, styles.textArea, errors.description && { borderColor: 'red' }]}
                     placeholder="Description"
                     multiline
                     numberOfLines={4}
                     value={listing.description}
                     onChangeText={(text) => handleChange('description', text)}
                 />
+                {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
 
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, errors.price && { borderColor: 'red' }]}
                     placeholder="Price"
                     keyboardType="numeric"
                     value={listing.price}
                     onChangeText={(text) => handleChange('price', text)}
                 />
+                {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
 
-                {/* Category Picker */}
-                <View style={styles.pickerWrapper}>
+                <View style={[styles.pickerWrapper, errors.category && { borderColor: 'red' }]}>
                     <Picker
                         selectedValue={listing.category}
                         onValueChange={(value) => handleChange('category', value)}
@@ -102,9 +147,9 @@ const AddListingScreen = ({ navigation }) => {
                         <Picker.Item label="Furniture" value="furniture" />
                     </Picker>
                 </View>
+                {errors.category && <Text style={styles.errorText}>{errors.category}</Text>}
 
-                {/* Condition Picker */}
-                <View style={styles.pickerWrapper}>
+                <View style={[styles.pickerWrapper, errors.condition && { borderColor: 'red' }]}>
                     <Picker
                         selectedValue={listing.condition}
                         onValueChange={(value) => handleChange('condition', value)}
@@ -115,14 +160,21 @@ const AddListingScreen = ({ navigation }) => {
                         <Picker.Item label="Used" value="used" />
                     </Picker>
                 </View>
+                {errors.condition && <Text style={styles.errorText}>{errors.condition}</Text>}
 
-                {/* Create Listing Button */}
-                <TouchableOpacity style={styles.button} onPress={handleCreate}>
-                    <Text style={styles.buttonText}>Create Listing</Text>
+                <TouchableOpacity
+                    style={[styles.button, loading && { opacity: 0.6 }]}
+                    onPress={handleCreate}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color={COLORS.white} size="small" />
+                    ) : (
+                        <Text style={styles.buttonText}>Create Listing</Text>
+                    )}
                 </TouchableOpacity>
             </ScrollView>
 
-            {/* Success Modal */}
             <SuccessModal
                 visible={modalVisible}
                 message="Your item has been successfully listed!"
@@ -136,16 +188,6 @@ const AddListingScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: THEME.spacing.md,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    headerTitle: { fontSize: 20, fontWeight: '700', color: COLORS.black },
     container: { padding: THEME.spacing.lg },
     imageBox: {
         borderWidth: 2,
@@ -187,7 +229,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 20,
     },
-    buttonText: { color: COLORS.white, fontSize: 18, fontWeight: '600' },
+    buttonText: {
+        color: COLORS.white,
+        fontSize: 18,
+        fontWeight: '600'
+    },
+    errorText: {
+        color: 'red',
+        marginBottom: THEME.spacing.sm,
+        marginLeft: 8,
+    },
 });
 
 export default AddListingScreen;

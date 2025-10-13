@@ -9,6 +9,8 @@ import ChatsScreen from '../screens/ChatsScreen';
 import ChatRoomScreen from '../screens/ChatRoomScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddListingScreen from '../screens/AddListingScreen';
+import EditListingScreen from '../screens/EditListingScreen';
+import MyListingsScreen from '../screens/MyListingsScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 
@@ -17,11 +19,13 @@ const Stack = createNativeStackNavigator();
 export default function MainLayout() {
     const [activeTab, setActiveTab] = React.useState('Home');
 
-    const renderStack = () => {
-        return (
+    return (
+        <View style={styles.container}>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {activeTab === 'Home' && (
-                    <Stack.Screen name="ExploreScreen" component={ExploreScreen} />
+                    <Stack.Screen name="ExploreScreen">
+                        {() => <ExploreScreen activeTab={activeTab} />}
+                    </Stack.Screen>
                 )}
                 {activeTab === 'Activity' && (
                     <Stack.Screen name="ActivityScreen" component={ActivityScreen} />
@@ -40,17 +44,16 @@ export default function MainLayout() {
                     </>
                 )}
                 <Stack.Screen name="AddListingScreen" component={AddListingScreen} />
+                <Stack.Screen name="EditListingScreen" component={EditListingScreen} />
+                <Stack.Screen name="MyListingsScreen" component={MyListingsScreen} />
             </Stack.Navigator>
-        );
-    };
-
-    return (
-        <View style={styles.container}>
-            <View style={styles.content}>{renderStack()}</View>
-            <BottomNavBar active={activeTab} setActive={setActiveTab} />
+            {['Home', 'Activity', 'Chats', 'Settings'].includes(activeTab) && (
+                <BottomNavBar active={activeTab} setActive={setActiveTab} />
+            )}
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: { flex: 1 },

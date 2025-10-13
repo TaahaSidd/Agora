@@ -4,52 +4,81 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    TextInput,
     FlatList,
     KeyboardAvoidingView,
     Platform,
     Alert,
+    Dimensions,
 } from 'react-native';
-import Autocomplete from 'react-native-autocomplete-input';
+import Svg, { Path } from 'react-native-svg';
 import { SignUpContext } from '../context/SignUpContext';
 import { COLORS } from '../utils/colors';
+import Button from '../components/Button';
+import InputField from '../components/InputField';
+import { getColleges } from '../services/api';
 
-const colleges = [
-    'Harvard University',
-    'Stanford University',
-    'Massachusetts Institute of Technology',
-    'University of California, Berkeley',
-    'University of Oxford',
-    'University of Cambridge',
-    'California Institute of Technology',
-    'Princeton University',
-    'Yale University',
-    'Columbia University',
-];
+const { width } = Dimensions.get('window');
 
 export default function SignUpStep3({ navigation }) {
     const { form, updateForm } = useContext(SignUpContext);
-    const [query, setQuery] = useState(form.college || '');
+    const [colleges, setColleges] = useState([]);
+    const [query, setQuery] = useState(form.collegeName || '');
     const [filteredColleges, setFilteredColleges] = useState([]);
+    const [selected, setSelected] = useState(false);
 
     useEffect(() => {
-        if (query.length > 0) {
+        const fetchColleges = async () => {
+            try {
+                const data = await getColleges();
+                const mapped = Array.isArray(data)
+                    ? data.map((c, index) => ({
+                        id: index.toString(),
+                        collegeName: c.collegeName,
+                    }))
+                    : [];
+
+                setColleges(mapped);
+            } catch (error) {
+                console.error("Error fetching colleges:", error.message || error);
+            }
+        };
+        fetchColleges();
+    }, []);
+
+    useEffect(() => {
+        if (query.length > 0 && !selected) {
             const filtered = colleges.filter(c =>
-                c.toLowerCase().includes(query.toLowerCase()),
+                c.collegeName.toLowerCase().includes(query.toLowerCase())
             );
             setFilteredColleges(filtered);
         } else {
             setFilteredColleges([]);
         }
-    }, [query]);
+    }, [query, colleges, selected]);
 
     const onNext = () => {
         if (!query.trim()) {
             Alert.alert('Validation Error', 'Please select your college.');
             return;
         }
-        updateForm('college', query);
+        if (!form.collegeId) {
+            Alert.alert('Validation Error', 'Please select a valid college from the list.');
+            return;
+        }
+        if (!form.idCardNo || form.idCardNo.trim() === '') {
+            Alert.alert('Validation Error', 'Please enter your College ID Card Number.');
+            return;
+        }
+        updateForm('collegeName', query);
         navigation.navigate('SignUpStep4');
+    };
+
+    const handleCollegeSelect = (college) => {
+        setQuery(college.collegeName);
+        updateForm('collegeName', college.collegeName);
+        updateForm('collegeId', college.id);
+        setSelected(true);
+        setFilteredColleges([]);
     };
 
     return (
@@ -57,79 +86,99 @@ export default function SignUpStep3({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
         >
-            <Text style={styles.title}>Step 3: College</Text>
-
-            <View style={styles.autocompleteContainer}>
-                <Autocomplete
-                    data={filteredColleges}
-                    defaultValue={query}
-                    onChangeText={text => setQuery(text)}
-                    placeholder="Type your college name"
-                    flatListProps={{
-                        keyExtractor: (_, idx) => idx.toString(),
-                        renderItem: ({ item }) => (
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setQuery(item);
-                                    setFilteredColleges([]);
-                                }}
-                            >
-                                <Text style={styles.itemText}>{item}</Text>
-                            </TouchableOpacity>
-                        ),
-                    }}
-                    inputContainerStyle={styles.input}
-                    listContainerStyle={styles.listContainer}
-                    listStyle={styles.list}
+            <Svg
+                height="400"
+                width={width}
+                viewBox={`0 0 ${width} 400`}
+                style={styles.wavyBackground}
+            >
+                <Path
+                    d={`M0 250 C ${width * 0.25} 350, ${width * 0.75} 150, ${width} 250 L ${width} 0 L0 0 Z`}
+                    fill={COLORS.primary}
                 />
-            </View>
+            </Svg>
 
-            <View style={styles.buttonsRow}>
-                <TouchableOpacity style={[styles.button, styles.backButton]} onPress={() => navigation.goBack()}>
-                    <Text style={styles.buttonText}>Back</Text>
-                </TouchableOpacity>
+            <View style={styles.inner}>
+                <View style={{ marginBottom: 20, position: 'relative', zIndex: 999 }}>
+                    <InputField
+                        label="College"
+                        placeholder="Enter college name"
+                        value={query}
+                        onChangeText={text => {
+                            setSelected(false);
+                            setQuery(text);
+                        }}
+                    />
 
-                <TouchableOpacity style={styles.button} onPress={onNext}>
-                    <Text style={styles.buttonText}>Next</Text>
-                </TouchableOpacity>
+                    {filteredColleges.length > 0 && (
+                        <View style={styles.dropdown}>
+                            <FlatList
+                                data={filteredColleges}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.dropdownItem}
+                                        onPress={() => handleCollegeSelect(item)}
+                                    >
+                                        <Text style={styles.dropdownText}>{item.collegeName}</Text>
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        </View>
+                    )}
+                </View>
+
+                <InputField
+                    label="College ID Card Number"
+                    placeholder="Enter your college ID card number"
+                    value={form.idCardNo || ''}
+                    onChangeText={value => updateForm('idCardNo', value)}
+                />
+
+                <View style={styles.buttonsRow}>
+                    <Button
+                        title="Back"
+                        onPress={() => navigation.goBack()}
+                        variant="secondary"
+                        style={{ flex: 1, marginRight: 10 }}
+                        textStyle={{ color: COLORS.primary }}
+                    />
+                    <Button
+                        title="Next"
+                        onPress={onNext}
+                        variant="primary"
+                        style={{ flex: 1, marginLeft: 10 }}
+                    />
+                </View>
             </View>
         </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.darkBlue, padding: 20, justifyContent: 'center' },
-    title: { fontSize: 24, fontWeight: 'bold', color: COLORS.white, marginBottom: 20, alignSelf: 'center' },
-    autocompleteContainer: {
-        zIndex: 1,
-        marginBottom: 15,
-    },
-    input: {
+    container: { flex: 1, backgroundColor: COLORS.white },
+    wavyBackground: { position: 'absolute', top: 0 },
+    inner: { flex: 1, justifyContent: 'center', padding: 20 },
+    dropdown: {
+        position: 'absolute',
+        top: 65,
+        left: 0,
+        right: 0,
         backgroundColor: COLORS.white,
-        borderRadius: 6,
-        paddingHorizontal: 15,
+        borderRadius: 8,
+        maxHeight: 150,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        zIndex: 999,
+    },
+    dropdownItem: {
         paddingVertical: 12,
+        paddingHorizontal: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
     },
-    listContainer: {
-        backgroundColor: COLORS.white,
-        borderRadius: 6,
-    },
-    list: {
-        maxHeight: 120,
-    },
-    itemText: {
-        padding: 10,
-        fontSize: 16,
-    },
-    buttonsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    button: {
-        backgroundColor: COLORS.primary,
-        paddingVertical: 15,
-        borderRadius: 6,
-        alignItems: 'center',
-        flex: 1,
-        marginHorizontal: 5,
-    },
-    backButton: { backgroundColor: COLORS.gray },
-    buttonText: { color: COLORS.white, fontSize: 18, fontWeight: 'bold' },
+    dropdownText: { fontSize: 16, color: COLORS.black },
+    buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
 });

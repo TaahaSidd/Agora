@@ -1,16 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet, Easing, Alert, Text } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import { authApiPost } from '../services/api';
 import { COLORS } from '../utils/colors';
-
-const BASE_URL = "http://10.0.2.2:9000/Agora/Token";
+import { jwtDecode } from 'jwt-decode';
 
 export default function SplashScreen({ navigation }) {
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        // 1️⃣ Start splash animation
         Animated.parallel([
             Animated.timing(scaleAnim, {
                 toValue: 1,
@@ -25,45 +24,44 @@ export default function SplashScreen({ navigation }) {
             }),
         ]).start();
 
-        // 2️⃣ After splash delay, check token
         const timer = setTimeout(async () => {
             try {
-                const token = await AsyncStorage.getItem('token');
+                const accessToken = await SecureStore.getItemAsync('accessToken');
+                const refreshToken = await SecureStore.getItemAsync('refreshToken');
 
-                if (!token) {
-                    // No token → Login
+                if (!accessToken || !refreshToken) {
                     navigation.replace('Login');
                     return;
                 }
 
-                // 3️⃣ Validate token with backend
-                const response = await fetch(`${BASE_URL}/validate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
+                const { exp } = jwtDecode(accessToken);
+                const jwtExpired = Date.now() >= exp * 1000;
 
-                if (response.ok) {
-                    // Valid token → Explore
-                    navigation.replace('MainLayout');
-                } else {
-                    // Invalid/expired token → remove and go to Login
-                    await AsyncStorage.removeItem('token');
-                    navigation.replace('Login');
+                let validToken = accessToken;
+
+                if (jwtExpired) {
+                    try {
+                        const res = await authApiPost('/auth/refresh', { refreshToken });
+                        validToken = res.jwt;
+                    } catch {
+                        await SecureStore.deleteItemAsync('accessToken');
+                        await SecureStore.deleteItemAsync('refreshToken');
+                        navigation.replace('Login');
+                        return;
+                    }
                 }
+                navigation.replace('MainLayout');
             } catch (error) {
-                // Network/server error
                 console.log('Token validation failed:', error);
-                await AsyncStorage.removeItem('token');
+                await SecureStore.deleteItemAsync('accessToken');
+                await SecureStore.deleteItemAsync('refreshToken');
                 Alert.alert(
                     'Network Error',
                     'Unable to verify login. Please check your connection.',
                     [{ text: 'OK', onPress: () => navigation.replace('Login') }]
                 );
             }
-        }, 2500); // 2.5s splash
+        }, 3000);
 
         return () => clearTimeout(timer);
     }, [navigation, scaleAnim, opacityAnim]);
@@ -82,6 +80,7 @@ export default function SplashScreen({ navigation }) {
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {

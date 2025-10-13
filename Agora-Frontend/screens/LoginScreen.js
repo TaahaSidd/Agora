@@ -11,7 +11,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { COLORS } from '../utils/colors';
 import { apiPost } from '../services/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import InputField from '../components/InputField';
 import ToastMessage from '../components/ToastMessage';
@@ -23,28 +23,44 @@ export default function LoginScreen({ navigation }) {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-
     const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+    const [errors, setErrors] = useState({});
 
     const showToast = ({ type, title, message }) => {
         setToast({ visible: true, type, title, message });
     };
 
+    const validateFields = () => {
+        const validationErrors = {};
+        if (!email.trim()) validationErrors.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(email)) validationErrors.email = 'Email format is invalid';
+
+        if (!password) validationErrors.password = 'Password is required';
+
+        setErrors(validationErrors);
+        return Object.keys(validationErrors).length === 0;
+    };
+
+    const storeTokens = async (jwt, refreshToken) => {
+        await SecureStore.setItemAsync('accessToken', jwt);
+        await SecureStore.setItemAsync('refreshToken', refreshToken);
+
+        const checkAccess = await SecureStore.getItemAsync('accessToken');
+        const checkRefresh = await SecureStore.getItemAsync('refreshToken');
+        console.log('✅ Tokens stored successfully:', {
+            accessToken: checkAccess,
+            refreshToken: checkRefresh,
+        });
+    };
+
     const onLogin = async () => {
-        if (!email.trim() || !password) {
-            showToast({
-                type: 'error',
-                title: 'Validation Error',
-                message: 'Please enter email and password',
-            });
-            return;
-        }
+        if (!validateFields()) return;
 
         setLoading(true);
         try {
             const data = await apiPost('/auth/login', { email, password });
-            await AsyncStorage.setItem('token', data.jwt);
-            navigation.replace('MainLayout');
+            await storeTokens(data.jwt, data.refreshToken);
+            navigation.navigate('MainLayout');
         } catch (error) {
             showToast({
                 type: 'error',
@@ -61,7 +77,6 @@ export default function LoginScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
         >
-            {/* Background Wavy Shape */}
             <Svg
                 height="400"
                 width={width}
@@ -81,15 +96,22 @@ export default function LoginScreen({ navigation }) {
                     label="Email"
                     placeholder="Enter your email"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(text) => {
+                        setEmail(text);
+                        setErrors((prev) => ({ ...prev, email: null }));
+                    }}
                     keyboardType="email-address"
+                    error={errors.email}
                 />
 
                 <InputField
                     label="Password"
                     placeholder="Enter your password"
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={(text) => {
+                        setPassword(text);
+                        setErrors((prev) => ({ ...prev, password: null }));
+                    }}
                     secureTextEntry={!showPassword}
                     rightIcon={
                         <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
@@ -100,6 +122,7 @@ export default function LoginScreen({ navigation }) {
                             />
                         </TouchableOpacity>
                     }
+                    error={errors.password}
                 />
 
                 <TouchableOpacity

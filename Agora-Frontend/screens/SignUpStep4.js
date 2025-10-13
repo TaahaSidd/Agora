@@ -2,15 +2,21 @@ import React, { useContext, useState } from 'react';
 import {
     View,
     Text,
-    TextInput,
     StyleSheet,
-    TouchableOpacity,
     Alert,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    Dimensions,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { SignUpContext } from '../context/SignUpContext';
 import { COLORS } from '../utils/colors';
 import { apiPost } from '../services/api';
+import InputField from '../components/InputField';
+import Button from '../components/Button';
+
+const { width } = Dimensions.get('window');
 
 export default function SignUpStep4({ navigation }) {
     const { form, updateForm } = useContext(SignUpContext);
@@ -33,18 +39,19 @@ export default function SignUpStep4({ navigation }) {
         setLoading(true);
         try {
             const body = {
+                userName: form.userName,
                 firstName: form.firstName,
                 lastName: form.lastName,
-                userName: form.username,
-                mobileNumber: form.mobile,
-                userEmail: form.email,
-                idCardNo: form.idCard,
-                collegeId: form.college,
+                mobileNumber: form.mobileNumber,
+                userEmail: form.userEmail,
+                idCardNo: form.idCardNo,
+                collegeId: form.collegeId,
                 password: form.password,
             };
+
             const data = await apiPost('/auth/register', body);
             Alert.alert('Success', 'Account created successfully!');
-            navigation.replace('Explore');
+            navigation.replace('Mainlayout');
         } catch (error) {
             Alert.alert('Signup Failed', error.response?.data?.message || error.message);
         } finally {
@@ -53,63 +60,67 @@ export default function SignUpStep4({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Step 4: Set Password</Text>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.container}
+        >
+            <Svg
+                height="400"
+                width={width}
+                viewBox={`0 0 ${width} 400`}
+                style={styles.wavyBackground}
+            >
+                <Path
+                    d={`M0 250 C ${width * 0.25} 350, ${width * 0.75} 150, ${width} 250 L ${width} 0 L0 0 Z`}
+                    fill={COLORS.primary}
+                />
+            </Svg>
+            <View style={styles.inner}>
+                <Text style={styles.title}>Set Your Password</Text>
+                <InputField
+                    label="Password"
+                    placeholder="Enter password"
+                    value={form.password}
+                    onChangeText={text => updateForm('password', text)}
+                    secureTextEntry
+                    autoCapitalize="none"
+                />
+                <InputField
+                    label="Confirm Password"
+                    placeholder="Re-enter password"
+                    value={form.confirmPassword}
+                    onChangeText={text => updateForm('confirmPassword', text)}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    style={{ marginBottom: 20 }}
+                />
 
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={form.password}
-                onChangeText={text => updateForm('password', text)}
-                secureTextEntry
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                value={form.confirmPassword}
-                onChangeText={text => updateForm('confirmPassword', text)}
-                secureTextEntry
-                autoCapitalize="none"
-            />
-
-            <View style={styles.buttonsRow}>
-                <TouchableOpacity style={[styles.button, styles.backButton]} onPress={() => navigation.goBack()}>
-                    <Text style={styles.buttonText}>Back</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
-                    {loading ? (
-                        <ActivityIndicator color={COLORS.white} />
-                    ) : (
-                        <Text style={styles.buttonText}>Submit</Text>
-                    )}
-                </TouchableOpacity>
+                <View style={styles.buttonsRow}>
+                    <Button
+                        title="Back"
+                        onPress={() => navigation.goBack()}
+                        variant="secondary"
+                        style={{ flex: 1, marginRight: 10 }}
+                        textStyle={{ color: COLORS.primary }}
+                    />
+                    <Button
+                        title={loading ? '' : 'Submit'}
+                        onPress={onSubmit}
+                        variant="primary"
+                        style={{ flex: 1, marginLeft: 10 }}
+                    >
+                        {loading && <ActivityIndicator color={COLORS.white} />}
+                    </Button>
+                </View>
             </View>
-        </View>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.darkBlue, padding: 20, justifyContent: 'center' },
-    title: { fontSize: 24, fontWeight: 'bold', color: COLORS.white, marginBottom: 20, alignSelf: 'center' },
-    input: {
-        backgroundColor: COLORS.white,
-        borderRadius: 6,
-        paddingHorizontal: 15,
-        paddingVertical: 12,
-        marginBottom: 15,
-        fontSize: 16,
-    },
-    buttonsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    button: {
-        backgroundColor: COLORS.primary,
-        paddingVertical: 15,
-        borderRadius: 6,
-        alignItems: 'center',
-        flex: 1,
-        marginHorizontal: 5,
-    },
-    backButton: { backgroundColor: COLORS.gray },
-    buttonText: { color: COLORS.white, fontSize: 18, fontWeight: 'bold' },
+    container: { flex: 1, backgroundColor: COLORS.white },
+    wavyBackground: { position: 'absolute', top: 0 },
+    inner: { flex: 1, justifyContent: 'center', padding: 20 },
+    title: { fontSize: 22, fontWeight: '600', color: COLORS.black, marginBottom: 20, textAlign: 'center' },
+    buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
 });

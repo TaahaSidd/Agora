@@ -1,42 +1,47 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, SafeAreaView, StyleSheet, Platform, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, SafeAreaView, StyleSheet, Platform, StatusBar, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import Button from '../components/Button';
 import Card from '../components/Cards';
 import { THEME } from '../utils/theme';
+import { apiGet } from '../services/api';
 
 const isAndroid = Platform.OS === 'android';
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation, route }) => {
+    const { sellerId } = route.params;
+    const [seller, setSeller] = useState(null);
+    const [listings, setListings] = useState([]);
     const [isFollowing, setIsFollowing] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    const listings = [
-        {
-            id: '1',
-            name: 'Laptop',
-            price: '₹40,000',
-            images: [require('../assets/22a475e555d7-best-laptop-deals.jpg')]
-        },
-        {
-            id: '2',
-            name: 'Bike',
-            price: '₹55,000',
-            images: ['https://via.placeholder.com/150']
-        },
-        {
-            id: '3',
-            name: 'Shoes',
-            price: '₹2,500',
-            images: ['https://via.placeholder.com/150']
-        },
-        {
-            id: '4',
-            name: 'Cap',
-            price: '₹500',
-            images: ['https://via.placeholder.com/150']
-        },
-    ];
+    useEffect(() => {
+        const loadSellerData = async () => {
+            try {
+                setLoading(true);
+
+                const response = await apiGet(`/profile/seller/${sellerId}`);
+                setSeller(response.data.seller);
+                setListings(response.data.listings);
+
+                setLoading(false);
+            } catch (err) {
+                console.error("Failed to load seller profile:", err);
+                setLoading(false);
+            }
+        };
+
+        loadSellerData();
+    }, [sellerId]);
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+            </View>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -55,26 +60,27 @@ const ProfileScreen = ({ navigation }) => {
 
                 {/* Profile Info */}
                 <View style={styles.profileSection}>
-                    <View style={styles.avatarPlaceholder} />
+                    <Image
+                        source={{ uri: seller?.profilePic || 'https://i.pravatar.cc/100' }}
+                        style={styles.avatarPlaceholder}
+                    />
                     <View style={styles.profileDetails}>
                         <View style={styles.nameRow}>
-                            <Text style={styles.name}>John Doe</Text>
-                            <View style={styles.verifiedTag}>
-                                <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
-                                {/* <Text style={styles.verifiedText}>Verified</Text> */}
-                            </View>
+                            <Text style={styles.name}>{seller?.userName || 'Seller'}</Text>
+                            {seller?.verified && (
+                                <View style={styles.verifiedTag}>
+                                    <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
+                                </View>
+                            )}
                         </View>
 
-                        {/* College Name */}
-                        <Text style={styles.collegeName}>Amity University</Text>
+                        <Text style={styles.collegeName}>{seller?.collegeName || 'College'}</Text>
 
                         <Button
                             title={isFollowing ? "Following" : "Follow"}
                             variant={isFollowing ? "primary" : "secondary"}
                             style={styles.followBtn}
-                            textStyle={{
-                                color: isFollowing ? COLORS.white : COLORS.primary,
-                            }}
+                            textStyle={{ color: isFollowing ? COLORS.white : COLORS.primary }}
                             onPress={() => setIsFollowing(!isFollowing)}
                         />
                     </View>
@@ -84,7 +90,7 @@ const ProfileScreen = ({ navigation }) => {
                 <Text style={styles.listingsHeader}>Listings</Text>
                 <FlatList
                     data={listings}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => item.id.toString()}
                     numColumns={2}
                     columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 16 }}
                     renderItem={({ item }) => <Card item={item} />}
@@ -123,7 +129,6 @@ const styles = StyleSheet.create({
     nameRow: { flexDirection: 'row', alignItems: 'center' },
     name: { fontSize: 18, fontWeight: '700', marginRight: 8 },
     verifiedTag: { flexDirection: 'row', alignItems: 'center' },
-    verifiedText: { fontSize: 12, marginLeft: 4, color: COLORS.primary },
     collegeName: {
         fontSize: 14,
         color: COLORS.gray,

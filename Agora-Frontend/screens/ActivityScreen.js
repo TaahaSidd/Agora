@@ -3,8 +3,7 @@ import { View, Text, FlatList, Image, StyleSheet, Platform, StatusBar } from 're
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
-
-const isAndroid = Platform.OS === 'android';
+import AppHeader from '../components/AppHeader';
 
 const ActivityScreen = () => {
     const activityData = [
@@ -66,15 +65,13 @@ const ActivityScreen = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Activity</Text>
-            </View>
+            {/* Replace your old header View with AppHeader */}
+            <AppHeader title="Activity" />
 
             {/* Activity List */}
             <FlatList
                 data={activityData}
-                keyExtractor={item => item.id}
+                keyExtractor={(item) => item.id}
                 renderItem={renderItem}
                 contentContainerStyle={{ padding: THEME.spacing.md }}
                 showsVerticalScrollIndicator={false}
@@ -83,23 +80,11 @@ const ActivityScreen = () => {
     );
 };
 
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.white,
-        paddingTop: isAndroid ? StatusBar.currentHeight : 0,
-    },
-    header: {
-        padding: THEME.spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: COLORS.darkBlue,
     },
     card: {
         flexDirection: 'row',

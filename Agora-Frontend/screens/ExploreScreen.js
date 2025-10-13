@@ -1,77 +1,52 @@
-import React from 'react';
-import { ScrollView, Text, View, Image, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, Text, View, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import Card from '../components/Cards';
 import Tag from '../components/Tag';
+import Banner from '../components/Banner';
+
+const BASE_URL = "http://192.168.8.15:9000/Agora";
 
 const ExploreScreen = () => {
-    const categories = ['Vehicles', 'Devices', 'Furniture', 'Stationery', 'Clothes', 'Random'];
-    const recommendedItems = [
-        {
-            id: 1,
-            price: '₹ 5,000',
-            name: 'Nike Air Max',
-            images: [
-                require('../assets/nikeshoes.jpg'),
-                require('../assets/nikeshoes2.jpg'),
-                require('../assets/nikeshoes3.jpg'),
-            ]
-        },
-        {
-            id: 2,
-            price: '₹ 1200',
-            name: 'Sofa Seat',
-            images: [
-                require('../assets/sofaseat.jpg'),
-                require('../assets/nikeshoes.jpg'),
-                require('../assets/headphones.jpg'),
-            ]
-        },
-        {
-            id: 3,
-            price: '₹ 20,000',
-            name: 'PS5 Console',
-            images: [
-                require('../assets/ps5console.jpg'),
-                require('../assets/sofaseat.jpg'),
-                require('../assets/nikeshoes.jpg'),
-            ]
-        },
-        {
-            id: 4,
-            price: '₹ 2,500',
-            name: 'Used Textbooks Set',
-            images: [
-                require('../assets/textbooks.jpg'),
-                require('../assets/sofaseat.jpg'),
-                require('../assets/nikeshoes.jpg'),
-            ],
-        },
-        {
-            id: 5,
-            price: '₹ 1,200',
-            name: 'Laptop Backpack',
-            images: [
-                require('../assets/laptopbag.jpg'),
-                require('../assets/sofaseat.jpg'),
-                require('../assets/nikeshoes.jpg'),
-            ],
-        },
-        {
-            id: 6,
-            price: '₹ 800',
-            name: 'Wireless Earbuds',
-            images: [
-                require('../assets/earbuds.jpg'),
-                require('../assets/sofaseat.jpg'),
-                require('../assets/nikeshoes.jpg'),
-            ],
-        },
-    ];
-
     const navigation = useNavigation();
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const categories = ['Vehicle', 'Device', 'Furniture', 'Stationery', 'Cloth' ];
+
+    const handleCategoryPress = (category) => {
+        navigation.navigate("CategoryScreen", { category });
+    };
+
+    useEffect(() => {
+        const fetchItems = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/listing/all`);
+                const data = await res.json();
+                const formatted = data.map(item => ({
+                    id: item.id,
+                    price: `₹ ${item.price}`,
+                    name: item.title,
+                    images: item.image
+                        ? [{ uri: item.image }]
+                        : [require('../assets/LW.jpg')],
+                    description: item.description,
+                    seller: item.seller,
+                    college: item.college,
+                }));
+
+                setItems(formatted);
+            } catch (err) {
+                console.error("Error fetching items:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchItems();
+    }, []);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -103,9 +78,8 @@ const ExploreScreen = () => {
                 </View>
 
                 {/* Banner */}
-                <Image
+                <Banner
                     source={require('../assets/banner.jpg')}
-                    style={{ width: '100%', height: 150, borderRadius: 10, marginBottom: 20 }}
                 />
 
                 {/* Categories */}
@@ -118,7 +92,11 @@ const ExploreScreen = () => {
 
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
                     {categories.map((category) => (
-                        <Tag key={category} label={category} />
+                        <Tag
+                            key={category}
+                            label={category}
+                            onPress={() => handleCategoryPress(category)}
+                        />
                     ))}
                 </ScrollView>
 
@@ -130,13 +108,17 @@ const ExploreScreen = () => {
                     </TouchableOpacity>
                 </View>
 
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                    {recommendedItems.map(item => (
-                        <Card key={item.id} item={item} />
-                    ))}
-                </View>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#008CFE" style={{ marginTop: 40 }} />
+                ) : (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                        {items.map(item => (
+                            <Card key={item.id} item={item} />
+                        ))}
+                    </View>
+                )}
             </ScrollView>
-        </SafeAreaView>
+        </SafeAreaView >
     );
 };
 

@@ -1,19 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Image, StatusBar, Modal } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { jwtDecode } from 'jwt-decode';
+import { apiPost } from '../services/api';
 
 const SettingsScreen = ({ navigation }) => {
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+    const [user, setUser] = useState({ name: '', email: '' });
 
-    const handleLogout = () => {
+    useEffect(() => {
+        const loadUser = async () => {
+            try {
+                const token = await SecureStore.getItemAsync('accessToken');
+                if (token) {
+                    const decoded = jwtDecode(token);
+                    console.log('Decoded JWT:', decoded);
+                    setUser({
+                        name: decoded.username || 'User',
+                        email: decoded.email || 'No email',
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to decode token:', error);
+            }
+        };
+        loadUser();
+    }, []);
+
+    const handleLogout = async () => {
         setLogoutModalVisible(false);
-        navigation.replace('Login');
+        try {
+            const refreshToken = await SecureStore.getItemAsync('refreshToken');
+
+            if (refreshToken) {
+                await apiPost('/auth/logout', { refreshToken });
+            }
+
+            await SecureStore.deleteItemAsync('accessToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+            navigation.replace('Login');
+        } catch (err) {
+            console.error('Logout failed:', err);
+            await SecureStore.deleteItemAsync('accessToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+            navigation.replace('Login');
+        }
     };
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', paddingTop: StatusBar.currentHeight || 20 }}>
             <ScrollView contentContainerStyle={styles.container}>
-                {/* Header */}
                 <Text style={styles.header}>Settings</Text>
 
                 {/* Account Section */}
@@ -30,14 +67,12 @@ const SettingsScreen = ({ navigation }) => {
                             style={styles.profilePic}
                         />
                         <View style={{ marginLeft: 12, flex: 1 }}>
-                            <Text style={styles.accountName}>John Doe</Text>
-                            <Text style={styles.accountEmail}>john@example.com</Text>
+                            <Text style={styles.accountName}>{user.name}</Text>
+                            <Text style={styles.accountEmail}>{user.email}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={24} color="#999" />
                     </TouchableOpacity>
                 </View>
-
-                {/* Options */}
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.optionItem}>
                         <FontAwesome5 name="heart" size={22} color="#555" />
@@ -45,7 +80,13 @@ const SettingsScreen = ({ navigation }) => {
                         <Ionicons name="chevron-forward" size={20} color="#999" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.optionItem}>
+                    <TouchableOpacity
+                        style={styles.optionItem}
+                        onPress={() => {
+                            console.log('Button pressed!');
+                            navigation.navigate('MyListingsScreen');
+                        }}
+                    >
                         <FontAwesome5 name="heart" size={22} color="#555" />
                         <Text style={styles.optionText}>My Listings</Text>
                         <Ionicons name="chevron-forward" size={20} color="#999" />
@@ -75,8 +116,6 @@ const SettingsScreen = ({ navigation }) => {
                         <Ionicons name="chevron-forward" size={20} color="#999" />
                     </TouchableOpacity>
                 </View>
-
-                {/* Logout */}
                 <TouchableOpacity
                     style={styles.logoutButton}
                     onPress={() => setLogoutModalVisible(true)}
@@ -84,8 +123,6 @@ const SettingsScreen = ({ navigation }) => {
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
             </ScrollView>
-
-            {/* Logout Modal */}
             <Modal
                 transparent
                 visible={logoutModalVisible}
@@ -97,15 +134,12 @@ const SettingsScreen = ({ navigation }) => {
                         <Text style={styles.modalTitle}>See you soon!</Text>
                         <Text style={styles.modalText}>You are about to logout.</Text>
                         <View style={styles.modalButtons}>
-                            {/* Cancel */}
                             <TouchableOpacity
                                 style={styles.cancelButton}
                                 onPress={() => setLogoutModalVisible(false)}
                             >
                                 <Text style={styles.cancelText}>Cancel</Text>
                             </TouchableOpacity>
-
-                            {/* Confirm */}
                             <TouchableOpacity
                                 style={styles.confirmButton}
                                 onPress={handleLogout}
