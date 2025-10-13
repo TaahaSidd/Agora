@@ -16,10 +16,12 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 20,
         marginRight: 12,
+        alignSelf: 'flex-start',
     },
     tagText: {
         color: "#008CFE",
         fontWeight: "600",
+        fontSize: 12,
     },
 });
 
