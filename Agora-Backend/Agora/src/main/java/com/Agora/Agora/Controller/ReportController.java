@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/Agora/report")
+@RequestMapping("Agora/report")
 @RequiredArgsConstructor
 public class ReportController {
 

@@ -16,7 +16,7 @@ import com.Agora.Agora.Jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("Agora/Token/")
+@RequestMapping("Agora/Token")
 @RequiredArgsConstructor
 public class TokenValidController {
 

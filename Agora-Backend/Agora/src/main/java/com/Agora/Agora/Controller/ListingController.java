@@ -26,7 +26,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/Agora/listing")
+@RequestMapping("Agora/listing")
 @RequiredArgsConstructor
 public class ListingController {
 
@@ -77,6 +77,7 @@ public class ListingController {
     }
 
     @GetMapping("/my-listings")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ListingResponseDto>> getMyListings(Authentication authentication) {
         AgoraUser currentUser = userService.getCurrentUser();
         List<ListingResponseDto> listings = listingService.getListingByUserId(currentUser.getId());

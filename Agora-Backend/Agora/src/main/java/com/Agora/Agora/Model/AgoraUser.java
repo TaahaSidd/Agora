@@ -69,7 +69,7 @@ public class AgoraUser implements UserDetails {
     private String verificationToken;
 
     @Column(nullable = false)
-    private LocalDateTime tokenExpiryDate;// Token Expiry Date.
+    private LocalDateTime tokenExpiryDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "college_id", nullable = false)
@@ -96,6 +96,10 @@ public class AgoraUser implements UserDetails {
 
     @Override
     public String getUsername() {
+        return this.userEmail;
+    }
+
+    public String getUserName() {
         return this.userName;
     }
 
@@ -116,6 +120,6 @@ public class AgoraUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return this.userStatus == UserStatus.ACTIVE;
+        return true;
     }
 }

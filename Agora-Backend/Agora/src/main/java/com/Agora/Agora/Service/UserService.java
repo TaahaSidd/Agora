@@ -72,12 +72,22 @@ public class UserService {
 
     // Getting current User.
     public AgoraUser getCurrentUser() {
-        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepo.findByUserName(userName)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found " + userName));
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepo.findByUserEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found " + userEmail));
     }
 
-    // Updating users both by admin and authenticated user.
+    public UserResponseDto findById(Long id) {
+        AgoraUser seller = userRepo.findById(id).orElseThrow(() -> new UsernameNotFoundException("user not found with id " + id));
+        UserResponseDto responseDto = dto.mapToUserResponseDto(seller);
+        return responseDto;
+    }
+
+    public AgoraUser findByEmail(String email) {
+        return userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Email not found " + email));
+    }
+
     @Transactional
     public UserResponseDto updateUser(Long id, UserReqDto req) {
         AgoraUser currentUser = userRepo.findById(id)
@@ -112,7 +122,6 @@ public class UserService {
             }
         }
 
-        // College details - only update the relationship if collegeId is present
         if (req.getCollegeId() != null) {
             College college = collegeRepo.findById(req.getCollegeId())
                     .orElseThrow(() -> new EntityNotFoundException(
@@ -130,7 +139,7 @@ public class UserService {
     public void banUser(Long userId) {
         AgoraUser user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        user.setUserStatus(UserStatus.BANNED); // Assuming you have a UserStatus enum with BANNED
+        user.setUserStatus(UserStatus.BANNED);
         userRepo.save(user);
     }
 }

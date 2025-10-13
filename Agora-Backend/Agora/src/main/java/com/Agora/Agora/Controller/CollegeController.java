@@ -22,7 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/Agora/college")
+@RequestMapping("Agora/college")
 @RequiredArgsConstructor
 public class CollegeController {
 

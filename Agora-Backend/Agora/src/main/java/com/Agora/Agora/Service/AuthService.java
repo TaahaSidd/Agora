@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,8 @@ import com.Agora.Agora.Model.Enums.VerificationStatus;
 import com.Agora.Agora.Model.RefreshToken;
 import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.UserRepo;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -43,10 +46,9 @@ public class AuthService {
         private final DtoMapper dto;
         // private final UserDetailsService userDetailsService;
 
-        // Registering New Users.(Sign-Up).
         @Transactional
         public RegistrationResponseDto register(RegistrationReqDto req) {
-                if (userRepo.findByUserEmail(req.getUserEmail()).isPresent()) { // Use isPresent() for Optional
+                if (userRepo.findByUserEmail(req.getUserEmail()).isPresent()) {
                         throw new RuntimeException("Email already exists");
                 }
 
@@ -57,7 +59,6 @@ public class AuthService {
                                 .orElseThrow(() -> new EntityNotFoundException(
                                                 "College not found with id: " + req.getCollegeId()));
 
-                // building the new user.
                 AgoraUser user = new AgoraUser();
                 user.setUserName(req.getUserName());
                 user.setUserEmail(req.getUserEmail());
@@ -73,10 +74,8 @@ public class AuthService {
                 user.setVerificationToken(UUID.randomUUID().toString());
                 user.setTokenExpiryDate(LocalDateTime.now().plusHours(24));
 
-                // save the user.
                 AgoraUser savedUser = userRepo.save(user);
 
-                // Sending welcome email.
                 String verificationLink = "http://localhost:8080/api/auth/verify-email?token="
                                 + savedUser.getVerificationToken();
                 emailService.sendWelcomeEmail(savedUser.getUserEmail(), savedUser.getUsername(),
@@ -90,7 +89,7 @@ public class AuthService {
 
         }
 
-        // Login-in.
+        // Login
         public LoginResponseDto login(LoginRequestDto req) {
                 Authentication authentication = authenticationManager
                                 .authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(),
@@ -99,9 +98,7 @@ public class AuthService {
                 UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
                 AgoraUser user = userRepo.findByUserEmail(userDetails.getUsername()).get();
-
-                // Generate the JWT (access token)
-                String jwt = jwtTokenProvider.generateToken(userDetails);
+                String jwt = jwtTokenProvider.generateToken(user);
 
                 RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user);
                 String refreshTokenString = refreshTokenEntity.getToken();
@@ -119,5 +116,35 @@ public class AuthService {
                                 .verificationStatus(user.getVerificationStatus())
                                 .message("Login successful!")
                                 .build();
+        }
+
+        // Login with otp
+        @SuppressWarnings("UseSpecificCatch")
+        public LoginResponseDto loginOtp(String firebaseToken) {
+                try {
+                        FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(firebaseToken);
+                        String phoneNumber = (String) decodedToken.getClaims().get("phone_number");
+
+                        if (phoneNumber == null) {
+                                throw new RuntimeException("Invalid Firebase Token: no phone number found");
+                        }
+
+                        AgoraUser user = userRepo.findByMobileNumber(phoneNumber)
+                                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+                        String jwt = jwtTokenProvider.generateToken(user);
+                        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+                        return LoginResponseDto.builder()
+                                        .jwt(jwt)
+                                        .refreshToken(refreshToken.getToken())
+                                        .id(user.getId())
+                                        .userName(user.getUserName())
+                                        .mobileNumber(user.getMobileNumber())
+                                        .message("OTP login successful!")
+                                        .build();
+                } catch (Exception e) {
+                        throw new RuntimeException("FirebaseToken invalid");
+                }
         }
 }

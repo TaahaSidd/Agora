@@ -47,7 +47,8 @@ public class SecurityConfig {
 
                         // Listing endpoints
                         .requestMatchers(HttpMethod.POST, "/Agora/listing/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/Agora/listing/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/Agora/listing/my-listings").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/Agora/listing/all").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/Agora/listing/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/Agora/listing/**").authenticated()
 
@@ -65,7 +66,7 @@ public class SecurityConfig {
                         // Moderation - Admin
                         .requestMatchers(HttpMethod.PUT, "/Agora/Admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/Agora/Admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/Agora/Admin/**").hasRole("  ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/Agora/Admin/**").hasRole("ADMIN")
 
                         // College - Admin only.
                         .requestMatchers(HttpMethod.POST, "/Agora/college/**").hasRole("ADMIN")

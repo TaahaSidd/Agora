@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Agora.Agora.Dto.Request.LoginRequestDto;
+import com.Agora.Agora.Dto.Request.OtpLoginRequestDto;
 import com.Agora.Agora.Dto.Request.RegistrationReqDto;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
@@ -17,7 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("Agora/auth/")
+@RequestMapping("Agora/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -35,5 +36,9 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(req));
     }
 
+    @PostMapping("/login/otp")
+    public ResponseEntity<LoginResponseDto> loginOtp(@RequestBody OtpLoginRequestDto req) {
+        return ResponseEntity.ok(authService.loginOtp(req.getFirebaseToken()));
+    }
+
 }
-    
