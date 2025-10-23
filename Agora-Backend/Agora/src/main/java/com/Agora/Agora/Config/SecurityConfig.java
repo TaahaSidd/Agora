@@ -36,13 +36,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
 
-                        // Auth endpoints (public)
+                        // Auth endpoints
                         .requestMatchers(HttpMethod.POST, "/Agora/auth/**").permitAll()
 
-                        // Token validation (public so frontend can check token)
                         .requestMatchers(HttpMethod.POST, "/Agora/Token/validate").permitAll()
 
-                        // Search endpoint — allow anyone
+                        // Search endpoint
                         .requestMatchers(HttpMethod.POST, "/Agora/listing/search").permitAll()
 
                         // Listing endpoints
@@ -54,6 +53,7 @@ public class SecurityConfig {
 
                         // Profile.
                         .requestMatchers(HttpMethod.GET, "/Agora/profile/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/Agora/profile/seller/{userId}").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/Agora/profile/**").authenticated()
 
                         // ChatRoom

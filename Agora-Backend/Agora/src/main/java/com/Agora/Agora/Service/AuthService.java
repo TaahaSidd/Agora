@@ -28,6 +28,7 @@ import com.Agora.Agora.Repository.UserRepo;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,7 @@ public class AuthService {
         // private final UserDetailsService userDetailsService;
 
         @Transactional
+        @SuppressWarnings("CallToPrintStackTrace")
         public RegistrationResponseDto register(RegistrationReqDto req) {
                 if (userRepo.findByUserEmail(req.getUserEmail()).isPresent()) {
                         throw new RuntimeException("Email already exists");
@@ -78,8 +80,12 @@ public class AuthService {
 
                 String verificationLink = "http://localhost:8080/api/auth/verify-email?token="
                                 + savedUser.getVerificationToken();
-                emailService.sendWelcomeEmail(savedUser.getUserEmail(), savedUser.getUsername(),
-                                verificationLink);
+                try {
+                        emailService.sendWelcomeEmail(savedUser.getUserEmail(), savedUser.getUsername(),
+                                        verificationLink);
+                } catch (MessagingException e) {
+                        e.printStackTrace();
+                }
 
                 String token = jwtTokenProvider.generateToken(savedUser);
 
