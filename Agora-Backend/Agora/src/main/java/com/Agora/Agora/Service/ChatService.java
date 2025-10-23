@@ -58,7 +58,7 @@ public class ChatService {
         ChatRoom chatRoom;
 
         if (existingChatRoom.isPresent()) {
-            chatRoom = existingChatRoom.get();// existing chat room.
+            chatRoom = existingChatRoom.get();
         } else {
             chatRoom = new ChatRoom();
             chatRoom.setListing(listing);
