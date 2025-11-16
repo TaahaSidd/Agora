@@ -1,0 +1,215 @@
+import React from 'react';
+import {
+    View,
+    Text,
+    Modal,
+    TouchableOpacity,
+    Platform,
+    StyleSheet,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+const BottomSheetMenu = ({
+    visible,
+    onClose,
+    type = 'user',
+    onShare,
+    onReport,
+    onBlock,
+    title = 'Options',
+}) => {
+    const userOptions = [
+        {
+            label: 'Share Profile',
+            description: 'Share with your friends',
+            icon: 'share-outline',
+            iconBg: '#DBEAFE',
+            iconColor: '#3B82F6',
+            action: onShare,
+        },
+        {
+            label: 'Report User',
+            description: 'Report inappropriate behavior',
+            icon: 'flag-outline',
+            iconBg: '#FEF3C7',
+            iconColor: '#F59E0B',
+            action: onReport,
+        },
+        {
+            label: 'Block User',
+            description: "You won't see their content",
+            icon: 'ban-outline',
+            iconBg: '#FEE2E2',
+            iconColor: '#EF4444',
+            labelColor: '#EF4444',
+            action: onBlock,
+        },
+    ];
+
+    const listingOptions = [
+        {
+            label: 'Share Listing',
+            description: 'Share this listing with others',
+            icon: 'share-outline',
+            iconBg: '#DBEAFE',
+            iconColor: '#3B82F6',
+            action: onShare,
+        },
+        {
+            label: 'Report Listing',
+            description: 'Report inappropriate content',
+            icon: 'flag-outline',
+            iconBg: '#FEF3C7',
+            iconColor: '#F59E0B',
+            action: onReport,
+        },
+    ];
+
+    const options = type === 'user' ? userOptions : listingOptions;
+
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={onClose}
+            >
+                <View style={styles.bottomSheet}>
+                    <View style={styles.sheetHandle} />
+
+                    <View style={styles.sheetHeader}>
+                        <Text style={styles.sheetTitle}>{title}</Text>
+                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                            <Ionicons name="close" size={24} color="#6B7280" />
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.menuOptions}>
+                        {options.map((item, index) => (
+                            <React.Fragment key={index}>
+                                <TouchableOpacity
+                                    style={styles.menuOption}
+                                    onPress={() => {
+                                        onClose();
+                                        item.action?.();
+                                    }}
+                                    activeOpacity={0.7}
+                                >
+                                    <View
+                                        style={[
+                                            styles.menuIconCircle,
+                                            { backgroundColor: item.iconBg },
+                                        ]}
+                                    >
+                                        <Ionicons name={item.icon} size={22} color={item.iconColor} />
+                                    </View>
+                                    <View style={styles.menuTextContainer}>
+                                        <Text
+                                            style={[
+                                                styles.menuTitle,
+                                                item.labelColor ? { color: item.labelColor } : {},
+                                            ]}
+                                        >
+                                            {item.label}
+                                        </Text>
+                                        <Text style={styles.menuDescription}>{item.description}</Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+                                </TouchableOpacity>
+                                {index !== options.length - 1 && <View style={styles.menuDivider} />}
+                            </React.Fragment>
+                        ))}
+                    </View>
+                </View>
+            </TouchableOpacity>
+        </Modal>
+    );
+};
+
+const styles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    bottomSheet: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    },
+    sheetHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: '#E5E7EB',
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginTop: 12,
+        marginBottom: 16,
+    },
+    sheetHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    sheetTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    closeButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F3F4F6',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    menuOptions: {
+        paddingTop: 8,
+    },
+    menuOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+    },
+    menuIconCircle: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 14,
+    },
+    menuTextContainer: {
+        flex: 1,
+    },
+    menuTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 2,
+    },
+    menuDescription: {
+        fontSize: 13,
+        color: '#6B7280',
+        fontWeight: '500',
+    },
+    menuDivider: {
+        height: 1,
+        backgroundColor: '#F3F4F6',
+        marginHorizontal: 20,
+    },
+});
+
+export default BottomSheetMenu;
