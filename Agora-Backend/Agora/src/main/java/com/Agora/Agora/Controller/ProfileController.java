@@ -1,5 +1,6 @@
 package com.Agora.Agora.Controller;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,14 @@ public class ProfileController {
         response.put("listing", listing);
 
         return ResponseEntity.ok(response);
+    }
 
+    @GetMapping("/image")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, String>> getProfileImage() {
+        String profileImage = userService.getCurrentUser().getProfileImage();
+        Map<String, String> response = Collections.singletonMap("profileImage", profileImage);
+        return ResponseEntity.ok(response);
     }
 
 }

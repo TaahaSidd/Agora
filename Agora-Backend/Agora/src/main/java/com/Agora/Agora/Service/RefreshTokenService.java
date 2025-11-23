@@ -44,6 +44,7 @@ public class RefreshTokenService {
         return refreshToken;
     }
 
+    @Transactional
     public Optional<RefreshToken> verifyRefreshToken(String token) {
         Optional<RefreshToken> refreshTokenOpt = refreshTokenRepo.findByToken(token);
 

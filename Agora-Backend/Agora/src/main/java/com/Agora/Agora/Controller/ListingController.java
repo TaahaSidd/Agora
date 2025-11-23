@@ -25,6 +25,8 @@ import com.Agora.Agora.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import com.Agora.Agora.Dto.Response.CategoryCountResponseDto;
+
 @RestController
 @RequestMapping("Agora/listing")
 @RequiredArgsConstructor
@@ -61,11 +63,10 @@ public class ListingController {
         return ResponseEntity.ok(listingService.updateListing(id, req));
     }
 
-    // Delete.
     @DeleteMapping("delete/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteListing(@Valid @PathVariable Long id) {
-        listingService.deleteListing(id);
+    public ResponseEntity<Void> deleteListing(@PathVariable Long id) {
+        listingService.deleteListingCloudinary(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -82,6 +83,11 @@ public class ListingController {
         AgoraUser currentUser = userService.getCurrentUser();
         List<ListingResponseDto> listings = listingService.getListingByUserId(currentUser.getId());
         return ResponseEntity.ok(listings);
+    }
+
+    @GetMapping("/popular-categories")
+    public ResponseEntity<List<CategoryCountResponseDto>> getPopularCategories() {
+        return ResponseEntity.ok(listingService.getPopularCategories());
     }
 
 }

@@ -73,12 +73,16 @@ public class UserService {
     // Getting current User.
     public AgoraUser getCurrentUser() {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepo.findByUserEmail(userEmail)
+        AgoraUser user = userRepo.findByUserEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found " + userEmail));
+
+        user.setId(user.getId());
+        return user;
     }
 
     public UserResponseDto findById(Long id) {
-        AgoraUser seller = userRepo.findById(id).orElseThrow(() -> new UsernameNotFoundException("user not found with id " + id));
+        AgoraUser seller = userRepo.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("user not found with id " + id));
         UserResponseDto responseDto = dto.mapToUserResponseDto(seller);
         return responseDto;
     }
@@ -110,7 +114,6 @@ public class UserService {
                 currentUser.setUserEmail(req.getUserEmail());
             }
         }
-
         if (req.getMobileNumber() != null && !req.getMobileNumber().trim().isBlank()) {
             if (!req.getMobileNumber().equals(currentUser.getMobileNumber())) {
                 Optional<AgoraUser> userWithMobile = userRepo.findByMobileNumber(req.getMobileNumber());
@@ -122,6 +125,9 @@ public class UserService {
             }
         }
 
+        if (req.getProfileImage() != null && !req.getProfileImage().isBlank()) {
+            currentUser.setProfileImage(req.getProfileImage());
+        }
         if (req.getCollegeId() != null) {
             College college = collegeRepo.findById(req.getCollegeId())
                     .orElseThrow(() -> new EntityNotFoundException(

@@ -1,6 +1,7 @@
 package com.Agora.Agora.Dto.Request;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import com.Agora.Agora.Model.Enums.ItemCondition;
 import com.Agora.Agora.Model.Enums.ItemStatus;
@@ -28,7 +29,7 @@ public class ListingReqDto {
     private String category;
 
     // For image will use cloudinary - will be using that later for now no image
-    private String image;
+    private List<ImageDto> images;
 
     @NotNull(message = "Item condition is required")
     private ItemCondition itemCondition;

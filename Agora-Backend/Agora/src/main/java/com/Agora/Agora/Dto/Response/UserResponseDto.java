@@ -23,6 +23,7 @@ public class UserResponseDto {
     private String lastName;
     private String mobileNumber;
     private String idCardNo;
+    private String profileImage;
 
     private Long collegeId;
     private String collegeEmail;

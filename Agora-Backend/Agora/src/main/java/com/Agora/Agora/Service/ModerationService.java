@@ -55,52 +55,32 @@ public class ModerationService {
 
         report.setStatus(req.getStatus());
         report.setModerationNotes(req.getModerationNotes());
-
-        // 4. If actionOnListing, delete or deactivate the listing
         if (Boolean.TRUE.equals(req.getActionOnListing()) && report.getListings() != null) {
-            listingService.deleteListing(report.getListings().getId());
+            listingService.deleteListingCloudinary(report.getListings().getId());
         }
-
-        // 5. If actionOnUser, ban the user
         if (Boolean.TRUE.equals(req.getActionOnUser() && report.getReportedUser() != null)) {
             AgoraUser reportedUser = report.getReportedUser();
             reportedUser.setUserStatus(UserStatus.BANNED);
             userRepo.save(reportedUser);
         }
-
-        // 6. Set resolvedBy and resolvedAt
         report.setResolvedAt(Instant.now());
-
-        // 7. Save Report
         Report updatedReport = reportRepo.save(report);
-
-        // 8. Return updated Report entity (or map to DTO if preferred)
         return dto.mapToReportResolveResponse(updatedReport, req);
     }
 
     @Transactional
     public void deactivateListing(Long listingId) {
-        // Fetch the listing
         Listings listing = listingsRepo.findById(listingId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
-
-        // Set status to DEACTIVATED or BANNED
         listing.setItemStatus(ItemStatus.DEACTIVATED);
-
-        // Save the updated listing
         listingsRepo.save(listing);
     }
 
     @Transactional
     public void banUser(Long userId) {
-        // Fetch the user
         AgoraUser user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        // Set status to BANNED
         user.setUserStatus(UserStatus.BANNED);
-
-        // Save the updated user
         userRepo.save(user);
     }
 }

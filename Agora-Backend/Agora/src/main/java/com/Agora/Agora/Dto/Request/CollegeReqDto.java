@@ -35,4 +35,6 @@ public class CollegeReqDto {
     @Pattern(regexp = "^(https?://)?[\\w.-]+(\\.[\\w\\.-]+)+[/#?]?.*$", message = "Invalid website URL")
     private String website;
 
+    private double latitude;
+    private double longitude;
 }

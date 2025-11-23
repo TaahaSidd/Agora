@@ -57,6 +57,9 @@ public class AgoraUser implements UserDetails {
     @Column(nullable = false)
     private String idCardNo; // will be adding college id images url. will be using cloudinary for that.
 
+    @Column(length = 255)
+    private String profileImage;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
@@ -78,6 +81,9 @@ public class AgoraUser implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus userStatus;
+
+    @Column(name = "expo_push_token")
+    private String expoPushToken;
 
     public boolean isAdmin() {
         return UserRole.ADMIN.equals(this.role);

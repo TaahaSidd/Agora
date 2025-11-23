@@ -40,4 +40,6 @@ public class RegistrationReqDto {
 
     @NotNull(message = "College id cannot be blank")
     private Long collegeId;
+
+    private String profileImage;
 }

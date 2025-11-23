@@ -2,6 +2,7 @@ package com.Agora.Agora.Dto.Response;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 import com.Agora.Agora.Model.Enums.ItemAvailability;
 import com.Agora.Agora.Model.Enums.ItemCondition;
@@ -25,7 +26,7 @@ public class ListingResponseDto {
     private BigDecimal price;
     private String category;
     private Instant postDate;
-    private String image;
+    private List<String> imageUrl;
 
     private ItemCondition itemCondition;
     private ItemStatus itemStatus;
@@ -34,6 +35,6 @@ public class ListingResponseDto {
     private UserResponseDto seller;
     private CollegeResponseDto college;
 
-    private String message; // Optional Feedback.
+    private String message;
 
 }

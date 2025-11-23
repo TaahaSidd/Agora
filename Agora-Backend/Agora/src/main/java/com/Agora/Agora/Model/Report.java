@@ -56,7 +56,7 @@ public class Report {
 
     @Column(nullable = false)
     private Instant reportedAt;
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Instant resolvedAt;
 
     private String moderationNotes;

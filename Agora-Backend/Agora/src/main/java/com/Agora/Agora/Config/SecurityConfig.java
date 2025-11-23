@@ -38,6 +38,7 @@ public class SecurityConfig {
 
                         // Auth endpoints
                         .requestMatchers(HttpMethod.POST, "/Agora/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/Agora/auth/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/Agora/Token/validate").permitAll()
 
@@ -47,12 +48,18 @@ public class SecurityConfig {
                         // Listing endpoints
                         .requestMatchers(HttpMethod.POST, "/Agora/listing/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/Agora/listing/my-listings").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/Agora/listing/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/Agora/listing/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/Agora/listing/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/Agora/listing/**").authenticated()
 
+                        // Favorites
+                        .requestMatchers(HttpMethod.GET, "/Agora/favorites/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/Agora/favorites/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/favorites/**").authenticated()
+
                         // Profile.
                         .requestMatchers(HttpMethod.GET, "/Agora/profile/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/Agora/profile/seller/{userId}").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/Agora/profile/**").authenticated()
 
@@ -62,6 +69,21 @@ public class SecurityConfig {
 
                         // Reporting
                         .requestMatchers(HttpMethod.POST, "/Agora/report/**").authenticated()
+
+                        // Reviews
+                        .requestMatchers(HttpMethod.POST, "/Agora/Review/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/Agora/Review/**").permitAll()
+
+                        // Follow
+                        .requestMatchers(HttpMethod.POST, "/Agora/follow/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/follow/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/Agora/follow/**").permitAll()
+
+                        // Expo-token
+                        .requestMatchers(HttpMethod.POST, "/Agora/expo/**").authenticated()
+
+                        // Notifications
+                        .requestMatchers(HttpMethod.GET, "/Agora/notifications/**").authenticated()
 
                         // Moderation - Admin
                         .requestMatchers(HttpMethod.PUT, "/Agora/Admin/**").hasRole("ADMIN")

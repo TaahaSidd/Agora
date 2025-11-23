@@ -46,13 +46,11 @@ public class ReportService {
 
         if (null == req.getReportType()) {
             throw new IllegalArgumentException("Unsupported report type.");
-        } else // 3. Validate and set target
+        } else
             switch (req.getReportType()) {
                 case USER -> {
-                    // Validate reported user exists
                     AgoraUser reportedUser = userRepo.findById(req.getReportedUserId())
                             .orElseThrow(() -> new EntityNotFoundException("Reported user not found"));
-                    // Prevent self-reporting
                     if (reportedUser.getId().equals(currentUser.getId())) {
                         throw new IllegalArgumentException("You cannot report yourself.");
                     }
@@ -60,39 +58,27 @@ public class ReportService {
                     report.setTargetId(reportedUser.getId());
                 }
                 case LISTING -> {
-                    // Validate listing exists
                     Listings listing = listingsRepo.findById(req.getReportedListingId())
                             .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
                     report.setListings(listing);
                     report.setTargetId(listing.getId());
                 }
                 case MESSAGE, CHAT_ROOM -> {
-                    // Validate targetId is present
                     if (req.getTargetId() == null) {
                         throw new IllegalArgumentException("Target ID must be provided for this report type.");
                     }
                     report.setTargetId(req.getTargetId());
-                    // Optionally: validate message/chat room exists
                 }
                 default -> throw new IllegalArgumentException("Unsupported report type.");
             }
-
-        // 4. resolvedAt is null at creation (not resolved yet)
         report.setResolvedAt(null);
-
-        // 5. Save report
         Report savedReport = reportRepo.save(report);
-
-        // 6. Map to DTO and return
         return dto.mapToReportResponseDto(savedReport);
-
     }
 
-    // Getting report by id - ADMIN ONLY.
     public ReportResponseDto getReportById(Long ReportId) {
         Report response = reportRepo.findById(ReportId).orElseThrow();
 
         return dto.mapToReportResponseDto(response);
     }
-
 }

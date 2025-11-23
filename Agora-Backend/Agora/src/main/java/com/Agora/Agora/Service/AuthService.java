@@ -70,6 +70,7 @@ public class AuthService {
                 user.setPassword(passwordEncoder.encode(req.getPassword()));
                 user.setIdCardNo(req.getIdCardNo());
                 user.setCollege(college);
+                user.setProfileImage("http://localhost:9000/images/da7ed7b0-5f66-4f97-a610-51100d3b9fd2.jpg");
                 user.setRole(UserRole.STUDENT);
                 user.setUserStatus(UserStatus.ACTIVE);
                 user.setVerificationStatus(VerificationStatus.PENDING_EMAIL);

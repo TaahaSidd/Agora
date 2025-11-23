@@ -1,5 +1,7 @@
 package com.Agora.Agora.Mapper;
 
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
 import com.Agora.Agora.Dto.Request.ReportResolveReqDto;
@@ -10,13 +12,16 @@ import com.Agora.Agora.Dto.Response.MessageResponseDto;
 import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
 import com.Agora.Agora.Dto.Response.ReportResolveResponse;
 import com.Agora.Agora.Dto.Response.ReportResponseDto;
+import com.Agora.Agora.Dto.Response.ReviewResponse;
 import com.Agora.Agora.Dto.Response.UserResponseDto;
 import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.ChatRoom;
 import com.Agora.Agora.Model.College;
+import com.Agora.Agora.Model.ListingImage;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Model.Message;
 import com.Agora.Agora.Model.Report;
+import com.Agora.Agora.Model.Review;
 import com.Agora.Agora.Service.MessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +42,7 @@ public class DtoMapper {
         dto.setLastName(user.getLastName());
         dto.setMobileNumber(user.getMobileNumber());
         dto.setIdCardNo(user.getIdCardNo());
+        dto.setProfileImage(user.getProfileImage());
         dto.setVerificationStatus(user.getVerificationStatus());
 
         // Set college details
@@ -59,6 +65,7 @@ public class DtoMapper {
         dto.setLastName(user.getLastName());
         dto.setMobileNumber(user.getMobileNumber());
         dto.setIdCardNo(user.getIdCardNo());
+        dto.setProfileImage(user.getProfileImage());
         dto.setVerificationStatus(user.getVerificationStatus());
 
         // Set college details
@@ -74,6 +81,7 @@ public class DtoMapper {
     // Dto mapping for College
     public CollegeResponseDto mapToCollegeResponseDto(College college) {
         CollegeResponseDto dto = new CollegeResponseDto();
+        dto.setId(college.getId());
         dto.setCollegeName(college.getCollegeName());
         dto.setCollegeEmail(college.getCollegeEmail());
         dto.setAddress(college.getAddress());
@@ -81,6 +89,9 @@ public class DtoMapper {
         dto.setState(college.getState());
         dto.setCountry(college.getCountry());
         dto.setWebsite(college.getWebsite());
+
+        dto.setLatitude(college.getLatitude());
+        dto.setLongitude(college.getLongitude());
 
         return dto;
     }
@@ -96,9 +107,10 @@ public class DtoMapper {
         dto.setPostDate(listing.getPostDate());
         dto.setItemCondition(listing.getItemCondition());
         dto.setItemStatus(listing.getItemStatus());
-        // dto.setItemAvailability(listing.getItemAvailability()); ADD THIS WHEN
-        // DROPPING
-        // THE TABLE FOR LISTING.
+        dto.setImageUrl(
+                listing.getImages().stream()
+                        .map(ListingImage::getUrl)
+                        .collect(Collectors.toList()));
 
         dto.setSeller(mapToUserResponseDto(listing.getSeller()));
         if (listing.getSeller() != null && listing.getSeller().getCollege() != null) {
@@ -140,24 +152,42 @@ public class DtoMapper {
         return dto;
     }
 
+    // Dto mapper for Review
+    public ReviewResponse mapToReviewResponseDto(Review review) {
+        ReviewResponse dto = new ReviewResponse();
+        dto.setId(review.getId());
+        dto.setComment(review.getComment());
+        dto.setRating(review.getRating());
+        dto.setCreatedAt(review.getCreatedAt());
+
+        if (review.getReviewer() != null) {
+            dto.setReviewerId(review.getReviewer().getId());
+            dto.setReviewerName(review.getReviewer().getUserName());
+            dto.setReviewerEmail(review.getReviewer().getUserEmail());
+        }
+        if (review.getListing() != null) {
+            dto.setListingId(review.getListing().getId());
+        }
+
+        if (review.getSeller() != null) {
+            dto.setSellerId(review.getSeller().getId());
+        }
+
+        return dto;
+    }
+
     // Dto mapper for Moderation
     public ReportResponseDto mapToReportResponseDto(Report report) {
         ReportResponseDto dto = new ReportResponseDto();
         dto.setId(report.getId());
-
-        // Reporter details
         if (report.getReporter() != null) {
             dto.setReporterId(report.getReporter().getId());
             dto.setReporterUserName(report.getReporter().getUsername());
         }
-
-        // Reported user details (if applicable)
         if (report.getReportedUser() != null) {
             dto.setReportedId(report.getReportedUser().getId());
             dto.setReportedUserName(report.getReportedUser().getUsername());
         }
-
-        // Listing details (if applicable)
         if (report.getListings() != null) {
             dto.setListingId(report.getListings().getId());
             dto.setReportedListingTitle(report.getListings().getTitle());
@@ -165,7 +195,7 @@ public class DtoMapper {
 
         dto.setReportType(report.getReportType());
         dto.setReportStatus(report.getStatus());
-        dto.setReportReason(report.getReason()); // Assuming this is an enum or field in Report
+        dto.setReportReason(report.getReason());
 
         dto.setReportedAt(report.getReportedAt());
         dto.setResolvedAt(report.getResolvedAt());
@@ -178,7 +208,7 @@ public class DtoMapper {
         ReportResolveResponse response = new ReportResolveResponse();
         response.setReportId(report.getId());
         response.setStatus(report.getStatus());
-        response.setModerationNotes(report.getModerationNotes()); // Assuming you store notes in the entity
+        response.setModerationNotes(report.getModerationNotes());
         response.setActionOnUser(req.getActionOnUser());
         response.setActionOnListing(req.getActionOnListing());
         response.setResolvedAt(report.getResolvedAt());

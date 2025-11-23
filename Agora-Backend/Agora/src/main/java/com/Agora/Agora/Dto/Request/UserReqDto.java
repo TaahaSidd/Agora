@@ -22,5 +22,6 @@ public class UserReqDto {
     private String password;
     private String idCardNo;
     private Long collegeId;
+    private String profileImage;
 
 }

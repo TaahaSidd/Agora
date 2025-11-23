@@ -30,4 +30,7 @@ public class College {
     private String country;
     private String website;
 
+    private Double latitude;
+    private Double longitude;
+
 }

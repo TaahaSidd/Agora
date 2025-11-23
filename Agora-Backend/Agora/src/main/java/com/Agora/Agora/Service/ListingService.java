@@ -10,11 +10,13 @@ import org.springframework.stereotype.Service;
 
 import com.Agora.Agora.Dto.Request.ListingFilterReqDto;
 import com.Agora.Agora.Dto.Request.ListingReqDto;
+import com.Agora.Agora.Dto.Response.CategoryCountResponseDto;
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
 import com.Agora.Agora.Mapper.DtoMapper;
 import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.Enums.ItemStatus;
+import com.Agora.Agora.Model.ListingImage;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Repository.ListingSearchRepo;
 import com.Agora.Agora.Repository.ListingsRepo;
@@ -31,6 +33,7 @@ public class ListingService {
     private final UserService userService;
     private final ListingsRepo listingRepo;
     private final DtoMapper dto;
+    private final CloudinaryService cloudinaryService;
 
     @Transactional
     public ListingResponseDto createListing(ListingReqDto req) {
@@ -50,6 +53,17 @@ public class ListingService {
         listing.setPostDate(Instant.now());
         listing.setItemCondition(req.getItemCondition());
         listing.setItemStatus(ItemStatus.AVAILABLE);
+        if (req.getImages() != null) {
+            listing.setImages(
+                    req.getImages().stream()
+                            .map(img -> {
+                                ListingImage listingImage = new ListingImage();
+                                listingImage.setUrl(img.getUrl());
+                                listingImage.setPublicId(img.getPublicId());
+                                return listingImage;
+                            })
+                            .collect(Collectors.toList()));
+        }
 
         listing.setSeller(currentUser);
         listing.setCollege(college);
@@ -98,7 +112,17 @@ public class ListingService {
             updatedListings.setItemCondition(req.getItemCondition());
         if (req.getItemStatus() != null)
             updatedListings.setItemStatus(req.getItemStatus());
-
+        if (req.getImages() != null) {
+            updatedListings.setImages(
+                    req.getImages().stream()
+                            .map(img -> {
+                                ListingImage listingImage = new ListingImage();
+                                listingImage.setUrl(img.getUrl());
+                                listingImage.setPublicId(img.getPublicId());
+                                return listingImage;
+                            })
+                            .collect(Collectors.toList()));
+        }
         Listings updatedListing = listingRepo.save(updatedListings);
 
         ListingResponseDto responseDto = dto.mapToListingResponseDto(updatedListing);
@@ -106,16 +130,16 @@ public class ListingService {
         return responseDto;
     }
 
-    public void deleteListing(Long listingId) {
-
-        if (listingId == null) {
-            throw new IllegalArgumentException("Listing id is required");
-        }
-
-        if (!listingRepo.existsById(listingId)) {
-            throw new EntityNotFoundException("Listing not found");
-        }
-        listingRepo.deleteById(listingId);
+    @Transactional
+    public void deleteListingCloudinary(Long listingId) {
+        Listings listing = listingRepo.findById(listingId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+        listing.getImages().forEach(img -> {
+            if (img.getPublicId() != null && !img.getPublicId().isEmpty()) {
+                cloudinaryService.deleteImages(img.getPublicId());
+            }
+        });
+        listingRepo.delete(listing);
     }
 
     @SuppressWarnings("removal")
@@ -172,6 +196,10 @@ public class ListingService {
         List<ListingResponseDto> responseDto = listings.stream().map(dto::mapToListingResponseDto)
                 .collect(Collectors.toList());
         return responseDto;
+    }
+
+    public List<CategoryCountResponseDto> getPopularCategories() {
+        return listingRepo.findPopularCategories();
     }
 
 }

@@ -25,6 +25,7 @@ public class RegistrationResponseDto {
     private String lastName;
     private String mobileNumber;
     private String idCardNo;
+    private String profileImage;
 
     // College Id and Details.
     private Long collegeId;

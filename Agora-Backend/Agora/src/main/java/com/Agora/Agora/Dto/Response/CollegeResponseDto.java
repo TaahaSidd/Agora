@@ -11,6 +11,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CollegeResponseDto {
 
+    private Long id;
+
     private String collegeName;
     private String collegeEmail;
     private String address;
@@ -18,4 +20,7 @@ public class CollegeResponseDto {
     private String state;
     private String country;
     private String website;
+
+    private Double latitude;
+    private Double longitude;
 }
