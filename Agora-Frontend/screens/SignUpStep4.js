@@ -4,37 +4,42 @@ import {
     Text,
     StyleSheet,
     Alert,
-    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
-    Dimensions,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SignUpContext } from '../context/SignUpContext';
 import { COLORS } from '../utils/colors';
 import { apiPost } from '../services/api';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 
-const { width } = Dimensions.get('window');
-
 export default function SignUpStep4({ navigation }) {
     const { form, updateForm } = useContext(SignUpContext);
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    const validateFields = () => {
+        const validationErrors = {};
+
+        if (!form.password) {
+            validationErrors.password = 'Password is required';
+        } else if (form.password.length < 6) {
+            validationErrors.password = 'Password must be at least 6 characters';
+        }
+
+        if (!form.confirmPassword) {
+            validationErrors.confirmPassword = 'Please confirm your password';
+        } else if (form.password !== form.confirmPassword) {
+            validationErrors.confirmPassword = 'Passwords do not match';
+        }
+
+        setErrors(validationErrors);
+        return Object.keys(validationErrors).length === 0;
+    };
 
     const onSubmit = async () => {
-        if (!form.password || !form.confirmPassword) {
-            Alert.alert('Validation Error', 'Please fill all fields.');
-            return;
-        }
-        if (form.password.length < 6) {
-            Alert.alert('Validation Error', 'Password must be at least 6 characters.');
-            return;
-        }
-        if (form.password !== form.confirmPassword) {
-            Alert.alert('Validation Error', 'Passwords do not match.');
-            return;
-        }
+        if (!validateFields()) return;
 
         setLoading(true);
         try {
@@ -50,8 +55,9 @@ export default function SignUpStep4({ navigation }) {
             };
 
             const data = await apiPost('/auth/register', body);
+            console.log('Signup payload:', body);
             Alert.alert('Success', 'Account created successfully!');
-            navigation.replace('Mainlayout');
+            navigation.replace('MainLayout');
         } catch (error) {
             Alert.alert('Signup Failed', error.response?.data?.message || error.message);
         } finally {
@@ -60,67 +66,135 @@ export default function SignUpStep4({ navigation }) {
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.container}
+        <LinearGradient
+            colors={['#EFF6FF', '#DBEAFE', '#BFDBFE']}
+            style={{ flex: 1 }}
         >
-            <Svg
-                height="400"
-                width={width}
-                viewBox={`0 0 ${width} 400`}
-                style={styles.wavyBackground}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.container}
             >
-                <Path
-                    d={`M0 250 C ${width * 0.25} 350, ${width * 0.75} 150, ${width} 250 L ${width} 0 L0 0 Z`}
-                    fill={COLORS.primary}
-                />
-            </Svg>
-            <View style={styles.inner}>
-                <Text style={styles.title}>Set Your Password</Text>
-                <InputField
-                    label="Password"
-                    placeholder="Enter password"
-                    value={form.password}
-                    onChangeText={text => updateForm('password', text)}
-                    secureTextEntry
-                    autoCapitalize="none"
-                />
-                <InputField
-                    label="Confirm Password"
-                    placeholder="Re-enter password"
-                    value={form.confirmPassword}
-                    onChangeText={text => updateForm('confirmPassword', text)}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    style={{ marginBottom: 20 }}
-                />
+                <View style={styles.inner}>
+                    {/* Header */}
+                    <View style={styles.headerSection}>
+                        <Text style={styles.mainHeader}>Secure Account</Text>
+                        <Text style={styles.subHeader}>Create a strong password</Text>
+                    </View>
 
-                <View style={styles.buttonsRow}>
-                    <Button
-                        title="Back"
-                        onPress={() => navigation.goBack()}
-                        variant="secondary"
-                        style={{ flex: 1, marginRight: 10 }}
-                        textStyle={{ color: COLORS.primary }}
+                    {/* Form */}
+                    <InputField
+                        label="Password"
+                        placeholder="Enter password (min. 6 characters)"
+                        value={form.password}
+                        onChangeText={text => {
+                            updateForm('password', text);
+                            setErrors({ ...errors, password: null });
+                        }}
+                        secureTextEntry
+                        autoCapitalize="none"
+                        error={errors.password}
+                        leftIcon="lock-outline"
                     />
-                    <Button
-                        title={loading ? '' : 'Submit'}
-                        onPress={onSubmit}
-                        variant="primary"
-                        style={{ flex: 1, marginLeft: 10 }}
-                    >
-                        {loading && <ActivityIndicator color={COLORS.white} />}
-                    </Button>
+
+                    <InputField
+                        label="Confirm Password"
+                        placeholder="Re-enter password"
+                        value={form.confirmPassword}
+                        onChangeText={text => {
+                            updateForm('confirmPassword', text);
+                            setErrors({ ...errors, confirmPassword: null });
+                        }}
+                        secureTextEntry
+                        autoCapitalize="none"
+                        error={errors.confirmPassword}
+                        leftIcon="lock-outline"
+                    />
+
+                    {/* Step Indicator */}
+                    <View style={styles.stepIndicator}>
+                        <View style={styles.stepDot} />
+                        <View style={styles.stepDot} />
+                        <View style={styles.stepDot} />
+                        <View style={[styles.stepDot, styles.stepDotActive]} />
+                    </View>
+
+                    {/* Buttons */}
+                    <View style={styles.buttonsRow}>
+                        <Button
+                            title="Back"
+                            onPress={() => navigation.goBack()}
+                            variant="secondary"
+                            style={styles.backButton}
+                            disabled={loading}
+                            size="large"
+                        />
+                        <Button
+                            title="Create Account"
+                            onPress={onSubmit}
+                            variant="primary"
+                            style={styles.submitButton}
+                            disabled={loading}
+                            loading={loading}
+                            size="large"
+                        />
+                    </View>
                 </View>
-            </View>
-        </KeyboardAvoidingView>
+            </KeyboardAvoidingView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.white },
-    wavyBackground: { position: 'absolute', top: 0 },
-    inner: { flex: 1, justifyContent: 'center', padding: 20 },
-    title: { fontSize: 22, fontWeight: '600', color: COLORS.black, marginBottom: 20, textAlign: 'center' },
-    buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+    container: {
+        flex: 1,
+        // backgroundColor: COLORS.white,
+        backgroundColor: 'transparent',
+    },
+    inner: {
+        flex: 1,
+        padding: 20,
+        justifyContent: 'center',
+    },
+    headerSection: {
+        marginBottom: 30,
+    },
+    mainHeader: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: COLORS.black,
+        marginBottom: 2,
+    },
+    subHeader: {
+        fontSize: 20,
+        color: COLORS.gray,
+        marginBottom: 10,
+    },
+    stepIndicator: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 10,
+        marginVertical: 20,
+    },
+    stepDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: '#edf5ffff',
+    },
+    stepDotActive: {
+        backgroundColor: COLORS.primary,
+        width: 30,
+        borderRadius: 5,
+    },
+    buttonsRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    backButton: {
+        flex: 1,
+    },
+    // submitButton: {
+    //     flex: 1,
+    // },
 });

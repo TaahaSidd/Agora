@@ -11,19 +11,71 @@ import {
     Alert,
     TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
 import AppHeader from '../components/AppHeader';
 import { apiGet } from '../services/api';
+import QuickActions from '../components/QuickActions';
+import ProfileSection from '../components/ProfileSection';
 
-const UserProfileScreen = ({ navigation }) => {
+import { useUserStats } from '../hooks/useUserStats';
+import { useFavorites } from '../hooks/useFavorites';
+import { useAverageRating } from '../hooks/useAverageRating';
+import { useCurrentUser } from '../hooks/useCurrentUser';
+
+const UserProfileScreen = ({ navigation, route }) => {
+    const { user: currentUser, loading: userLoading, isGuest } = useCurrentUser();
     const [user, setUser] = useState(null);
+    const { profileImage } = route.params || {};
     const [loading, setLoading] = useState(true);
+
+    const { listingsCount, loading: statsLoading } = useUserStats();
+    const { favorites = [], loading: favLoading } = useFavorites();
+
+    const currentUserId = currentUser?.id || null;
+    const { rating, loading: ratingLoading } = useAverageRating('user', currentUserId);
+
+    const averageRating = rating ?? 0;
+
+    const statsActions = [
+        {
+            icon: 'list-outline',
+            iconColor: '#2563EB',
+            bgColor: '#E0E7FF',
+            number: statsLoading || listingsCount == null ? '-' : listingsCount,
+            label: 'Listings',
+            onPress: () => navigation.navigate('MyListings'),
+        },
+        {
+            icon: 'heart-outline',
+            iconColor: '#DC2626',
+            bgColor: '#FEE2E2',
+            number: favLoading ? '-' : favorites.length,
+            label: 'Favorites',
+            onPress: () => navigation.navigate('Favorites'),
+        },
+        {
+            icon: 'star-outline',
+            iconColor: '#B45309',
+            bgColor: '#FEF3C7',
+            number: ratingLoading || averageRating == null ? '-' : averageRating.toFixed(1),
+            label: 'Rating',
+            onPress: () => navigation.navigate('MyReviews'),
+        },
+    ];
 
     const fetchProfile = async () => {
         try {
             const data = await apiGet('/profile/myProfile');
-            setUser(data);
+            const mappedUser = {
+                name: data.username || 'User',
+                email: data.userEmail || data.email || 'email@example.com',
+                ...data,
+            };
+
+            setUser(mappedUser);
+            // console.log('------Fetched User Profile:-------', mappedUser);
         } catch (error) {
             console.error('Error fetching profile:', error.response?.data || error.message);
             Alert.alert('Error', 'Unable to fetch profile information.');
@@ -31,7 +83,6 @@ const UserProfileScreen = ({ navigation }) => {
             setLoading(false);
         }
     };
-
     useEffect(() => {
         fetchProfile();
     }, []);
@@ -53,152 +104,206 @@ const UserProfileScreen = ({ navigation }) => {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
+        <SafeAreaView style={styles.safeArea}>
             <AppHeader title="My Profile" onBack={() => navigation.goBack()} />
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                {/* Top Section */}
-                <View style={styles.topSection}>
-                    <Image
-                        source={
-                            user.profilePic
-                                ? { uri: user.profilePic }
-                                : require('../assets/adaptive-icon.png')
-                        }
-                        style={styles.profilePic}
-                    />
+            <ScrollView
+                contentContainerStyle={styles.scrollContainer}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Profile Header Card */}
+                <ProfileSection
+                    user={user}
+                    profileImage={profileImage || user?.avatar || 'https://i.pravatar.cc/100'}
+                    buttonLabel="Edit Profile"
+                    onButtonPress={() =>
+                        navigation.navigate('EditProfileScreen', { user, profileImage })
+                    }
+                />
+                <QuickActions title="Stats" actions={statsActions} />
 
-                    <View style={styles.profileInfo}>
-                        <Text style={styles.nameText}>
-                            {user.firstName} {user.lastName}
-                        </Text>
-                        <Text style={styles.emailText}>{user.userEmail}</Text>
+                {/* Personal Information Card */}
+                <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                        <View style={styles.iconBadge}>
+                            <Ionicons name="person" size={20} color={COLORS.primary} />
+                        </View>
+                        <View style={styles.cardHeaderText}>
+                            <Text style={styles.cardTitle}>Personal Information</Text>
+                            <Text style={styles.cardSubtitle}>Your basic details</Text>
+                        </View>
+                    </View>
 
-                        <TouchableOpacity
-                            style={styles.editButton}
-                            onPress={() => navigation.navigate('EditProfileScreen', { user })}
-                        >
-                            <Text style={styles.editButtonText}>Edit Profile</Text>
-                        </TouchableOpacity>
+                    {/* First Name */}
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoLeft}>
+                            <Ionicons name="person-outline" size={18} color="#9CA3AF" />
+                            <Text style={styles.infoLabel}>First Name</Text>
+                        </View>
+                        <Text style={styles.infoValue}>{user.firstName || 'N/A'}</Text>
+                    </View>
+
+                    {/* Last Name */}
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoLeft}>
+                            <Ionicons name="person-outline" size={18} color="#9CA3AF" />
+                            <Text style={styles.infoLabel}>Last Name</Text>
+                        </View>
+                        <Text style={styles.infoValue}>{user.lastName || 'N/A'}</Text>
+                    </View>
+
+                    {/* Email */}
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoLeft}>
+                            <Ionicons name="mail-outline" size={18} color="#9CA3AF" />
+                            <Text style={styles.infoLabel}>Email Address</Text>
+                        </View>
+                        <Text style={styles.infoValue}>{user.userEmail || 'N/A'}</Text>
+                    </View>
+
+                    {/* Phone */}
+                    <View style={[styles.infoRow, styles.infoRowLast]}>
+                        <View style={styles.infoLeft}>
+                            <Ionicons name="call-outline" size={18} color="#9CA3AF" />
+                            <Text style={styles.infoLabel}>Phone Number</Text>
+                        </View>
+                        <Text style={styles.infoValue}>{user.mobileNumber || 'N/A'}</Text>
                     </View>
                 </View>
 
-                <Text style={styles.sectionTitle}>Your Information</Text>
-                <View style={styles.row}>
-                    <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        value={user.firstName || ''}
-                        editable={false}
-                        placeholder="First Name"
-                    />
-                    <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        value={user.lastName || ''}
-                        editable={false}
-                        placeholder="Last Name"
-                    />
+                {/* Academic Information Card */}
+                <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                        <View style={[styles.iconBadge, { backgroundColor: '#FEF3C7' }]}>
+                            <Ionicons name="school" size={20} color="#CA8A04" />
+                        </View>
+                        <View style={styles.cardHeaderText}>
+                            <Text style={styles.cardTitle}>Academic Information</Text>
+                            <Text style={styles.cardSubtitle}>Your student details</Text>
+                        </View>
+                    </View>
+
+                    {/* Student ID */}
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoLeft}>
+                            <Ionicons name="card-outline" size={18} color="#9CA3AF" />
+                            <Text style={styles.infoLabel}>Student ID</Text>
+                        </View>
+                        <Text style={styles.infoValue}>{user.idCardNo || 'N/A'}</Text>
+                    </View>
+
+                    {/* College */}
+                    <View style={[styles.infoRow, styles.infoRowLast]}>
+                        <View style={styles.infoLeft}>
+                            <Ionicons name="school-outline" size={18} color="#9CA3AF" />
+                            <Text style={styles.infoLabel}>College</Text>
+                        </View>
+                        <Text style={styles.infoValue}>
+                            {user.college?.collegeName || 'N/A'}
+                        </Text>
+                    </View>
                 </View>
 
-                <TextInput
-                    style={styles.input}
-                    value={user.userEmail || ''}
-                    editable={false}
-                    placeholder="Email"
-                />
-                <TextInput
-                    style={styles.input}
-                    value={user.mobileNumber || ''}
-                    editable={false}
-                    placeholder="Phone Number"
-                />
-                <TextInput
-                    style={styles.input}
-                    value={user.idCardNo || ''}
-                    editable={false}
-                    placeholder="ID Card Number"
-                />
-                <TextInput
-                    style={styles.input}
-                    value={user.college?.collegeName || 'N/A'}
-                    editable={false}
-                    placeholder="College"
-                />
             </ScrollView>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    scrollContainer: {
-        padding: 16,
-    },
-    topSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f5f9ff',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 24,
-    },
-    profilePic: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: '#eaeaea',
-    },
-    profileInfo: {
-        marginLeft: 16,
+    safeArea: {
         flex: 1,
+        backgroundColor: COLORS.dark.bg,
     },
-    nameText: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: COLORS.black,
+
+    scrollContainer: {
+        padding: 20,
+        paddingBottom: 40,
     },
-    emailText: {
-        fontSize: 14,
-        color: COLORS.gray,
-        marginVertical: 4,
-    },
-    editButton: {
-        backgroundColor: COLORS.primary,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        marginTop: 6,
-        alignSelf: 'flex-start',
-    },
-    editButtonText: {
-        color: COLORS.white,
-        fontWeight: '600',
-        fontSize: 14,
-    },
-    sectionTitle: {
-        fontWeight: '700',
-        fontSize: 16,
-        color: COLORS.black,
-        marginBottom: 12,
-    },
-    input: {
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 10,
-        backgroundColor: '#fafafa',
-        color: COLORS.black,
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    halfInput: {
-        width: '48%',
-    },
+
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: COLORS.white,
+        backgroundColor: COLORS.dark.bg,
+    },
+
+    // Card Styles
+    card: {
+        backgroundColor: COLORS.dark.card,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: COLORS.shadow.light,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+    },
+
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        gap: 12,
+    },
+
+    iconBadge: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        backgroundColor: COLORS.primaryLightest,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    cardHeaderText: {
+        flex: 1,
+    },
+
+    cardTitle: {
+        fontSize: 16,
+        fontWeight: '800',
+        color: COLORS.dark.text,
+    },
+
+    cardSubtitle: {
+        fontSize: 12,
+        color: COLORS.dark.textTertiary,
+        marginTop: 2,
+    },
+
+    // Info Row Styles
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.dark.border,
+    },
+
+    infoRowLast: {
+        borderBottomWidth: 0,
+    },
+
+    infoLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        flex: 1,
+    },
+
+    infoLabel: {
+        fontSize: 14,
+        color: COLORS.dark.textTertiary,
+        fontWeight: '500',
+    },
+
+    infoValue: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: COLORS.dark.text,
+        textAlign: 'right',
+        flex: 1,
     },
 });
 

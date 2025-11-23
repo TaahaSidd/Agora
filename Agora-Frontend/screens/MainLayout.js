@@ -1,61 +1,132 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+// import React, { useRef } from 'react';
+// import { Animated, View, StyleSheet } from 'react-native';
+// import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+// import { createNativeStackNavigator } from '@react-navigation/native-stack';
+// import ExploreScreen from './ExploreScreen';
+// import ActivityScreen from './ActivityScreen';
+// import AddListingScreen from './AddListingScreen';
+// import ChatsScreen from './ChatsScreen';
+// import SettingsScreen from './SettingsScreen';
+// import AnimatedBottomNavBar from '../components/AnimatedBottomNav';
+
+// const Tab = createBottomTabNavigator();
+// const Stack = createNativeStackNavigator();
+
+// function TabsLayout({ scrollY }) {
+//     return (
+//         <Tab.Navigator
+//             screenOptions={{ headerShown: false }}
+//             tabBar={(props) => <AnimatedBottomNavBar {...props} scrollY={scrollY} />}
+//         >
+//             <Tab.Screen name="Explore">
+//                 {(props) => <ExploreScreen {...props} scrollY={scrollY} />}
+//             </Tab.Screen>
+//             <Tab.Screen name="Activity">
+//                 {(props) => <ActivityScreen {...props} scrollY={scrollY} />}
+//             </Tab.Screen>
+//             <Tab.Screen name="Chats">
+//                 {(props) => <ChatsScreen {...props} scrollY={scrollY} />}
+//             </Tab.Screen>
+//             <Tab.Screen name="Settings">
+//                 {(props) => <SettingsScreen {...props} scrollY={scrollY} />}
+//             </Tab.Screen>
+//         </Tab.Navigator>
+//     );
+// }
+
+// export default function MainLayout() {
+//     const scrollY = useRef(new Animated.Value(0)).current;
+
+//     return (
+//         <View style={{ flex: 1 }}>
+//             <Stack.Navigator screenOptions={{ headerShown: false }}>
+//                 {/* This is your normal tab layout */}
+//                 <Stack.Screen name="Tabs">
+//                     {(props) => <TabsLayout {...props} scrollY={scrollY} />}
+//                 </Stack.Screen>
+
+//                 {/* CreateListing screen – no bottom nav */}
+//                 <Stack.Screen name="AddListingScreen" component={AddListingScreen} />
+//             </Stack.Navigator>
+//         </View>
+//     );
+// }
+
+import React, { useRef } from 'react';
+import { Animated, View, Alert } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import BottomNavBar from '../components/BottomNavBar';
+import ExploreScreen from './ExploreScreen';
+import ActivityScreen from './ActivityScreen';
+import AddListingScreen from './AddListingScreen';
+import ChatsScreen from './ChatsScreen';
+import SettingsScreen from './SettingsScreen';
+import AnimatedBottomNavBar from '../components/AnimatedBottomNav';
 
-import ExploreScreen from '../screens/ExploreScreen';
-import ActivityScreen from '../screens/ActivityScreen';
-import ChatsScreen from '../screens/ChatsScreen';
-import ChatRoomScreen from '../screens/ChatRoomScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import AddListingScreen from '../screens/AddListingScreen';
-import EditListingScreen from '../screens/EditListingScreen';
-import MyListingsScreen from '../screens/MyListingsScreen';
-import UserProfileScreen from '../screens/UserProfileScreen';
-import EditProfileScreen from '../screens/EditProfileScreen';
-
+const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-export default function MainLayout() {
-    const [activeTab, setActiveTab] = React.useState('Home');
+function TabsLayout({ scrollY, isGuest, navigation }) {
+    const guestBlocker = () => {
+        Alert.alert(
+            'Login Required',
+            'You need to login to access this feature.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Login', onPress: () => navigation.replace('Login') },
+            ]
+        );
+    };
 
     return (
-        <View style={styles.container}>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-                {activeTab === 'Home' && (
-                    <Stack.Screen name="ExploreScreen">
-                        {() => <ExploreScreen activeTab={activeTab} />}
-                    </Stack.Screen>
+        <Tab.Navigator
+            screenOptions={{ headerShown: false }}
+            tabBar={(props) => <AnimatedBottomNavBar {...props} scrollY={scrollY} isGuest={isGuest} />}
+        >
+            <Tab.Screen name="Explore">
+                {(props) => <ExploreScreen {...props} scrollY={scrollY} />}
+            </Tab.Screen>
+
+            <Tab.Screen name="Activity">
+                {(props) => <ActivityScreen {...props} scrollY={scrollY} />}
+            </Tab.Screen>
+
+            <Tab.Screen name="Chats">
+                {(props) => <ChatsScreen {...props} scrollY={scrollY} />}
+            </Tab.Screen>
+
+            <Tab.Screen name="Settings">
+                {(props) => (
+                    <SettingsScreen
+                        {...props}
+                        scrollY={scrollY}
+                        isGuest={isGuest}
+                    />
                 )}
-                {activeTab === 'Activity' && (
-                    <Stack.Screen name="ActivityScreen" component={ActivityScreen} />
-                )}
-                {activeTab === 'Chats' && (
-                    <>
-                        <Stack.Screen name="ChatsMain" component={ChatsScreen} />
-                        <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
-                    </>
-                )}
-                {activeTab === 'Settings' && (
-                    <>
-                        <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
-                        <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
-                        <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-                    </>
-                )}
-                <Stack.Screen name="AddListingScreen" component={AddListingScreen} />
-                <Stack.Screen name="EditListingScreen" component={EditListingScreen} />
-                <Stack.Screen name="MyListingsScreen" component={MyListingsScreen} />
-            </Stack.Navigator>
-            {['Home', 'Activity', 'Chats', 'Settings'].includes(activeTab) && (
-                <BottomNavBar active={activeTab} setActive={setActiveTab} />
-            )}
-        </View>
+            </Tab.Screen>
+        </Tab.Navigator >
     );
 }
 
+export default function MainLayout({ route, navigation }) {
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const isGuest = route?.params?.guest ?? false;
 
-const styles = StyleSheet.create({
-    container: { flex: 1 },
-    content: { flex: 1 },
-});
+    return (
+        <View style={{ flex: 1 }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Tabs">
+                    {(props) => (
+                        <TabsLayout
+                            {...props}
+                            scrollY={scrollY}
+                            isGuest={isGuest}
+                            navigation={navigation}
+                        />
+                    )}
+                </Stack.Screen>
+                <Stack.Screen name="AddListingScreen" component={AddListingScreen} />
+            </Stack.Navigator>
+        </View>
+    );
+}

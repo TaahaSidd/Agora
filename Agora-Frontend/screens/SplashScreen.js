@@ -1,48 +1,176 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, Easing, Alert, Text } from 'react-native';
+import { View, Animated, StyleSheet, Easing, Alert, Text, Dimensions } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { authApiPost } from '../services/api';
 import { COLORS } from '../utils/colors';
 import { jwtDecode } from 'jwt-decode';
 
+const { width, height } = Dimensions.get('window');
+
 export default function SplashScreen({ navigation }) {
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
+    const taglineAnim = useRef(new Animated.Value(0)).current;
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+
+    const circle1 = useRef(new Animated.Value(0)).current;
+    const circle2 = useRef(new Animated.Value(0)).current;
+    const circle3 = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         Animated.parallel([
-            Animated.timing(scaleAnim, {
+            Animated.spring(scaleAnim, {
                 toValue: 1,
-                duration: 1200,
-                easing: Easing.out(Easing.exp),
+                friction: 5,
+                tension: 40,
                 useNativeDriver: true,
             }),
             Animated.timing(opacityAnim, {
                 toValue: 1,
-                duration: 1200,
+                duration: 1000,
                 useNativeDriver: true,
             }),
         ]).start();
 
+        Animated.timing(taglineAnim, {
+            toValue: 1,
+            duration: 800,
+            delay: 600,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+        }).start();
+
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, {
+                    toValue: 1.03,
+                    duration: 2000,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(pulseAnim, {
+                    toValue: 1,
+                    duration: 2000,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
+
+        Animated.loop(
+            Animated.parallel([
+                Animated.timing(circle1, {
+                    toValue: 1,
+                    duration: 10000,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(circle2, {
+                    toValue: 1,
+                    duration: 13000,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(circle3, {
+                    toValue: 1,
+                    duration: 16000,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
+
+        const setOnboardingSeen = async () => {
+            await SecureStore.setItemAsync('hasSeenOnboarding', 'true');
+        };
+
+        const getOnboardingSeen = async () => {
+            const value = await SecureStore.getItemAsync('hasSeenOnboarding');
+            return value === 'true';
+        };
+
+        // const timer = setTimeout(async () => {
+        //     try {
+        //         const accessToken = await SecureStore.getItemAsync('accessToken');
+        //         const refreshToken = await SecureStore.getItemAsync('refreshToken');
+
+        //         if (!accessToken && !refreshToken) {
+        //             // New or logged-out user
+        //             navigation.replace('Onboarding', { guest: true });
+        //             return;
+        //         }
+
+        //         if (accessToken) {
+        //             const { exp } = jwtDecode(accessToken);
+        //             const jwtExpired = Date.now() >= exp * 1000;
+
+        //             if (!jwtExpired) {
+        //                 navigation.replace('MainLayout', { guest: false });
+        //                 return;
+        //             }
+        //         }
+
+        //         if (refreshToken) {
+        //             try {
+        //                 const res = await authApiPost('/auth/refresh', { refreshToken });
+        //                 await SecureStore.setItemAsync('accessToken', res.jwt);
+        //                 if (res.refreshToken) await SecureStore.setItemAsync('refreshToken', res.refreshToken);
+
+        //                 navigation.replace('MainLayout', { guest: false });
+        //                 return;
+        //             } catch {
+        //                 await SecureStore.deleteItemAsync('accessToken');
+        //                 await SecureStore.deleteItemAsync('refreshToken');
+        //                 navigation.replace('Login');
+        //                 return;
+        //             }
+        //         }
+
+        //         await SecureStore.deleteItemAsync('accessToken');
+        //         navigation.replace('Login');
+
+        //     } catch (error) {
+        //         console.log('Token validation failed:', error);
+        //         navigation.replace('Login');
+        //     }
+        // }, 3000);
+
         const timer = setTimeout(async () => {
             try {
+                const hasSeenOnboarding = await getOnboardingSeen();
                 const accessToken = await SecureStore.getItemAsync('accessToken');
                 const refreshToken = await SecureStore.getItemAsync('refreshToken');
 
-                if (!accessToken || !refreshToken) {
-                    navigation.replace('Login');
+                // Show onboarding only if user hasn't seen it yet
+                if (!hasSeenOnboarding) {
+                    navigation.replace('Onboarding', { guest: !accessToken });
                     return;
                 }
 
-                const { exp } = jwtDecode(accessToken);
-                const jwtExpired = Date.now() >= exp * 1000;
+                // Existing guest / login / main flow
+                if (!accessToken && !refreshToken) {
+                    navigation.replace('Login'); // or guest mode
+                    return;
+                }
 
-                let validToken = accessToken;
+                if (accessToken) {
+                    const { exp } = jwtDecode(accessToken);
+                    const jwtExpired = Date.now() >= exp * 1000;
 
-                if (jwtExpired) {
+                    if (!jwtExpired) {
+                        navigation.replace('MainLayout', { guest: false });
+                        return;
+                    }
+                }
+
+                if (refreshToken) {
                     try {
                         const res = await authApiPost('/auth/refresh', { refreshToken });
-                        validToken = res.jwt;
+                        await SecureStore.setItemAsync('accessToken', res.jwt);
+                        if (res.refreshToken) await SecureStore.setItemAsync('refreshToken', res.refreshToken);
+
+                        navigation.replace('MainLayout', { guest: false });
+                        return;
                     } catch {
                         await SecureStore.deleteItemAsync('accessToken');
                         await SecureStore.deleteItemAsync('refreshToken');
@@ -50,37 +178,147 @@ export default function SplashScreen({ navigation }) {
                         return;
                     }
                 }
-                navigation.replace('MainLayout');
+
+                await SecureStore.deleteItemAsync('accessToken');
+                navigation.replace('Login');
+
             } catch (error) {
                 console.log('Token validation failed:', error);
-                await SecureStore.deleteItemAsync('accessToken');
-                await SecureStore.deleteItemAsync('refreshToken');
-                Alert.alert(
-                    'Network Error',
-                    'Unable to verify login. Please check your connection.',
-                    [{ text: 'OK', onPress: () => navigation.replace('Login') }]
-                );
+                navigation.replace('Login');
             }
         }, 3000);
 
         return () => clearTimeout(timer);
     }, [navigation, scaleAnim, opacityAnim]);
 
+    const circle1Y = circle1.interpolate({
+        inputRange: [0, 1],
+        outputRange: [height, -300],
+    });
+    const circle2Y = circle2.interpolate({
+        inputRange: [0, 1],
+        outputRange: [height + 150, -350],
+    });
+    const circle3Y = circle3.interpolate({
+        inputRange: [0, 1],
+        outputRange: [height + 300, -400],
+    });
+
+    const circle1X = circle1.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0, 30, 0],
+    });
+    const circle2X = circle2.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0, -40, 0],
+    });
+
     return (
         <View style={styles.container}>
-            <Animated.Text
+            <Animated.View
                 style={[
-                    styles.title,
-                    { transform: [{ scale: scaleAnim }], opacity: opacityAnim },
+                    styles.circle,
+                    styles.circle1,
+                    {
+                        transform: [
+                            { translateY: circle1Y },
+                            { translateX: circle1X }
+                        ]
+                    },
+                ]}
+            />
+            <Animated.View
+                style={[
+                    styles.circle,
+                    styles.circle2,
+                    {
+                        transform: [
+                            { translateY: circle2Y },
+                            { translateX: circle2X }
+                        ]
+                    },
+                ]}
+            />
+            <Animated.View
+                style={[
+                    styles.circle,
+                    styles.circle3,
+                    { transform: [{ translateY: circle3Y }] },
+                ]}
+            />
+
+            {/* Main Content */}
+            <Animated.View
+                style={[
+                    styles.logoContainer,
+                    {
+                        transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }],
+                        opacity: opacityAnim,
+                    },
                 ]}
             >
-                Agora
-            </Animated.Text>
-            <Text style={styles.tagline}>India's First Student Marketplace</Text>
+                <Text style={styles.title}>Agora</Text>
+            </Animated.View>
+
+            {/* Tagline with fade in and slide up */}
+            <Animated.View
+                style={[
+                    styles.taglineContainer,
+                    {
+                        opacity: taglineAnim,
+                        transform: [
+                            {
+                                translateY: taglineAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [30, 0],
+                                }),
+                            },
+                        ],
+                    },
+                ]}
+            >
+                <Text style={styles.tagline}>India's First Student Marketplace</Text>
+
+                {/* Loading Dots */}
+                <View style={styles.dotsContainer}>
+                    <Animated.View
+                        style={[
+                            styles.dot,
+                            {
+                                opacity: taglineAnim.interpolate({
+                                    inputRange: [0, 0.3, 1],
+                                    outputRange: [0.3, 1, 0.3],
+                                }),
+                            }
+                        ]}
+                    />
+                    <Animated.View
+                        style={[
+                            styles.dot,
+                            {
+                                opacity: taglineAnim.interpolate({
+                                    inputRange: [0, 0.5, 1],
+                                    outputRange: [0.3, 1, 0.3],
+                                }),
+                            }
+                        ]}
+                    />
+                    <Animated.View
+                        style={[
+                            styles.dot,
+                            {
+                                opacity: taglineAnim.interpolate({
+                                    inputRange: [0, 0.7, 1],
+                                    outputRange: [0.3, 1, 0.3],
+                                }),
+                            }
+                        ]}
+                    />
+                </View>
+            </Animated.View>
         </View>
     );
 }
-
 
 const styles = StyleSheet.create({
     container: {
@@ -89,20 +327,66 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        overflow: 'hidden',
+    },
+    circle: {
+        position: 'absolute',
+        borderRadius: 1000,
+        opacity: 0.04,
+    },
+    circle1: {
+        width: 500,
+        height: 500,
+        backgroundColor: COLORS.primary,
+        left: -150,
+    },
+    circle2: {
+        width: 400,
+        height: 400,
+        backgroundColor: '#3B82F6',
+        right: -120,
+    },
+    circle3: {
+        width: 350,
+        height: 350,
+        backgroundColor: '#8B5CF6',
+        left: width / 2 - 175,
+    },
+    logoContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     title: {
         color: COLORS.white,
-        fontSize: 36,
-        fontWeight: 'bold',
-        letterSpacing: 2,
+        fontSize: 56,
+        fontWeight: '900',
+        letterSpacing: 4,
+        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+        textShadowOffset: { width: 0, height: 6 },
+        textShadowRadius: 12,
+    },
+    taglineContainer: {
+        position: 'absolute',
+        bottom: 80,
+        alignItems: 'center',
     },
     tagline: {
-        position: 'absolute',
-        bottom: 60,
-        color: COLORS.white,
-        fontSize: 16,
-        opacity: 0.8,
+        color: 'rgba(255, 255, 255, 0.8)',
+        fontSize: 15,
+        fontWeight: '600',
         textAlign: 'center',
-        width: '100%',
+        letterSpacing: 0.8,
+        marginBottom: 24,
+    },
+    dotsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: COLORS.primary,
     },
 });

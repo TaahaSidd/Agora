@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
     View,
     Text,
@@ -7,11 +7,20 @@ import {
     FlatList,
     ActivityIndicator,
     StyleSheet,
-    SafeAreaView
+    SafeAreaView,
+    StatusBar,
+    Image,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import debounce from "lodash.debounce";
+
+import { COLORS } from '../utils/colors';
+import { THEME } from "../utils/theme";
+
+import SearchInput from "../components/SearchInput";
+
+import RoadSVG from '../assets/svg/RoadSVG.svg';
 
 const BACKEND_URL = "http://192.168.8.15:9000/Agora";
 
@@ -31,7 +40,17 @@ const SearchScreen = ({ navigation }) => {
             const response = await axios.post(`${BACKEND_URL}/listing/search`, {
                 keyword: query,
             });
-            setSearchResults(response.data);
+
+            const formatted = response.data.map(item => ({
+                ...item,
+                images: item.imageUrl && item.imageUrl.length > 0
+                    ? item.imageUrl.map(url => ({ uri: url }))
+                    : [require('../assets/LW.jpg')],
+                name: item.title || 'Untitled',
+                price: item.price ? `₹ ${item.price}` : 'N/A',
+            }));
+
+            setSearchResults(formatted);
         } catch (err) {
             console.log("Search error:", err);
         } finally {
@@ -43,14 +62,17 @@ const SearchScreen = ({ navigation }) => {
 
     const handleChangeText = (text) => {
         setSearchQuery(text);
-        debouncedSearch(text);
-        if (query.trim() !== "") {
+        if (text.trim().length >= 2) {
+            debouncedSearch(text);
+        } else {
+            setSearchResults([]);
+        }
+
+        if (text.trim().length >= 2) {
             setRecentSearches((prev) => {
-                const updated = [query, ...prev.filter(item => item !== query)];
+                const updated = [text, ...prev.filter(item => item !== text)];
                 return updated.slice(0, 3);
             });
-
-            fetchSearchResults(query);
         }
     };
 
@@ -59,71 +81,165 @@ const SearchScreen = ({ navigation }) => {
     const handleBackPress = () => navigation.goBack();
 
     const handleSearchItemPress = (item) => {
-        // Add to recent searches if it's not there
         if (!recentSearches.includes(item.title || item)) {
             setRecentSearches([item.title || item, ...recentSearches].slice(0, 10));
         }
         navigation.navigate("ProductDetailsScreen", { item });
     };
 
-    const renderItem = ({ item }) => (
+    const renderSearchResult = ({ item }) => (
+        <TouchableOpacity
+            style={styles.resultCard}
+            onPress={() => handleSearchItemPress(item)}
+            activeOpacity={0.7}
+        >
+            <Image
+                source={item.images[0]}
+                style={styles.resultImage}
+                resizeMode="cover"
+            />
+            <View style={styles.resultContent}>
+                <Text style={styles.resultTitle} numberOfLines={2}>
+                    {item.title || item.name}
+                </Text>
+
+                {item.description && (
+                    <Text style={styles.resultDescription} numberOfLines={2}>
+                        {item.description}
+                    </Text>
+                )}
+
+                <View style={styles.resultFooter}>
+                    <Text style={styles.resultPrice}>{item.price}</Text>
+
+                    {item.condition && (
+                        <View style={styles.conditionBadge}>
+                            <Text style={styles.conditionText}>{item.condition}</Text>
+                        </View>
+                    )}
+                </View>
+
+                {item.category && (
+                    <View style={styles.categoryContainer}>
+                        <Ionicons name="pricetag-outline" size={12} color="#6B7280" />
+                        <Text style={styles.categoryText}>{item.category}</Text>
+                    </View>
+                )}
+            </View>
+        </TouchableOpacity>
+    );
+
+    const renderRecentSearch = ({ item }) => (
         <TouchableOpacity
             style={styles.item}
-            onPress={() => handleSearchItemPress(item)}
+            onPress={() => {
+                setSearchQuery(item);
+                handleChangeText(item);
+            }}
+            activeOpacity={0.7}
         >
-            <Text style={styles.itemText}>{item.title || item}</Text>
-            {!searchQuery && (
+            <View style={styles.itemIconContainer}>
+                <Ionicons
+                    name="time-outline"
+                    size={20}
+                    color="#6B7280"
+                />
+            </View>
+            <Text style={styles.itemText}>{item}</Text>
+            <TouchableOpacity
+                style={styles.removeButton}
+                onPress={(e) => {
+                    e.stopPropagation();
+                    setRecentSearches(prev => prev.filter(search => search !== item));
+                }}
+            >
                 <Ionicons
                     name="close-circle"
-                    size={16}
-                    color="#999"
-                    style={styles.itemIcon}
+                    size={20}
+                    color="#67707fff"
                 />
-            )}
+            </TouchableOpacity>
         </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <SafeAreaView style={styles.safeArea}>
+            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
+
             <View style={styles.container}>
-                {/* Search Bar */}
-                <View style={styles.searchContainer}>
-                    <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={20} color="#000" />
+                {/* Search Header */}
+                <View style={styles.searchHeader}>
+                    <TouchableOpacity
+                        onPress={handleBackPress}
+                        style={styles.backButton}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#ffffffff" />
                     </TouchableOpacity>
-                    <TextInput
-                        placeholder='Search for “Stationery”'
-                        placeholderTextColor="#979797"
-                        style={styles.input}
+                    <SearchInput
                         value={searchQuery}
                         onChangeText={handleChangeText}
+                        placeholder='Search for "Stationery"'
+                        autoFocus
+                        onClear={() => setSearchQuery("")}
                     />
                 </View>
 
-
+                {/* Section Header */}
                 <View style={styles.headerContainer}>
                     <Text style={styles.headerText}>
-                        {searchQuery ? "Search Results" : "Recent Search"}
+                        {searchQuery ? "Search Results" : "Recent Searches"}
                     </Text>
                     {!searchQuery && recentSearches.length > 0 && (
-                        <TouchableOpacity onPress={handleClearAll}>
+                        <TouchableOpacity
+                            onPress={handleClearAll}
+                            activeOpacity={0.7}
+                        >
                             <Text style={styles.clearText}>Clear All</Text>
                         </TouchableOpacity>
                     )}
                 </View>
 
-
+                {/* Results/List */}
                 {loading ? (
-                    <ActivityIndicator size="large" color="#008CFE" style={{ marginTop: 20 }} />
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={COLORS.primary} />
+                        <Text style={styles.loadingText}>Searching...</Text>
+                    </View>
                 ) : (
                     <FlatList
                         data={searchQuery ? searchResults : recentSearches}
                         keyExtractor={(item, index) => `${item.id || item}-${index}`}
-                        renderItem={renderItem}
+                        renderItem={searchQuery ? renderSearchResult : renderRecentSearch}
+                        contentContainerStyle={styles.listContainer}
+                        showsVerticalScrollIndicator={false}
                         ListEmptyComponent={
-                            <Text style={styles.emptyText}>
-                                {searchQuery ? "No results found" : "No recent searches"}
-                            </Text>
+                            <View style={styles.emptyContainer}>
+                                {searchQuery ? (
+                                    // No results found - with SVG illustration
+                                    <>
+                                        <RoadSVG width={180} height={180} />
+                                        <Text style={styles.emptyTitle}>No results found</Text>
+                                        <Text style={styles.emptySubtitle}>
+                                            Try searching with different keywords
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <>
+                                        <View style={styles.emptyIconContainer}>
+                                            <Ionicons
+                                                name="time-outline"
+                                                size={48}
+                                                color={COLORS.gray500}
+                                            />
+                                        </View>
+                                        <Text style={styles.emptyTitle}>No recent searches</Text>
+                                        <Text style={styles.emptySubtitle}>
+                                            Your search history will appear here
+                                        </Text>
+                                    </>
+                                )}
+                            </View>
                         }
                         keyboardShouldPersistTaps="handled"
                     />
@@ -132,47 +248,213 @@ const SearchScreen = ({ navigation }) => {
         </SafeAreaView>
     );
 };
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 16 },
-    searchContainer: {
+    safeArea: {
+        flex: 1,
+        backgroundColor: COLORS.dark.bg,
+    },
+    container: {
+        flex: 1,
+        backgroundColor: COLORS.dark.bg,
+    },
+
+    /* Header with back button + search bar */
+    searchHeader: {
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 38,
-        marginBottom: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        backgroundColor: COLORS.dark.bgElevated,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.dark.border,
+        marginTop: 30,
     },
     backButton: {
-        padding: 8,
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
         marginRight: 8,
     },
-    input: {
-        flex: 1,
-        height: 40,
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        backgroundColor: "#f1f1f1",
-        color: "#000",
-    },
+
+    /* Recent Search Header */
     headerContainer: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 8,
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 12,
     },
-    headerText: { fontSize: 16, fontWeight: "700", color: "#000" },
-    clearText: { fontSize: 14, color: "#008CFE" },
+    headerText: {
+        fontSize: 18,
+        fontWeight: "800",
+        color: COLORS.dark.text,
+        letterSpacing: -0.3,
+    },
+    clearText: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: COLORS.primary,
+    },
+
+    listContainer: {
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+    },
+
+    /* Recent Search Item */
     item: {
         flexDirection: "row",
         alignItems: "center",
-        paddingVertical: 10,
-        borderBottomWidth: 0.5,
-        borderBottomColor: "#ccc",
+        backgroundColor: COLORS.dark.card,
+        paddingVertical: 16,
+        paddingHorizontal: 16,
+        borderRadius: 16,
+        marginBottom: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 2,
     },
-    itemText: { fontSize: 14, color: "#000", flex: 1 },
-    itemIcon: { marginLeft: 8 },
-    emptyText: { textAlign: "center", marginTop: 20, color: "#999" },
+    itemIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: COLORS.dark.cardElevated,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 12,
+    },
+    itemText: {
+        flex: 1,
+        fontSize: 15,
+        color: COLORS.dark.textSecondary,
+        fontWeight: "600",
+    },
+    removeButton: {
+        padding: 4,
+        marginLeft: 8,
+    },
+
+    /* Result Cards */
+    resultCard: {
+        flexDirection: "row",
+        backgroundColor: COLORS.dark.card,
+        borderRadius: 16,
+        marginBottom: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 2,
+        overflow: "hidden",
+    },
+    resultImage: {
+        width: 120,
+        height: 120,
+        backgroundColor: COLORS.dark.cardElevated,
+    },
+    resultContent: {
+        flex: 1,
+        padding: 12,
+        justifyContent: "space-between",
+    },
+    resultTitle: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: COLORS.dark.text,
+        marginBottom: 4,
+        lineHeight: 20,
+    },
+    resultDescription: {
+        fontSize: 13,
+        color: COLORS.dark.textTertiary,
+        lineHeight: 18,
+        marginBottom: 8,
+    },
+    resultFooter: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 6,
+    },
+    resultPrice: {
+        fontSize: 16,
+        fontWeight: "800",
+        color: COLORS.primary,
+    },
+    conditionBadge: {
+        backgroundColor: COLORS.dark.cardElevated,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    conditionText: {
+        fontSize: 11,
+        fontWeight: "600",
+        color: COLORS.dark.textTertiary,
+        textTransform: "capitalize",
+    },
+
+    /* Category text under result */
+    categoryContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+    },
+    categoryText: {
+        fontSize: 12,
+        color: COLORS.dark.textTertiary,
+        fontWeight: "500",
+    },
+
+    /* Loading state */
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingTop: 60,
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: COLORS.dark.textSecondary,
+        fontWeight: "500",
+    },
+
+    /* Empty state */
+    emptyContainer: {
+        alignItems: 'center',
+        paddingTop: 80,
+        paddingHorizontal: THEME.spacing['3xl'],
+    },
+    emptyIconContainer: {
+        width: 100,
+        height: 100,
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.dark.cardElevated,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: THEME.spacing.lg,
+        borderWidth: THEME.borderWidth.thick,
+        borderColor: COLORS.dark.border,
+    },
+    emptyTitle: {
+        fontSize: THEME.fontSize.xl,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginTop: THEME.spacing.lg, // Add margin for SVG
+        marginBottom: THEME.spacing[2],
+        textAlign: 'center',
+    },
+    emptySubtitle: {
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        textAlign: 'center',
+        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
+    },
 });
 
 export default SearchScreen;
-
-//fix some minor ui in screen.

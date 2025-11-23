@@ -1,146 +1,636 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     View,
     Text,
-    Image,
     TouchableOpacity,
     StyleSheet,
     Dimensions,
     ScrollView,
     StatusBar,
-    SafeAreaView,
+    Platform,
+    FlatList,
+    Linking,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { BlurView } from 'expo-blur';
+import { Image } from "expo-image";
+import MapView, { Marker } from 'react-native-maps';
+import ImageViewing from 'react-native-image-viewing';
 import Icon from "react-native-vector-icons/Ionicons";
-import Entypo from "react-native-vector-icons/Entypo";
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import Button from "../components/Button";
 import Tag from "../components/Tag";
+import SellerCard from "../components/SellerCard";
+import Button from "../components/Button";
+import Card from "../components/Cards";
+import FavoriteButton from "../components/FavoriteButton";
+import ExpandableText from "../components/ExpandableText";
+import ProductDetailItem from "../components/ProductDetailItem";
+import SafetyTips from "../components/SafetyTips";
+import BottomSheetMenu from "../components/BottomSheetMenu";
+import InputModal from "../components/InputModal";
+import ToastMessage from "../components/ToastMessage";
+
+import { shareItem } from '../services/share';
+import { getOrCreateChatRoom } from '../services/chatService';
+
+import { getTimeAgo } from '../utils/dateUtils';
 import { COLORS } from "../utils/colors";
+import { THEME } from "../utils/theme";
+import { useCurrentUser } from '../hooks/useCurrentUser';
+import { useReviews } from "../hooks/useReviews";
+import { useListings } from "../hooks/useListings";
 
 const { height, width } = Dimensions.get("window");
 
 export default function ProductDetailsScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const { item: product } = route.params;
+    const product = route.params?.item;
+    const { items: allListings } = useListings();
+    const { reviews = [], setReviews } = useReviews(product?.id ?? null);
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+    const showToast = ({ type, title, message }) => {
+        setToast({ visible: true, type, title, message });
+    };
+    const { user: currentUser, loading, isGuest } = useCurrentUser();
+    const isOwnListing = currentUser?.id === product?.seller?.id;
+    const [isViewerVisible, setIsViewerVisible] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [showMenu, setShowMenu] = useState(false);
+    const [showAllReviews, setShowAllReviews] = useState(false);
+    const flatListRef = useRef(null);
+
+    const relatedListings = allListings.filter(
+        (listing) =>
+            listing.id !== product.id &&
+            listing.category === product.category
+    );
+
+    if (!product) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>Product not found!</Text>
+            </View>
+        );
+    }
 
     const images = product?.images?.length
         ? product.images
         : product?.image
             ? [{ uri: product.image }]
-            : [require("../assets/adaptive-icon.png")];
+            : [require("../assets/no-image.jpg")];
 
     const productName = product?.title || product?.name || "Product";
     const productPrice = product?.price ? (product.price.includes('₹') ? product.price : `₹ ${product.price}`) : "N/A";
     const productCondition = product?.itemCondition || "Used";
     const productCollege = product?.college?.collegeName || "Unknown College";
     const productLocation = product?.college?.city || "City Name";
-    const productDescription =
-        product?.description || "No description provided for this product.";
-    const sellerName =
-        (product?.seller?.firstName && product?.seller?.lastName
-            ? `${product.seller.firstName} ${product.seller.lastName}`
-            : product?.seller?.userName) || "Seller Name";
+    const productDescription = product?.description || "No description provided for this product.";
     const sellerSince = "2025";
+
+    let sellerAvatar = product.seller?.avatar;
+    if (sellerAvatar?.includes('localhost')) {
+        sellerAvatar = sellerAvatar.replace('localhost', '192.168.8.15');
+    }
+
+    const productCoordinates = product?.college?.latitude && product?.college?.longitude
+        ? {
+            latitude: Number(product.college.latitude),
+            longitude: Number(product.college.longitude),
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+        }
+        : {
+            latitude: 0,
+            longitude: 0,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+        };
+
+    const openInMaps = () => {
+        if (!product?.college?.latitude || !product?.college?.longitude) return;
+
+        const lat = Number(product.college.latitude);
+        const lng = Number(product.college.longitude);
+        const label = product.college.collegeName || "College";
+
+        const scheme = Platform.select({
+            ios: 'maps://0,0?q=',
+            android: 'geo:0,0?q='
+        });
+
+        const latLng = `${lat},${lng}`;
+
+        const url = Platform.select({
+            ios: `${scheme}${label}@${latLng}`,
+            android: `${scheme}${latLng}(${label})`
+        });
+
+        Linking.openURL(url);
+    };
+
+    // Calculate average rating
+    const avgRating = reviews.length > 0
+        ? Number((reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0) / reviews.length).toFixed(1))
+        : 0;
+
+    const ratingBreakdown = [5, 4, 3, 2, 1].map(star => {
+        const count = reviews.filter(r => Number(r.rating) === star).length;
+        const percentage = reviews.length ? (count / reviews.length) * 100 : 0;
+        return { star, count, percentage };
+    });
+
+    const openChatRoom = async () => {
+        if (loading) return;
+        if (isGuest || !currentUser?.id) {
+            showToast({
+                type: 'info',
+                title: 'Login Required',
+                message: 'Please log in to chat with the seller.',
+            });
+            return;
+        }
+
+        if (!product?.seller || !product.seller.id) {
+            console.warn("Seller data not loaded yet");
+            return;
+        }
+
+        try {
+            const buyer = {
+                id: currentUser.id,
+                email: currentUser.email,
+                name: currentUser.name,
+                avatar: currentUser.avatar || null,
+            };
+
+            const seller = {
+                id: product.seller.id,
+                email: product.seller.userEmail || product.seller.email || String(product.seller.id),
+                name: product.seller.firstName
+                    ? `${product.seller.firstName} ${product.seller.lastName}`
+                    : product.seller.userName || 'Seller',
+                avatar: product.seller.avatar || null,
+            };
+
+            const roomRef = await getOrCreateChatRoom(product.id, buyer, seller);
+
+            navigation.navigate('ChatRoomScreen', {
+                roomId: roomRef.id,
+                listing: product,
+                sellerName: seller.name,
+                sellerId: seller.id,
+                sellerAvatar: product.seller.profileImage || product.seller.avatar || null,
+            });
+        } catch (err) {
+            console.error('Failed to open chat room:', err);
+        }
+    };
+
+
+    const handleNextImage = () => {
+        if (currentImageIndex < images.length - 1) {
+            const nextIndex = currentImageIndex + 1;
+            setCurrentImageIndex(nextIndex);
+            flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+        }
+    };
+
+    const handlePreviousImage = () => {
+        if (currentImageIndex > 0) {
+            const prevIndex = currentImageIndex - 1;
+            setCurrentImageIndex(prevIndex);
+            flatListRef.current?.scrollToIndex({ index: prevIndex, animated: true });
+        }
+    };
+
+    const onViewableItemsChanged = useRef(({ viewableItems }) => {
+        if (viewableItems.length > 0) {
+            setCurrentImageIndex(viewableItems[0].index);
+        }
+    }).current;
+
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 50
+    }).current;
+
+    const renderImageItem = ({ item, index }) => (
+        <TouchableOpacity
+            onPress={() => {
+                setCurrentImageIndex(index);
+                setIsViewerVisible(true);
+            }}
+            style={styles.imageSlide}
+            activeOpacity={0.9}
+        >
+            <Image
+                source={typeof item === 'string' ? { uri: item } : item}
+                style={styles.productImage}
+                resizeMode="cover"
+            />
+        </TouchableOpacity>
+    );
+
+    const renderReviewItem = ({ item, index }) => {
+        const reviewerName = item?.reviewerName || item?.user || item?.userName || 'Unknown';
+        const rating = Number(item?.rating) || 0;
+        const comment = item?.comment || '';
+        const createdAt = item?.createdAt || item?.date || item?.createdAtIso || null;
+        const reviewerInitial = reviewerName ? String(reviewerName).charAt(0) : '?';
+
+        return (
+            <View style={styles.reviewCard}>
+                <View style={styles.reviewHeader}>
+                    <View style={styles.reviewUserInfo}>
+                        <View style={styles.reviewAvatar}>
+                            <Text style={styles.reviewAvatarText}>{reviewerInitial}</Text>
+                        </View>
+                        <View style={styles.reviewUserDetails}>
+                            <View style={styles.reviewNameRow}>
+                                <Text style={styles.reviewUser}>{reviewerName}</Text>
+                                {/* if you have a verified flag in DTO */}
+                                {item?.verified && (
+                                    <View style={styles.verifiedBadge}>
+                                        <Icon name="checkmark-circle" size={14} color="#10B981" />
+                                    </View>
+                                )}
+                            </View>
+                            {createdAt && (
+                                <Text style={styles.reviewDate}>
+                                    {new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </Text>
+                            )}
+                        </View>
+                    </View>
+                </View>
+
+                <View style={styles.reviewRatingRow}>
+                    {[...Array(5)].map((_, i) => (
+                        <Icon key={i} name={i < rating ? 'star' : 'star-outline'} size={14} color="#FCD34D" />
+                    ))}
+                </View>
+
+                <Text style={styles.reviewComment}>{comment}</Text>
+            </View>
+        );
+    };
+
+    const displayedReviews = showAllReviews ? reviews : (reviews || []).slice(0, 2);
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" translucent />
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+            {/* Floating Header */}
             <View style={styles.headerRow}>
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={styles.iconBtn}
-                >
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
                     <Icon name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
 
-                <Text style={styles.headerText}>Details</Text>
-
-                <TouchableOpacity style={styles.iconBtn}>
-                    <Entypo name="dots-three-vertical" size={20} color="#fff" />
-                </TouchableOpacity>
+                <View style={styles.headerActions}>
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => setShowMenu(true)}
+                        style={styles.iconBtn}>
+                        <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
+                    </TouchableOpacity>
+                    <FavoriteButton listingId={product.id} size={28} style={{ position: 'absolute', top: 2, right: 54 }} />
+                </View>
             </View>
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                {/* Image Carousel */}
                 <View style={styles.imageContainer}>
-                    <Image
-                        source={images[0]}
-                        style={styles.productImage}
-                        resizeMode="cover"
+                    <FlatList
+                        ref={flatListRef}
+                        data={images}
+                        renderItem={renderImageItem}
+                        keyExtractor={(item, index) => index.toString()}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onViewableItemsChanged={onViewableItemsChanged}
+                        viewabilityConfig={viewabilityConfig}
+                        getItemLayout={(data, index) => ({
+                            length: width,
+                            offset: width * index,
+                            index,
+                        })}
+                    />
+
+                    {/* Navigation Arrows */}
+                    {images.length > 1 && (
+                        <>
+                            {currentImageIndex > 0 && (
+                                <TouchableOpacity
+                                    style={[styles.arrowButton, styles.leftArrow]}
+                                    onPress={handlePreviousImage}
+                                    activeOpacity={0.8}
+                                >
+                                    <Icon name="chevron-back" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            )}
+                            {currentImageIndex < images.length - 1 && (
+                                <TouchableOpacity
+                                    style={[styles.arrowButton, styles.rightArrow]}
+                                    onPress={handleNextImage}
+                                    activeOpacity={0.8}
+                                >
+                                    <Icon name="chevron-forward" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            )}
+                        </>
+                    )}
+
+                    {/* Dot Indicators */}
+                    {images.length > 1 && (
+                        <View style={styles.dotContainer}>
+                            {images.map((_, index) => (
+                                <View
+                                    key={index}
+                                    style={[
+                                        styles.dot,
+                                        currentImageIndex === index && styles.activeDot
+                                    ]}
+                                />
+                            ))}
+                        </View>
+                    )}
+
+                    <ImageViewing
+                        images={images.map(img => (typeof img === 'string' ? { uri: img } : img))}
+                        imageIndex={currentImageIndex}
+                        visible={isViewerVisible}
+                        onRequestClose={() => setIsViewerVisible(false)}
                     />
                 </View>
-                <View style={styles.content}>
-                    <View style={styles.productInfoSection}>
-                        {productCollege && <Tag label={productCollege} />}
-                        <Text style={styles.productName}>{productName}</Text>
-                        <Text style={styles.productPrice}>{productPrice}</Text>
 
-                        <View style={styles.metaInfo}>
-                            <View style={styles.metaRow}>
-                                <Icon name="location-outline" size={18} color={COLORS.gray} />
-                                <Text style={styles.metaText}>{productLocation}</Text>
-                            </View>
-                            <View style={styles.metaRow}>
-                                <Icon name="shield-checkmark-outline" size={18} color="#4CAF50" />
-                                <Text style={styles.metaText}>Verified Listing</Text>
+                {/* Main Content */}
+                <View style={styles.content}>
+                    <View style={styles.priceRow}>
+                        <Text style={styles.productName}>{productName}</Text>
+                        {/* <Tag label={productCondition} type="condition" /> */}
+                    </View>
+
+                    <Text style={styles.productPrice}>{productPrice}</Text>
+
+                    <View style={styles.locationSection}>
+                        <Tag
+                            label={productLocation}
+                            type="location"
+                            icon={{ library: "Ionicons", name: "location", color: COLORS.primary }}
+                        />
+                        <View style={styles.divider} />
+                        <Tag
+                            label={productCollege}
+                            type="college"
+                            icon={{ library: "MaterialCommunityIcons", name: "school", color: COLORS.primary }}
+                        />
+                    </View>
+
+                    <View style={styles.quickInfoPills}>
+                        {/* <Tag
+                            label="Verified"
+                            type="verified"
+                            icon={{ library: "Ionicons", name: "shield-checkmark", color: "#10B981" }}
+                        /> */}
+                        <Tag
+                            label={product.postDate ? `Posted ${getTimeAgo(product.postDate)}` : "Posted recently"}
+                            type="time"
+                            icon={{ library: "Ionicons", name: "time-outline", color: "#6B7280" }}
+                        />
+                    </View>
+
+                    <View style={styles.sectionDivider} />
+
+                    <Text style={styles.sectionTitle}>Seller</Text>
+                    <SellerCard
+                        seller={product.seller}
+                        sellerSince={sellerSince}
+                        currentUser={currentUser}
+                        onPress={() => navigation.navigate("ProfileScreen", {
+                            sellerId: product.seller.id,
+                            profileImage: product.seller.profileImage
+                        })}
+                    />
+
+                    <View style={styles.sectionDivider} />
+
+                    <Text style={styles.sectionTitle}>Description</Text>
+                    <ExpandableText text={productDescription || "No description available."} />
+
+                    <View style={styles.sectionDivider} />
+
+                    <Text style={styles.sectionTitle}>Product Details</Text>
+                    <ProductDetailItem label="Condition" value={productCondition} />
+                    <ProductDetailItem
+                        label="Category"
+                        value={product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : 'N/A'}
+                    />
+                    <ProductDetailItem label="Availability" value={product.itemStatus} type="availability" />
+
+                    <View style={styles.sectionDivider} />
+
+                    {/* Enhanced Map Section */}
+                    <View style={styles.mapHeader}>
+                        <Text style={styles.sectionTitle}>Location</Text>
+                        <TouchableOpacity
+                            style={styles.viewMapButton}
+                            onPress={openInMaps}
+                            activeOpacity={0.7}
+                        >
+                            <Icon name="map" size={16} color={COLORS.primary} />
+                            <Text style={styles.viewMapText}>View in Maps</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.mapCard}>
+                        <MapView
+                            style={styles.map}
+                            initialRegion={productCoordinates}
+                            scrollEnabled={false}
+                            zoomEnabled={false}
+                        >
+                            <Marker coordinate={productCoordinates} title={productName} />
+                        </MapView>
+                        <View style={styles.mapOverlay}>
+                            <View style={styles.mapInfoCard}>
+                                <View style={styles.mapIconCircle}>
+                                    <Icon name="location" size={20} color={COLORS.primary} />
+                                </View>
+                                <View style={styles.mapInfo}>
+                                    <Text style={styles.mapLocation}>{productLocation}</Text>
+                                    <Text style={styles.mapCollege}>{productCollege}</Text>
+                                    <Text style={styles.mapDistance}>~2.5 km away</Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={styles.directionsButton}
+                                    onPress={openInMaps}
+                                    activeOpacity={0.7}
+                                >
+                                    <Icon name="navigate" size={18} color="#fff" />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </View>
-                    <View style={styles.descriptionSection}>
-                        <Text style={styles.sectionTitle}>Description</Text>
-                        <Text style={styles.description}>{productDescription}</Text>
+
+                    <View style={styles.sectionDivider} />
+
+                    {/* Safety Tips */}
+                    <SafetyTips />
+
+                    <View style={styles.sectionDivider} />
+
+                    {/* Enhanced Reviews Section */}
+                    <View style={styles.reviewsHeader}>
+                        <Text style={styles.sectionTitle}>Reviews & Ratings</Text>
                     </View>
-                    <View style={styles.sellerContactSection}>
-                        <Text style={styles.sectionTitle}>Seller Information</Text>
-                        <TouchableOpacity
-                            style={styles.sellerCard}
-                            onPress={() =>
-                                navigation.navigate("ProfileScreen", {  sellerId: product.sellerId })
-                            }
-                        >
-                            <Image
-                                source={
-                                    product.seller?.avatar
-                                        ? { uri: product.seller.avatar }
-                                        : require("../assets/804948.png")
-                                }
-                                style={styles.sellerAvatar}
-                            />
-                            <View style={styles.sellerInfo}>
-                                <View style={styles.sellerDetails}>
-                                    <Text style={styles.sellerName}>{sellerName}</Text>
-                                    <Text style={styles.sellerSince}>Member since {sellerSince}</Text>
-                                </View>
-                                <View style={styles.sellerRating}>
-                                    <Icon name="star" size={16} color="#FFD700" />
-                                    <Text style={styles.ratingText}>4.8</Text>
-                                </View>
-                                <Icon
-                                    name="chevron-forward"
-                                    size={20}
-                                    color={COLORS.gray}
-                                />
+
+                    {/* Rating Summary */}
+                    <View style={styles.ratingSummaryCard}>
+                        <View style={styles.ratingLeft}>
+                            <Text style={styles.avgRatingNumber}>{avgRating}</Text>
+                            <View style={styles.ratingStarsRow}>
+                                {[...Array(5)].map((_, i) => (
+                                    <Icon
+                                        key={i}
+                                        name={i < Math.floor(avgRating) ? "star" : "star-outline"}
+                                        size={16}
+                                        color="#FCD34D"
+                                    />
+                                ))}
                             </View>
-                        </TouchableOpacity>
+                            <Text style={styles.totalReviews}>{reviews.length} reviews</Text>
+                        </View>
+
+                        <View style={styles.ratingRight}>
+                            {ratingBreakdown.map(item => (
+                                <View key={item.star} style={styles.ratingBarRow}>
+                                    <Text style={styles.ratingBarLabel}>{item.star}★</Text>
+                                    <View style={styles.ratingBarTrack}>
+                                        <View
+                                            style={[
+                                                styles.ratingBarFill,
+                                                { width: `${item.percentage}%` }
+                                            ]}
+                                        />
+                                    </View>
+                                    <Text style={styles.ratingBarCount}>{item.count}</Text>
+                                </View>
+                            ))}
+                        </View>
                     </View>
+
+                    {/* Reviews List */}
+                    <View style={styles.reviewsListContainer}>
+                        <FlatList
+                            data={displayedReviews || []}
+                            renderItem={renderReviewItem}
+                            keyExtractor={(item, index) => {
+                                const id = item?.id ?? item?.reviewId ?? item?.reviewerId;
+                                return id ? String(id) : String(index);
+                            }}
+                            scrollEnabled={false}
+                        />
+
+                        {reviews.length > 0 && (
+                            <Button
+                                title={`View All ${reviews.length} Reviews`}
+                                onPress={() =>
+                                    navigation.navigate('AllReviewsScreen', {
+                                        reviews,
+                                        productName,
+                                        productId: product.id,
+                                        onAddReview: newReview => {
+                                            setReviews(prev => [newReview, ...prev]);
+                                        },
+                                    })
+                                }
+                                variant="ghost"
+                                size="small"
+                                icon="chevron-forward"
+                                iconPosition="right"
+                                fullWidth
+                                textStyle={{ color: COLORS.primary }}
+                            />
+                        )}
+                    </View>
+
+                    <View style={styles.sectionDivider} />
+
+                    {/* Enhanced Related Listings */}
+                    <View style={styles.relatedHeader}>
+                        <Text style={styles.sectionTitle}>Similar Listings</Text>
+                    </View>
+
+                    {relatedListings.length === 0 ? (
+                        <View style={styles.emptyRelatedContainer}>
+                            <Ionicons name="cube-outline" size={32} color={COLORS.gray500} />
+                            <Text style={styles.emptyRelatedText}>
+                                No similar listings found.
+                            </Text>
+                        </View>
+                    ) : (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.relatedList}
+                        >
+                            {relatedListings.slice(0, 5).map((item) => (
+                                <Card
+                                    key={item.id}
+                                    item={item}
+                                    horizontal
+                                    onPress={() => navigation.push('ProductDetailsScreen', { item })}
+                                />
+                            ))}
+                        </ScrollView>
+                    )}
+
                 </View>
             </ScrollView>
 
-            {/* Bottom Buttons */}
-            <View style={styles.bottomButtons}>
-                <Button
-                    variant="secondary"
-                    style={styles.chatButton}
-                    title={<Icon name="chatbubble-outline" size={20} color={COLORS.primary} />}
-                />
-                <Button
-                    variant="primary"
-                    style={styles.offerButton}
-                    title="Make Offer"
-                    onPress={() => navigation.navigate("MakeOfferScreen", { item: product })}
-                />
-            </View>
+            {/* Floating Bottom Action Bar */}
+            {!isOwnListing && (
+                <View style={styles.bottomBar}>
+                    <Button
+                        title="Chat"
+                        variant="primary"
+                        size="medium"
+                        icon="chatbubble-ellipses"
+                        iconPosition="left"
+                        onPress={openChatRoom}
+                        style={styles.chatButton}
+                    />
+                </View>
+            )}
+
+            {/* Bottom Sheet Menu */}
+            <BottomSheetMenu
+                visible={showMenu}
+                onClose={() => setShowMenu(false)}
+                type="listing"
+                title="Listing Options"
+                onShare={() => {
+                    shareItem({ type: 'LISTING', title: product.title, id: product.id });
+                }}
+                onReport={() => {
+                    console.log('Report Listing');
+                    navigation.navigate('ReportListingScreen', { listingId: product.id });
+                }}
+            />
+
+            {
+                toast.visible && (
+                    <ToastMessage
+                        type={toast.type}
+                        title={toast.title}
+                        message={toast.message}
+                        onHide={() => setToast({ ...toast, visible: false })}
+                    />
+                )
+            }
         </View>
     );
 }
@@ -148,7 +638,7 @@ export default function ProductDetailsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#fff",
+        backgroundColor: COLORS.dark.bg,
     },
     headerRow: {
         position: "absolute",
@@ -158,200 +648,414 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingTop: 40,
-        paddingHorizontal: 16,
-        height: 80,
-        zIndex: 10,
+        paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + THEME.spacing.xs : 50,
+        paddingHorizontal: THEME.spacing.md,
+        paddingBottom: THEME.spacing.xs,
+        zIndex: THEME.zIndex.fixed,
+    },
+    headerActions: {
+        flexDirection: "row",
+        gap: THEME.spacing[2],
     },
     iconBtn: {
-        padding: 8,
-        backgroundColor: "rgba(0,0,0,0.4)",
-        borderRadius: 20,
-    },
-    headerText: {
-        fontSize: 18,
-        fontWeight: "600",
-        color: "#fff",
+        width: THEME.layout.minTouchTarget - 4,
+        height: THEME.layout.minTouchTarget - 4,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: COLORS.transparentBlack50,
+        borderRadius: THEME.borderRadius.full,
     },
     scrollView: {
         flex: 1,
     },
     imageContainer: {
-        height: 320,
-        backgroundColor: "#f8f8f8",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        height: 380,
+        backgroundColor: COLORS.black,
+        position: "relative",
+    },
+    imageSlide: {
+        width: width,
+        height: 380,
     },
     productImage: {
         width: "100%",
         height: "100%",
     },
+    arrowButton: {
+        position: "absolute",
+        top: "50%",
+        marginTop: -20,
+        width: THEME.layout.minTouchTarget - 4,
+        height: THEME.layout.minTouchTarget - 4,
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.transparentBlack70,
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: THEME.zIndex.dropdown,
+    },
+    leftArrow: {
+        left: THEME.spacing.md,
+    },
+    rightArrow: {
+        right: THEME.spacing.md,
+    },
+    dotContainer: {
+        position: "absolute",
+        bottom: THEME.spacing.sectionGap,
+        left: 0,
+        right: 0,
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: THEME.spacing[2],
+    },
+    dot: {
+        width: 8,
+        height: 6,
+        borderRadius: THEME.borderRadius.xs,
+        backgroundColor: COLORS.transparentWhite30,
+        marginHorizontal: THEME.spacing[1],
+    },
+    activeDot: {
+        backgroundColor: COLORS.primary,
+        width: 20,
+        borderRadius: THEME.borderRadius.xs,
+    },
     content: {
-        padding: 24,
-        paddingBottom: 120,
-        backgroundColor: "#fafafa",
+        backgroundColor: COLORS.dark.card,
+        borderTopLeftRadius: THEME.borderRadius['2xl'],
+        borderTopRightRadius: THEME.borderRadius['2xl'],
+        marginTop: -THEME.spacing.sectionGap,
+        paddingTop: THEME.spacing.sectionGap,
+        paddingHorizontal: THEME.spacing.sectionGap,
+        paddingBottom: 100,
     },
-    productInfoSection: {
-        backgroundColor: COLORS.white,
-        borderRadius: 16,
-        padding: 24,
-        marginBottom: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
-    },
-    productName: {
-        fontSize: 26,
-        fontWeight: "700",
-        color: COLORS.black,
-        marginTop: 12,
-        marginBottom: 8,
-        lineHeight: 32,
+    priceRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
     },
     productPrice: {
-        fontSize: 22,
-        fontWeight: "600",
+        fontSize: THEME.fontSize['2xl'],
+        fontWeight: THEME.fontWeight.extrabold,
         color: COLORS.primary,
-        marginBottom: 16,
+        letterSpacing: THEME.letterSpacing.tight,
+        marginBottom: THEME.spacing.itemGap,
     },
-    metaInfo: {
-        borderTopWidth: 1,
-        borderTopColor: "#f0f0f0",
-        paddingTop: 16,
-        marginTop: 4,
+    productName: {
+        fontSize: THEME.fontSize['2xl'],
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing.itemGap,
+        lineHeight: THEME.fontSize['2xl'] * THEME.lineHeight.snug,
     },
-    metaRow: {
+    quickInfoPills: {
+        flexDirection: "row",
+        marginTop: THEME.spacing.itemGap,
+        gap: THEME.spacing[2],
+    },
+    locationSection: {
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: 8,
+        paddingVertical: THEME.spacing.itemGap,
+        borderTopWidth: THEME.borderWidth.hairline,
+        borderBottomWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
     },
-    metaText: {
-        fontSize: 14,
-        color: "#666",
-        marginLeft: 10,
-        fontWeight: "500",
+    divider: {
+        width: THEME.borderWidth.hairline,
+        height: 16,
+        backgroundColor: COLORS.dark.border,
+        marginHorizontal: THEME.spacing.itemGap,
     },
-    descriptionSection: {
-        backgroundColor: COLORS.white,
-        borderRadius: 16,
-        padding: 24,
-        marginBottom: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
-    },
-    sellerContactSection: {
-        backgroundColor: COLORS.white,
-        borderRadius: 16,
-        padding: 24,
-        marginBottom: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
+    sectionDivider: {
+        height: THEME.borderWidth.hairline,
+        backgroundColor: COLORS.dark.border,
+        marginVertical: THEME.spacing.sectionGap,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: "600",
-        color: COLORS.black,
-        marginBottom: 12,
+        fontSize: THEME.fontSize.lg,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing.md,
     },
-    description: {
-        fontSize: 15,
-        color: "#666",
-        lineHeight: 24,
+
+    // Map Styles
+    mapHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: THEME.spacing.md,
     },
-    sellerCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#f8f9fa",
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: "#e9ecef",
+    viewMapButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: THEME.spacing[1] + 2,
+        backgroundColor: COLORS.primaryLightest,
+        paddingHorizontal: THEME.spacing.itemGap,
+        paddingVertical: THEME.spacing[1] + 2,
+        borderRadius: THEME.borderRadius.sm,
     },
-    sellerAvatar: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        borderWidth: 2,
-        borderColor: COLORS.primary,
+    viewMapText: {
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.primary,
     },
-    sellerInfo: {
+    mapCard: {
+        width: '100%',
+        height: 200,
+        borderRadius: THEME.borderRadius.card,
+        overflow: 'hidden',
+        marginBottom: THEME.spacing.itemGap,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
+    },
+    map: {
         flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginLeft: 16,
     },
-    sellerDetails: {
+    mapOverlay: {
+        position: 'absolute',
+        bottom: THEME.spacing.itemGap,
+        left: THEME.spacing.itemGap,
+        right: THEME.spacing.itemGap,
+    },
+    mapInfoCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.dark.card,
+        borderRadius: THEME.borderRadius.md,
+        padding: THEME.spacing.itemGap,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
+        ...THEME.shadows.lg,
+    },
+    mapIconCircle: {
+        width: THEME.layout.minTouchTarget - 4,
+        height: THEME.layout.minTouchTarget - 4,
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.primaryLightest,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: THEME.spacing.itemGap,
+    },
+    mapInfo: {
         flex: 1,
     },
-    sellerName: {
-        fontSize: 17,
-        fontWeight: "600",
-        color: COLORS.black,
-        marginBottom: 4,
+    mapLocation: {
+        fontSize: THEME.fontSize.base,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing[0] + 2,
     },
-    sellerSince: {
-        fontSize: 13,
-        color: COLORS.gray,
+    mapCollege: {
+        fontSize: THEME.fontSize.xs,
+        color: COLORS.dark.textSecondary,
+        fontWeight: THEME.fontWeight.medium,
+        marginBottom: THEME.spacing[0] + 2,
     },
-    sellerRating: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginRight: 12,
+    mapDistance: {
+        fontSize: THEME.fontSize.xs - 1,
+        color: COLORS.primary,
+        fontWeight: THEME.fontWeight.bold,
     },
-    ratingText: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: COLORS.black,
-        marginLeft: 4,
+    directionsButton: {
+        width: THEME.layout.minTouchTarget - 4,
+        height: THEME.layout.minTouchTarget - 4,
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: THEME.spacing[2],
     },
-    bottomButtons: {
+
+    // Reviews Styles
+    reviewsHeader: {
+        marginBottom: THEME.spacing.md,
+    },
+    ratingSummaryCard: {
+        flexDirection: 'row',
+        backgroundColor: COLORS.dark.bgElevated,
+        borderRadius: THEME.borderRadius.card,
+        padding: THEME.spacing.lg,
+        marginBottom: THEME.spacing.lg,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
+    },
+    ratingLeft: {
+        alignItems: 'center',
+        paddingRight: THEME.spacing.lg,
+        borderRightWidth: THEME.borderWidth.hairline,
+        borderRightColor: COLORS.dark.border,
+        marginRight: THEME.spacing.lg,
+    },
+    avgRatingNumber: {
+        fontSize: THEME.fontSize['6xl'],
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.dark.text,
+        lineHeight: THEME.fontSize['6xl'] + 8,
+    },
+    ratingStarsRow: {
+        flexDirection: 'row',
+        marginBottom: THEME.spacing[2],
+    },
+    totalReviews: {
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        fontWeight: THEME.fontWeight.semibold,
+    },
+    ratingRight: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    ratingBarRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: THEME.spacing[2],
+    },
+    ratingBarLabel: {
+        fontSize: THEME.fontSize.xs,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.textSecondary,
+        width: 30,
+    },
+    ratingBarTrack: {
+        flex: 1,
+        height: 6,
+        backgroundColor: COLORS.dark.cardElevated,
+        borderRadius: THEME.borderRadius.xs,
+        marginHorizontal: THEME.spacing[2],
+        overflow: 'hidden',
+    },
+    ratingBarFill: {
+        height: '100%',
+        backgroundColor: COLORS.warning,
+        borderRadius: THEME.borderRadius.xs,
+    },
+    ratingBarCount: {
+        fontSize: THEME.fontSize.xs,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textTertiary,
+        width: 24,
+        textAlign: 'right',
+    },
+    reviewsListContainer: {
+        marginBottom: THEME.spacing.itemGap,
+    },
+    reviewCard: {
+        backgroundColor: COLORS.dark.bgElevated,
+        borderRadius: THEME.borderRadius.card,
+        padding: THEME.spacing.md,
+        marginBottom: THEME.spacing.itemGap,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
+    },
+    reviewHeader: {
+        marginBottom: THEME.spacing.itemGap,
+    },
+    reviewUserInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    reviewAvatar: {
+        width: THEME.layout.minTouchTarget,
+        height: THEME.layout.minTouchTarget,
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: THEME.spacing.itemGap,
+    },
+    reviewAvatarText: {
+        fontSize: THEME.fontSize.lg,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.white,
+    },
+    reviewUserDetails: {
+        flex: 1,
+    },
+    reviewNameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: THEME.spacing[0] + 2,
+    },
+    reviewUser: {
+        fontSize: THEME.fontSize.base,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginRight: THEME.spacing[1] + 2,
+    },
+    verifiedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    reviewDate: {
+        fontSize: THEME.fontSize.xs,
+        color: COLORS.dark.textTertiary,
+        fontWeight: THEME.fontWeight.medium,
+    },
+    reviewRatingRow: {
+        flexDirection: 'row',
+        marginBottom: THEME.spacing[2] + 2,
+    },
+    reviewComment: {
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
+        fontWeight: THEME.fontWeight.medium,
+        marginBottom: THEME.spacing.itemGap,
+    },
+    viewAllReviewsText: {
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.primary,
+    },
+
+    // Related Listings Styles
+    relatedHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: THEME.spacing.md,
+    },
+    relatedList: {
+        gap: THEME.spacing.itemGap,
+    },
+    emptyRelatedContainer: {
+        paddingVertical: THEME.spacing['2xl'],
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: THEME.spacing[2],
+    },
+    emptyRelatedText: {
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        textAlign: 'center',
+    },
+
+    // Bottom Bar Styles
+    bottomWrapper: {
         position: "absolute",
-        bottom: 24,
-        left: 24,
-        right: 24,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        overflow: 'hidden',
+        borderTopLeftRadius: THEME.borderRadius.xl,
+        borderTopRightRadius: THEME.borderRadius.xl,
+    },
+    bottomBar: {
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
         flexDirection: "row",
-        justifyContent: "space-between",
-        zIndex: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 8,
+        alignItems: "center",
+        paddingHorizontal: THEME.spacing.md,
+        paddingVertical: THEME.spacing.itemGap,
+        paddingBottom: Platform.OS === 'ios' ? THEME.spacing['2xl'] - 4 : THEME.spacing.itemGap,
     },
     chatButton: {
-        width: 64,
-        height: 52,
-        borderRadius: 16,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: COLORS.white,
-        borderWidth: 2,
-        borderColor: COLORS.primary,
-    },
-    offerButton: {
+        flexDirection: "row",
         flex: 1,
-        marginLeft: 16,
-        height: 52,
-        borderRadius: 16,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: COLORS.primary,
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
+        gap: THEME.spacing.itemGap,
     },
-});
+}); 

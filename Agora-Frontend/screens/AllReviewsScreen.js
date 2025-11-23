@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 import { useAddReview } from '../hooks/useAddReview';
 
 import ToastMessage from '../components/ToastMessage';
@@ -25,6 +26,7 @@ const AllReviewsScreen = ({ navigation, route }) => {
     const [filterRating, setFilterRating] = useState('all');
     const [sortBy, setSortBy] = useState('recent');
     const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+
     const showToast = ({ type, title, message }) => {
         setToast({ visible: true, type, title, message });
     };
@@ -52,21 +54,17 @@ const AllReviewsScreen = ({ navigation, route }) => {
         } else {
             filtered.sort((a, b) => b.id - a.id);
         }
-
         return filtered;
     };
-
 
     const filteredReviews = getFilteredReviews();
 
     const handleSubmitReview = async (rating, comment) => {
         try {
             const res = await addReview(productId, { rating, comment });
-            console.log("Raw review response:", res);
             if (res) {
                 const newReview = res.data || res;
                 if (newReview && newReview.id) {
-                    console.log('New Review Object:', newReview);
                     setLocalReviews(prev => [newReview, ...prev.filter(r => r && r.id)]);
                 }
                 setReviewModalVisible(false);
@@ -93,56 +91,17 @@ const AllReviewsScreen = ({ navigation, route }) => {
         }
     };
 
-    const renderReviewItem = ({ item }) => (
-        <View style={styles.reviewCard}>
-            <View style={styles.reviewHeader}>
-                <View style={styles.reviewUserInfo}>
-                    <View style={styles.reviewAvatar}>
-                        <Text style={styles.reviewAvatarText}>
-                            {item.reviewerName ? item.reviewerName.charAt(0) : '?'}
-                        </Text>
-                    </View>
-                    <View>
-                        <Text style={styles.reviewUser}>
-                            {item.reviewerName || 'Anonymous'}
-                        </Text>
-                        <View style={styles.reviewRatingRow}>
-                            {[...Array(5)].map((_, i) => (
-                                <Ionicons
-                                    key={i}
-                                    name={i < item.rating ? "star" : "star-outline"}
-                                    size={14}
-                                    color="#FCD34D"
-                                />
-                            ))}
-                        </View>
-                    </View>
-                </View>
-                {item.createdAt && (
-                    <Text style={styles.reviewDate}>
-                        {new Date(item.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                        })}
-                    </Text>
-                )}
-            </View>
-            <Text style={styles.reviewComment}>{item.comment}</Text>
-        </View>
-    );
-
-
     const FilterChip = ({ label, value, isActive }) => (
         <TouchableOpacity
             style={[styles.filterChip, isActive && styles.filterChipActive]}
             onPress={() => setFilterRating(value)}
-            activeOpacity={0.7}
+            activeOpacity={THEME.opacity.hover}
         >
             {value !== 'all' && (
                 <Ionicons
                     name="star"
                     size={14}
-                    color={isActive ? COLORS.primary : '#9CA3AF'}
+                    color={isActive ? COLORS.primary : COLORS.gray400}
                 />
             )}
             <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
@@ -155,7 +114,7 @@ const AllReviewsScreen = ({ navigation, route }) => {
         <TouchableOpacity
             style={[styles.sortOption, isActive && styles.sortOptionActive]}
             onPress={() => setSortBy(value)}
-            activeOpacity={0.7}
+            activeOpacity={THEME.opacity.hover}
         >
             <Text style={[styles.sortOptionText, isActive && styles.sortOptionTextActive]}>
                 {label}
@@ -169,7 +128,7 @@ const AllReviewsScreen = ({ navigation, route }) => {
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-                <Ionicons name="chatbox-ellipses-outline" size={60} color="#D1D5DB" />
+                <Ionicons name="chatbox-ellipses-outline" size={60} color={COLORS.gray500} />
             </View>
             <Text style={styles.emptyTitle}>No Reviews Yet</Text>
             <Text style={styles.emptyText}>
@@ -178,9 +137,9 @@ const AllReviewsScreen = ({ navigation, route }) => {
             <TouchableOpacity
                 style={styles.emptyButton}
                 onPress={() => setReviewModalVisible(true)}
-                activeOpacity={0.8}
+                activeOpacity={THEME.opacity.hover}
             >
-                <Ionicons name="create" size={18} color="#fff" />
+                <Ionicons name="create" size={18} color={COLORS.white} />
                 <Text style={styles.emptyButtonText}>Write First Review</Text>
             </TouchableOpacity>
         </View>
@@ -188,7 +147,7 @@ const AllReviewsScreen = ({ navigation, route }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
+            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content" />
             <AppHeader
                 title="Reviews & Ratings"
                 onBack={() => navigation.goBack()}
@@ -221,7 +180,7 @@ const AllReviewsScreen = ({ navigation, route }) => {
                                                         key={i}
                                                         name={i < item.rating ? 'star' : 'star-outline'}
                                                         size={14}
-                                                        color="#FCD34D"
+                                                        color={COLORS.warning}
                                                     />
                                                 ))}
                                             </View>
@@ -254,7 +213,7 @@ const AllReviewsScreen = ({ navigation, route }) => {
                                                 key={i}
                                                 name={i < Math.floor(avgRating) ? "star" : "star-outline"}
                                                 size={18}
-                                                color="#FCD34D"
+                                                color={COLORS.warning}
                                             />
                                         ))}
                                     </View>
@@ -322,12 +281,12 @@ const AllReviewsScreen = ({ navigation, route }) => {
 
                             {filteredReviews.length === 0 && (
                                 <View style={styles.noResultsContainer}>
-                                    <Ionicons name="search-outline" size={48} color="#D1D5DB" />
+                                    <Ionicons name="search-outline" size={48} color={COLORS.gray500} />
                                     <Text style={styles.noResultsText}>No reviews with this rating yet</Text>
                                     <TouchableOpacity
                                         style={styles.clearFilterButton}
                                         onPress={() => setFilterRating('all')}
-                                        activeOpacity={0.7}
+                                        activeOpacity={THEME.opacity.hover}
                                     >
                                         <Text style={styles.clearFilterText}>Clear Filters</Text>
                                     </TouchableOpacity>
@@ -343,7 +302,6 @@ const AllReviewsScreen = ({ navigation, route }) => {
                 visible={reviewModalVisible}
                 type="review"
                 enableRating
-                // userName={listing?.title || "this item"}
                 message="How was this item?"
                 placeholder="Share your experience with this product..."
                 multiline={true}
@@ -352,16 +310,14 @@ const AllReviewsScreen = ({ navigation, route }) => {
                 onClose={() => setReviewModalVisible(false)}
             />
 
-            {
-                toast.visible && (
-                    <ToastMessage
-                        type={toast.type}
-                        title={toast.title}
-                        message={toast.message}
-                        onHide={() => setToast({ ...toast, visible: false })}
-                    />
-                )
-            }
+            {toast.visible && (
+                <ToastMessage
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                    onHide={() => setToast({ ...toast, visible: false })}
+                />
+            )}
         </SafeAreaView>
     );
 };
@@ -369,196 +325,181 @@ const AllReviewsScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bg,
     },
     listContainer: {
-        padding: 20,
-        paddingBottom: 40,
+        padding: THEME.spacing.screenPadding,
+        paddingBottom: THEME.spacing['3xl'],
     },
     ratingSummaryCard: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderRadius: 20,
-        padding: 24,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        backgroundColor: COLORS.dark.card,
+        borderRadius: THEME.borderRadius.card,
+        padding: THEME.spacing.sectionGap,
+        marginBottom: THEME.spacing.lg,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
+        ...THEME.shadows.sm,
     },
     ratingLeft: {
         alignItems: 'center',
-        paddingRight: 24,
-        borderRightWidth: 1,
-        borderRightColor: '#F3F4F6',
+        paddingRight: THEME.spacing.sectionGap,
+        borderRightWidth: THEME.borderWidth.hairline,
+        borderRightColor: COLORS.dark.border,
         minWidth: 100,
     },
     avgRatingNumber: {
-        fontSize: 48,
-        fontWeight: '800',
-        color: '#111827',
-        lineHeight: 56,
+        fontSize: THEME.fontSize['6xl'],
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.dark.text,
+        lineHeight: THEME.fontSize['6xl'] + 8,
     },
     ratingStarsRow: {
         flexDirection: 'row',
-        marginVertical: 8,
+        marginVertical: THEME.spacing[2],
     },
     totalReviews: {
-        fontSize: 13,
-        color: '#6B7280',
-        fontWeight: '600',
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        fontWeight: THEME.fontWeight.semibold,
         textAlign: 'center',
     },
     ratingRight: {
         flex: 1,
-        paddingLeft: 24,
+        paddingLeft: THEME.spacing.sectionGap,
         justifyContent: 'center',
     },
     ratingBarRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: THEME.spacing[2],
     },
     ratingBarLabel: {
-        fontSize: 13,
-        fontWeight: '700',
-        color: '#6B7280',
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.textSecondary,
         width: 30,
     },
     ratingBarTrack: {
         flex: 1,
         height: 8,
-        backgroundColor: '#F3F4F6',
-        borderRadius: 4,
-        marginHorizontal: 8,
+        backgroundColor: COLORS.dark.cardElevated,
+        borderRadius: THEME.borderRadius.xs,
+        marginHorizontal: THEME.spacing[2],
         overflow: 'hidden',
     },
     ratingBarFill: {
         height: '100%',
-        backgroundColor: '#FCD34D',
-        borderRadius: 4,
+        backgroundColor: COLORS.warning,
+        borderRadius: THEME.borderRadius.xs,
     },
     ratingBarCount: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#9CA3AF',
+        fontSize: THEME.fontSize.xs,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.gray400,
         width: 25,
         textAlign: 'right',
     },
     writeReviewButton: {
-        marginBottom: 12,
+        marginBottom: THEME.spacing.itemGap,
     },
     filterSection: {
-        marginBottom: 20,
+        marginBottom: THEME.spacing.lg,
     },
     filterTitle: {
-        fontSize: 16,
-        fontWeight: '800',
-        color: '#111827',
-        marginBottom: 12,
+        fontSize: THEME.fontSize.md,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing.itemGap,
     },
     filterChips: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+        gap: THEME.spacing[2],
     },
     filterChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F9FAFB',
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 12,
-        borderWidth: 1.5,
-        borderColor: '#E5E7EB',
-        gap: 4,
+        backgroundColor: COLORS.dark.bgElevated,
+        paddingHorizontal: THEME.spacing.sm + 2,
+        paddingVertical: THEME.spacing[2],
+        borderRadius: THEME.borderRadius.md,
+        borderWidth: THEME.borderWidth.medium,
+        borderColor: COLORS.dark.border,
+        gap: THEME.spacing[1],
     },
     filterChipActive: {
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.cardElevated,
         borderColor: COLORS.primary,
     },
     filterChipText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#6B7280',
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textSecondary,
     },
     filterChipTextActive: {
         color: COLORS.primary,
-        fontWeight: '700',
+        fontWeight: THEME.fontWeight.bold,
     },
     sortSection: {
-        marginBottom: 20,
+        marginBottom: THEME.spacing.lg,
     },
     sortTitle: {
-        fontSize: 16,
-        fontWeight: '800',
-        color: '#111827',
-        marginBottom: 12,
+        fontSize: THEME.fontSize.md,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing.itemGap,
     },
     sortOptions: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 4,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        backgroundColor: COLORS.dark.card,
+        borderRadius: THEME.borderRadius.card,
+        padding: THEME.spacing[1],
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
+        ...THEME.shadows.sm,
     },
     sortOption: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 12,
+        paddingVertical: THEME.spacing.itemGap,
+        paddingHorizontal: THEME.spacing.md,
+        borderRadius: THEME.borderRadius.md,
     },
     sortOptionActive: {
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.cardElevated,
     },
     sortOptionText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#6B7280',
+        fontSize: THEME.fontSize.base,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textSecondary,
     },
     sortOptionTextActive: {
         color: COLORS.primary,
-        fontWeight: '700',
+        fontWeight: THEME.fontWeight.bold,
     },
     resultsHeader: {
-        marginBottom: 16,
+        marginBottom: THEME.spacing.md,
     },
     resultsText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#6B7280',
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textSecondary,
     },
     reviewCard: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        backgroundColor: COLORS.dark.card,
+        borderRadius: THEME.borderRadius.card,
+        padding: THEME.spacing.md,
+        marginBottom: THEME.spacing.itemGap,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
+        ...THEME.shadows.sm,
     },
     reviewHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 12,
+        marginBottom: THEME.spacing.itemGap,
     },
     reviewUserInfo: {
         flexDirection: 'row',
@@ -568,102 +509,106 @@ const styles = StyleSheet.create({
     reviewAvatar: {
         width: 40,
         height: 40,
-        borderRadius: 20,
+        borderRadius: THEME.borderRadius.full,
         backgroundColor: COLORS.primary,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
+        marginRight: THEME.spacing.itemGap,
     },
     reviewAvatarText: {
-        fontSize: 16,
-        fontWeight: '800',
-        color: '#fff',
+        fontSize: THEME.fontSize.md,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.white,
     },
     reviewUser: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: '#111827',
-        marginBottom: 4,
+        fontSize: THEME.fontSize.base,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing[1],
     },
     reviewRatingRow: {
         flexDirection: 'row',
     },
     reviewDate: {
-        fontSize: 12,
-        color: '#9CA3AF',
-        fontWeight: '500',
+        fontSize: THEME.fontSize.xs,
+        color: COLORS.gray400,
+        fontWeight: THEME.fontWeight.medium,
     },
     reviewComment: {
-        fontSize: 14,
-        color: '#4B5563',
-        lineHeight: 20,
-        fontWeight: '500',
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
+        fontWeight: THEME.fontWeight.medium,
     },
     emptyContainer: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 80,
-        paddingHorizontal: 40,
+        paddingHorizontal: THEME.spacing['3xl'],
     },
     emptyIconCircle: {
         width: 100,
         height: 100,
-        borderRadius: 50,
-        backgroundColor: '#F3F4F6',
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.dark.cardElevated,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 20,
+        marginBottom: THEME.spacing.lg,
+        borderWidth: THEME.borderWidth.thick,
+        borderColor: COLORS.dark.border,
     },
     emptyTitle: {
-        fontSize: 20,
-        fontWeight: '800',
-        color: '#111827',
-        marginBottom: 8,
+        fontSize: THEME.fontSize.xl,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing[2],
     },
     emptyText: {
-        fontSize: 14,
-        color: '#6B7280',
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
         textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 24,
+        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
+        marginBottom: THEME.spacing.sectionGap,
     },
     emptyButton: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: COLORS.primary,
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 14,
-        elevation: 1,
+        paddingHorizontal: THEME.spacing.sectionGap,
+        paddingVertical: THEME.spacing.itemGap,
+        borderRadius: THEME.borderRadius.button,
+        ...THEME.shadows.md,
     },
     emptyButtonText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '700',
-        marginLeft: 8,
+        color: COLORS.white,
+        fontSize: THEME.fontSize.base,
+        fontWeight: THEME.fontWeight.bold,
+        marginLeft: THEME.spacing[2],
     },
     noResultsContainer: {
         alignItems: 'center',
-        paddingVertical: 40,
+        paddingVertical: THEME.spacing['3xl'],
     },
     noResultsText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#6B7280',
-        marginTop: 12,
-        marginBottom: 16,
+        fontSize: THEME.fontSize.md,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textSecondary,
+        marginTop: THEME.spacing.itemGap,
+        marginBottom: THEME.spacing.md,
     },
     clearFilterButton: {
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        backgroundColor: '#F3F4F6',
-        borderRadius: 12,
+        paddingHorizontal: THEME.spacing.lg,
+        paddingVertical: THEME.spacing[2] + 2,
+        backgroundColor: COLORS.dark.cardElevated,
+        borderRadius: THEME.borderRadius.md,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
     },
     clearFilterText: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#6B7280',
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.textSecondary,
     },
 });
 

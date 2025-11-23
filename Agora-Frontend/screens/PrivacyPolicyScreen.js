@@ -1,7 +1,10 @@
 import React from 'react';
 import { View, Text, SafeAreaView, ScrollView, StyleSheet, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 import AppHeader from '../components/AppHeader';
+import InfoBox from '../components/InfoBox';
+
 import { COLORS } from '../utils/colors';
 
 const privacyData = [
@@ -73,8 +76,8 @@ export default function PrivacyPolicyScreen({ navigation }) {
             <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
             <AppHeader title="Privacy Policy" onBack={() => navigation.goBack()} />
 
-            <ScrollView 
-                contentContainerStyle={styles.container} 
+            <ScrollView
+                contentContainerStyle={styles.container}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Header Info */}
@@ -114,12 +117,10 @@ export default function PrivacyPolicyScreen({ navigation }) {
                 ))}
 
                 {/* Footer Note */}
-                <View style={styles.footerCard}>
-                    <Ionicons name="information-circle" size={20} color={COLORS.primary} />
-                    <Text style={styles.footerText}>
-                        By using Agora, you agree to our Privacy Policy and Terms of Service.
-                    </Text>
-                </View>
+                <InfoBox
+                    text="By using Agora, you agree to our Privacy Policy and Terms of Service."
+                    icon="information-circle"
+                />
             </ScrollView>
         </SafeAreaView>
     );
@@ -128,14 +129,14 @@ export default function PrivacyPolicyScreen({ navigation }) {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bg,
     },
     container: {
         padding: 20,
         paddingBottom: 40,
     },
     headerCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 20,
         padding: 24,
         alignItems: 'center',
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
         width: 70,
         height: 70,
         borderRadius: 35,
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.gray700,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -158,17 +159,17 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 6,
         letterSpacing: -0.3,
     },
     headerSubtitle: {
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         fontWeight: '500',
     },
     sectionCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 20,
         padding: 20,
         marginBottom: 12,
@@ -190,17 +191,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
+        backgroundColor: COLORS.dark.gray700,
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         flex: 1,
         letterSpacing: -0.3,
     },
     sectionContent: {
         fontSize: 15,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         lineHeight: 24,
         marginBottom: 12,
         fontWeight: '500',
@@ -225,23 +227,23 @@ const styles = StyleSheet.create({
     listText: {
         flex: 1,
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         lineHeight: 22,
         fontWeight: '500',
     },
     footerCard: {
         flexDirection: 'row',
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.cardElevated,
         padding: 16,
         borderRadius: 16,
         marginTop: 8,
         borderWidth: 1,
-        borderColor: '#DBEAFE',
+        borderColor: COLORS.dark.divider,
     },
     footerText: {
         flex: 1,
         fontSize: 13,
-        color: '#1E40AF',
+        color: COLORS.dark.textTertiary,
         marginLeft: 12,
         lineHeight: 20,
         fontWeight: '500',

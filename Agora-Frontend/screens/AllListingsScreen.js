@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -12,31 +12,37 @@ import {
     ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useListings } from '../hooks/useListings';
+
 import AppHeader from '../components/AppHeader';
 import Card from '../components/Cards';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Button from '../components/Button';
+
 import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
 const AllListingsScreen = ({ navigation }) => {
+    const { items, loading, error, refetch } = useListings();
+
+    const [filteredItems, setFilteredItems] = useState([]);
     const [filterModalVisible, setFilterModalVisible] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedCondition, setSelectedCondition] = useState('all');
     const [priceRange, setPriceRange] = useState('all');
     const [sortBy, setSortBy] = useState('recent');
-    const [loading, setLoading] = useState(false);
 
-    // Mock data - replace with actual API call
-    const listings = [
-        // Your listings data here
-    ];
+    useEffect(() => {
+        setFilteredItems(items);
+    }, [items]);
 
     const categories = [
         { id: 'all', name: 'All Categories', icon: 'apps-outline' },
-        { id: 'textbooks', name: 'Textbooks', icon: 'book-outline' },
-        { id: 'electronics', name: 'Electronics', icon: 'laptop-outline' },
-        { id: 'clothing', name: 'Clothing', icon: 'shirt-outline' },
-        { id: 'furniture', name: 'Furniture', icon: 'bed-outline' },
-        { id: 'stationery', name: 'Stationery', icon: 'pencil-outline' },
+        { id: 'textbooks', name: 'Textbooks & Study Materials', icon: 'book-outline' },
+        { id: 'electronics', name: 'Electronics & Gadgets', icon: 'laptop-outline' },
+        { id: 'clothing', name: 'Clothing & Accessories', icon: 'shirt-outline' },
+        { id: 'furniture', name: 'Furniture & Dorm Supplies', icon: 'bed-outline' },
+        { id: 'stationery', name: 'Stationery & Office Supplies', icon: 'pencil-outline' },
     ];
 
     const conditions = [
@@ -45,6 +51,8 @@ const AllListingsScreen = ({ navigation }) => {
         { id: 'USED', name: 'Used' },
         { id: 'GOOD', name: 'Good' },
         { id: 'REFURBISHED', name: 'Refurbished' },
+        { id: 'REPAIRED', name: 'Repaired' },
+        { id: 'DAMAGED', name: 'Damaged' },
     ];
 
     const priceRanges = [
@@ -65,13 +73,43 @@ const AllListingsScreen = ({ navigation }) => {
 
     const handleApplyFilters = () => {
         setFilterModalVisible(false);
-        // Apply filters logic here
-        console.log('Filters applied:', {
-            category: selectedCategory,
-            condition: selectedCondition,
-            priceRange,
-            sortBy,
-        });
+
+        let updated = [...items];
+
+        // Category filter
+        if (selectedCategory !== 'all') {
+            updated = updated.filter(item => item.category === selectedCategory);
+        }
+
+        // Condition filter
+        if (selectedCondition !== 'all') {
+            updated = updated.filter(item => item.condition === selectedCondition);
+        }
+
+        // Price filter
+        if (priceRange !== 'all') {
+            const [min, max] = priceRange.includes('+')
+                ? [parseInt(priceRange), Infinity]
+                : priceRange.split('-').map(Number);
+            updated = updated.filter(item => item.price.replace('₹ ', '') >= min && item.price.replace('₹ ', '') <= max);
+        }
+
+        // Sort
+        switch (sortBy) {
+            case 'price-low':
+                updated.sort((a, b) => parseFloat(a.price.replace('₹ ', '')) - parseFloat(b.price.replace('₹ ', '')));
+                break;
+            case 'price-high':
+                updated.sort((a, b) => parseFloat(b.price.replace('₹ ', '')) - parseFloat(a.price.replace('₹ ', '')));
+                break;
+            case 'recent':
+                updated.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                break;
+            case 'popular':
+                updated.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+                break;
+        }
+        setFilteredItems(updated);
     };
 
     const handleResetFilters = () => {
@@ -79,6 +117,7 @@ const AllListingsScreen = ({ navigation }) => {
         setSelectedCondition('all');
         setPriceRange('all');
         setSortBy('recent');
+        setFilteredItems(items);
     };
 
     const activeFiltersCount = [
@@ -88,14 +127,6 @@ const AllListingsScreen = ({ navigation }) => {
         sortBy !== 'recent',
     ].filter(Boolean).length;
 
-    const renderListingItem = ({ item }) => (
-        <View style={styles.cardWrapper}>
-            <Card
-                item={item}
-                onPress={() => navigation.navigate('ProductDetailsScreen', { item })}
-            />
-        </View>
-    );
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
@@ -106,13 +137,13 @@ const AllListingsScreen = ({ navigation }) => {
             <Text style={styles.emptyText}>
                 Try adjusting your filters or check back later for new items!
             </Text>
-            <TouchableOpacity
-                style={styles.resetButton}
+            <Button
+                title="Reset Filters"
                 onPress={handleResetFilters}
-                activeOpacity={0.8}
-            >
-                <Text style={styles.resetButtonText}>Reset Filters</Text>
-            </TouchableOpacity>
+                variant="primary"
+                size="medium"
+                fullWidth={false}
+            />
         </View>
     );
 
@@ -155,15 +186,20 @@ const AllListingsScreen = ({ navigation }) => {
                     <LoadingSpinner />
                     <Text style={styles.loadingText}>Loading listings...</Text>
                 </View>
+            ) : filteredItems.length === 0 ? (
+                renderEmptyState()
             ) : (
                 <FlatList
-                    data={listings}
-                    renderItem={renderListingItem}
+                    data={filteredItems}
+                    renderItem={({ item }) => <Card item={item} />}
                     keyExtractor={(item) => item.id.toString()}
                     numColumns={2}
-                    contentContainerStyle={styles.listContainer}
+                    columnWrapperStyle={{ justifyContent: 'space-between' }}
+                    contentContainerStyle={{
+                        paddingHorizontal: 12,
+                        paddingBottom: 60,
+                    }}
                     showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={renderEmptyState}
                 />
             )}
 
@@ -312,20 +348,19 @@ const AllListingsScreen = ({ navigation }) => {
 
                         {/* Bottom Actions */}
                         <View style={styles.sheetFooter}>
-                            <TouchableOpacity
-                                style={styles.clearButton}
+                            <Button
+                                title="Clear All"
+                                variant="outline"
+                                style={{ flex: 1 }}
                                 onPress={handleResetFilters}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.clearButtonText}>Clear All</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.applyButton}
+                            />
+
+                            <Button
+                                title="Apply Filters"
+                                variant="primary"
+                                style={{ flex: 1 }}
                                 onPress={handleApplyFilters}
-                                activeOpacity={0.8}
-                            >
-                                <Text style={styles.applyButtonText}>Apply Filters</Text>
-                            </TouchableOpacity>
+                            />
                         </View>
                     </Pressable>
                 </Pressable>
@@ -333,281 +368,279 @@ const AllListingsScreen = ({ navigation }) => {
         </SafeAreaView>
     );
 };
-
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bg,
     },
     filterBar: {
         flexDirection: 'row',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        paddingHorizontal: THEME.spacing.screenPadding,
+        paddingVertical: THEME.spacing.itemGap,
+        backgroundColor: COLORS.dark.cardE,
+        borderBottomWidth: THEME.borderWidth.hairline,
+        borderBottomColor: COLORS.dark.border,
     },
     filterButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#EFF6FF',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 12,
-        marginRight: 12,
+        backgroundColor: COLORS.dark.card,
+        paddingHorizontal: THEME.spacing.md,
+        paddingVertical: THEME.spacing[2] + 2,
+        borderRadius: THEME.borderRadius.md,
+        marginRight: THEME.spacing.itemGap,
         position: 'relative',
     },
     filterButtonText: {
-        fontSize: 14,
-        fontWeight: '700',
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.bold,
         color: COLORS.primary,
-        marginLeft: 6,
+        marginLeft: THEME.spacing[1] + 2,
     },
     filterBadge: {
         position: 'absolute',
         top: -6,
         right: -6,
-        backgroundColor: '#EF4444',
+        backgroundColor: COLORS.error,
         width: 20,
         height: 20,
-        borderRadius: 10,
+        borderRadius: THEME.borderRadius.full,
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
+        borderWidth: THEME.borderWidth.medium,
+        borderColor: COLORS.dark.card,
     },
     filterBadgeText: {
-        fontSize: 11,
-        fontWeight: '800',
-        color: '#fff',
+        fontSize: THEME.fontSize.xs - 1,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.white,
     },
     sortButton: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
-        backgroundColor: '#F9FAFB',
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderRadius: 12,
+        backgroundColor: COLORS.dark.bgElevated,
+        paddingHorizontal: THEME.spacing.itemGap,
+        paddingVertical: THEME.spacing[2] + 2,
+        borderRadius: THEME.borderRadius.md,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
     },
     sortButtonText: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#6B7280',
-        marginLeft: 6,
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textSecondary,
+        marginLeft: THEME.spacing[1] + 2,
         flex: 1,
     },
     listContainer: {
-        padding: 16,
-        paddingBottom: 40,
+        padding: THEME.spacing.md,
+        paddingBottom: THEME.spacing['3xl'],
     },
-    cardWrapper: {
-        width: '50%',
-        padding: 6,
+    allListingsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: THEME.spacing.md,
+        paddingBottom: THEME.spacing.md,
+        marginTop: THEME.spacing.md,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: COLORS.dark.bg,
     },
     loadingText: {
-        marginTop: 12,
-        fontSize: 14,
-        color: '#6B7280',
-        fontWeight: '500',
+        marginTop: THEME.spacing.itemGap,
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        fontWeight: THEME.fontWeight.medium,
     },
     emptyContainer: {
         flex: 1,
         alignItems: 'center',
         paddingTop: 80,
-        paddingHorizontal: 40,
+        paddingHorizontal: THEME.spacing['3xl'],
     },
     emptyIconCircle: {
         width: 100,
         height: 100,
-        borderRadius: 50,
-        backgroundColor: '#F3F4F6',
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.dark.cardElevated,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 20,
+        marginBottom: THEME.spacing.lg,
+        borderWidth: THEME.borderWidth.thick,
+        borderColor: COLORS.dark.border,
     },
     emptyTitle: {
-        fontSize: 20,
-        fontWeight: '800',
-        color: '#111827',
-        marginBottom: 8,
+        fontSize: THEME.fontSize.xl,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing[2],
     },
     emptyText: {
-        fontSize: 14,
-        color: '#6B7280',
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
         textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 24,
-    },
-    resetButton: {
-        backgroundColor: COLORS.primary,
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
-    },
-    resetButtonText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '700',
+        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
+        marginBottom: THEME.spacing.sectionGap,
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: COLORS.dark.overlay,
         justifyContent: 'flex-end',
     },
     bottomSheet: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        width: '100%',
+        backgroundColor: COLORS.dark.card,
+        borderTopLeftRadius: THEME.borderRadius['2xl'],
+        borderTopRightRadius: THEME.borderRadius['2xl'],
         maxHeight: '85%',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: -4,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 8,
+        borderTopWidth: THEME.borderWidth.hairline,
+        borderTopColor: COLORS.dark.border,
+        ...THEME.shadows.xl,
+        //overflow: 'hidden',
     },
     handleBar: {
         width: 40,
         height: 4,
-        backgroundColor: '#D1D5DB',
-        borderRadius: 2,
+        backgroundColor: COLORS.dark.border,
+        borderRadius: THEME.borderRadius.xs,
         alignSelf: 'center',
-        marginTop: 12,
-        marginBottom: 8,
+        marginTop: THEME.spacing.itemGap,
+        marginBottom: THEME.spacing[2],
     },
     sheetHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        paddingHorizontal: THEME.spacing.screenPadding,
+        paddingVertical: THEME.spacing.md,
+        borderBottomWidth: THEME.borderWidth.hairline,
+        borderBottomColor: COLORS.dark.border,
     },
     sheetTitle: {
-        fontSize: 20,
-        fontWeight: '800',
-        color: '#111827',
-        letterSpacing: -0.3,
+        fontSize: THEME.fontSize.xl,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.dark.text,
+        letterSpacing: THEME.letterSpacing.tight,
     },
     closeButton: {
         width: 36,
         height: 36,
-        borderRadius: 18,
-        backgroundColor: '#F3F4F6',
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.dark.cardElevated,
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
     },
     sheetContent: {
-        paddingHorizontal: 20,
-        paddingTop: 12,
+        paddingHorizontal: THEME.spacing.screenPadding,
+        paddingTop: THEME.spacing.itemGap,
     },
     filterSection: {
-        marginBottom: 24,
+        marginBottom: THEME.spacing.sectionGap,
     },
     filterSectionTitle: {
-        fontSize: 16,
-        fontWeight: '800',
-        color: '#111827',
-        marginBottom: 12,
+        fontSize: THEME.fontSize.md,
+        fontWeight: THEME.fontWeight.extrabold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing.itemGap,
     },
     optionsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginHorizontal: -4,
+        marginHorizontal: -THEME.spacing[1],
     },
     optionChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F9FAFB',
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 12,
-        marginHorizontal: 4,
-        marginBottom: 8,
-        borderWidth: 1.5,
-        borderColor: '#E5E7EB',
+        backgroundColor: COLORS.dark.card,
+        paddingHorizontal: THEME.spacing.sm + 2,
+        paddingVertical: THEME.spacing[2] + 2,
+        borderRadius: THEME.borderRadius.md,
+        marginHorizontal: THEME.spacing[1],
+        marginBottom: THEME.spacing[2],
+        borderWidth: THEME.borderWidth.medium,
+        borderColor: COLORS.dark.border,
     },
     optionChipSelected: {
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.cardElevated,
         borderColor: COLORS.primary,
     },
     optionChipText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#6B7280',
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textSecondary,
     },
     optionChipTextSelected: {
         color: COLORS.primary,
-        fontWeight: '700',
+        fontWeight: THEME.fontWeight.bold,
     },
     categoryChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F9FAFB',
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderRadius: 12,
-        marginHorizontal: 4,
-        marginBottom: 8,
-        borderWidth: 1.5,
-        borderColor: '#E5E7EB',
+        backgroundColor: COLORS.dark.card,
+        paddingHorizontal: THEME.spacing.itemGap,
+        paddingVertical: THEME.spacing[2] + 2,
+        borderRadius: THEME.borderRadius.md,
+        marginHorizontal: THEME.spacing[1],
+        marginBottom: THEME.spacing[2],
+        borderWidth: THEME.borderWidth.medium,
+        borderColor: COLORS.dark.border,
     },
     categoryChipSelected: {
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.cardElevated,
         borderColor: COLORS.primary,
     },
     categoryChipText: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#6B7280',
-        marginLeft: 6,
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textSecondary,
+        marginLeft: THEME.spacing[1] + 2,
     },
     categoryChipTextSelected: {
         color: COLORS.primary,
-        fontWeight: '700',
+        fontWeight: THEME.fontWeight.bold,
     },
     sheetFooter: {
         flexDirection: 'row',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#F3F4F6',
-        gap: 12,
+        paddingHorizontal: THEME.spacing.screenPadding,
+        paddingVertical: THEME.spacing.md,
+        borderTopWidth: THEME.borderWidth.hairline,
+        borderTopColor: COLORS.dark.border,
+        gap: THEME.spacing.itemGap,
+        backgroundColor: COLORS.dark.bgElevated,
     },
     clearButton: {
         flex: 1,
-        backgroundColor: '#F3F4F6',
-        paddingVertical: 14,
-        borderRadius: 14,
+        backgroundColor: COLORS.dark.cardElevated,
+        paddingVertical: THEME.spacing.sm + 2,
+        borderRadius: THEME.borderRadius.button,
         alignItems: 'center',
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
     },
     clearButtonText: {
-        color: '#6B7280',
-        fontSize: 15,
-        fontWeight: '700',
+        color: COLORS.dark.textSecondary,
+        fontSize: THEME.fontSize.base,
+        fontWeight: THEME.fontWeight.bold,
     },
     applyButton: {
         flex: 1,
         backgroundColor: COLORS.primary,
-        paddingVertical: 14,
-        borderRadius: 14,
+        paddingVertical: THEME.spacing.sm + 2,
+        borderRadius: THEME.borderRadius.button,
         alignItems: 'center',
-        shadowColor: COLORS.primary,
-        elevation: 1,
+        ...THEME.shadows.primary,
     },
     applyButtonText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '700',
+        color: COLORS.white,
+        fontSize: THEME.fontSize.base,
+        fontWeight: THEME.fontWeight.bold,
     },
 });
 

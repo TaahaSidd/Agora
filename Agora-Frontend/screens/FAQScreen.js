@@ -9,8 +9,12 @@ import {
     StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 import AppHeader from '../components/AppHeader';
+import Button from '../components/Button';
+
 import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
 const faqData = [
     {
@@ -141,68 +145,71 @@ export default function FAQScreen({ navigation }) {
                     <Text style={styles.helpText}>
                         Can't find what you're looking for? Our support team is here to help.
                     </Text>
-                    <TouchableOpacity
-                        style={styles.contactButton}
+                    <Button
+                        title="Contact Support"
                         onPress={() => navigation.navigate('SupportScreen')}
-                        activeOpacity={0.8}
-                    >
-                        <Ionicons name="headset-outline" size={18} color="#fff" />
-                        <Text style={styles.contactButtonText}>Contact Support</Text>
-                    </TouchableOpacity>
+                        icon="headset-outline"
+                        fullWidth
+                        size="medium"
+                    />
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
 }
-
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bg,
     },
+
     container: {
         padding: 20,
         paddingBottom: 40,
     },
+
+    // Header
     headerSection: {
         marginBottom: 24,
     },
     headerTitle: {
         fontSize: 28,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         letterSpacing: -0.5,
         marginBottom: 8,
     },
     headerSubtitle: {
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         fontWeight: '500',
         lineHeight: 20,
     },
+
+    // FAQ Item
     item: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
         elevation: 2,
     },
+
     itemExpanded: {
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
         elevation: 3,
     },
+
     questionRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
+
     iconCircle: {
         width: 44,
         height: 44,
@@ -210,14 +217,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
+        backgroundColor: COLORS.dark.gray700,
     },
+
     question: {
         flex: 1,
         fontSize: 15,
         fontWeight: '700',
-        color: '#111827',
+        color: COLORS.dark.text,
         lineHeight: 20,
     },
+
     chevronContainer: {
         width: 32,
         height: 32,
@@ -225,76 +235,58 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginLeft: 8,
     },
+
     answerContainer: {
         marginTop: 12,
         marginLeft: 56,
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: '#F3F4F6',
+        borderTopColor: COLORS.dark.divider,
     },
+
     answer: {
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         lineHeight: 22,
         fontWeight: '500',
     },
+
+    // Help Card
     helpCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 20,
         padding: 24,
         marginTop: 20,
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
         elevation: 2,
     },
+
     helpIconContainer: {
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.primaryLightest,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
     },
+
     helpTitle: {
         fontSize: 20,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 8,
     },
+
     helpText: {
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
         marginBottom: 20,
-    },
-    contactButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.primary,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 14,
-        shadowColor: COLORS.primary,
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    contactButtonText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '700',
-        marginLeft: 8,
     },
 });

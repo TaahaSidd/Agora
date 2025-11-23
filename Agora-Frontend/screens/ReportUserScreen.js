@@ -12,7 +12,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
+
+import { useReport } from '../hooks/useReport';
+
 import AppHeader from '../components/AppHeader';
+import Button from '../components/Button';
+import ToastMessage from '../components/ToastMessage';
 import ModalComponent from '../components/Modal';
 
 const ReportUserScreen = ({ navigation, route }) => {
@@ -20,6 +25,8 @@ const ReportUserScreen = ({ navigation, route }) => {
     const [selectedReason, setSelectedReason] = useState('');
     const [additionalDetails, setAdditionalDetails] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const { submitReport, loading } = useReport();
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
 
     const reportReasons = [
         {
@@ -68,21 +75,25 @@ const ReportUserScreen = ({ navigation, route }) => {
 
     const handleSubmit = async () => {
         if (!selectedReason) {
-            Alert.alert('Required', 'Please select a reason for reporting');
+            setToast({
+                visible: true,
+                type: 'error',
+                title: 'Required',
+                message: 'Please select a reason for reporting',
+            });
             return;
         }
 
-        try {
-            // TODO: Implement API call to submit report
-            console.log('Report submitted:', {
-                userId,
-                reason: selectedReason,
-                details: additionalDetails,
-            });
-
+        const success = await submitReport("USER", selectedReason, userId);
+        if (success) {
             setShowSuccessModal(true);
-        } catch (error) {
-            Alert.alert('Error', 'Failed to submit report. Please try again.');
+        } else {
+            setToast({
+                visible: true,
+                type: 'error',
+                title: 'Error',
+                message: 'Failed to submit report. Please try again.',
+            });
         }
     };
 
@@ -175,15 +186,15 @@ const ReportUserScreen = ({ navigation, route }) => {
                 </View>
 
                 {/* Submit Button */}
-                <TouchableOpacity
-                    style={[styles.submitButton, !selectedReason && styles.submitButtonDisabled]}
+                <Button
+                    title="Submit Report"
                     onPress={handleSubmit}
+                    variant="danger"
+                    size="large"
+                    icon="send"
+                    iconPosition="left"
                     disabled={!selectedReason}
-                    activeOpacity={0.8}
-                >
-                    <Ionicons name="send" size={20} color="#fff" />
-                    <Text style={styles.submitButtonText}>Submit Report</Text>
-                </TouchableOpacity>
+                />
             </ScrollView>
 
             <ModalComponent
@@ -197,6 +208,17 @@ const ReportUserScreen = ({ navigation, route }) => {
                     navigation.goBack();
                 }}
             />
+
+            {
+                toast.visible && (
+                    <ToastMessage
+                        type={toast.type}
+                        title={toast.title}
+                        message={toast.message}
+                        onHide={() => setToast({ ...toast, visible: false })}
+                    />
+                )
+            }
         </SafeAreaView>
     );
 };
@@ -204,23 +226,20 @@ const ReportUserScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bg,
     },
     container: {
         padding: 20,
         paddingBottom: 40,
     },
     headerCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 20,
         padding: 24,
         alignItems: 'center',
         marginBottom: 24,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
@@ -229,7 +248,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#FEE2E2',
+        backgroundColor: COLORS.errorBgDark,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -237,13 +256,13 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 8,
         letterSpacing: -0.3,
     },
     headerSubtitle: {
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
         fontWeight: '500',
@@ -254,30 +273,27 @@ const styles = StyleSheet.create({
     sectionLabel: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#374151',
+        color: COLORS.dark.textSecondary,
         marginBottom: 12,
     },
     reasonCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
         borderWidth: 2,
-        borderColor: '#E5E7EB',
+        borderColor: COLORS.dark.divider,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.03,
         shadowRadius: 4,
         elevation: 1,
     },
     reasonCardSelected: {
         borderColor: COLORS.primary,
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.primaryLightest,
     },
     reasonIconCircle: {
         width: 48,
@@ -293,12 +309,12 @@ const styles = StyleSheet.create({
     reasonTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 2,
     },
     reasonDescription: {
         fontSize: 13,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         fontWeight: '500',
     },
     radioButton: {
@@ -306,7 +322,7 @@ const styles = StyleSheet.create({
         height: 24,
         borderRadius: 12,
         borderWidth: 2,
-        borderColor: '#D1D5DB',
+        borderColor: COLORS.dark.textTertiary,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -318,16 +334,13 @@ const styles = StyleSheet.create({
     },
     textAreaContainer: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 14,
         borderWidth: 1.5,
-        borderColor: '#E5E7EB',
+        borderColor: COLORS.dark.divider,
         padding: 16,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.03,
         shadowRadius: 3,
         elevation: 1,
@@ -339,53 +352,39 @@ const styles = StyleSheet.create({
     textArea: {
         flex: 1,
         fontSize: 15,
-        color: '#111827',
+        color: COLORS.dark.text,
         minHeight: 100,
         fontWeight: '500',
     },
     characterCount: {
         fontSize: 12,
-        color: '#9CA3AF',
+        color: COLORS.dark.textTertiary,
         textAlign: 'right',
         marginTop: 6,
         fontWeight: '500',
     },
     infoBox: {
         flexDirection: 'row',
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.infoBgDark,
         padding: 14,
         borderRadius: 12,
         marginBottom: 24,
         borderWidth: 1,
-        borderColor: '#DBEAFE',
+        borderColor: COLORS.infoDark,
     },
     infoText: {
         flex: 1,
         fontSize: 13,
-        color: '#1E40AF',
+        color: COLORS.infoDark,
         marginLeft: 10,
         lineHeight: 18,
         fontWeight: '500',
     },
-    submitButton: {
-        flexDirection: 'row',
-        backgroundColor: '#EF4444',
-        paddingVertical: 16,
-        borderRadius: 14,
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 1,
-        gap: 8,
-    },
     submitButtonDisabled: {
-        backgroundColor: '#D1D5DB',
+        backgroundColor: COLORS.dark.textTertiary,
         opacity: 0.6,
     },
-    submitButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '700',
-    },
 });
+
 
 export default ReportUserScreen;

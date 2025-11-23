@@ -11,10 +11,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiGet, apiDelete } from '../services/api';
+
 import { COLORS } from '../utils/colors';
+
 import AppHeader from '../components/AppHeader';
 import Card from '../components/Cards';
 import FavoriteButton from '../components/FavoriteButton';
+import Button from '../components/Button';
+
+import FavoriteSvg from '../assets/svg/favouriteItem.svg'
 
 const FavoritesScreen = ({ navigation }) => {
     const [favorites, setFavorites] = useState([]);
@@ -25,14 +30,23 @@ const FavoritesScreen = ({ navigation }) => {
         loadFavorites();
     }, []);
 
-    // Fetch favorites from backend
     const loadFavorites = async () => {
         try {
             setLoading(true);
-            const data = await apiGet("/favorites"); // GET /Agora/favorites
-            // Mark each item as favorited
-            const marked = data.map(item => ({ ...item, isFavorite: true }));
-            setFavorites(marked);
+            const data = await apiGet("/favorites");
+
+            const formatted = data.map(item => ({
+                ...item,
+                isFavorite: true,
+                name: item.title || item.name || 'Untitled',
+                price: item.price ? `₹ ${item.price}` : 'N/A',
+                images:
+                    item.imageUrl && item.imageUrl.length > 0
+                        ? item.imageUrl.map(url => ({ uri: url }))
+                        : [require('../assets/LW.jpg')],
+            }));
+
+            setFavorites(formatted);
         } catch (error) {
             console.error("Failed to load favorites:", error);
         } finally {
@@ -40,7 +54,6 @@ const FavoritesScreen = ({ navigation }) => {
         }
     };
 
-    // Toggle favorite for a listing
     const toggleFavorite = async (listingId, currentlyFavorite) => {
         try {
             if (currentlyFavorite) {
@@ -78,20 +91,22 @@ const FavoritesScreen = ({ navigation }) => {
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-                <Ionicons name="heart-outline" size={60} color="#D1D5DB" />
+                <FavoriteSvg width={160} height={160} />
             </View>
             <Text style={styles.emptyTitle}>No Favorites Yet</Text>
             <Text style={styles.emptyText}>
                 Start adding items to your favorites to see them here
             </Text>
-            <TouchableOpacity
-                style={styles.browseButton}
+
+            <Button
+                title="Browse Listings"
+                icon="compass-outline"
+                iconPosition="left"
                 onPress={() => navigation.navigate('MainLayout')}
-                activeOpacity={0.8}
-            >
-                <Ionicons name="compass-outline" size={20} color="#fff" />
-                <Text style={styles.browseButtonText}>Browse Listings</Text>
-            </TouchableOpacity>
+                fullWidth={false}
+                variant="primary"
+                size="medium"
+            />
         </View>
     );
 
@@ -211,18 +226,18 @@ const FavoritesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bg,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bg,
     },
     loadingText: {
         marginTop: 12,
         fontSize: 15,
-        color: '#6B7280',
+        color: COLORS.dark.textQuaternary,
         fontWeight: '500',
     },
     headerContainer: {
@@ -231,7 +246,7 @@ const styles = StyleSheet.create({
     },
     statsCard: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.cardElevated,
         borderRadius: 20,
         padding: 20,
         marginBottom: 16,
@@ -260,18 +275,18 @@ const styles = StyleSheet.create({
     statNumber: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 2,
     },
     statLabel: {
         fontSize: 12,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         fontWeight: '600',
     },
     statDivider: {
         width: 1,
         height: '100%',
-        backgroundColor: '#E5E7EB',
+        backgroundColor: COLORS.dark.divider,
         marginHorizontal: 16,
     },
     filterContainer: {
@@ -329,17 +344,16 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     emptyContainer: {
-        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 40,
         paddingTop: 100,
     },
     emptyIconCircle: {
-        width: 120,
-        height: 120,
+        width: 180,
+        height: 180,
         borderRadius: 60,
-        backgroundColor: '#FEE2E2',
+        backgroundColor: COLORS.dark.cardElevated,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 24,
@@ -347,13 +361,13 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 8,
         letterSpacing: -0.3,
     },
     emptyText: {
         fontSize: 15,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: 32,
@@ -365,14 +379,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 14,
-        shadowColor: COLORS.primary,
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+        elevation: 1,
         gap: 8,
     },
     browseButtonText: {

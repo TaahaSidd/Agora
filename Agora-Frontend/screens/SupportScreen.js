@@ -1,7 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, Linking } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+
 import AppHeader from '../components/AppHeader';
+import InfoBox from '../components/InfoBox';
+
 import { COLORS } from '../utils/colors';
 
 const SupportScreen = ({ navigation }) => {
@@ -141,15 +144,10 @@ const SupportScreen = ({ navigation }) => {
                 </View>
 
                 {/* Info Card */}
-                <View style={styles.infoCard}>
-                    <Ionicons name="time-outline" size={20} color={COLORS.primary} />
-                    <View style={styles.infoContent}>
-                        <Text style={styles.infoTitle}>Response Time</Text>
-                        <Text style={styles.infoText}>
-                            Our support team typically responds within 24 hours. For urgent issues, please use the live chat option.
-                        </Text>
-                    </View>
-                </View>
+                <InfoBox
+                    icon="time-outline"
+                    text="Our support team typically responds within 24 hours. For urgent issues, please use the live chat option."
+                />
 
                 {/* Social Media */}
                 <View style={styles.section}>
@@ -177,7 +175,7 @@ const SupportScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bg,
     },
     container: {
         padding: 20,
@@ -192,7 +190,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.gray700,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -200,13 +198,13 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 8,
         letterSpacing: -0.3,
     },
     headerSubtitle: {
         fontSize: 15,
-        color: '#6B7280',
+        color: COLORS.dark.textTertiary,
         textAlign: 'center',
         lineHeight: 22,
         paddingHorizontal: 20,
@@ -217,12 +215,12 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 12,
         letterSpacing: -0.3,
     },
     optionsCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 20,
         padding: 4,
         shadowColor: '#000',
@@ -247,6 +245,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 14,
+        backgroundColor: COLORS.dark.gray700,
     },
     optionContent: {
         flex: 1,
@@ -254,17 +253,17 @@ const styles = StyleSheet.create({
     optionTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 2,
     },
     optionDescription: {
         fontSize: 13,
-        color: '#6B7280',
+        color: COLORS.dark.textTertiary,
         fontWeight: '500',
     },
     divider: {
         height: 1,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: COLORS.dark.divider,
         marginHorizontal: 16,
     },
     quickLinksGrid: {
@@ -275,15 +274,12 @@ const styles = StyleSheet.create({
     },
     quickLinkCard: {
         width: '48%',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 16,
         padding: 20,
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
@@ -292,7 +288,7 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.gray700,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 12,
@@ -300,32 +296,8 @@ const styles = StyleSheet.create({
     quickLinkText: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#374151',
+        color: COLORS.dark.text,
         textAlign: 'center',
-    },
-    infoCard: {
-        flexDirection: 'row',
-        backgroundColor: '#EFF6FF',
-        padding: 16,
-        borderRadius: 16,
-        marginBottom: 24,
-        borderWidth: 1,
-        borderColor: '#DBEAFE',
-    },
-    infoContent: {
-        flex: 1,
-        marginLeft: 12,
-    },
-    infoTitle: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: '#1E40AF',
-        marginBottom: 4,
-    },
-    infoText: {
-        fontSize: 13,
-        color: '#1E40AF',
-        lineHeight: 20,
     },
     socialContainer: {
         flexDirection: 'row',
@@ -336,14 +308,11 @@ const styles = StyleSheet.create({
         width: 52,
         height: 52,
         borderRadius: 26,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
