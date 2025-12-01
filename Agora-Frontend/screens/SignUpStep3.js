@@ -9,14 +9,17 @@ import {
     Platform,
     Alert,
     ScrollView,
+    StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 import { SignUpContext } from '../context/SignUpContext';
-import { LinearGradient } from 'expo-linear-gradient';
+import { getColleges } from '../services/api';
+
 import { COLORS } from '../utils/colors';
+
 import Button from '../components/Button';
 import InputField from '../components/InputField';
-import { getColleges } from '../services/api';
 
 export default function SignUpStep3({ navigation }) {
     const { form, updateForm } = useContext(SignUpContext);
@@ -76,13 +79,12 @@ export default function SignUpStep3({ navigation }) {
     };
 
     return (
-        <LinearGradient
-            colors={['#EFF6FF', '#DBEAFE', '#BFDBFE']}
-            style={{ flex: 1 }}
-        >
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor={COLORS.dark.bg} />
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.container}
+                style={styles.keyboardView}
             >
                 <ScrollView
                     contentContainerStyle={styles.inner}
@@ -139,13 +141,12 @@ export default function SignUpStep3({ navigation }) {
                                             <Text style={styles.dropdownText} numberOfLines={2}>
                                                 {item.collegeName}
                                             </Text>
-                                            <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
+                                            <Ionicons name="chevron-forward" size={16} color={COLORS.dark.textTertiary} />
                                         </TouchableOpacity>
                                     )}
                                 />
                             </View>
                         )}
-
                     </View>
 
                     {/* College ID */}
@@ -184,19 +185,21 @@ export default function SignUpStep3({ navigation }) {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </LinearGradient>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'transparent',
+        backgroundColor: COLORS.dark.bg,
+    },
+    keyboardView: {
+        flex: 1,
     },
     inner: {
         flexGrow: 1,
         padding: 20,
-        // paddingTop: 60,
         justifyContent: 'center',
     },
     headerSection: {
@@ -205,29 +208,28 @@ const styles = StyleSheet.create({
     mainHeader: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: COLORS.black,
+        color: COLORS.dark.text,
         marginBottom: 2,
     },
     subHeader: {
         fontSize: 20,
-        color: COLORS.gray,
+        color: COLORS.dark.textSecondary,
         marginBottom: 10,
     },
     dropdownWrapper: {
         position: 'relative',
         zIndex: 999,
-        // marginBottom: 20,
     },
     dropdown: {
         position: 'absolute',
         top: 60,
         left: 0,
         right: 0,
-        backgroundColor: COLORS.white,
+        backgroundColor: COLORS.dark.card,
         borderRadius: 16,
         maxHeight: 240,
         shadowColor: '#000',
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.3,
         shadowRadius: 12,
         shadowOffset: {
             width: 0,
@@ -242,14 +244,14 @@ const styles = StyleSheet.create({
     dropdownHeader: {
         paddingHorizontal: 16,
         paddingVertical: 10,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.bgElevated,
         borderBottomWidth: 1,
-        borderBottomColor: '#E5E7EB',
+        borderBottomColor: COLORS.dark.border,
     },
     dropdownHeaderText: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
@@ -259,7 +261,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        borderBottomColor: COLORS.dark.border,
         gap: 12,
     },
     dropdownItemLast: {
@@ -269,14 +271,14 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 10,
-        backgroundColor: '#EFF6FF',
+        backgroundColor: `${COLORS.primary}20`,
         alignItems: 'center',
         justifyContent: 'center',
     },
     dropdownText: {
         flex: 1,
         fontSize: 15,
-        color: COLORS.black,
+        color: COLORS.dark.text,
         fontWeight: '500',
         lineHeight: 20,
     },
@@ -291,7 +293,7 @@ const styles = StyleSheet.create({
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: '#edf5ffff',
+        backgroundColor: COLORS.dark.border,
     },
     stepDotActive: {
         backgroundColor: COLORS.primary,
