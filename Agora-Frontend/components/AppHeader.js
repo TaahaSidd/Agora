@@ -3,26 +3,49 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
 
+export default function AppHeader({
+    title,
+    centerComponent,
+    onBack,
+    rightIcon,
+    rightComponent,
+    onRightPress,
+}) {
+    const backgroundColor = COLORS.dark.bg;
+    const textColor = COLORS.dark.text;
+    const borderColor = COLORS.dark.border;
 
-export default function AppHeader({ title, onBack, rightIcon, onRightPress }) {
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
+        <SafeAreaView>
+            <View style={[styles.header, { backgroundColor, borderBottomColor: borderColor }]}>
+
+                {/* Back Button */}
                 {onBack ? (
                     <TouchableOpacity onPress={onBack}>
-                        <Ionicons name="arrow-back" size={24} color={COLORS.black} />
+                        <Ionicons name="arrow-back" size={24} color={textColor} />
                     </TouchableOpacity>
                 ) : (
                     <View style={{ width: 24 }} />
                 )}
 
-                <Text style={styles.headerTitle}>{title}</Text>
+                {/* Center Area */}
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                    {centerComponent ? (
+                        centerComponent
+                    ) : (
+                        <Text style={[styles.headerTitle, { color: textColor }]}>
+                            {title}
+                        </Text>
+                    )}
+                </View>
 
-                {rightIcon ? (
-                    <TouchableOpacity onPress={onRightPress}>
-                        <Ionicons name={rightIcon} size={24} color={COLORS.black} />
+                {/* Right Side */}
+                {rightComponent ? (
+                    rightComponent
+                ) : rightIcon ? (
+                    <TouchableOpacity onPress={onRightPress} style={styles.iconArea}>
+                        <Ionicons name={rightIcon} size={24} color={textColor} />
                     </TouchableOpacity>
                 ) : (
                     <View style={{ width: 24 }} />
@@ -33,21 +56,22 @@ export default function AppHeader({ title, onBack, rightIcon, onRightPress }) {
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        backgroundColor: COLORS.white,
-    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: THEME.spacing.md,
+        paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
     },
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: COLORS.black,
+    },
+    iconArea: {
+        width: 32,
+        height: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });

@@ -1,5 +1,8 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
+import Button from './Button';
+
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LogoutModal({ visible, onClose, onConfirm }) {
@@ -21,21 +24,23 @@ export default function LogoutModal({ visible, onClose, onConfirm }) {
                     </Text>
 
                     <View style={styles.modalButtons}>
-                        <TouchableOpacity
-                            style={styles.cancelButton}
+                        <Button
+                            title="Cancel"
+                            variant="outline"
+                            size="medium"
                             onPress={onClose}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={styles.cancelText}>Cancel</Text>
-                        </TouchableOpacity>
+                        // style={styles.cancelButton}   // optional if you have spacing/custom styles
+                        // textStyle={styles.cancelText} // optional for custom text styling
+                        />
 
-                        <TouchableOpacity
-                            style={styles.confirmButton}
+                        <Button
+                            title="Yes, Logout"
+                            variant="danger"
+                            size="medium"
                             onPress={onConfirm}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.confirmText}>Yes, Logout</Text>
-                        </TouchableOpacity>
+                        // style={styles.confirmButton}   // optional for layout/styling
+                        // textStyle={styles.confirmText} // optional if you have custom text styles
+                        />
                     </View>
                 </View>
             </View>

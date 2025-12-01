@@ -157,82 +157,85 @@ const CustomPicker = ({
 };
 
 const styles = StyleSheet.create({
-    container: {
-        // No margin here as parent controls spacing
-    },
+    container: {},
+
     label: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#374151',
+        color: COLORS.dark.text,
         marginBottom: 10,
     },
+
     pickerButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 14,
         borderWidth: 1.5,
-        borderColor: '#E5E7EB',
+        borderColor: COLORS.dark.border,
         paddingHorizontal: 16,
-        height: 52, // Match input height
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.03,
+        height: 52,
+        shadowColor: COLORS.shadow.medium,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
         shadowRadius: 3,
         elevation: 1,
     },
+
     pickerButtonError: {
-        borderColor: '#EF4444',
+        borderColor: COLORS.error,
         borderWidth: 2,
     },
+
     pickerContent: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
     },
+
     icon: {
         marginRight: 12,
     },
+
     pickerText: {
         fontSize: 15,
         fontWeight: '500',
-        color: '#111827',
+        color: COLORS.dark.text,
         flex: 1,
     },
+
     placeholderText: {
-        color: '#9CA3AF',
+        color: COLORS.dark.textTertiary,
         fontWeight: '500',
     },
+
     errorText: {
         fontSize: 13,
-        color: '#EF4444',
+        color: COLORS.error,
         marginTop: 6,
         marginLeft: 4,
         fontWeight: '500',
     },
+
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: COLORS.dark.overlay,
         justifyContent: 'flex-end',
     },
+
     modalContent: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.bgElevated,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         maxHeight: '80%',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: -4,
-        },
-        shadowOpacity: 0.1,
+        shadowColor: COLORS.shadow.heavy,
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.15,
         shadowRadius: 12,
         elevation: 8,
     },
+
     modalHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -241,27 +244,31 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        borderBottomColor: COLORS.dark.divider,
     },
+
     modalTitle: {
         fontSize: 20,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
         letterSpacing: -0.3,
     },
+
     closeButton: {
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: COLORS.dark.card,
         alignItems: 'center',
         justifyContent: 'center',
     },
+
     optionsList: {
         paddingHorizontal: 20,
         paddingTop: 8,
         paddingBottom: 20,
     },
+
     optionItem: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -270,46 +277,55 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderRadius: 12,
         marginBottom: 8,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.dark.card,
     },
+
     optionItemSelected: {
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.cardElevated,
         borderWidth: 1.5,
         borderColor: COLORS.primary,
     },
+
     lastItem: {
         marginBottom: 0,
     },
+
     optionContent: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
     },
+
     optionIconContainer: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: COLORS.dark.cardElevated,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
     },
+
     optionText: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#374151',
+        color: COLORS.dark.textSecondary,
         flex: 1,
     },
+
     optionTextSelected: {
         color: COLORS.primary,
         fontWeight: '700',
     },
+
     optionTextDisabled: {
-        color: '#D1D5DB',
+        color: COLORS.dark.textDisabled,
     },
+
     checkmarkContainer: {
         marginLeft: 8,
     },
 });
+
 
 export default CustomPicker;

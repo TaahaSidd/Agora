@@ -2,17 +2,15 @@ import React from 'react';
 import { Animated, View } from 'react-native';
 import BottomNavBar from './BottomNavBar';
 
-export default function AnimatedBottomNavBar({ state, descriptors, navigation, scrollY }) {
-    // Animate hide on scroll
+export default function AnimatedBottomNavBar({ state, descriptors, navigation, scrollY, isGuest }) {
     const translateY = scrollY
         ? scrollY.interpolate({
             inputRange: [0, 100],
-            outputRange: [0, 80], // adjust for your nav height
+            outputRange: [0, 100],
             extrapolate: 'clamp',
         })
         : new Animated.Value(0);
 
-    // Current active route name
     const activeRoute = state.routes[state.index].name;
 
     return (
@@ -27,6 +25,7 @@ export default function AnimatedBottomNavBar({ state, descriptors, navigation, s
         >
             <BottomNavBar
                 active={activeRoute}
+                isGuest={isGuest}
                 onNavigate={(routeName) => {
                     const route = state.routes.find(r => r.name === routeName);
                     if (route) {

@@ -1,27 +1,34 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
+import { useFavorites } from '../context/FavoritesContext';
 
-const FavoriteButton = ({ size = 22 }) => {
-    const [isFavorite, setIsFavorite] = useState(false);
+const FavoriteButton = ({ listingId, size = 22, style }) => {
+    const { favorites, toggleFavorite } = useFavorites();
+    const [loading, setLoading] = useState(false);
 
-    const toggleFavorite = () => {
-        setIsFavorite(!isFavorite);
+    const isFavorite = favorites.some(f => f.id === listingId);
+
+    const handlePress = async () => {
+        if (loading) return;
+        setLoading(true);
+        await toggleFavorite(listingId);
+        setLoading(false);
     };
 
     return (
-        <TouchableOpacity
-            style={styles.button}
-            onPress={toggleFavorite}
-            activeOpacity={0.7}
-        >
-            <Icon
-                name={isFavorite ? 'heart' : 'heart-outline'}
-                size={size}
-                color={isFavorite ? COLORS.red : COLORS.white}
-            />
+        <TouchableOpacity onPress={handlePress} style={[styles.button, style]}>
+            {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+            ) : (
+                <Icon
+                    name={isFavorite ? 'heart' : 'heart-outline'}
+                    size={size}
+                    color={isFavorite ? 'red' : '#fff'}
+                />
+            )}
         </TouchableOpacity>
     );
 };
@@ -31,7 +38,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: THEME.spacing.sm,
         right: THEME.spacing.sm,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: "rgba(0,0,0,0.5)",
         padding: THEME.spacing.sm - 4,
         borderRadius: THEME.borderRadius.full,
     },

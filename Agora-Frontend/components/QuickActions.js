@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { THEME } from '../utils/theme';
+import { COLORS } from '../utils/colors';
 
 export default function QuickActions({ title, actions }) {
     return (
@@ -42,7 +44,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 12,
     },
     row: {
@@ -52,15 +54,11 @@ const styles = StyleSheet.create({
     actionButton: {
         flex: 1,
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         paddingVertical: 20,
-        borderRadius: 16,
+        borderRadius: THEME.borderRadius.lg,
         marginHorizontal: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        elevation: 1,
     },
     iconCircle: {
         width: 50,
@@ -73,19 +71,19 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#374151',
+        color: COLORS.dark.text,
         textAlign: 'center',
     },
     statNumber: {
         fontSize: 20,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.primary,
         marginBottom: 2,
         textAlign: 'center',
     },
     statLabel: {
         fontSize: 12,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         fontWeight: '600',
         textAlign: 'center',
     },

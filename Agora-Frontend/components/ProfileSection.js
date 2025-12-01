@@ -50,32 +50,35 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 20,
         marginBottom: 24,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow.light,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
     },
+
     profileImageContainer: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        borderWidth: 3,
-        borderColor: '#F3F4F6',
+        borderWidth: 2,
+        borderColor: COLORS.primaryLightest,
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
         position: 'relative',
     },
+
     profilePic: {
         width: '130%',
         height: '100%',
         resizeMode: 'cover',
         marginRight: 6,
     },
+
     verifiedBadge: {
         position: 'absolute',
         bottom: 0,
@@ -87,32 +90,37 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 3,
-        borderColor: '#fff',
+        borderColor: COLORS.dark.cardElevated, // better dark-mode border
     },
+
     profileInfo: {
         flex: 1,
         marginLeft: 16,
     },
+
     profileName: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 4,
     },
+
     profileEmail: {
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         marginBottom: 8,
     },
+
     viewProfileBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.dark.cardElevated,
         alignSelf: 'flex-start',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 12,
     },
+
     viewProfileText: {
         fontSize: 12,
         fontWeight: '700',

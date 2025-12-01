@@ -8,6 +8,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../utils/colors';
 
 const BottomSheetMenu = ({
     visible,
@@ -134,11 +135,11 @@ const BottomSheetMenu = ({
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: COLORS.dark.overlayHeavy,
         justifyContent: 'flex-end',
     },
     bottomSheet: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         paddingBottom: Platform.OS === 'ios' ? 34 : 20,
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     sheetHandle: {
         width: 40,
         height: 4,
-        backgroundColor: '#E5E7EB',
+        backgroundColor: COLORS.dark.divider,
         borderRadius: 2,
         alignSelf: 'center',
         marginTop: 12,
@@ -159,18 +160,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        borderBottomColor: COLORS.dark.divider,
     },
     sheetTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: '#111827',
+        color: COLORS.dark.text,
     },
     closeButton: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: COLORS.dark.cardElevated,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -190,6 +191,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 14,
+        backgroundColor: COLORS.dark.cardElevated,
     },
     menuTextContainer: {
         flex: 1,
@@ -197,17 +199,17 @@ const styles = StyleSheet.create({
     menuTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 2,
     },
     menuDescription: {
         fontSize: 13,
-        color: '#6B7280',
+        color: COLORS.dark.textSecondary,
         fontWeight: '500',
     },
     menuDivider: {
         height: 1,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: COLORS.dark.divider,
         marginHorizontal: 20,
     },
 });

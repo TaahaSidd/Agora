@@ -7,7 +7,7 @@ const SafetyTips = () => {
     return (
         <View style={styles.safetySection}>
             <View style={styles.safetyHeader}>
-                <Icon name="shield-outline" size={20} color={COLORS.primary} />
+                <Icon name="shield-outline" size={20} color={COLORS.warning} />
                 <Text style={styles.safetyTitle}>Safety Tips</Text>
             </View>
             <Text style={styles.safetyText}>
@@ -21,11 +21,11 @@ const SafetyTips = () => {
 
 const styles = StyleSheet.create({
     safetySection: {
-        backgroundColor: "#FEF3C7",
+        backgroundColor: COLORS.warningBgDark, // Dark mode background
         borderRadius: 16,
         padding: 16,
         borderWidth: 1,
-        borderColor: "#FDE68A",
+        borderColor: COLORS.warningDark, // Darker border for contrast
     },
     safetyHeader: {
         flexDirection: "row",
@@ -35,12 +35,12 @@ const styles = StyleSheet.create({
     safetyTitle: {
         fontSize: 16,
         fontWeight: "700",
-        color: "#92400E",
+        color: COLORS.warningBg, // Primary text color for dark mode
         marginLeft: 8,
     },
     safetyText: {
         fontSize: 13,
-        color: "#78350F",
+        color: COLORS.warningLight, // Readable text on dark bg
         lineHeight: 20,
     },
 });

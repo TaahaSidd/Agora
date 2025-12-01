@@ -1,10 +1,21 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { THEME } from '../utils/theme';
+import { COLORS } from '../utils/colors';
 
 const FeaturedCard = ({ item, onPress }) => {
     return (
         <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={() => onPress?.(item)}>
-            <Image source={item.images?.[0]} style={styles.image} resizeMode="cover" />
+            <Image
+                source={
+                    item.images && item.images.length
+                        ? item.images[0]
+                        : require('../assets/LW.jpg')
+                }
+
+                style={styles.image}
+                resizeMode="cover"
+            />
             <View style={styles.info}>
                 <Text numberOfLines={1} style={styles.title}>{item.name}</Text>
                 <Text style={styles.price}>{item.price}</Text>
@@ -17,7 +28,7 @@ const styles = StyleSheet.create({
     card: {
         width: 220,
         borderRadius: 16,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         marginRight: 16,
         elevation: 1,
         overflow: 'hidden',
@@ -34,13 +45,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#333',
+        color: COLORS.dark.text,
         marginBottom: 4,
     },
     price: {
         fontSize: 14,
-        fontWeight: '700',
-        color: '#008CFE',
+        fontWeight: '800',
+        color: COLORS.primary,
     },
 });
 

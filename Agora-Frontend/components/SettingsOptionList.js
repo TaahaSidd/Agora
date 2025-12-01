@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { COLORS } from '../utils/colors';
 
 export default function SettingsOptionList({ title, options }) {
     return (
@@ -50,18 +51,14 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#111827',
+        color: COLORS.dark.text,
         marginBottom: 12,
     },
     optionsCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.dark.card,
         borderRadius: 20,
         padding: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        elevation: 1,
     },
     optionItem: {
         flexDirection: 'row',
@@ -70,7 +67,7 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        borderBottomColor: COLORS.dark.border,
     },
     optionLeft: {
         flexDirection: 'row',
@@ -88,7 +85,7 @@ const styles = StyleSheet.create({
     optionText: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#111827',
+        color: COLORS.dark.text,
     },
     optionRight: {
         flexDirection: 'row',
@@ -96,7 +93,7 @@ const styles = StyleSheet.create({
     },
     optionValue: {
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.dark.textQuaternary,
         marginRight: 8,
         fontWeight: '500',
     },

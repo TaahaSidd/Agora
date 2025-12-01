@@ -43,11 +43,8 @@ const Tooltip = ({
                 position === 'bottom' && styles.tooltipBottom,
                 position === 'left' && styles.tooltipLeft,
                 position === 'right' && styles.tooltipRight,
-                {
-                    transform: [{ scale: scaleAnim }],
-                    opacity: opacityAnim,
-                    style,
-                },
+                { transform: [{ scale: scaleAnim }], opacity: opacityAnim },
+                style,
             ]}
         >
             <View style={styles.tooltip}>
@@ -123,7 +120,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 13,
         fontWeight: '600',
-        flex: 1,
+        flexShrink: 1,
         lineHeight: 18,
     },
     closeButton: {
