@@ -82,7 +82,12 @@ export const useCurrentUser = () => {
                     name: decoded.username || decoded.name || 'User',
                     email: decoded.email || 'unknown@example.com',
                     profileImage: data.profileImage || null,
+                    collegeId: data.college?.id,
+                    collegeName: data.college?.collegeName,
+                    collegeEmail: data.college?.collegeEmail,
                 };
+
+                // console.log('✅ Final User Object:', finalUser);
 
                 setUser(finalUser);
                 setIsGuest(false);

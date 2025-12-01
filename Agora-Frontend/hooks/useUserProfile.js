@@ -6,6 +6,7 @@ const useUserProfile = () => {
         const fetchProfile = async () => {
             try {
                 const data = await apiGet('/profile/myProfile');
+                // console.log('------Fetched User Profile:-------', data);
                 setUser(data);
             } catch (err) {
                 console.error('Error fetching profile:', err);
