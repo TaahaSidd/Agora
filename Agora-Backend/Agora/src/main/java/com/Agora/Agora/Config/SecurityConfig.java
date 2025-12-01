@@ -80,10 +80,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/Agora/follow/**").permitAll()
 
                         // Expo-token
-                        .requestMatchers(HttpMethod.POST, "/Agora/expo/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/Agora/expo/**").permitAll()
 
                         // Notifications
                         .requestMatchers(HttpMethod.GET, "/Agora/notifications/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/Agora/notifications/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/notifications/**").authenticated()
 
                         // Moderation - Admin
                         .requestMatchers(HttpMethod.PUT, "/Agora/Admin/**").hasRole("ADMIN")

@@ -3,6 +3,7 @@ package com.Agora.Agora.Model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -23,7 +24,7 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private AgoraUser user;
     @ManyToOne
     private Listings listings;
@@ -32,6 +33,7 @@ public class Notification {
     private String body;
 
     private String type;
+    private Boolean read = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

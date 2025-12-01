@@ -16,6 +16,7 @@ public class FollowService {
 
     private final FollowRepo followRepo;
     private final UserRepo userRepo;
+    private final NotificationService notiService;
 
     @Transactional
     public boolean follow(Long followerId, Long followingId) {
@@ -30,6 +31,9 @@ public class FollowService {
                 .orElseThrow(() -> new RuntimeException("Following not found"));
 
         followRepo.save(new Follow(follower, following));
+
+        notiService.createFollowNotification(follower, following);
+
         return true;
     }
 

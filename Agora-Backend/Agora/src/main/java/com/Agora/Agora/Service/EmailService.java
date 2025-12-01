@@ -375,7 +375,7 @@ public class EmailService {
                 + "</body>";
 
         helper.setTo(email);
-        helper.setSubject("🔐 Your Agora Password Reset Code");
+        helper.setSubject("Your Agora Password Reset Code");
         helper.setText(htmlContent, true);
         try {
             helper.setFrom("noreply@agora.com", "Agora");

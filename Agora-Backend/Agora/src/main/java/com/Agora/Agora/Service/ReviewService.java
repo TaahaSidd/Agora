@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class ReviewService {
 
         private final ReviewRepo reviewRepo;
+        private final NotificationService notificationService;
         private final ListingsRepo listingRepo;
         private final UserRepo userRepo;
         private final DtoMapper dto;
@@ -39,6 +40,9 @@ public class ReviewService {
                 review.setComment(req.getComment());
 
                 Review savedReview = reviewRepo.save(review);
+
+                notificationService.createReviewNotification(reviewer, listing);
+
                 return dto.mapToReviewResponseDto(savedReview);
         }
 

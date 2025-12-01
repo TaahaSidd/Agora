@@ -9,6 +9,7 @@ import com.Agora.Agora.Dto.Response.ChatRoomResponseDto;
 import com.Agora.Agora.Dto.Response.CollegeResponseDto;
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
 import com.Agora.Agora.Dto.Response.MessageResponseDto;
+import com.Agora.Agora.Dto.Response.NotificationResponseDto;
 import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
 import com.Agora.Agora.Dto.Response.ReportResolveResponse;
 import com.Agora.Agora.Dto.Response.ReportResponseDto;
@@ -20,6 +21,7 @@ import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.ListingImage;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Model.Message;
+import com.Agora.Agora.Model.Notification;
 import com.Agora.Agora.Model.Report;
 import com.Agora.Agora.Model.Review;
 import com.Agora.Agora.Service.MessageService;
@@ -172,6 +174,27 @@ public class DtoMapper {
         if (review.getSeller() != null) {
             dto.setSellerId(review.getSeller().getId());
         }
+
+        return dto;
+    }
+
+    // Notification
+    public NotificationResponseDto mapToNotificationResponseDto(Notification noti) {
+        NotificationResponseDto dto = new NotificationResponseDto();
+        dto.setId(noti.getId());
+        dto.setUserId(noti.getUser().getId());
+        
+        if (noti.getListings() != null) {
+            dto.setListingsId(noti.getListings().getId());
+        } else {
+            dto.setListingsId(null);
+        }
+
+        dto.setTitle(noti.getTitle());
+        dto.setBody(noti.getBody());
+        dto.setType(noti.getType());
+        dto.setRead(noti.getRead());
+        dto.setCreatedAt(noti.getCreatedAt());
 
         return dto;
     }

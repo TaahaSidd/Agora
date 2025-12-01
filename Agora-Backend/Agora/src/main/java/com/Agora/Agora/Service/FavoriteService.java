@@ -6,14 +6,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
+import com.Agora.Agora.Mapper.DtoMapper;
 import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.Favorite;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Repository.FavoriteRepo;
 import com.Agora.Agora.Repository.ListingsRepo;
 import com.Agora.Agora.Repository.UserRepo;
+
 import jakarta.persistence.EntityNotFoundException;
-import com.Agora.Agora.Mapper.DtoMapper;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,6 +25,7 @@ public class FavoriteService {
         private final UserRepo userRepo;
         private final ListingsRepo listingsRepo;
         private final DtoMapper dto;
+        private final NotificationService notificationService;
 
         @Transactional
         public ListingResponseDto addFavorite(String userEmail, Long listingId) {
@@ -42,6 +44,9 @@ public class FavoriteService {
                 favorite.setUser(user);
                 favorite.setListing(listing);
                 favoriteRepo.save(favorite);
+
+                AgoraUser receiver = listing.getSeller();
+                notificationService.sendListingLikedNotification(receiver, listing, user);
 
                 return dto.mapToListingResponseDto(listing);
         }

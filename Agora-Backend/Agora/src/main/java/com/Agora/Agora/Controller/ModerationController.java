@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Agora.Agora.Dto.Request.ReportResolveReqDto;
+import com.Agora.Agora.Dto.Request.SystemNotificationRequest;
 import com.Agora.Agora.Dto.Response.ReportResolveResponse;
 import com.Agora.Agora.Model.Report;
 import com.Agora.Agora.Service.ListingService;
 import com.Agora.Agora.Service.ModerationService;
+import com.Agora.Agora.Service.NotificationService;
 import com.Agora.Agora.Service.UserService;
 
 import jakarta.validation.Valid;
@@ -27,6 +29,7 @@ import java.util.List;
 public class ModerationController {
 
     private final ModerationService moderationService;
+    private final NotificationService notifcationService;
     private final UserService userService;
     private final ListingService listingService;
 
@@ -61,6 +64,14 @@ public class ModerationController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Report>> getAllReports() {
         return ResponseEntity.ok(moderationService.getAllReports());
+    }
+
+    // Notifications
+    @PostMapping("/system")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> sendSystem(@RequestBody SystemNotificationRequest req) {
+        notifcationService.sendSystemNotification(req.getTitle(), req.getBody());
+        return ResponseEntity.ok("Sent to all users");
     }
 
 }
