@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
 import Button from '../components/Button';
+import AppHeader from '../components/AppHeader';
 
 const MakeOfferScreen = ({ navigation, route }) => {
     const { item } = route.params; // item = { name, image, price, sellerName }
@@ -51,22 +52,17 @@ const MakeOfferScreen = ({ navigation, route }) => {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white, paddingTop: StatusBar.currentHeight || 20 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white}}>
             {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color={COLORS.black} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{item.sellerName}</Text>
-                <View style={{ width: 24 }} />
-            </View>
+            <AppHeader title="My Listings" onBack={() => navigation.goBack()} />
+
 
             {/* Main Content */}
             <ScrollView contentContainerStyle={styles.container}>
                 {/* Item Box */}
                 <View style={styles.itemBox}>
                     <Image
-                        source={item.image || require('../assets/bike.jpg')}
+                        source={item.image || require('../assets/no-image.jpg')}
                         style={styles.itemImage}
                     />
                     <View style={{ flex: 1, marginLeft: 12 }}>

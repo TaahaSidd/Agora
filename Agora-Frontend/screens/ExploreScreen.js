@@ -8,6 +8,7 @@ import * as Location from "expo-location";
 import { useAutoSlide } from '../hooks/useAutoSlide';
 import { useListings } from '../hooks/useListings';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { useNotificationCount } from '../hooks/useNotificationCount';
 
 import Card from '../components/Cards';
 import FeaturedCard from '../components/FeaturedCard';
@@ -79,6 +80,14 @@ const ExploreScreen = ({ navigation, scrollY }) => {
     const { items, loading, error, refetch } = useListings();
     const [refreshing, setRefreshing] = useState(false);
     const [userLocation, setUserLocation] = useState(null);
+    const { unreadCount } = useNotificationCount(user, 60000);
+
+    // console.log('ExploreScreen MOUNTING');
+
+    // useEffect(() => {
+    //     console.log('ExploreScreen useEffect 1');
+    //     return () => console.log('ExploreScreen cleanup 1');
+    // }, []);
 
     const { user, loading: userLoading } = useCurrentUser();
 
@@ -137,7 +146,7 @@ const ExploreScreen = ({ navigation, scrollY }) => {
             })
             .filter(Boolean)
             .sort((a, b) => a.distance - b.distance)
-            .slice(0, 10); // top 10 items
+            .slice(0, 10);
 
         setNearestItems(nearby);
     }, [userLocation, items]);
@@ -356,13 +365,20 @@ const ExploreScreen = ({ navigation, scrollY }) => {
                                 >
                                     <Icon name="search-outline" size={22} color="#E6F4FF" />
                                 </TouchableOpacity>
+
                                 <TouchableOpacity
                                     style={styles.iconButton}
                                     onPress={() => navigation.navigate('Notification')}
                                     activeOpacity={0.7}
                                 >
                                     <Icon name="notifications-outline" size={22} color="#E6F4FF" />
-                                    <View style={styles.notificationBadge} />
+                                    {unreadCount > 0 && (
+                                        <View style={styles.notificationBadge}>
+                                            <Text style={styles.badgeText}>
+                                                {unreadCount > 9 ? '9+' : unreadCount}
+                                            </Text>
+                                        </View>
+                                    )}
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -483,7 +499,7 @@ const ExploreScreen = ({ navigation, scrollY }) => {
 
                         {/* Referral Banner */}
                         <View style={styles.section}>
-                            <ReferralBanner onPress={() => console.log('Referral clicked')} />
+                            <ReferralBanner onPress={() => navigation.navigate('ReferralScreen')} />
                         </View>
 
                         {/* Explore */}
@@ -565,14 +581,22 @@ const styles = StyleSheet.create({
     },
     notificationBadge: {
         position: 'absolute',
-        top: 10,
-        right: 10,
-        width: 8,
-        height: 8,
-        borderRadius: THEME.borderRadius.full,
+        top: -4,
+        right: -4,
         backgroundColor: COLORS.error,
-        borderWidth: THEME.borderWidth.medium,
-        borderColor: COLORS.dark.bgElevated,
+        minWidth: 16,
+        height: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: COLORS.dark.bg,
+        paddingHorizontal: 4,
+    },
+    badgeText: {
+        color: '#fff',
+        fontSize: 9,
+        fontWeight: '800',
     },
     section: {
         marginTop: THEME.spacing.sectionGap,

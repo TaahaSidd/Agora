@@ -40,7 +40,6 @@ export default function ForgotPasswordScreen() {
             return;
         }
 
-        // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             setError('Please enter a valid email address.');
@@ -56,7 +55,6 @@ export default function ForgotPasswordScreen() {
             setSuccess('OTP sent successfully to your email!');
             resetTimer(300);
 
-            // Navigate after a short delay to show success message
             setTimeout(() => {
                 navigation.navigate('OTPScreen', { email });
             }, 1500);
@@ -100,7 +98,7 @@ export default function ForgotPasswordScreen() {
                         <View style={styles.titleSection}>
                             <Text style={styles.title}>Forgot Password?</Text>
                             <Text style={styles.subtitle}>
-                                Don't worry! Enter your registered email address and we'll send you a verification code to reset your password.
+                                Enter your email to receive a verification code.
                             </Text>
                         </View>
 
@@ -325,7 +323,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 14,
+        //paddingVertical: 14,
     },
     backToLoginText: {
         fontSize: 15,

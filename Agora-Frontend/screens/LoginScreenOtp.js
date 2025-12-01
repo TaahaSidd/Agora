@@ -1,16 +1,14 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, SafeAreaView, ActivityIndicator, Alert } from "react-native";
-import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
-import { getAuth, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from "firebase/auth";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 import { BASE_URL } from "../services/api";
 
-const LoginScreen = () => {
+const LoginScreenOtp = () => {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [otp, setOtp] = useState("");
     const [verificationId, setVerificationId] = useState(null);
     const [loading, setLoading] = useState(false);
-    const recaptchaVerifier = useRef(null);
 
     const formatPhoneNumber = (number) => {
         let trimmed = number.trim();
@@ -27,10 +25,19 @@ const LoginScreen = () => {
             return;
         }
 
-
         try {
             setLoading(true);
-            const confirmationResult = await signInWithPhoneNumber(auth, formattedNumber, recaptchaVerifier.current);
+
+            // Create a RecaptchaVerifier (web SDK)
+            const recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+                size: 'invisible', // invisible solves the modal issue in React Native
+                callback: () => {
+                    console.log("Recaptcha solved");
+                },
+            }, auth);
+
+            // Send OTP
+            const confirmationResult = await signInWithPhoneNumber(auth, formattedNumber, recaptchaVerifier);
             setVerificationId(confirmationResult.verificationId);
             Alert.alert("OTP Sent", `OTP sent to ${formattedNumber}`);
         } catch (error) {
@@ -75,7 +82,6 @@ const LoginScreen = () => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <FirebaseRecaptchaVerifierModal ref={recaptchaVerifier} firebaseConfig={auth.app.options} />
             <View style={styles.container}>
                 <Text style={styles.heading}>Login with Phone Number</Text>
 
@@ -106,10 +112,13 @@ const LoginScreen = () => {
                 )}
 
                 {loading && <ActivityIndicator style={{ marginTop: 20 }} size="large" />}
+
+                <View id="recaptcha-container" />
             </View>
         </SafeAreaView>
     );
 };
+
 
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: "#fff" },
@@ -132,4 +141,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default LoginScreen;
+export default LoginScreenOtp;

@@ -89,30 +89,30 @@ const ActivityScreen = ({ scrollY }) => {
     const getActivityIcon = (type) => {
         switch (type) {
             case 'listed':
-                return { name: 'pricetag', color: COLORS.primary, bg: `${COLORS.primary}15` };
+                return { name: 'pricetag', color: COLORS.primary, bg: `${COLORS.primary}30` };
             case 'offer':
-                return { name: 'cash', color: '#FF9500', bg: '#FF950015' };
+                return { name: 'cash', color: '#FF9500', bg: '#FF950030' };
             case 'sold':
-                return { name: 'checkmark-circle', color: '#34C759', bg: '#34C75915' };
+                return { name: 'checkmark-circle', color: '#34C759', bg: '#34C75930' };
             case 'message':
-                return { name: 'chatbubble', color: '#5856D6', bg: '#5856D615' };
+                return { name: 'chatbubble', color: '#5856D6', bg: '#5856D630' };
             case 'view':
-                return { name: 'eye', color: '#007AFF', bg: '#007AFF15' };
+                return { name: 'eye', color: '#007AFF', bg: '#007AFF30' };
             default:
-                return { name: 'information-circle', color: '#8E8E93', bg: '#8E8E9315' };
+                return { name: 'information-circle', color: COLORS.dark.textTertiary, bg: COLORS.dark.cardElevated };
         }
     };
 
     const getStatusBadge = (status) => {
         switch (status) {
             case 'active':
-                return { label: 'Active', color: '#34C759', bg: '#34C75915' };
+                return { label: 'Active', color: '#34C759', bg: '#34C75930' };
             case 'pending':
-                return { label: 'Pending', color: '#FF9500', bg: '#FF950015' };
+                return { label: 'Pending', color: '#FF9500', bg: '#FF950030' };
             case 'completed':
-                return { label: 'Completed', color: '#8E8E93', bg: '#8E8E9315' };
+                return { label: 'Completed', color: COLORS.dark.textSecondary, bg: COLORS.dark.cardElevated };
             case 'unread':
-                return { label: 'Unread', color: '#FF3B30', bg: '#FF3B3015' };
+                return { label: 'Unread', color: '#FF3B30', bg: '#FF3B3030' };
             default:
                 return null;
         }
@@ -194,7 +194,7 @@ const ActivityScreen = ({ scrollY }) => {
 
                             <View style={styles.metaRow}>
                                 <View style={styles.timeContainer}>
-                                    <Ionicons name="time-outline" size={14} color="#999" />
+                                    <Ionicons name="time-outline" size={14} color={COLORS.dark.textTertiary} />
                                     <Text style={styles.time}>{item.time}</Text>
                                 </View>
 
@@ -208,14 +208,14 @@ const ActivityScreen = ({ scrollY }) => {
 
                                 {item.views && (
                                     <View style={styles.viewsContainer}>
-                                        <Ionicons name="eye-outline" size={14} color="#999" />
+                                        <Ionicons name="eye-outline" size={14} color={COLORS.dark.textTertiary} />
                                         <Text style={styles.viewsText}>{item.views} views</Text>
                                     </View>
                                 )}
                             </View>
                         </View>
 
-                        <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                        <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary} />
                     </View>
                 </View>
             </TouchableOpacity>
@@ -311,7 +311,7 @@ const ActivityScreen = ({ scrollY }) => {
                 ) : (
                     <View style={styles.emptyContainer}>
                         <View style={styles.emptyIconContainer}>
-                            <Ionicons name="notifications-off-outline" size={64} color="#C7C7CC" />
+                            <Ionicons name="notifications-off-outline" size={64} color={COLORS.dark.textTertiary} />
                         </View>
                         <Text style={styles.emptyTitle}>No Activity Yet</Text>
                         <Text style={styles.emptySubtitle}>
@@ -326,13 +326,13 @@ const ActivityScreen = ({ scrollY }) => {
 
 const styles = StyleSheet.create({
     container: {
-
-        backgroundColor: '#F8F9FA',
+        flex: 1,
+        backgroundColor: COLORS.dark.bg,
     },
     filterContainer: {
-        backgroundColor: COLORS.white,
+        backgroundColor: COLORS.dark.bgElevated,
         borderBottomWidth: 1,
-        borderBottomColor: '#E5E5E5',
+        borderBottomColor: COLORS.dark.border,
         paddingVertical: THEME.spacing.sm,
     },
     filterContent: {
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
         paddingVertical: THEME.spacing.sm,
         paddingHorizontal: THEME.spacing.md,
         borderRadius: THEME.borderRadius.full,
-        backgroundColor: `${COLORS.primary}10`,
+        backgroundColor: `${COLORS.primary}20`,
         marginRight: THEME.spacing.sm,
         gap: 6,
     },
@@ -366,12 +366,12 @@ const styles = StyleSheet.create({
     sectionHeader: {
         paddingHorizontal: THEME.spacing.md,
         paddingVertical: THEME.spacing.sm,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: COLORS.dark.bg,
     },
     sectionTitle: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#8E8E93',
+        color: COLORS.dark.textSecondary,
         letterSpacing: 0.5,
         textTransform: 'uppercase',
     },
@@ -379,12 +379,12 @@ const styles = StyleSheet.create({
         marginHorizontal: THEME.spacing.md,
         marginVertical: 4,
         borderRadius: THEME.borderRadius.lg,
-        backgroundColor: COLORS.white,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
+        backgroundColor: COLORS.dark.card,
+        shadowColor: COLORS.black,
+        shadowOpacity: 0.3,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 8,
-        elevation: 2,
+        elevation: 4,
     },
     cardContent: {
         flexDirection: 'row',
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         zIndex: 1,
         borderWidth: 2,
-        borderColor: COLORS.white,
+        borderColor: COLORS.dark.card,
     },
     image: {
         width: 64,
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     itemName: {
         fontWeight: '700',
         fontSize: 16,
-        color: COLORS.darkBlue,
+        color: COLORS.dark.text,
         flex: 1,
     },
     badge: {
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     },
     description: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.dark.textSecondary,
         marginTop: 2,
     },
     metaRow: {
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     },
     time: {
         fontSize: 12,
-        color: '#999',
+        color: COLORS.dark.textTertiary,
     },
     price: {
         fontSize: 14,
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     },
     viewsText: {
         fontSize: 12,
-        color: '#999',
+        color: COLORS.dark.textTertiary,
         fontWeight: '500',
     },
     emptyContainer: {
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: COLORS.dark.cardElevated,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: THEME.spacing.lg,
@@ -498,13 +498,13 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 22,
         fontWeight: '700',
-        color: COLORS.darkBlue,
+        color: COLORS.dark.text,
         marginBottom: THEME.spacing.sm,
         textAlign: 'center',
     },
     emptySubtitle: {
         fontSize: 15,
-        color: '#8E8E93',
+        color: COLORS.dark.textSecondary,
         textAlign: 'center',
         lineHeight: 22,
     },

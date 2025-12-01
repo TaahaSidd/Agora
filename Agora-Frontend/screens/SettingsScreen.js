@@ -12,7 +12,7 @@ import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
 import { Animated } from 'react-native';
 
-import { SettingsScreenSkeleton } from '../components/SkeletonItem';
+import { SettingsScreenSkeleton } from '../components/skeletons/SkeletonItem';
 import ModalComponent from '../components/Modal';
 import Button from '../components/Button';
 import ToastMessage from '../components/ToastMessage';
@@ -168,10 +168,10 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                             },
                         },
                         {
-                            icon: 'chatbubbles',
-                            iconColor: COLORS.warning,
-                            bgColor: COLORS.warningBg,
-                            label: 'Messages',
+                            icon: 'person-add',
+                            iconColor: COLORS.accent,
+                            bgColor: COLORS.successBg,
+                            label: 'Referral',
                             onPress: () => {
                                 if (isGuest) {
                                     showToast({
@@ -181,7 +181,7 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                                     });
                                     return;
                                 }
-                                // navigation.navigate('MessagesScreen');
+                                navigation.navigate('ReferralScreen');
                             },
                         },
                     ]}

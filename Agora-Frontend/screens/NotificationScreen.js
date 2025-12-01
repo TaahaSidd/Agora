@@ -5,16 +5,17 @@ import {
     TouchableOpacity,
     FlatList,
     StyleSheet,
-    SafeAreaView,
     StatusBar,
 } from "react-native";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/Ionicons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
 import { useNavigation } from "@react-navigation/native";
-import { apiGet } from "../services/api";
+import { apiGet, apiPatch, apiDelete } from "../services/api";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useNotificationCount } from "../hooks/useNotificationCount";
 
 import AppHeader from "../components/AppHeader";
 
@@ -25,26 +26,238 @@ import RelaxSVG from '../assets/svg/RelaxSVG.svg';
 
 const STORAGE_KEY = "notifications";
 
-const NotificationItem = ({ item, onPress }) => {
-    const getIconColor = (type) => {
-        switch (type) {
-            case 'message': return '#3B82F6';
-            case 'offer': return '#10B981';
-            case 'alert': return '#EF4444';
-            case 'info': return '#8B5CF6';
-            default: return COLORS.primary;
-        }
+const getNotificationIcon = (type) => {
+    const normalizedType = type?.toLowerCase().replace(/_/g, '');
+
+    const iconMap = {
+        'listingliked': 'heart',
+        'listingsold': 'checkmark-circle',
+        'listingapproved': 'checkmark-circle',
+        'listingrejected': 'close-circle',
+        'newlisting': 'add-circle',
+        'listingexpired': 'time-outline',
+
+        'message': 'chatbubble-ellipses',
+        'newmessage': 'chatbubble',
+        'chat': 'chatbubble',
+        'reply': 'chatbubbles',
+
+        'offer': 'pricetag',
+        'newoffer': 'pricetag',
+        'offersent': 'paper-plane',
+        'offeraccepted': 'checkmark-circle',
+        'offerrejected': 'close-circle',
+        'pricedrop': 'trending-down',
+        'pricealert': 'notifications',
+        'discount': 'gift',
+
+        'order': 'receipt',
+        'neworder': 'cart',
+        'orderconfirmed': 'checkmark-circle',
+        'ordercancelled': 'close-circle',
+        'payment': 'card',
+        'paymentreceived': 'cash',
+        'transaction': 'cash',
+        'delivery': 'location',
+
+        'alert': 'alert-circle',
+        'warning': 'warning',
+        'report': 'flag',
+        'reportreceived': 'shield',
+
+        'info': 'information-circle',
+        'announcement': 'megaphone',
+        'update': 'sync',
+        'reminder': 'time',
+
+        'like': 'heart',
+        'follow': 'person-add',
+        'newfollower': 'person-add',
+        'share': 'share-social',
+        'comment': 'chatbox',
+        'newcomment': 'chatbox',
+
+        'achievement': 'trophy',
+        'badge': 'ribbon',
+        'reward': 'star',
+
+        'review': 'star',
+        'newreview': 'star',
+        'rating': 'star-half',
     };
 
-    const getIconBg = (type) => {
-        switch (type) {
-            case 'message': return '#DBEAFE';
-            case 'offer': return '#D1FAE5';
-            case 'alert': return '#FEE2E2';
-            case 'info': return '#EDE9FE';
-            default: return '#EFF6FF';
-        }
+    return iconMap[normalizedType] || 'notifications-outline';
+};
+
+const getIconColor = (type) => {
+    const normalizedType = type?.toLowerCase().replace(/_/g, '');
+
+    const colorMap = {
+        // Listing - Pink/Purple
+        'listingliked': '#EC4899',
+        'listingsold': '#10B981',
+        'listingapproved': '#10B981',
+        'listingrejected': '#EF4444',
+        'newlisting': '#8B5CF6',
+        'listingexpired': '#F59E0B',
+
+        // Messages - Blue
+        'message': '#3B82F6',
+        'newmessage': '#3B82F6',
+        'chat': '#3B82F6',
+        'reply': '#3B82F6',
+        'comment': '#3B82F6',
+        'newcomment': '#3B82F6',
+
+        // Offers/Money - Green
+        'offer': '#10B981',
+        'newoffer': '#10B981',
+        'offersent': '#10B981',
+        'offeraccepted': '#10B981',
+        'offerrejected': '#EF4444',
+        'pricedrop': '#10B981',
+        'payment': '#10B981',
+        'paymentreceived': '#10B981',
+        'transaction': '#10B981',
+        'discount': '#10B981',
+
+        // Alerts/Warnings - Red
+        'alert': '#EF4444',
+        'warning': '#EF4444',
+        'report': '#EF4444',
+        'reportreceived': '#EF4444',
+
+        // Info - Purple
+        'info': '#8B5CF6',
+        'announcement': '#8B5CF6',
+        'update': '#8B5CF6',
+
+        // Orders - Orange
+        'order': '#F59E0B',
+        'neworder': '#F59E0B',
+        'orderconfirmed': '#10B981',
+        'ordercancelled': '#EF4444',
+        'delivery': '#F59E0B',
+
+        // Social - Pink
+        'like': '#EC4899',
+        'follow': '#EC4899',
+        'newfollower': '#EC4899',
+        'share': '#EC4899',
+
+        // Achievement - Yellow
+        'achievement': '#F59E0B',
+        'badge': '#F59E0B',
+        'reward': '#F59E0B',
+
+        // Review - Yellow
+        'review': '#F59E0B',
+        'newreview': '#F59E0B',
+        'rating': '#F59E0B',
+
+        // Reminder - Yellow
+        'reminder': '#F59E0B',
     };
+
+    return colorMap[normalizedType] || COLORS.primary;
+};
+
+const getIconBg = (type) => {
+    const normalizedType = type?.toLowerCase().replace(/_/g, '');
+
+    // For dark mode, use more subtle backgrounds
+    const bgMap = {
+        // Listing - Pink/Purple backgrounds
+        'listingliked': 'rgba(236, 72, 153, 0.15)',
+        'listingsold': 'rgba(16, 185, 129, 0.15)',
+        'listingapproved': 'rgba(16, 185, 129, 0.15)',
+        'listingrejected': 'rgba(239, 68, 68, 0.15)',
+        'newlisting': 'rgba(139, 92, 246, 0.15)',
+        'listingexpired': 'rgba(245, 158, 11, 0.15)',
+
+        // Messages - Blue background
+        'message': 'rgba(59, 130, 246, 0.15)',
+        'newmessage': 'rgba(59, 130, 246, 0.15)',
+        'chat': 'rgba(59, 130, 246, 0.15)',
+        'reply': 'rgba(59, 130, 246, 0.15)',
+        'comment': 'rgba(59, 130, 246, 0.15)',
+        'newcomment': 'rgba(59, 130, 246, 0.15)',
+
+        // Offers/Money - Green background
+        'offer': 'rgba(16, 185, 129, 0.15)',
+        'newoffer': 'rgba(16, 185, 129, 0.15)',
+        'offersent': 'rgba(16, 185, 129, 0.15)',
+        'offeraccepted': 'rgba(16, 185, 129, 0.15)',
+        'offerrejected': 'rgba(239, 68, 68, 0.15)',
+        'pricedrop': 'rgba(16, 185, 129, 0.15)',
+        'payment': 'rgba(16, 185, 129, 0.15)',
+        'paymentreceived': 'rgba(16, 185, 129, 0.15)',
+        'transaction': 'rgba(16, 185, 129, 0.15)',
+        'discount': 'rgba(16, 185, 129, 0.15)',
+
+        // Alerts - Red background
+        'alert': 'rgba(239, 68, 68, 0.15)',
+        'warning': 'rgba(239, 68, 68, 0.15)',
+        'report': 'rgba(239, 68, 68, 0.15)',
+        'reportreceived': 'rgba(239, 68, 68, 0.15)',
+
+        // Info - Purple background
+        'info': 'rgba(139, 92, 246, 0.15)',
+        'announcement': 'rgba(139, 92, 246, 0.15)',
+        'update': 'rgba(139, 92, 246, 0.15)',
+
+        // Orders - Orange background
+        'order': 'rgba(245, 158, 11, 0.15)',
+        'neworder': 'rgba(245, 158, 11, 0.15)',
+        'orderconfirmed': 'rgba(16, 185, 129, 0.15)',
+        'ordercancelled': 'rgba(239, 68, 68, 0.15)',
+        'delivery': 'rgba(245, 158, 11, 0.15)',
+
+        // Social - Pink background
+        'like': 'rgba(236, 72, 153, 0.15)',
+        'follow': 'rgba(236, 72, 153, 0.15)',
+        'newfollower': 'rgba(236, 72, 153, 0.15)',
+        'share': 'rgba(236, 72, 153, 0.15)',
+
+        // Achievement - Yellow background
+        'achievement': 'rgba(245, 158, 11, 0.15)',
+        'badge': 'rgba(245, 158, 11, 0.15)',
+        'reward': 'rgba(245, 158, 11, 0.15)',
+
+        // Review - Yellow background
+        'review': 'rgba(245, 158, 11, 0.15)',
+        'newreview': 'rgba(245, 158, 11, 0.15)',
+        'rating': 'rgba(245, 158, 11, 0.15)',
+
+        // Reminder - Yellow background
+        'reminder': 'rgba(245, 158, 11, 0.15)',
+    };
+
+    return bgMap[normalizedType] || 'rgba(59, 130, 246, 0.15)';
+};
+
+const formatTime = (timestamp) => {
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diffMs = now - then;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+    return `${Math.floor(diffDays / 30)}mo ago`;
+};
+
+const NotificationItem = ({ item, onPress }) => {
+    const iconName = getNotificationIcon(item.type);
+    const iconColor = getIconColor(item.type);
+    const iconBg = getIconBg(item.type);
+    const { refresh } = useNotificationCount(0);
 
     return (
         <TouchableOpacity
@@ -52,8 +265,8 @@ const NotificationItem = ({ item, onPress }) => {
             style={[styles.notificationCard, !item.read && styles.unreadCard]}
             activeOpacity={0.7}
         >
-            <View style={[styles.iconWrapper, { backgroundColor: getIconBg(item.type) }]}>
-                <Icon name={item.icon} size={24} color={getIconColor(item.type)} />
+            <View style={[styles.iconWrapper, { backgroundColor: iconBg }]}>
+                <Icon name={iconName} size={24} color={iconColor} />
             </View>
 
             <View style={styles.contentWrapper}>
@@ -77,76 +290,33 @@ const NotificationItem = ({ item, onPress }) => {
     );
 };
 
+
 export default function NotificationScreen() {
     const navigation = useNavigation();
     const { user, loading, isGuest } = useCurrentUser();
     const [notifications, setNotifications] = useState([]);
-    const [filter, setFilter] = useState('all'); // 'all', 'unread'
+    const [filter, setFilter] = useState('all');
 
-    // useEffect(() => {
-    //     const loadNotifications = async () => {
-    //         try {
-    //             const stored = await AsyncStorage.getItem(STORAGE_KEY);
-    //             if (stored) {
-    //                 setNotifications(JSON.parse(stored));
-    //             } else {
-    //                 // Demo notifications
-    //                 const initial = [
-    //                     {
-    //                         id: "1",
-    //                         title: "New Message",
-    //                         description: "John Doe sent you a message about iPhone listing",
-    //                         time: "2h ago",
-    //                         icon: "chatbubble-ellipses",
-    //                         type: "message",
-    //                         read: false
-    //                     },
-    //                     {
-    //                         id: "2",
-    //                         title: "Offer Received",
-    //                         description: "Someone made an offer of ₹5000 on your laptop",
-    //                         time: "5h ago",
-    //                         icon: "pricetag",
-    //                         type: "offer",
-    //                         read: false
-    //                     },
-    //                     {
-    //                         id: "3",
-    //                         title: "Listing Approved",
-    //                         description: "Your listing 'Gaming Mouse' has been approved and is now live",
-    //                         time: "1d ago",
-    //                         icon: "checkmark-circle",
-    //                         type: "info",
-    //                         read: true
-    //                     },
-    //                     {
-    //                         id: "4",
-    //                         title: "Price Drop Alert",
-    //                         description: "Item on your wishlist dropped to ₹1200",
-    //                         time: "2d ago",
-    //                         icon: "trending-down",
-    //                         type: "alert",
-    //                         read: true
-    //                     },
-    //                 ];
-    //                 setNotifications(initial);
-    //                 await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-    //             }
-    //         } catch (e) {
-    //             console.error("Failed to load notifications:", e);
-    //         }
-    //     };
-    //     loadNotifications();
-    // }, []);
 
     useEffect(() => {
-        if (loading || isGuest) return;  // wait until user loads
+        if (loading || isGuest) return;
 
         const loadNotifications = async () => {
             try {
-
                 const data = await apiGet(`/notifications/${user.id}`);
-                setNotifications(data);
+                console.log("DATA is --", data);
+
+                const formatted = data.map(noti => ({
+                    id: noti.id.toString(),
+                    title: noti.title,
+                    description: noti.body,
+                    type: noti.type,
+                    time: formatTime(noti.createdAt),
+                    read: noti.read,
+                    listingsId: noti.listingsId,
+                }));
+
+                setNotifications(formatted);
             } catch (e) {
                 console.error("Failed to load notifications:", e);
             }
@@ -157,11 +327,18 @@ export default function NotificationScreen() {
 
 
     const handlePressNotification = async (id) => {
-        const updated = notifications.map((n) =>
-            n.id === id ? { ...n, read: true } : n
-        );
-        setNotifications(updated);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        try {
+            await apiPatch(`/notifications/read/${id}`);
+
+            const updated = notifications.map((n) =>
+                n.id === id ? { ...n, read: true } : n
+            );
+            setNotifications(updated);
+
+            refresh();
+        } catch (e) {
+            console.log(e);
+        }
     };
 
     const handleMarkAllRead = async () => {
@@ -171,8 +348,15 @@ export default function NotificationScreen() {
     };
 
     const handleClearAll = async () => {
-        setNotifications([]);
-        await AsyncStorage.removeItem(STORAGE_KEY);
+        if (!user?.id) return;
+
+        try {
+            await apiDelete(`/notifications/clear/${user.id}`);
+            setNotifications([]);
+            refresh();
+        } catch (error) {
+            console.error("Failed to clear notifications:", error);
+        }
     };
 
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -192,7 +376,7 @@ export default function NotificationScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaProvider style={styles.safeArea}>
             <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
 
             {/* Header */}
@@ -281,7 +465,7 @@ export default function NotificationScreen() {
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
             />
-        </SafeAreaView>
+        </SafeAreaProvider>
     );
 }
 
