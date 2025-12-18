@@ -1,19 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiGet } from '../services/api';
 
-export const useNotificationCount = (user, loading, isGuest, refreshInterval = 60000) => {
+export const useNotificationCount = (
+    userId,
+    loading,
+    isGuest,
+    refreshInterval = 60000
+) => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
 
-    const fetchUnreadCount = async () => {
-        if (loading || isGuest || !user?.id) {
+    const fetchUnreadCount = useCallback(async () => {
+        if (loading || isGuest || !userId) {
             setUnreadCount(0);
             return;
         }
 
         setIsLoading(true);
         try {
-            const data = await apiGet(`/notifications/${user.id}`);
+            const data = await apiGet(`/notifications/${userId}`);
             const unread = data.filter(n => !n.read).length;
             setUnreadCount(unread);
         } catch (error) {
@@ -22,22 +27,18 @@ export const useNotificationCount = (user, loading, isGuest, refreshInterval = 6
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [userId, loading, isGuest]);
 
     useEffect(() => {
-        if (!loading && !isGuest && user?.id) {
-            fetchUnreadCount();
+        if (!userId || loading || isGuest) return;
 
-            let interval;
-            if (refreshInterval > 0) {
-                interval = setInterval(fetchUnreadCount, refreshInterval);
-            }
+        fetchUnreadCount();
 
-            return () => {
-                if (interval) clearInterval(interval);
-            };
+        if (refreshInterval > 0) {
+            const interval = setInterval(fetchUnreadCount, refreshInterval);
+            return () => clearInterval(interval);
         }
-    }, [user?.id, loading, isGuest, refreshInterval]);
+    }, [fetchUnreadCount, refreshInterval]);
 
     return {
         unreadCount,

@@ -2,6 +2,7 @@ package com.Agora.Agora.Model;
 
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -36,5 +37,8 @@ public class Notification {
     private Boolean read = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(columnDefinition = "TEXT")
+    private String metadata;
 
 }

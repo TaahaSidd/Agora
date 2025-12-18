@@ -6,15 +6,16 @@ import {
     FlatList,
     StyleSheet,
     StatusBar,
+    LogBox,
 } from "react-native";
+LogBox.ignoreAllLogs(false);
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/Ionicons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
 import { useNavigation } from "@react-navigation/native";
 import { apiGet, apiPatch, apiDelete } from "../services/api";
-import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useUserStore } from "../stores/userStore";
 import { useNotificationCount } from "../hooks/useNotificationCount";
 
 import AppHeader from "../components/AppHeader";
@@ -257,11 +258,10 @@ const NotificationItem = ({ item, onPress }) => {
     const iconName = getNotificationIcon(item.type);
     const iconColor = getIconColor(item.type);
     const iconBg = getIconBg(item.type);
-    const { refresh } = useNotificationCount(0);
 
     return (
         <TouchableOpacity
-            onPress={() => onPress(item.id)}
+            onPress={() => onPress(item)}
             style={[styles.notificationCard, !item.read && styles.unreadCard]}
             activeOpacity={0.7}
         >
@@ -293,65 +293,116 @@ const NotificationItem = ({ item, onPress }) => {
 
 export default function NotificationScreen() {
     const navigation = useNavigation();
-    const { user, loading, isGuest } = useCurrentUser();
+    const { currentUser, loading, isGuest } = useUserStore();
     const [notifications, setNotifications] = useState([]);
     const [filter, setFilter] = useState('all');
+    const { unreadCount, refresh } = useNotificationCount(currentUser, loading, isGuest);
 
+    const loadNotifications = async () => {
+        if (!currentUser?.id) return;
+
+        try {
+            const data = await apiGet(`/notifications/${currentUser.id}`);
+            //console.log("DATA IS -> ", data);
+
+            const formatted = data.map(noti => ({
+                id: noti.id.toString(),
+                title: noti.title,
+                description: noti.body,
+                type: noti.type,
+                time: formatTime(noti.createdAt),
+                read: noti.read,
+                listingsId: noti.listingsId,
+            }));
+
+            setNotifications(formatted);
+        } catch (e) {
+            console.error("Failed to load notifications:", e);
+        }
+    };
 
     useEffect(() => {
-        if (loading || isGuest) return;
-
-        const loadNotifications = async () => {
-            try {
-                const data = await apiGet(`/notifications/${user.id}`);
-                console.log("DATA is --", data);
-
-                const formatted = data.map(noti => ({
-                    id: noti.id.toString(),
-                    title: noti.title,
-                    description: noti.body,
-                    type: noti.type,
-                    time: formatTime(noti.createdAt),
-                    read: noti.read,
-                    listingsId: noti.listingsId,
-                }));
-
-                setNotifications(formatted);
-            } catch (e) {
-                console.error("Failed to load notifications:", e);
-            }
-        };
+        if (loading) return;
+        if (!currentUser || isGuest) return;
 
         loadNotifications();
-    }, [user, loading, isGuest]);
+    }, [currentUser, loading, isGuest]);
 
+    // const handleNotificationPress = async (notification) => {
 
-    const handlePressNotification = async (id) => {
-        try {
-            await apiPatch(`/notifications/read/${id}`);
+    //     //console.log("🔍 Full notification object:", notification);
+    //     if (!notification?.id) return;
 
-            const updated = notifications.map((n) =>
-                n.id === id ? { ...n, read: true } : n
+    //     if (!notification.read) {
+    //         try {
+    //             await apiPatch(`/notifications/read/${notification.id}`);
+    //             //console.log("✅ Marked as read:", notification.id);
+
+    //             refresh();
+    //             await loadNotifications();
+    //         } catch (error) {
+    //             console.error('Error marking as read:', error);
+    //         }
+    //     }
+
+    //     if (notification.type === 'LISTING_LIKED' && notification.listingsId) {
+    //         navigation.navigate('ProductDetailsScreen', { listingId: notification.listingsId });
+    //     } else if (notification.type === 'REVIEW' && notification.listingsId) {
+    //         navigation.navigate('ProductDetailsScreen', { listingId: notification.listingsId });
+    //     } else if (notification.type === 'FOLLOW') {
+    //         navigation.navigate('ProfileScreen');
+    //     }
+    // };
+
+    const handleNotificationPress = async (notification) => {
+        if (!notification?.id) return;
+
+        // Mark as read locally
+        if (!notification.read) {
+            setNotifications(prev =>
+                prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
             );
-            setNotifications(updated);
+
+            // Update backend silently
+            apiPatch(`/notifications/read/${notification.id}`).catch(console.error);
 
             refresh();
-        } catch (e) {
-            console.log(e);
+        }
+
+        switch (notification.type) {
+            case 'LISTING_LIKED':
+            case 'REVIEW':
+                if (notification.listingsId) {
+                    navigation.navigate('ProductDetailsScreen', { listingId: notification.listingsId });
+                }
+                break;
+            case 'FOLLOW':
+                navigation.navigate('ProfileScreen');
+                break;
         }
     };
 
     const handleMarkAllRead = async () => {
-        const updated = notifications.map((n) => ({ ...n, read: true }));
-        setNotifications(updated);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        if (!currentUser?.id) return;
+
+        try {
+
+            await apiPatch(`/notifications/mark-all-read/${currentUser.id}`);
+
+            const updated = notifications.map((n) => ({ ...n, read: true }));
+            setNotifications(updated);
+
+            refresh();
+        } catch (error) {
+            console.error("Failed to mark all as read:", error);
+        }
     };
 
     const handleClearAll = async () => {
-        if (!user?.id) return;
+        if (!currentUser?.id) return;
 
         try {
-            await apiDelete(`/notifications/clear/${user.id}`);
+            await apiDelete(`/notifications/clear/${currentUser.id}`);
             setNotifications([]);
             refresh();
         } catch (error) {
@@ -359,18 +410,16 @@ export default function NotificationScreen() {
         }
     };
 
-    const unreadCount = notifications.filter(n => !n.read).length;
     const filteredNotifications = filter === 'unread'
         ? notifications.filter(n => !n.read)
         : notifications;
-
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <RelaxSVG width={200} height={200} />
             <Text style={styles.emptyTitle}>All Caught Up!</Text>
             <Text style={styles.emptyText}>
-                You have no new notifications. We'll let you know when something comes up!
+                You have no new notifications.
             </Text>
         </View>
     );
@@ -379,7 +428,6 @@ export default function NotificationScreen() {
         <SafeAreaProvider style={styles.safeArea}>
             <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
 
-            {/* Header */}
             <AppHeader
                 onBack={() =>
                     navigation.canGoBack()
@@ -406,7 +454,6 @@ export default function NotificationScreen() {
                 }
             />
 
-            {/* Filter Tabs */}
             {notifications.length > 0 && (
                 <View style={styles.filterContainer}>
                     <TouchableOpacity
@@ -430,7 +477,6 @@ export default function NotificationScreen() {
                 </View>
             )}
 
-            {/* Actions Row */}
             {notifications.length > 0 && (
                 <View style={styles.actionsRow}>
                     {unreadCount > 0 && (
@@ -454,12 +500,11 @@ export default function NotificationScreen() {
                 </View>
             )}
 
-            {/* Notifications List */}
             <FlatList
                 data={filteredNotifications}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <NotificationItem item={item} onPress={handlePressNotification} />
+                    <NotificationItem item={item} onPress={handleNotificationPress} />
                 )}
                 ListEmptyComponent={renderEmptyState}
                 contentContainerStyle={styles.listContent}
@@ -647,7 +692,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: THEME.spacing['3xl'],
     },
     emptyTitle: {
         fontSize: THEME.fontSize['2xl'],
