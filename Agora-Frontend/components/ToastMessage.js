@@ -1,226 +1,3 @@
-// import React, { useEffect, useRef } from 'react';
-// import { Animated, View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-// import { Ionicons } from '@expo/vector-icons';
-// import { COLORS } from '../utils/colors';
-
-// const ToastMessage = ({
-//     type = 'info',
-//     title,
-//     message,
-//     onHide,
-//     duration = 3000,
-//     position = 'top',
-// }) => {
-//     const slideAnim = useRef(new Animated.Value(position === 'top' ? -200 : 200)).current;
-//     const opacityAnim = useRef(new Animated.Value(0)).current;
-
-//     useEffect(() => {
-//         Animated.parallel([
-//             Animated.spring(slideAnim, {
-//                 toValue: 0,
-//                 tension: 50,
-//                 friction: 7,
-//                 useNativeDriver: true,
-//             }),
-//             Animated.timing(opacityAnim, {
-//                 toValue: 1,
-//                 duration: 300,
-//                 useNativeDriver: true,
-//             }),
-//         ]).start();
-
-//         const timer = setTimeout(() => {
-//             hideToast();
-//         }, duration);
-
-//         return () => clearTimeout(timer);
-//     }, []);
-
-//     const hideToast = () => {
-//         Animated.parallel([
-//             Animated.timing(slideAnim, {
-//                 toValue: position === 'top' ? -200 : 200,
-//                 duration: 300,
-//                 useNativeDriver: true,
-//             }),
-//             Animated.timing(opacityAnim, {
-//                 toValue: 0,
-//                 duration: 300,
-//                 useNativeDriver: true,
-//             }),
-//         ]).start(() => onHide && onHide());
-//     };
-
-//     const getToastConfig = () => {
-//         switch (type) {
-//             case 'success':
-//                 return {
-//                     icon: 'checkmark-circle',
-//                     iconColor: '#10B981',
-//                     backgroundColor: '#ECFDF5',
-//                     borderColor: '#A7F3D0',
-//                     titleColor: '#065F46',
-//                     messageColor: '#047857',
-//                 };
-//             case 'error':
-//                 return {
-//                     icon: 'close-circle',
-//                     iconColor: '#EF4444',
-//                     backgroundColor: '#FEF2F2',
-//                     borderColor: '#FECACA',
-//                     titleColor: '#991B1B',
-//                     messageColor: '#DC2626',
-//                 };
-//             case 'warning':
-//                 return {
-//                     icon: 'warning',
-//                     iconColor: '#F59E0B',
-//                     backgroundColor: '#FFFBEB',
-//                     borderColor: '#FDE68A',
-//                     titleColor: '#92400E',
-//                     messageColor: '#D97706',
-//                 };
-//             case 'info':
-//             default:
-//                 return {
-//                     icon: 'information-circle',
-//                     iconColor: '#3B82F6',
-//                     backgroundColor: '#EFF6FF',
-//                     borderColor: '#DBEAFE',
-//                     titleColor: '#1E40AF',
-//                     messageColor: '#2563EB',
-//                 };
-//         }
-//     };
-
-//     const config = getToastConfig();
-
-//     return (
-//         <Animated.View
-//             style={[
-//                 styles.container,
-//                 position === 'top' ? styles.topPosition : styles.bottomPosition,
-//                 {
-//                     backgroundColor: config.backgroundColor,
-//                     borderColor: config.borderColor,
-//                     transform: [{ translateY: slideAnim }],
-//                     opacity: opacityAnim,
-//                 },
-//             ]}
-//         >
-//             <View style={styles.content}>
-//                 <View style={[styles.iconCircle, { backgroundColor: `${config.iconColor}20` }]}>
-//                     <Ionicons name={config.icon} size={24} color={config.iconColor} />
-//                 </View>
-
-//                 <View style={styles.textContainer}>
-//                     {title && (
-//                         <Text style={[styles.title, { color: config.titleColor }]}>
-//                             {title}
-//                         </Text>
-//                     )}
-//                     {message && (
-//                         <Text style={[styles.message, { color: config.messageColor }]}>
-//                             {message}
-//                         </Text>
-//                     )}
-//                 </View>
-
-//                 <TouchableOpacity
-//                     onPress={hideToast}
-//                     style={styles.closeButton}
-//                     activeOpacity={0.7}
-//                 >
-//                     <Ionicons name="close" size={18} color={config.messageColor} />
-//                 </TouchableOpacity>
-//             </View>
-
-//             {/* Progress bar */}
-//             <Animated.View
-//                 style={[
-//                     styles.progressBar,
-//                     {
-//                         backgroundColor: config.iconColor,
-//                         width: opacityAnim.interpolate({
-//                             inputRange: [0, 1],
-//                             outputRange: ['0%', '100%'],
-//                         }),
-//                     },
-//                 ]}
-//             />
-//         </Animated.View>
-//     );
-// };
-
-// const styles = StyleSheet.create({
-//     container: {
-//         position: 'absolute',
-//         left: 16,
-//         right: 16,
-//         borderRadius: 16,
-//         borderWidth: 1,
-//         shadowColor: '#000',
-//         shadowOpacity: 0.1,
-//         shadowOffset: { width: 0, height: 4 },
-//         shadowRadius: 12,
-//         elevation: 8,
-//         zIndex: 9999,
-//         overflow: 'hidden',
-//     },
-//     topPosition: {
-//         top: Platform.OS === 'ios' ? 80 : 40,
-//     },
-//     bottomPosition: {
-//         bottom: Platform.OS === 'ios' ? 40 : 20,
-//     },
-//     content: {
-//         flexDirection: 'row',
-//         alignItems: 'center',
-//         padding: 16,
-//     },
-//     iconCircle: {
-//         width: 40,
-//         height: 40,
-//         borderRadius: 20,
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//         marginRight: 12,
-//     },
-//     textContainer: {
-//         flex: 1,
-//     },
-//     title: {
-//         fontWeight: '700',
-//         fontSize: 15,
-//         marginBottom: 2,
-//         letterSpacing: -0.2,
-//     },
-//     message: {
-//         fontSize: 13,
-//         lineHeight: 18,
-//         fontWeight: '500',
-//     },
-//     closeButton: {
-//         width: 28,
-//         height: 28,
-//         borderRadius: 14,
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//         marginLeft: 8,
-//     },
-//     progressBar: {
-//         height: 3,
-//         position: 'absolute',
-//         bottom: 0,
-//         left: 0,
-//     },
-// });
-
-// export default ToastMessage;
-
-
-
-
 import React, { useEffect, useRef } from 'react';
 import { Animated, View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -236,13 +13,15 @@ const ToastMessage = ({
 }) => {
     const slideAnim = useRef(new Animated.Value(position === 'top' ? -200 : 200)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.92)).current;
+    const progressAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
         Animated.parallel([
             Animated.spring(slideAnim, {
                 toValue: 0,
-                tension: 50,
-                friction: 7,
+                tension: 70,
+                friction: 9,
                 useNativeDriver: true,
             }),
             Animated.timing(opacityAnim, {
@@ -250,7 +29,20 @@ const ToastMessage = ({
                 duration: 300,
                 useNativeDriver: true,
             }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                tension: 80,
+                friction: 8,
+                useNativeDriver: true,
+            }),
         ]).start();
+
+        // Progress bar animation
+        Animated.timing(progressAnim, {
+            toValue: 0,
+            duration: duration,
+            useNativeDriver: false,
+        }).start();
 
         const timer = setTimeout(() => {
             hideToast();
@@ -263,12 +55,17 @@ const ToastMessage = ({
         Animated.parallel([
             Animated.timing(slideAnim, {
                 toValue: position === 'top' ? -200 : 200,
-                duration: 300,
+                duration: 250,
                 useNativeDriver: true,
             }),
             Animated.timing(opacityAnim, {
                 toValue: 0,
-                duration: 300,
+                duration: 250,
+                useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+                toValue: 0.92,
+                duration: 250,
                 useNativeDriver: true,
             }),
         ]).start(() => onHide && onHide());
@@ -280,8 +77,8 @@ const ToastMessage = ({
                 return {
                     icon: 'checkmark-circle',
                     iconColor: COLORS.success,
+                    accentColor: COLORS.success,
                     backgroundColor: COLORS.dark.cardElevated,
-                    borderColor: COLORS.successDark,
                     titleColor: COLORS.successLight,
                     messageColor: COLORS.dark.textSecondary,
                 };
@@ -289,8 +86,8 @@ const ToastMessage = ({
                 return {
                     icon: 'close-circle',
                     iconColor: COLORS.error,
+                    accentColor: COLORS.error,
                     backgroundColor: COLORS.dark.cardElevated,
-                    borderColor: COLORS.errorDark,
                     titleColor: COLORS.errorLight,
                     messageColor: COLORS.dark.textSecondary,
                 };
@@ -298,8 +95,8 @@ const ToastMessage = ({
                 return {
                     icon: 'warning',
                     iconColor: COLORS.warning,
+                    accentColor: COLORS.warning,
                     backgroundColor: COLORS.dark.cardElevated,
-                    borderColor: COLORS.warningDark,
                     titleColor: COLORS.warningLight,
                     messageColor: COLORS.dark.textSecondary,
                 };
@@ -308,8 +105,8 @@ const ToastMessage = ({
                 return {
                     icon: 'information-circle',
                     iconColor: COLORS.info,
+                    accentColor: COLORS.info,
                     backgroundColor: COLORS.dark.cardElevated,
-                    borderColor: COLORS.infoDark,
                     titleColor: COLORS.infoLight,
                     messageColor: COLORS.dark.textSecondary,
                 };
@@ -318,6 +115,11 @@ const ToastMessage = ({
 
     const config = getToastConfig();
 
+    const progressWidth = progressAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0%', '100%'],
+    });
+
     return (
         <Animated.View
             style={[
@@ -325,25 +127,27 @@ const ToastMessage = ({
                 position === 'top' ? styles.topPosition : styles.bottomPosition,
                 {
                     backgroundColor: config.backgroundColor,
-                    borderColor: config.borderColor,
-                    transform: [{ translateY: slideAnim }],
+                    transform: [
+                        { translateY: slideAnim },
+                        { scale: scaleAnim }
+                    ],
                     opacity: opacityAnim,
                 },
             ]}
         >
             <View style={styles.content}>
-                <View style={[styles.iconCircle, { backgroundColor: `${config.iconColor}20` }]}>
-                    <Ionicons name={config.icon} size={24} color={config.iconColor} />
+                <View style={[styles.iconContainer, { backgroundColor: `${config.iconColor}20` }]}>
+                    <Ionicons name={config.icon} size={22} color={config.iconColor} />
                 </View>
 
                 <View style={styles.textContainer}>
                     {title && (
-                        <Text style={[styles.title, { color: config.titleColor }]}>
+                        <Text style={[styles.title, { color: config.titleColor }]} numberOfLines={1}>
                             {title}
                         </Text>
                     )}
                     {message && (
-                        <Text style={[styles.message, { color: config.messageColor }]}>
+                        <Text style={[styles.message, { color: config.messageColor }]} numberOfLines={2}>
                             {message}
                         </Text>
                     )}
@@ -352,25 +156,25 @@ const ToastMessage = ({
                 <TouchableOpacity
                     onPress={hideToast}
                     style={styles.closeButton}
-                    activeOpacity={0.7}
+                    activeOpacity={0.6}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                    <Ionicons name="close" size={18} color={COLORS.dark.textTertiary} />
+                    <Ionicons name="close" size={20} color={COLORS.dark.textTertiary} />
                 </TouchableOpacity>
             </View>
 
             {/* Progress bar */}
-            <Animated.View
-                style={[
-                    styles.progressBar,
-                    {
-                        backgroundColor: config.iconColor,
-                        width: opacityAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0%', '100%'],
-                        }),
-                    },
-                ]}
-            />
+            <View style={styles.progressBarContainer}>
+                <Animated.View
+                    style={[
+                        styles.progressBar,
+                        {
+                            backgroundColor: config.accentColor,
+                            width: progressWidth,
+                        },
+                    ]}
+                />
+            </View>
         </Animated.View>
     );
 };
@@ -378,64 +182,69 @@ const ToastMessage = ({
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        left: 16,
-        right: 16,
-        borderRadius: 16,
-        borderWidth: 1,
+        left: 18,
+        right: 18,
+        borderRadius: 14,
         shadowColor: '#000',
-        shadowOpacity: 0.3,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 12,
+        shadowOpacity: 0.4,
+        shadowOffset: { width: 0, height: 8 },
+        shadowRadius: 20,
         elevation: 8,
         zIndex: 9999,
         overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
     },
     topPosition: {
-        top: Platform.OS === 'ios' ? 80 : 40,
+        top: Platform.OS === 'ios' ? 60 : 50,
     },
     bottomPosition: {
-        bottom: Platform.OS === 'ios' ? 40 : 20,
+        bottom: Platform.OS === 'ios' ? 50 : 30,
     },
     content: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         padding: 16,
     },
-    iconCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
     },
     textContainer: {
         flex: 1,
+        paddingTop: 2,
     },
     title: {
-        fontWeight: '700',
+        fontWeight: '600',
         fontSize: 15,
-        marginBottom: 2,
-        letterSpacing: -0.2,
+        marginBottom: 3,
+        letterSpacing: -0.3,
     },
     message: {
-        fontSize: 13,
-        lineHeight: 18,
-        fontWeight: '500',
+        fontSize: 14,
+        lineHeight: 19,
+        fontWeight: '400',
+        letterSpacing: -0.1,
     },
     closeButton: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: 8,
     },
+    progressBarContainer: {
+        height: 2,
+        backgroundColor: COLORS.dark.border,
+        width: '100%',
+    },
     progressBar: {
-        height: 3,
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
+        height: '100%',
     },
 });
 
