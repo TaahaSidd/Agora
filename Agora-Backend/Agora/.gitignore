@@ -31,3 +31,25 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# GCP Service Account Keys
+src/main/resources/gcp/*.json
+gcp/*.json
+**/*.google.json
+agora-477216-26c3809cf1cb.json
+
+# Spring Boot configs with secrets
+application-local.properties
+application-dev.properties
+application-local.yml
+application-dev.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+A
