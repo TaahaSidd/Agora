@@ -12,7 +12,6 @@ import {
     Linking,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { BlurView } from 'expo-blur';
 import { Image } from "expo-image";
 import MapView, { Marker } from 'react-native-maps';
 import ImageViewing from 'react-native-image-viewing';
@@ -28,7 +27,6 @@ import ExpandableText from "../components/ExpandableText";
 import ProductDetailItem from "../components/ProductDetailItem";
 import SafetyTips from "../components/SafetyTips";
 import BottomSheetMenu from "../components/BottomSheetMenu";
-import InputModal from "../components/InputModal";
 import ToastMessage from "../components/ToastMessage";
 
 import { shareItem } from '../services/share';
@@ -390,11 +388,6 @@ export default function ProductDetailsScreen() {
                     </View>
 
                     <View style={styles.quickInfoPills}>
-                        {/* <Tag
-                            label="Verified"
-                            type="verified"
-                            icon={{ library: "Ionicons", name: "shield-checkmark", color: "#10B981" }}
-                        /> */}
                         <Tag
                             label={product.postDate ? `Posted ${getTimeAgo(product.postDate)}` : "Posted recently"}
                             type="time"
@@ -521,39 +514,68 @@ export default function ProductDetailsScreen() {
                             ))}
                         </View>
                     </View>
-
                     {/* Reviews List */}
                     <View style={styles.reviewsListContainer}>
-                        <FlatList
-                            data={displayedReviews || []}
-                            renderItem={renderReviewItem}
-                            keyExtractor={(item, index) => {
-                                const id = item?.id ?? item?.reviewId ?? item?.reviewerId;
-                                return id ? String(id) : String(index);
-                            }}
-                            scrollEnabled={false}
-                        />
+                        {reviews.length === 0 ? (
+                            <View style={styles.emptyReviewsContainer}>
+                                <View style={styles.emptyReviewsIconCircle}>
+                                    <Ionicons name="chatbox-ellipses-outline" size={32} color={COLORS.dark.textTertiary} />
+                                </View>
+                                <Text style={styles.emptyReviewsTitle}>No reviews yet</Text>
+                                <Text style={styles.emptyReviewsSubtitle}>
+                                    Be the first to share your experience with this seller
+                                </Text>
+                                <Button
+                                    title="Write a Review"
+                                    onPress={() =>
+                                        navigation.navigate('AllReviewsScreen', {
+                                            reviews,
+                                            productName,
+                                            productId: product.id,
+                                            onAddReview: newReview => {
+                                                setReviews(prev => [newReview, ...prev]);
+                                            },
+                                        })
+                                    }
+                                    variant="primary"
+                                    size="medium"
+                                    icon="create-outline"
+                                    iconPosition="left"
+                                    style={{ marginTop: THEME.spacing.md }}
+                                />
+                            </View>
+                        ) : (
+                            <>
+                                <FlatList
+                                    data={displayedReviews || []}
+                                    renderItem={renderReviewItem}
+                                    keyExtractor={(item, index) => {
+                                        const id = item?.id ?? item?.reviewId ?? item?.reviewerId;
+                                        return id ? String(id) : String(index);
+                                    }}
+                                    scrollEnabled={false}
+                                />
 
-                        {reviews.length > 0 && (
-                            <Button
-                                title={`View All ${reviews.length} Reviews`}
-                                onPress={() =>
-                                    navigation.navigate('AllReviewsScreen', {
-                                        reviews,
-                                        productName,
-                                        productId: product.id,
-                                        onAddReview: newReview => {
-                                            setReviews(prev => [newReview, ...prev]);
-                                        },
-                                    })
-                                }
-                                variant="ghost"
-                                size="small"
-                                icon="chevron-forward"
-                                iconPosition="right"
-                                fullWidth
-                                textStyle={{ color: COLORS.primary }}
-                            />
+                                <Button
+                                    title={`View All ${reviews.length} Reviews`}
+                                    onPress={() =>
+                                        navigation.navigate('AllReviewsScreen', {
+                                            reviews,
+                                            productName,
+                                            productId: product.id,
+                                            onAddReview: newReview => {
+                                                setReviews(prev => [newReview, ...prev]);
+                                            },
+                                        })
+                                    }
+                                    variant="ghost"
+                                    size="small"
+                                    icon="chevron-forward"
+                                    iconPosition="right"
+                                    fullWidth
+                                    textStyle={{ color: COLORS.primary }}
+                                />
+                            </>
                         )}
                     </View>
 
@@ -1008,6 +1030,36 @@ const styles = StyleSheet.create({
         fontSize: THEME.fontSize.sm,
         fontWeight: THEME.fontWeight.bold,
         color: COLORS.primary,
+    },
+    emptyReviewsContainer: {
+        alignItems: 'center',
+        paddingVertical: THEME.spacing['2xl'],
+        backgroundColor: COLORS.dark.bgElevated,
+        borderRadius: THEME.borderRadius.card,
+        borderWidth: THEME.borderWidth.hairline,
+        borderColor: COLORS.dark.border,
+    },
+    emptyReviewsIconCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.dark.cardElevated,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: THEME.spacing.md,
+    },
+    emptyReviewsTitle: {
+        fontSize: THEME.fontSize.lg,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing.xs,
+    },
+    emptyReviewsSubtitle: {
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        textAlign: 'center',
+        paddingHorizontal: THEME.spacing.lg,
+        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
     },
 
     // Related Listings Styles

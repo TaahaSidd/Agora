@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { Animated, Text, View, TouchableOpacity, StatusBar, FlatList, Dimensions, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -9,6 +10,7 @@ import { useAutoSlide } from '../hooks/useAutoSlide';
 import { useListings } from '../hooks/useListings';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useNotificationCount } from '../hooks/useNotificationCount';
+import { useUserStore } from '../stores/userStore';
 
 import Card from '../components/Cards';
 import FeaturedCard from '../components/FeaturedCard';
@@ -80,23 +82,23 @@ const ExploreScreen = ({ navigation, scrollY }) => {
     const { items, loading, error, refetch } = useListings();
     const [refreshing, setRefreshing] = useState(false);
     const [userLocation, setUserLocation] = useState(null);
-    const { unreadCount } = useNotificationCount(user, 60000);
+    const { currentUser, loading: userLoading, isGuest } = useUserStore();
+    const userId = currentUser?.id ?? null;
+    const { unreadCount, refresh } = useNotificationCount(userId, userLoading, isGuest, 60000);
+    const { user } = useCurrentUser();
 
-    // console.log('ExploreScreen MOUNTING');
-
-    // useEffect(() => {
-    //     console.log('ExploreScreen useEffect 1');
-    //     return () => console.log('ExploreScreen cleanup 1');
-    // }, []);
-
-    const { user, loading: userLoading } = useCurrentUser();
+    useFocusEffect(
+        React.useCallback(() => {
+            if (!userId || isGuest) return;
+            refresh();
+        }, [userId, isGuest])
+    );
 
     const collegeItems = useMemo(() => {
         if (!user) return [];
         return items.filter(item => item.seller?.collegeId === user.collegeId);
     }, [user, items]);
 
-    //User location fetch
     useEffect(() => {
         (async () => {
             let { status } = await Location.requestForegroundPermissionsAsync();
@@ -527,14 +529,16 @@ const ExploreScreen = ({ navigation, scrollY }) => {
                                 )}
                                 ListFooterComponent={() => (
                                     items.length > 6 ? (
-                                        <TouchableOpacity
-                                            style={styles.showAllCard}
-                                            onPress={() => navigation.navigate('AllListingsScreen')}
-                                            activeOpacity={0.8}
-                                        >
-                                            <Text style={styles.showAllText}>Show All</Text>
-                                            <Icon name="chevron-forward" size={20} color="#111" />
-                                        </TouchableOpacity>
+                                        <View style={styles.showAllContainer}>
+                                            <TouchableOpacity
+                                                style={styles.showAllButton}
+                                                onPress={() => navigation.navigate('AllListingsScreen')}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={styles.showAllButtonText}>View All Listings</Text>
+                                                <Icon name="arrow-forward" size={18} color={COLORS.primary} />
+                                            </TouchableOpacity>
+                                        </View>
                                     ) : null
                                 )}
                                 showsVerticalScrollIndicator={false}
@@ -644,23 +648,27 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'space-between',
     },
-    showAllCard: {
-        width: '48%',
-        aspectRatio: 0.75,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.card,
+    showAllContainer: {
+        width: '100%',
         alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: THEME.spacing.itemGap,
-        borderWidth: THEME.borderWidth.medium,
-        borderColor: COLORS.dark.border,
-        borderStyle: 'dashed',
+        paddingVertical: THEME.spacing.lg,
+        marginTop: THEME.spacing.sm,
     },
-    showAllText: {
-        fontSize: THEME.fontSize.md,
-        fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.textTertiary,
-        marginBottom: THEME.spacing[1],
+    showAllButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: THEME.spacing.sm,
+        paddingVertical: THEME.spacing.sm,
+        paddingHorizontal: THEME.spacing.lg,
+        backgroundColor: COLORS.dark.cardElevated,
+        borderRadius: THEME.borderRadius.full,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+    },
+    showAllButtonText: {
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.primary,
     },
 
     // Skeleton Styles

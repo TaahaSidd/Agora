@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import * as Location from 'expo-location';
 import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 
 import { apiPost } from '../services/api';
 import { useCurrentUser } from '../hooks/useCurrentUser';
@@ -177,7 +176,7 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                                     showToast({
                                         type: 'info',
                                         title: 'Sign in required',
-                                        message: 'Please log in to access messages.',
+                                        message: 'Please log in to access referral.',
                                     });
                                     return;
                                 }

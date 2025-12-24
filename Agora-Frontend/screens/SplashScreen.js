@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, Easing, Alert, Text, Dimensions } from 'react-native';
+import { View, Animated, StyleSheet, Easing, Text, Dimensions } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { authApiPost } from '../services/api';
 import { COLORS } from '../utils/colors';
 import { jwtDecode } from 'jwt-decode';
+import { useUserStore } from "../stores/userStore";
+import LogoAppSVG from '../assets/svg/LogoAppSVG.svg';
 
 const { width, height } = Dimensions.get('window');
 
@@ -89,67 +91,19 @@ export default function SplashScreen({ navigation }) {
             return value === 'true';
         };
 
-        // const timer = setTimeout(async () => {
-        //     try {
-        //         const accessToken = await SecureStore.getItemAsync('accessToken');
-        //         const refreshToken = await SecureStore.getItemAsync('refreshToken');
-
-        //         if (!accessToken && !refreshToken) {
-        //             // New or logged-out user
-        //             navigation.replace('Onboarding', { guest: true });
-        //             return;
-        //         }
-
-        //         if (accessToken) {
-        //             const { exp } = jwtDecode(accessToken);
-        //             const jwtExpired = Date.now() >= exp * 1000;
-
-        //             if (!jwtExpired) {
-        //                 navigation.replace('MainLayout', { guest: false });
-        //                 return;
-        //             }
-        //         }
-
-        //         if (refreshToken) {
-        //             try {
-        //                 const res = await authApiPost('/auth/refresh', { refreshToken });
-        //                 await SecureStore.setItemAsync('accessToken', res.jwt);
-        //                 if (res.refreshToken) await SecureStore.setItemAsync('refreshToken', res.refreshToken);
-
-        //                 navigation.replace('MainLayout', { guest: false });
-        //                 return;
-        //             } catch {
-        //                 await SecureStore.deleteItemAsync('accessToken');
-        //                 await SecureStore.deleteItemAsync('refreshToken');
-        //                 navigation.replace('Login');
-        //                 return;
-        //             }
-        //         }
-
-        //         await SecureStore.deleteItemAsync('accessToken');
-        //         navigation.replace('Login');
-
-        //     } catch (error) {
-        //         console.log('Token validation failed:', error);
-        //         navigation.replace('Login');
-        //     }
-        // }, 3000);
-
         const timer = setTimeout(async () => {
             try {
                 const hasSeenOnboarding = await getOnboardingSeen();
                 const accessToken = await SecureStore.getItemAsync('accessToken');
                 const refreshToken = await SecureStore.getItemAsync('refreshToken');
 
-                // Show onboarding only if user hasn't seen it yet
                 if (!hasSeenOnboarding) {
                     navigation.replace('Onboarding', { guest: !accessToken });
                     return;
                 }
 
-                // Existing guest / login / main flow
                 if (!accessToken && !refreshToken) {
-                    navigation.replace('Login'); // or guest mode
+                    navigation.replace('Login');
                     return;
                 }
 
@@ -158,6 +112,7 @@ export default function SplashScreen({ navigation }) {
                     const jwtExpired = Date.now() >= exp * 1000;
 
                     if (!jwtExpired) {
+                        await useUserStore.getState().fetchUser();
                         navigation.replace('MainLayout', { guest: false });
                         return;
                     }
@@ -169,6 +124,7 @@ export default function SplashScreen({ navigation }) {
                         await SecureStore.setItemAsync('accessToken', res.jwt);
                         if (res.refreshToken) await SecureStore.setItemAsync('refreshToken', res.refreshToken);
 
+                        await useUserStore.getState().fetchUser();
                         navigation.replace('MainLayout', { guest: false });
                         return;
                     } catch {
@@ -247,7 +203,7 @@ export default function SplashScreen({ navigation }) {
                 ]}
             />
 
-            {/* Main Content */}
+            {/* Main Content - SVG Logo */}
             <Animated.View
                 style={[
                     styles.logoContainer,
@@ -257,10 +213,10 @@ export default function SplashScreen({ navigation }) {
                     },
                 ]}
             >
-                <Text style={styles.title}>Agora</Text>
+                <LogoAppSVG width={280} height={280} />
             </Animated.View>
 
-            {/* Tagline with fade in and slide up */}
+            {/* Tagline */}
             <Animated.View
                 style={[
                     styles.taglineContainer,
@@ -278,43 +234,6 @@ export default function SplashScreen({ navigation }) {
                 ]}
             >
                 <Text style={styles.tagline}>India's First Student Marketplace</Text>
-
-                {/* Loading Dots */}
-                <View style={styles.dotsContainer}>
-                    <Animated.View
-                        style={[
-                            styles.dot,
-                            {
-                                opacity: taglineAnim.interpolate({
-                                    inputRange: [0, 0.3, 1],
-                                    outputRange: [0.3, 1, 0.3],
-                                }),
-                            }
-                        ]}
-                    />
-                    <Animated.View
-                        style={[
-                            styles.dot,
-                            {
-                                opacity: taglineAnim.interpolate({
-                                    inputRange: [0, 0.5, 1],
-                                    outputRange: [0.3, 1, 0.3],
-                                }),
-                            }
-                        ]}
-                    />
-                    <Animated.View
-                        style={[
-                            styles.dot,
-                            {
-                                opacity: taglineAnim.interpolate({
-                                    inputRange: [0, 0.7, 1],
-                                    outputRange: [0.3, 1, 0.3],
-                                }),
-                            }
-                        ]}
-                    />
-                </View>
             </Animated.View>
         </View>
     );
@@ -356,15 +275,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    title: {
-        color: COLORS.white,
-        fontSize: 56,
-        fontWeight: '900',
-        letterSpacing: 4,
-        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-        textShadowOffset: { width: 0, height: 6 },
-        textShadowRadius: 12,
-    },
     taglineContainer: {
         position: 'absolute',
         bottom: 80,
@@ -376,17 +286,33 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
         letterSpacing: 0.8,
-        marginBottom: 24,
-    },
-    dotsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: COLORS.primary,
     },
 });
+
+
+/*
+SPLASH SCREEN LOGIC - PRODUCTION PATTERN
+
+1. Purpose:
+- Hide app loading / cold start
+    - Run auth + onboarding checks
+    - Decide initial navigation
+    - Mask startup time with animation
+
+2. What we need:
+    - Minimum display time(e.g., 1 - 1.5s)
+    - Async logic completion tracking:
+        • Onboarding check
+        • Access / refresh token validation
+        • Fetch user if logged in
+    - Animation(logo, pulses, background motion)
+    - Navigation only after BOTH:
+        • Async logic finished
+        • Minimum time elapsed
+
+3. Notes:
+    - Avoid fixed timeouts(do not just wait 3s)
+    - Do not fetch heavy data here(keep splash lightweight)
+    - Hide Expo native splash immediately when JS is ready
+    - Ensure navigation happens once(guard against race conditions)
+*/

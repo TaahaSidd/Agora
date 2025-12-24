@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react';
+const getTrendIcon = (trend) => {
+    if (trend > 0) return { name: 'trending-up', color: '#10B981' };
+    if (trend < 0) return { name: 'trending-down', color: '#EF4444' };
+    return { name: 'remove', color: '#6B7280' };
+}; import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -9,6 +13,7 @@ import {
     StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import AppHeader from '../components/AppHeader';
 import InfoBox from '../components/InfoBox';
@@ -18,8 +23,8 @@ import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
 
 const CategoriesScreen = ({ navigation }) => {
-
     const [popularCategories, setPopularCategories] = useState([]);
+    const [categoryCounts, setCategoryCounts] = useState({});
     const [loading, setLoading] = useState(true);
 
     const categories = [
@@ -27,85 +32,73 @@ const CategoriesScreen = ({ navigation }) => {
             id: 'textbooks',
             name: 'Textbooks & Study Materials',
             icon: 'book-outline',
-            color: '#3B82F6',
-            bgColor: '#DBEAFE',
+            gradient: ['#3B82F6', '#2563EB'],
         },
         {
             id: 'electronics',
             name: 'Electronics & Gadgets',
             icon: 'laptop-outline',
-            color: '#8B5CF6',
-            bgColor: '#EDE9FE',
+            gradient: ['#8B5CF6', '#7C3AED'],
         },
         {
             id: 'clothing',
             name: 'Clothing & Accessories',
             icon: 'shirt-outline',
-            color: '#EC4899',
-            bgColor: '#FCE7F3',
+            gradient: ['#EC4899', '#DB2777'],
         },
         {
             id: 'furniture',
             name: 'Furniture & Dorm Supplies',
             icon: 'bed-outline',
-            color: '#F59E0B',
-            bgColor: '#FEF3C7',
+            gradient: ['#F59E0B', '#D97706'],
         },
         {
             id: 'stationery',
             name: 'Stationery & Office Supplies',
             icon: 'pencil-outline',
-            color: '#14B8A6',
-            bgColor: '#CCFBF1',
+            gradient: ['#14B8A6', '#0D9488'],
         },
         {
             id: 'sports',
             name: 'Sports & Fitness Equipment',
             icon: 'basketball-outline',
-            color: '#EF4444',
-            bgColor: '#FEE2E2',
+            gradient: ['#EF4444', '#DC2626'],
         },
         {
             id: 'bicycles',
             name: 'Bicycles & Transportation',
             icon: 'bicycle-outline',
-            color: '#10B981',
-            bgColor: '#D1FAE5',
+            gradient: ['#10B981', '#059669'],
         },
         {
             id: 'food',
             name: 'Food & Snacks',
             icon: 'fast-food-outline',
-            color: '#F97316',
-            bgColor: '#FFEDD5',
+            gradient: ['#F97316', '#EA580C'],
         },
         {
             id: 'housing',
             name: 'Housing & Roommates',
             icon: 'home-outline',
-            color: '#06B6D4',
-            bgColor: '#CFFAFE',
+            gradient: ['#06B6D4', '#0891B2'],
         },
         {
             id: 'tutoring',
             name: 'Tutoring & Academic Services',
             icon: 'school-outline',
-            color: '#8B5CF6',
-            bgColor: '#F3E8FF',
+            gradient: ['#8B5CF6', '#6D28D9'],
         },
         {
             id: 'events',
             name: 'Events & Tickets',
             icon: 'ticket-outline',
-            color: '#EC4899',
-            bgColor: '#FBCFE8',
+            gradient: ['#EC4899', '#BE185D'],
         },
         {
             id: 'miscellaneous',
             name: 'Miscellaneous',
             icon: 'apps-outline',
-            color: '#6B7280',
-            bgColor: '#F3F4F6',
+            gradient: ['#6B7280', '#4B5563'],
         },
     ];
 
@@ -126,28 +119,41 @@ const CategoriesScreen = ({ navigation }) => {
                 categoryName: item.categoryName,
                 itemCount: item.itemCount,
                 icon: 'apps-outline',
-                color: '#000',
-                bgColor: '#eee',
+                gradient: ['#6B7280', '#4B5563'],
             };
         });
     };
 
     useEffect(() => {
-        fetchPopularCategories();
+        fetchCategoryData();
     }, []);
 
-    const fetchPopularCategories = async () => {
+    const fetchCategoryData = async () => {
         try {
             setLoading(true);
-            const popular = await apiGet('/listing/popular-categories');
 
+            // Fetch popular categories with counts
+            const popular = await apiGet('/listing/popular-categories');
             const mapped = mapPopularCategories(popular);
             setPopularCategories(mapped.slice(0, 3));
+
+            // Build category counts from popular data
+            const counts = {};
+            popular.forEach(item => {
+                counts[item.categoryId] = item.itemCount;
+            });
+            setCategoryCounts(counts);
         } catch (error) {
-            console.error('Error fetching popular categories:', error);
+            console.error('Error fetching category data:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const getTrendIcon = (trend) => {
+        if (trend > 0) return { name: 'trending-up', color: '#10B981' };
+        if (trend < 0) return { name: 'trending-down', color: '#EF4444' };
+        return { name: 'remove', color: '#6B7280' };
     };
 
     const handleCategoryPress = (category) => {
@@ -159,7 +165,7 @@ const CategoriesScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
+            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content" />
             <AppHeader title="All Categories" onBack={() => navigation.goBack()} />
 
             <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -173,12 +179,11 @@ const CategoriesScreen = ({ navigation }) => {
                 <View style={styles.popularSection}>
                     <View style={styles.popularHeader}>
                         <Ionicons name="flame" size={24} color="#EF4444" />
-                        <Text style={styles.popularTitle}>Most Popular</Text>
+                        <Text style={styles.popularTitle}>Trending Now</Text>
                     </View>
 
                     <View style={styles.popularCards}>
                         {loading ? (
-                            // Simple skeleton placeholders
                             [1, 2, 3].map((_, idx) => (
                                 <View key={idx} style={styles.popularCardSkeleton}>
                                     <View style={styles.popularRankSkeleton} />
@@ -187,32 +192,41 @@ const CategoriesScreen = ({ navigation }) => {
                                 </View>
                             ))
                         ) : (
-                            popularCategories.map((category, index) => (
-                                <TouchableOpacity
-                                    key={category.id}
-                                    style={styles.popularCard}
-                                    onPress={() => handleCategoryPress(category)}
-                                    activeOpacity={0.7}
-                                >
-                                    <View style={styles.popularRank}>
-                                        <Text style={styles.popularRankText}>#{index + 1}</Text>
-                                    </View>
-                                    <View style={[styles.popularIcon, { backgroundColor: category.bgColor || '#eee' }]}>
-                                        <Ionicons name={category.icon || 'apps-outline'} size={20} color={category.color || '#000'} />
-                                    </View>
-                                    <View style={styles.popularInfo}>
-                                        <Text style={styles.popularName} numberOfLines={1}>
-                                            {(category.categoryName || category.name || "Unknown Category")}
-                                        </Text>
-                                    </View>
-                                    <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-                                </TouchableOpacity>
-                            ))
+                            popularCategories.map((category, index) => {
+                                return (
+                                    <TouchableOpacity
+                                        key={category.id}
+                                        style={styles.popularCard}
+                                        onPress={() => handleCategoryPress(category)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={styles.popularRank}>
+                                            <Text style={styles.popularRankText}>#{index + 1}</Text>
+                                        </View>
+                                        <LinearGradient
+                                            colors={category.gradient}
+                                            style={styles.popularIcon}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
+                                        >
+                                            <Ionicons name={category.icon || 'apps-outline'} size={20} color="#fff" />
+                                        </LinearGradient>
+                                        <View style={styles.popularInfo}>
+                                            <Text style={styles.popularName} numberOfLines={1}>
+                                                {category.categoryName || category.name || "Unknown Category"}
+                                            </Text>
+                                            <Text style={styles.popularCount}>
+                                                {category.itemCount || 0} {category.itemCount === 1 ? 'item' : 'items'}
+                                            </Text>
+                                        </View>
+                                        <Ionicons name="chevron-forward" size={18} color={COLORS.dark.textTertiary} />
+                                    </TouchableOpacity>
+                                );
+                            })
                         )}
                     </View>
                 </View>
 
-                {/* All Categories Grid */}
                 <View style={styles.allCategoriesHeader}>
                     <Text style={styles.allCategoriesTitle}>All Categories</Text>
                 </View>
@@ -223,25 +237,35 @@ const CategoriesScreen = ({ navigation }) => {
                             <View key={idx} style={styles.categoryCardSkeleton} />
                         ))
                     ) : (
-                        categories.map((category) => (
-                            <TouchableOpacity
-                                key={category.id}
-                                style={styles.categoryCard}
-                                onPress={() => handleCategoryPress(category)}
-                                activeOpacity={0.7}
-                            >
-                                <View style={[styles.categoryIconCircle, { backgroundColor: category.bgColor }]}>
-                                    <Ionicons name={category.icon} size={32} color={category.color} />
-                                </View>
-                                <Text style={styles.categoryName} numberOfLines={2}>
-                                    {category.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))
+                        categories.map((category) => {
+                            const count = categoryCounts[category.id] || 0;
+                            return (
+                                <TouchableOpacity
+                                    key={category.id}
+                                    style={styles.categoryCard}
+                                    onPress={() => handleCategoryPress(category)}
+                                    activeOpacity={0.7}
+                                >
+                                    <LinearGradient
+                                        colors={category.gradient}
+                                        style={styles.categoryIconCircle}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                    >
+                                        <Ionicons name={category.icon} size={32} color="#fff" />
+                                    </LinearGradient>
+                                    <Text style={styles.categoryName} numberOfLines={2}>
+                                        {category.name}
+                                    </Text>
+                                    <Text style={styles.categoryCount}>
+                                        {count} {count === 1 ? 'item' : 'items'}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })
                     )}
                 </View>
 
-                {/* Bottom Info */}
                 <InfoBox
                     text="Can't find what you're looking for? Try searching or check back later for new listings!"
                 />
@@ -249,21 +273,19 @@ const CategoriesScreen = ({ navigation }) => {
         </SafeAreaView>
     );
 };
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: COLORS.dark.bg,
     },
-
     container: {
         padding: 20,
         paddingBottom: 40,
     },
-
     headerInfo: {
         marginBottom: 24,
     },
-
     headerTitle: {
         fontSize: 28,
         fontWeight: '800',
@@ -271,25 +293,20 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         letterSpacing: -0.5,
     },
-
     headerSubtitle: {
         fontSize: 14,
         color: COLORS.dark.textSecondary,
         fontWeight: '500',
         lineHeight: 20,
     },
-
-    // Popular Section
     popularSection: {
         marginBottom: 32,
     },
-
     popularHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 16,
     },
-
     popularTitle: {
         fontSize: 20,
         fontWeight: '800',
@@ -297,18 +314,13 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         letterSpacing: -0.3,
     },
-
     popularCards: {
         backgroundColor: COLORS.dark.card,
         borderRadius: 20,
         padding: 8,
-        shadowColor: COLORS.shadow.light,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
     },
-
     popularCard: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -316,23 +328,20 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 4,
     },
-
     popularRank: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: COLORS.dark.errorBg,
+        backgroundColor: COLORS.dark.cardElevated,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
     },
-
     popularRankText: {
         fontSize: 14,
         fontWeight: '800',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.dark.text,
     },
-
     popularIcon: {
         width: 40,
         height: 40,
@@ -340,59 +349,54 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
-        backgroundColor: COLORS.dark.cardElevated,
     },
-
     popularInfo: {
         flex: 1,
     },
-
     popularName: {
         fontSize: 15,
         fontWeight: '700',
         color: COLORS.dark.text,
     },
-
-    // All Categories
+    popularCount: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: COLORS.dark.textSecondary,
+        marginTop: 2,
+    },
     allCategoriesHeader: {
         marginBottom: 16,
     },
-
     allCategoriesTitle: {
         fontSize: 20,
         fontWeight: '800',
         color: COLORS.dark.text,
         letterSpacing: -0.3,
     },
-
     gridContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         marginHorizontal: -6,
         marginBottom: 24,
     },
-
     categoryCard: {
         width: '50%',
         paddingHorizontal: 6,
-        marginBottom: 12,
+        marginBottom: 16,
     },
-
     categoryIconCircle: {
         width: '100%',
         aspectRatio: 1,
         borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 12,
-        backgroundColor: COLORS.dark.card,
-        shadowColor: COLORS.shadow.light,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
+        marginBottom: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
         shadowRadius: 8,
-        elevation: 2,
+        elevation: 4,
     },
-
     categoryName: {
         fontSize: 13,
         fontWeight: '700',
@@ -400,71 +404,49 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 18,
         paddingHorizontal: 4,
+        marginBottom: 4,
     },
-
-    // Bottom Info Banner
-    bottomInfo: {
-        flexDirection: 'row',
-        backgroundColor: COLORS.infoBgDark,
-        padding: 16,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: COLORS.dark.divider,
+    categoryCount: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: COLORS.dark.textTertiary,
+        textAlign: 'center',
     },
-
-    infoIconContainer: {
-        marginRight: 12,
-        marginTop: 2,
-    },
-
-    infoText: {
-        flex: 1,
-        fontSize: 13,
-        color: COLORS.infoLight,
-        lineHeight: 20,
-        fontWeight: '500',
-    },
-
-    // Skeletons (Dark Mode)
     popularCardSkeleton: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
         borderRadius: 12,
         marginBottom: 4,
-        backgroundColor: COLORS.dark.gray800,
+        backgroundColor: COLORS.dark.cardElevated,
     },
-
     popularRankSkeleton: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: COLORS.dark.gray700,
+        backgroundColor: COLORS.dark.border,
         marginRight: 12,
     },
-
     popularIconSkeleton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: COLORS.dark.gray700,
+        backgroundColor: COLORS.dark.border,
         marginRight: 12,
     },
-
     popularInfoSkeleton: {
         flex: 1,
         height: 16,
         borderRadius: 8,
-        backgroundColor: COLORS.dark.gray700,
+        backgroundColor: COLORS.dark.border,
     },
-
     categoryCardSkeleton: {
         width: '48%',
         paddingHorizontal: 6,
         marginBottom: 12,
-        height: 100,
+        height: 140,
         borderRadius: 12,
-        backgroundColor: COLORS.dark.gray700,
+        backgroundColor: COLORS.dark.cardElevated,
     },
 });
 
