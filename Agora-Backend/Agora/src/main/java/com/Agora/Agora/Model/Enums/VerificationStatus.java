@@ -1,8 +1,8 @@
 package com.Agora.Agora.Model.Enums;
 
 public enum VerificationStatus {
+    PENDING,
     PENDING_EMAIL,
-    PENDING_ID_REVIEW,
     VERIFIED,
     REJECTED
 }
