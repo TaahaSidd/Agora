@@ -83,6 +83,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/Agora/expo/**").permitAll()
 
                         // Notifications
+                        .requestMatchers(HttpMethod.POST, "/Agora/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/Agora/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/Agora/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/Agora/notifications/**").authenticated()
@@ -123,4 +124,6 @@ public class SecurityConfig {
     AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
+    
 }
