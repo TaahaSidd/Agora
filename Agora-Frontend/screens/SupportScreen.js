@@ -1,16 +1,62 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, Linking } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import {View, Text, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView} from 'react-native';
+import {Ionicons, MaterialIcons} from '@expo/vector-icons';
+import {LinearGradient} from 'expo-linear-gradient';
 
 import AppHeader from '../components/AppHeader';
 import InfoBox from '../components/InfoBox';
 
-import { COLORS } from '../utils/colors';
+import {COLORS} from '../utils/colors';
 
-const SupportScreen = ({ navigation }) => {
+const SupportScreen = ({navigation}) => {
+    const contactOptions = [
+        {
+            title: 'Live Chat',
+            description: 'Chat with our support team',
+            icon: 'chatbubble-ellipses',
+            gradient: ['#3B82F6', '#2563EB'],
+            iconType: 'ion',
+        },
+        {
+            title: 'Submit a Ticket',
+            description: "We'll respond within 24hrs",
+            icon: 'support-agent',
+            gradient: ['#EF4444', '#DC2626'],
+            iconType: 'material',
+        },
+        {
+            title: 'Email Us',
+            description: 'support@agora.com',
+            icon: 'mail',
+            gradient: ['#10B981', '#059669'],
+            iconType: 'ion',
+        },
+        {
+            title: 'Phone Support',
+            description: '+91 123 456 7890',
+            icon: 'call',
+            gradient: ['#F59E0B', '#D97706'],
+            iconType: 'ion',
+        },
+    ];
+
+    const quickLinks = [
+        {icon: 'document-text', label: 'Help Center', gradient: ['#3B82F6', '#2563EB']},
+        {icon: 'book', label: 'User Guide', gradient: ['#8B5CF6', '#7C3AED']},
+        {icon: 'bug', label: 'Report Bug', gradient: ['#EF4444', '#DC2626']},
+        {icon: 'bulb', label: 'Feedback', gradient: ['#F59E0B', '#D97706']},
+    ];
+
+    const socialLinks = [
+        {icon: 'logo-twitter', color: '#1DA1F2'},
+        {icon: 'logo-facebook', color: '#4267B2'},
+        {icon: 'logo-instagram', color: '#E4405F'},
+        {icon: 'logo-linkedin', color: '#0A66C2'},
+    ];
+
     return (
         <SafeAreaView style={styles.safeArea}>
-            <AppHeader title="Support" onBack={() => navigation.goBack()} />
+            <AppHeader title="Support" onBack={() => navigation.goBack()}/>
 
             <ScrollView
                 contentContainerStyle={styles.container}
@@ -18,9 +64,14 @@ const SupportScreen = ({ navigation }) => {
             >
                 {/* Header Section */}
                 <View style={styles.headerSection}>
-                    <View style={styles.iconCircle}>
-                        <Ionicons name="help-buoy" size={40} color={COLORS.primary} />
-                    </View>
+                    <LinearGradient
+                        colors={['#3B82F6', '#2563EB']}
+                        style={styles.iconCircle}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 1}}
+                    >
+                        <Ionicons name="help-buoy" size={40} color="#fff"/>
+                    </LinearGradient>
                     <Text style={styles.headerTitle}>How can we help you?</Text>
                     <Text style={styles.headerSubtitle}>
                         Our support team is here to assist you with any questions or issues
@@ -32,67 +83,33 @@ const SupportScreen = ({ navigation }) => {
                     <Text style={styles.sectionTitle}>Get in Touch</Text>
 
                     <View style={styles.optionsCard}>
-                        <TouchableOpacity
-                            style={styles.optionItem}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.optionIconCircle, { backgroundColor: '#DBEAFE' }]}>
-                                <Ionicons name="chatbubble-ellipses" size={22} color="#2563EB" />
-                            </View>
-                            <View style={styles.optionContent}>
-                                <Text style={styles.optionTitle}>Live Chat</Text>
-                                <Text style={styles.optionDescription}>Chat with our support team</Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-                        </TouchableOpacity>
-
-                        <View style={styles.divider} />
-
-                        <TouchableOpacity
-                            style={styles.optionItem}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.optionIconCircle, { backgroundColor: '#FEE2E2' }]}>
-                                <MaterialIcons name="support-agent" size={22} color="#DC2626" />
-                            </View>
-                            <View style={styles.optionContent}>
-                                <Text style={styles.optionTitle}>Submit a Ticket</Text>
-                                <Text style={styles.optionDescription}>We'll respond within 24hrs</Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-                        </TouchableOpacity>
-
-                        <View style={styles.divider} />
-
-                        <TouchableOpacity
-                            style={styles.optionItem}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.optionIconCircle, { backgroundColor: '#DCFCE7' }]}>
-                                <Ionicons name="mail" size={22} color="#16A34A" />
-                            </View>
-                            <View style={styles.optionContent}>
-                                <Text style={styles.optionTitle}>Email Us</Text>
-                                <Text style={styles.optionDescription}>support@agora.com</Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-                        </TouchableOpacity>
-
-                        <View style={styles.divider} />
-
-                        <TouchableOpacity
-                            style={styles.optionItem}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.optionIconCircle, { backgroundColor: '#FEF3C7' }]}>
-                                <Ionicons name="call" size={22} color="#D97706" />
-                            </View>
-                            <View style={styles.optionContent}>
-                                <Text style={styles.optionTitle}>Phone Support</Text>
-                                <Text style={styles.optionDescription}>+91 123 456 7890</Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-                        </TouchableOpacity>
+                        {contactOptions.map((option, index) => (
+                            <React.Fragment key={index}>
+                                <TouchableOpacity
+                                    style={styles.optionItem}
+                                    activeOpacity={0.85}
+                                >
+                                    <LinearGradient
+                                        colors={option.gradient}
+                                        style={styles.optionIconCircle}
+                                        start={{x: 0, y: 0}}
+                                        end={{x: 1, y: 1}}
+                                    >
+                                        {option.iconType === 'material' ? (
+                                            <MaterialIcons name={option.icon} size={22} color="#fff"/>
+                                        ) : (
+                                            <Ionicons name={option.icon} size={22} color="#fff"/>
+                                        )}
+                                    </LinearGradient>
+                                    <View style={styles.optionContent}>
+                                        <Text style={styles.optionTitle}>{option.title}</Text>
+                                        <Text style={styles.optionDescription}>{option.description}</Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
+                                </TouchableOpacity>
+                                {index !== contactOptions.length - 1 && <View style={styles.divider}/>}
+                            </React.Fragment>
+                        ))}
                     </View>
                 </View>
 
@@ -101,45 +118,23 @@ const SupportScreen = ({ navigation }) => {
                     <Text style={styles.sectionTitle}>Quick Links</Text>
 
                     <View style={styles.quickLinksGrid}>
-                        <TouchableOpacity
-                            style={styles.quickLinkCard}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.quickLinkIcon}>
-                                <Ionicons name="document-text" size={24} color={COLORS.primary} />
-                            </View>
-                            <Text style={styles.quickLinkText}>Help Center</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.quickLinkCard}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.quickLinkIcon}>
-                                <Ionicons name="book" size={24} color={COLORS.primary} />
-                            </View>
-                            <Text style={styles.quickLinkText}>User Guide</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.quickLinkCard}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.quickLinkIcon}>
-                                <Ionicons name="bug" size={24} color={COLORS.primary} />
-                            </View>
-                            <Text style={styles.quickLinkText}>Report Bug</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.quickLinkCard}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.quickLinkIcon}>
-                                <Ionicons name="bulb" size={24} color={COLORS.primary} />
-                            </View>
-                            <Text style={styles.quickLinkText}>Feedback</Text>
-                        </TouchableOpacity>
+                        {quickLinks.map((link, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={styles.quickLinkCard}
+                                activeOpacity={0.85}
+                            >
+                                <LinearGradient
+                                    colors={link.gradient}
+                                    style={styles.quickLinkIcon}
+                                    start={{x: 0, y: 0}}
+                                    end={{x: 1, y: 1}}
+                                >
+                                    <Ionicons name={link.icon} size={24} color="#fff"/>
+                                </LinearGradient>
+                                <Text style={styles.quickLinkText}>{link.label}</Text>
+                            </TouchableOpacity>
+                        ))}
                     </View>
                 </View>
 
@@ -153,18 +148,15 @@ const SupportScreen = ({ navigation }) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Follow Us</Text>
                     <View style={styles.socialContainer}>
-                        <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                            <Ionicons name="logo-twitter" size={24} color="#1DA1F2" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                            <Ionicons name="logo-facebook" size={24} color="#4267B2" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                            <Ionicons name="logo-instagram" size={24} color="#E4405F" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                            <Ionicons name="logo-linkedin" size={24} color="#0A66C2" />
-                        </TouchableOpacity>
+                        {socialLinks.map((social, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={styles.socialButton}
+                                activeOpacity={0.85}
+                            >
+                                <Ionicons name={social.icon} size={24} color={social.color}/>
+                            </TouchableOpacity>
+                        ))}
                     </View>
                 </View>
             </ScrollView>
@@ -190,10 +182,14 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: COLORS.dark.gray700,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
+        shadowColor: '#3B82F6',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
     },
     headerTitle: {
         fontSize: 24,
@@ -204,10 +200,11 @@ const styles = StyleSheet.create({
     },
     headerSubtitle: {
         fontSize: 15,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.dark.textSecondary,
         textAlign: 'center',
         lineHeight: 22,
         paddingHorizontal: 20,
+        letterSpacing: -0.1,
     },
     section: {
         marginBottom: 24,
@@ -222,14 +219,13 @@ const styles = StyleSheet.create({
     optionsCard: {
         backgroundColor: COLORS.dark.card,
         borderRadius: 20,
-        padding: 4,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        overflow: 'hidden',
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
     optionItem: {
@@ -245,7 +241,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 14,
-        backgroundColor: COLORS.dark.gray700,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     optionContent: {
         flex: 1,
@@ -255,21 +255,22 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: COLORS.dark.text,
         marginBottom: 2,
+        letterSpacing: -0.2,
     },
     optionDescription: {
         fontSize: 13,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.dark.textSecondary,
         fontWeight: '500',
+        letterSpacing: -0.1,
     },
     divider: {
         height: 1,
-        backgroundColor: COLORS.dark.divider,
+        backgroundColor: COLORS.dark.border,
         marginHorizontal: 16,
     },
     quickLinksGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
         gap: 12,
     },
     quickLinkCard: {
@@ -278,26 +279,33 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 20,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
     quickLinkIcon: {
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: COLORS.dark.gray700,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     quickLinkText: {
         fontSize: 14,
         fontWeight: '700',
         color: COLORS.dark.text,
         textAlign: 'center',
+        letterSpacing: -0.2,
     },
     socialContainer: {
         flexDirection: 'row',
@@ -311,10 +319,12 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.dark.card,
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
 });

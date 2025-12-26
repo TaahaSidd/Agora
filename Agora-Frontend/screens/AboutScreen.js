@@ -10,12 +10,13 @@ import {
     TouchableOpacity,
     Linking
 } from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {LinearGradient} from 'expo-linear-gradient';
 import AppHeader from '../components/AppHeader';
-import { COLORS } from '../utils/colors';
-import { Ionicons } from '@expo/vector-icons';
-import { THEME } from '../utils/theme';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
 
-export default function AboutScreen({ navigation }) {
+export default function AboutScreen({navigation}) {
     const handleEmail = () => {
         Linking.openURL('mailto:support@agora.com');
     };
@@ -33,10 +34,28 @@ export default function AboutScreen({ navigation }) {
         Linking.openURL(urls[platform]);
     };
 
+    const features = [
+        {
+            icon: 'shield-checkmark',
+            label: 'Safe & Secure',
+            desc: 'Campus-verified users',
+            gradient: ['#3B82F6', '#2563EB']
+        },
+        {icon: 'flash', label: 'Fast & Easy', desc: 'List items in seconds', gradient: ['#10B981', '#059669']},
+        {icon: 'people', label: 'Community', desc: 'Connect with peers', gradient: ['#F59E0B', '#D97706']},
+        {icon: 'leaf', label: 'Sustainable', desc: 'Reduce, reuse, recycle', gradient: ['#EC4899', '#DB2777']},
+    ];
+
+    const socialButtons = [
+        {icon: 'logo-instagram', label: 'Instagram', platform: 'instagram', gradient: ['#E4405F', '#C13584']},
+        {icon: 'logo-twitter', label: 'Twitter', platform: 'twitter', gradient: ['#1DA1F2', '#0C85D0']},
+        {icon: 'logo-facebook', label: 'Facebook', platform: 'facebook', gradient: ['#1877F2', '#0D5DBE']},
+    ];
+
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
-            <AppHeader title="About Agora" onBack={() => navigation.goBack()} />
+            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            <AppHeader title="About Agora" onBack={() => navigation.goBack()}/>
 
             <ScrollView
                 contentContainerStyle={styles.container}
@@ -49,9 +68,6 @@ export default function AboutScreen({ navigation }) {
                             source={require('../assets/LogoApp.png')}
                             style={styles.logo}
                         />
-                        {/* <View style={styles.verifiedBadge}>
-                            <Ionicons name="checkmark" size={16} color="#fff" />
-                        </View> */}
                     </View>
                     <Text style={styles.title}>Agora</Text>
                     <Text style={styles.tagline}>Your Campus Marketplace</Text>
@@ -60,7 +76,7 @@ export default function AboutScreen({ navigation }) {
                     </Text>
 
                     <View style={styles.versionBadge}>
-                        <Ionicons name="code-outline" size={16} color={COLORS.primary} />
+                        <Ionicons name="code-outline" size={16} color={COLORS.primary}/>
                         <Text style={styles.versionText}>Version 1.0.0</Text>
                     </View>
                 </View>
@@ -70,7 +86,9 @@ export default function AboutScreen({ navigation }) {
                     <Text style={styles.sectionTitle}>Our Mission</Text>
                     <View style={styles.missionCard}>
                         <Text style={styles.missionText}>
-                            Agora empowers students to build a sustainable campus economy by making it easy to buy, sell, and exchange items with peers. We're creating a trusted community marketplace that puts students first.
+                            Agora empowers students to build a sustainable campus economy by making it easy to buy,
+                            sell, and exchange items with peers. We're creating a trusted community marketplace that
+                            puts students first.
                         </Text>
                     </View>
                 </View>
@@ -79,37 +97,20 @@ export default function AboutScreen({ navigation }) {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Why Choose Agora?</Text>
                     <View style={styles.featuresGrid}>
-                        <View style={styles.featureCard}>
-                            <View style={[styles.featureIcon, { backgroundColor: '#DBEAFE' }]}>
-                                <Ionicons name="shield-checkmark" size={24} color="#2563EB" />
+                        {features.map((feature, index) => (
+                            <View key={index} style={styles.featureCard}>
+                                <LinearGradient
+                                    colors={feature.gradient}
+                                    style={styles.featureIcon}
+                                    start={{x: 0, y: 0}}
+                                    end={{x: 1, y: 1}}
+                                >
+                                    <Ionicons name={feature.icon} size={24} color="#fff"/>
+                                </LinearGradient>
+                                <Text style={styles.featureTitle}>{feature.label}</Text>
+                                <Text style={styles.featureText}>{feature.desc}</Text>
                             </View>
-                            <Text style={styles.featureTitle}>Safe & Secure</Text>
-                            <Text style={styles.featureText}>Campus-verified users only</Text>
-                        </View>
-
-                        <View style={styles.featureCard}>
-                            <View style={[styles.featureIcon, { backgroundColor: '#D1FAE5' }]}>
-                                <Ionicons name="flash" size={24} color="#10B981" />
-                            </View>
-                            <Text style={styles.featureTitle}>Fast & Easy</Text>
-                            <Text style={styles.featureText}>List items in seconds</Text>
-                        </View>
-
-                        <View style={styles.featureCard}>
-                            <View style={[styles.featureIcon, { backgroundColor: '#FEF3C7' }]}>
-                                <Ionicons name="people" size={24} color="#F59E0B" />
-                            </View>
-                            <Text style={styles.featureTitle}>Community</Text>
-                            <Text style={styles.featureText}>Connect with peers</Text>
-                        </View>
-
-                        <View style={styles.featureCard}>
-                            <View style={[styles.featureIcon, { backgroundColor: '#FCE7F3' }]}>
-                                <Ionicons name="leaf" size={24} color="#EC4899" />
-                            </View>
-                            <Text style={styles.featureTitle}>Sustainable</Text>
-                            <Text style={styles.featureText}>Reduce, reuse, recycle</Text>
-                        </View>
+                        ))}
                     </View>
                 </View>
 
@@ -120,33 +121,43 @@ export default function AboutScreen({ navigation }) {
                         <TouchableOpacity
                             style={styles.contactItem}
                             onPress={handleEmail}
-                            activeOpacity={0.7}
+                            activeOpacity={0.85}
                         >
-                            <View style={[styles.contactIcon, { backgroundColor: '#E0E7FF' }]}>
-                                <Ionicons name="mail-outline" size={22} color="#4F46E5" />
-                            </View>
+                            <LinearGradient
+                                colors={['#8B5CF6', '#7C3AED']}
+                                style={styles.contactIcon}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 1}}
+                            >
+                                <Ionicons name="mail-outline" size={22} color="#fff"/>
+                            </LinearGradient>
                             <View style={styles.contactInfo}>
                                 <Text style={styles.contactLabel}>Email Support</Text>
                                 <Text style={styles.contactValue}>support@agora.com</Text>
                             </View>
-                            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+                            <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
                         </TouchableOpacity>
 
-                        <View style={styles.divider} />
+                        <View style={styles.divider}/>
 
                         <TouchableOpacity
                             style={styles.contactItem}
                             onPress={handleWebsite}
-                            activeOpacity={0.7}
+                            activeOpacity={0.85}
                         >
-                            <View style={[styles.contactIcon, { backgroundColor: '#DCFCE7' }]}>
-                                <Ionicons name="globe-outline" size={22} color="#16A34A" />
-                            </View>
+                            <LinearGradient
+                                colors={['#10B981', '#059669']}
+                                style={styles.contactIcon}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 1}}
+                            >
+                                <Ionicons name="globe-outline" size={22} color="#fff"/>
+                            </LinearGradient>
                             <View style={styles.contactInfo}>
                                 <Text style={styles.contactLabel}>Website</Text>
                                 <Text style={styles.contactValue}>www.agora.com</Text>
                             </View>
-                            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+                            <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -155,38 +166,24 @@ export default function AboutScreen({ navigation }) {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Follow Us</Text>
                     <View style={styles.socialCard}>
-                        <TouchableOpacity
-                            style={styles.socialButton}
-                            onPress={() => handleSocial('instagram')}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.socialIcon, { backgroundColor: '#FCE7F3' }]}>
-                                <Ionicons name="logo-instagram" size={24} color="#DB2777" />
-                            </View>
-                            <Text style={styles.socialText}>Instagram</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.socialButton}
-                            onPress={() => handleSocial('twitter')}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.socialIcon, { backgroundColor: '#DBEAFE' }]}>
-                                <Ionicons name="logo-twitter" size={24} color="#3B82F6" />
-                            </View>
-                            <Text style={styles.socialText}>Twitter</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.socialButton}
-                            onPress={() => handleSocial('facebook')}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.socialIcon, { backgroundColor: '#DBEAFE' }]}>
-                                <Ionicons name="logo-facebook" size={24} color="#1877F2" />
-                            </View>
-                            <Text style={styles.socialText}>Facebook</Text>
-                        </TouchableOpacity>
+                        {socialButtons.map((social, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={styles.socialButton}
+                                onPress={() => handleSocial(social.platform)}
+                                activeOpacity={0.85}
+                            >
+                                <LinearGradient
+                                    colors={social.gradient}
+                                    style={styles.socialIcon}
+                                    start={{x: 0, y: 0}}
+                                    end={{x: 1, y: 1}}
+                                >
+                                    <Ionicons name={social.icon} size={24} color="#fff"/>
+                                </LinearGradient>
+                                <Text style={styles.socialText}>{social.label}</Text>
+                            </TouchableOpacity>
+                        ))}
                     </View>
                 </View>
 
@@ -196,20 +193,20 @@ export default function AboutScreen({ navigation }) {
                         <TouchableOpacity
                             style={styles.legalItem}
                             onPress={() => navigation.navigate('PrivacyPolicyScreen')}
-                            activeOpacity={0.7}
+                            activeOpacity={0.85}
                         >
-                            <Ionicons name="shield-outline" size={18} color="#6B7280" />
+                            <Ionicons name="shield-outline" size={18} color={COLORS.dark.textSecondary}/>
                             <Text style={styles.legalText}>Privacy Policy</Text>
                         </TouchableOpacity>
 
-                        <View style={styles.legalDivider} />
+                        <View style={styles.legalDivider}/>
 
                         <TouchableOpacity
                             style={styles.legalItem}
                             onPress={() => navigation.navigate('TermsScreen')}
-                            activeOpacity={0.7}
+                            activeOpacity={0.85}
                         >
-                            <Ionicons name="document-text-outline" size={18} color="#6B7280" />
+                            <Ionicons name="document-text-outline" size={18} color={COLORS.dark.textSecondary}/>
                             <Text style={styles.legalText}>Terms of Service</Text>
                         </TouchableOpacity>
                     </View>
@@ -218,7 +215,7 @@ export default function AboutScreen({ navigation }) {
                 {/* Footer */}
                 <View style={styles.footer}>
                     <Text style={styles.footerText}>Made with</Text>
-                    <Ionicons name="heart" size={16} color="#EF4444" style={styles.heartIcon} />
+                    <Ionicons name="heart" size={16} color="#EF4444" style={styles.heartIcon}/>
                     <Text style={styles.footerText}>by the Agora Team</Text>
                 </View>
 
@@ -227,6 +224,7 @@ export default function AboutScreen({ navigation }) {
         </SafeAreaView>
     );
 }
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -241,11 +239,16 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 32,
         marginBottom: 24,
-        elevation: 1,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 2,
     },
     logoContainer: {
-        position: 'relative',
         marginBottom: 16,
     },
     logo: {
@@ -254,19 +257,6 @@ const styles = StyleSheet.create({
         borderRadius: THEME.borderRadius.full,
         borderWidth: 3,
         borderColor: COLORS.dark.border,
-    },
-    verifiedBadge: {
-        position: 'absolute',
-        bottom: -4,
-        right: -4,
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: COLORS.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 3,
-        borderColor: COLORS.dark.bg,
     },
     title: {
         fontSize: 28,
@@ -288,11 +278,12 @@ const styles = StyleSheet.create({
         lineHeight: 20,
         marginBottom: 20,
         fontWeight: '500',
+        letterSpacing: -0.1,
     },
     versionBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.dark.gray700,
+        backgroundColor: COLORS.dark.cardElevated,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 12,
@@ -317,10 +308,12 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.dark.card,
         borderRadius: 16,
         padding: 20,
-        shadowColor: COLORS.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
     missionText: {
@@ -328,15 +321,26 @@ const styles = StyleSheet.create({
         color: COLORS.dark.textSecondary,
         lineHeight: 22,
         fontWeight: '500',
+        letterSpacing: -0.1,
     },
     featuresGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginHorizontal: -6,
+        gap: 12,
     },
     featureCard: {
-        width: '50%',
-        padding: 6,
+        width: '48%',
+        backgroundColor: COLORS.dark.card,
+        borderRadius: 16,
+        padding: 20,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 2,
     },
     featureIcon: {
         width: 56,
@@ -345,8 +349,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 12,
-        alignSelf: 'center',
-        backgroundColor: COLORS.dark.gray700,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     featureTitle: {
         fontSize: 14,
@@ -354,6 +361,7 @@ const styles = StyleSheet.create({
         color: COLORS.dark.text,
         textAlign: 'center',
         marginBottom: 4,
+        letterSpacing: -0.2,
     },
     featureText: {
         fontSize: 12,
@@ -363,12 +371,14 @@ const styles = StyleSheet.create({
     },
     contactCard: {
         backgroundColor: COLORS.dark.card,
-        borderRadius: 16,
-        padding: 4,
-        shadowColor: COLORS.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        borderRadius: 18,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
     contactItem: {
@@ -383,7 +393,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
-        backgroundColor: COLORS.dark.gray700,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     contactInfo: {
         flex: 1,
@@ -398,6 +412,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
         color: COLORS.dark.text,
+        letterSpacing: -0.2,
     },
     divider: {
         height: 1,
@@ -406,7 +421,7 @@ const styles = StyleSheet.create({
     },
     socialCard: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        gap: 12,
     },
     socialButton: {
         flex: 1,
@@ -414,11 +429,12 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.dark.card,
         paddingVertical: 20,
         borderRadius: 16,
-        marginHorizontal: 4,
-        shadowColor: COLORS.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
     socialIcon: {
@@ -428,22 +444,29 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 10,
-        backgroundColor: COLORS.dark.gray700,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     socialText: {
         fontSize: 13,
-        fontWeight: '600',
+        fontWeight: '700',
         color: COLORS.dark.text,
+        letterSpacing: -0.2,
     },
     legalCard: {
         flexDirection: 'row',
         backgroundColor: COLORS.dark.card,
         borderRadius: 16,
         padding: 16,
-        shadowColor: COLORS.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
     legalItem: {
@@ -451,12 +474,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 6,
     },
     legalText: {
         fontSize: 13,
         fontWeight: '600',
         color: COLORS.dark.textSecondary,
-        marginLeft: 6,
+        letterSpacing: -0.1,
     },
     legalDivider: {
         width: 1,
