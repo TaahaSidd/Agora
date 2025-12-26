@@ -1,16 +1,30 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { COLORS } from '../utils/colors';
+import {View, Text, Image, StyleSheet, TouchableOpacity, Dimensions} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {LinearGradient} from 'expo-linear-gradient';
+import {COLORS} from '../utils/colors';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-export default function NearestCard({ item, onPress }) {
+export default function NearestCard({item, onPress}) {
+    // Status badge logic
+    const getStatusBadge = () => {
+        if (item.itemStatus === 'SOLD') {
+            return {bg: '#EF4444', text: 'Sold', icon: 'checkmark-circle'};
+        }
+        if (item.itemCondition === 'NEW' || item.itemCondition === 'new') {
+            return {bg: '#10B981', text: 'New', icon: 'sparkles'};
+        }
+        return null;
+    };
+
+    const statusBadge = getStatusBadge();
+
     return (
         <TouchableOpacity
             style={styles.card}
             onPress={onPress}
-            activeOpacity={0.7}
+            activeOpacity={0.85}
         >
             {/* Image Section */}
             <View style={styles.imageContainer}>
@@ -22,12 +36,26 @@ export default function NearestCard({ item, onPress }) {
                     }
                     style={styles.image}
                 />
-                {/* Condition Badge */}
-                {/* {item.itemCondition && (
-                    <View style={styles.conditionBadge}>
-                        <Text style={styles.conditionText}>{item.itemCondition}</Text>
+
+                {/* Gradient Overlay */}
+                <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.5)']}
+                    style={styles.gradientOverlay}
+                />
+
+                {/* Status Badge */}
+                {statusBadge && (
+                    <View style={[styles.statusBadge, {backgroundColor: statusBadge.bg}]}>
+                        <Ionicons name={statusBadge.icon} size={10} color="#fff"/>
+                        <Text style={styles.statusText}>{statusBadge.text}</Text>
                     </View>
-                )} */}
+                )}
+
+                {/* Distance Badge */}
+                <View style={styles.distanceBadge}>
+                    <Ionicons name="location" size={10} color="#fff"/>
+                    <Text style={styles.distanceText}>2.5 km</Text>
+                </View>
             </View>
 
             {/* Content Section */}
@@ -36,26 +64,22 @@ export default function NearestCard({ item, onPress }) {
                     {item.name || item.title}
                 </Text>
 
-                {/* Location with icon */}
+                {/* College/Location */}
                 <View style={styles.locationRow}>
-                    <Icon name="location" size={14} color="#9CA3AF" />
+                    <Ionicons name="school-outline" size={13} color={COLORS.dark.textTertiary}/>
                     <Text style={styles.location} numberOfLines={1}>
-                        {item.college?.city || item.college?.collegeName || 'Nearby'}
+                        {item.college?.collegeName || item.college?.city || 'Nearby'}
                     </Text>
                 </View>
 
-                {/* Bottom row with price and verified badge */}
+                {/* Price Row */}
                 <View style={styles.bottomRow}>
                     <Text style={styles.price}>{item.price}</Text>
-                    {/* <View style={styles.verifiedBadge}>
-                        <Icon name="shield-checkmark" size={12} color="#10B981" />
-                        <Text style={styles.verifiedText}>Verified</Text>
-                    </View> */}
+                    <View style={styles.arrowCircle}>
+                        <Ionicons name="arrow-forward" size={14} color={COLORS.primary}/>
+                    </View>
                 </View>
             </View>
-
-            {/* Arrow indicator */}
-            <Icon name="chevron-forward" size={20} color="#D1D5DB" />
         </TouchableOpacity>
     );
 }
@@ -66,22 +90,71 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: width * 0.90,
         backgroundColor: COLORS.dark.card,
-        borderRadius: 16,
+        borderRadius: 18,
         marginRight: 16,
         padding: 12,
-        elevation: 1,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 3},
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+        elevation: 3,
     },
     imageContainer: {
         position: 'relative',
-        width: 90,
-        height: 90,
+        width: 100,
+        height: 100,
         borderRadius: 14,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: COLORS.dark.cardElevated,
         overflow: 'hidden',
     },
     image: {
         width: '100%',
         height: '100%',
+    },
+    gradientOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 35,
+    },
+    statusBadge: {
+        position: 'absolute',
+        top: 6,
+        left: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 6,
+        gap: 3,
+    },
+    statusText: {
+        color: '#fff',
+        fontSize: 9,
+        fontWeight: '800',
+        letterSpacing: 0.3,
+        textTransform: 'uppercase',
+    },
+    distanceBadge: {
+        position: 'absolute',
+        bottom: 6,
+        right: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 8,
+        gap: 3,
+    },
+    distanceText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: '700',
+        letterSpacing: -0.1,
     },
     textContainer: {
         flex: 1,
@@ -93,20 +166,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '700',
         color: COLORS.dark.text,
-        lineHeight: 22,
+        lineHeight: 21,
         marginBottom: 6,
+        letterSpacing: -0.2,
     },
     locationRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 10,
+        gap: 4,
     },
     location: {
-        fontSize: 13,
+        fontSize: 12,
         color: COLORS.dark.textTertiary,
-        marginLeft: 5,
-        fontWeight: '500',
+        fontWeight: '600',
         flex: 1,
+        letterSpacing: -0.1,
     },
     bottomRow: {
         flexDirection: 'row',
@@ -114,23 +189,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     price: {
-        fontSize: 18,
+        fontSize: 19,
         fontWeight: '800',
         color: COLORS.primary,
-        letterSpacing: -0.3,
+        letterSpacing: -0.4,
     },
-    verifiedBadge: {
-        flexDirection: 'row',
+    arrowCircle: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: COLORS.primaryLightest,
         alignItems: 'center',
-        backgroundColor: '#ECFDF5',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 8,
-    },
-    verifiedText: {
-        fontSize: 11,
-        color: '#10B981',
-        fontWeight: '700',
-        marginLeft: 4,
+        justifyContent: 'center',
     },
 });

@@ -1,44 +1,57 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { COLORS } from '../utils/colors';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {Ionicons, MaterialIcons} from '@expo/vector-icons';
+import {LinearGradient} from 'expo-linear-gradient';
+import {COLORS} from '../utils/colors';
 
-export default function SettingsOptionList({ title, options }) {
+export default function SettingsOptionList({title, options}) {
     return (
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{title}</Text>
+            {title && <Text style={styles.sectionTitle}>{title}</Text>}
             <View style={styles.optionsCard}>
-                {options.map((option, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={styles.optionItem}
-                        activeOpacity={0.7}
-                        onPress={option.onPress}
-                    >
-                        <View style={styles.optionLeft}>
-                            <View
-                                style={[
-                                    styles.optionIconCircle,
-                                    { backgroundColor: option.bgColor },
-                                ]}
-                            >
-                                {option.iconType === 'ion' ? (
-                                    <Ionicons name={option.icon} size={20} color={option.iconColor} />
-                                ) : (
-                                    <MaterialIcons name={option.icon} size={20} color={option.iconColor} />
-                                )}
-                            </View>
-                            <Text style={styles.optionText}>{option.label}</Text>
-                        </View>
+                {options.map((option, index) => {
+                    const isLast = index === options.length - 1;
 
-                        <View style={styles.optionRight}>
-                            {option.value ? (
-                                <Text style={styles.optionValue}>{option.value}</Text>
-                            ) : null}
-                            <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-                        </View>
-                    </TouchableOpacity>
-                ))}
+                    return (
+                        <TouchableOpacity
+                            key={index}
+                            style={[
+                                styles.optionItem,
+                                isLast && styles.lastItem
+                            ]}
+                            activeOpacity={0.7}
+                            onPress={option.onPress}
+                        >
+                            <View style={styles.optionLeft}>
+                                <LinearGradient
+                                    colors={option.gradient || [option.bgColor, option.bgColor]}
+                                    style={styles.optionIconCircle}
+                                    start={{x: 0, y: 0}}
+                                    end={{x: 1, y: 1}}
+                                >
+                                    {option.iconType === 'material' ? (
+                                        <MaterialIcons name={option.icon} size={20} color="#fff"/>
+                                    ) : (
+                                        <Ionicons name={option.icon} size={20} color="#fff"/>
+                                    )}
+                                </LinearGradient>
+                                <View style={styles.optionTextContainer}>
+                                    <Text style={styles.optionText}>{option.label}</Text>
+                                    {option.description && (
+                                        <Text style={styles.optionDescription}>{option.description}</Text>
+                                    )}
+                                </View>
+                            </View>
+
+                            <View style={styles.optionRight}>
+                                {option.value && (
+                                    <Text style={styles.optionValue} numberOfLines={1}>{option.value}</Text>
+                                )}
+                                <Ionicons name="chevron-forward" size={18} color={COLORS.dark.textTertiary}/>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
         </View>
     );
@@ -50,24 +63,34 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: '700',
+        fontWeight: '800',
         color: COLORS.dark.text,
-        marginBottom: 12,
+        marginBottom: 14,
+        letterSpacing: -0.3,
     },
     optionsCard: {
         backgroundColor: COLORS.dark.card,
-        borderRadius: 20,
-        padding: 4,
-        elevation: 1,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 2,
     },
     optionItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 16,
+        paddingVertical: 14,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
         borderBottomColor: COLORS.dark.border,
+    },
+    lastItem: {
+        borderBottomWidth: 0,
     },
     optionLeft: {
         flexDirection: 'row',
@@ -75,26 +98,44 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     optionIconCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 14,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    optionTextContainer: {
+        flex: 1,
     },
     optionText: {
         fontSize: 15,
         fontWeight: '600',
         color: COLORS.dark.text,
+        letterSpacing: -0.2,
+    },
+    optionDescription: {
+        fontSize: 12,
+        color: COLORS.dark.textTertiary,
+        marginTop: 2,
+        fontWeight: '500',
+        letterSpacing: -0.1,
     },
     optionRight: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 6,
     },
     optionValue: {
-        fontSize: 14,
-        color: COLORS.dark.textQuaternary,
-        marginRight: 8,
-        fontWeight: '500',
+        fontSize: 13,
+        color: COLORS.dark.textSecondary,
+        fontWeight: '600',
+        maxWidth: 100,
+        letterSpacing: -0.1,
     },
 });
