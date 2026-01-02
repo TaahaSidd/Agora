@@ -89,20 +89,15 @@ export default function LoginScreen({ navigation }) {
 
         setLoading(true);
         try {
-
-            //1
             const data = await apiPost('/auth/login', { email, password });
             console.log("LOGIN RESPONSE:", data);
             console.log("USER ID:", data.id);
 
-            // 🔍 Inspect JWT
             const decoded = jwtDecode(data.jwt);
             console.log('🔍 JWT payload:', decoded);
 
-            //2
             await storeTokens(data.jwt, data.refreshToken);
 
-            //3
             if (data.id) {
                 console.log('🔔 Registering push token for user:', data.id);
                 await registerPushTokenForUser(data.id);
@@ -110,12 +105,11 @@ export default function LoginScreen({ navigation }) {
                 console.error('❌ No user ID found in response');
             }
 
-            //4
             await fetchUser();
             const { currentUser } = useUserStore.getState();
             console.log('❤️ Current User:', currentUser);
 
-            navigation.navigate('MainLayout');
+            navigation.replace('MainLayout');
 
         } catch (error) {
             showToast({
@@ -128,21 +122,21 @@ export default function LoginScreen({ navigation }) {
         }
     };
 
-    const onGoogleLogin = () => {
-        showToast({
-            type: 'info',
-            title: 'Continue with Google',
-            message: 'Google login feature is not implemented yet.',
-        });
-    };
-
-    const onAppleLogin = () => {
-        showToast({
-            type: 'info',
-            title: 'Sign in with Apple',
-            message: 'Apple login feature is not implemented yet.',
-        });
-    };
+    // const onGoogleLogin = () => {
+    //     showToast({
+    //         type: 'info',
+    //         title: 'Continue with Google',
+    //         message: 'Google login feature is not implemented yet.',
+    //     });
+    // };
+    //
+    // const onAppleLogin = () => {
+    //     showToast({
+    //         type: 'info',
+    //         title: 'Sign in with Apple',
+    //         message: 'Apple login feature is not implemented yet.',
+    //     });
+    // };
 
 
     return (
@@ -218,30 +212,30 @@ export default function LoginScreen({ navigation }) {
                     {/* Separator */}
                     <View style={styles.separatorContainer}>
                         <View style={styles.separatorLine} />
-                        <Text style={styles.separatorText}>Or continue with</Text>
+                        <Text style={styles.separatorText}>Or</Text>
                         <View style={styles.separatorLine} />
                     </View>
 
                     {/* Social Login Buttons */}
-                    <View style={styles.socialButtonsContainer}>
-                        <Button
-                            title="Sign in with Google"
-                            onPress={onGoogleLogin}
-                            variant="outline"
-                            fullWidth
-                            icon="logo-google"
-                            size="large"
-                        />
+                    {/*<View style={styles.socialButtonsContainer}>*/}
+                    {/*    <Button*/}
+                    {/*        title="Sign in with Google"*/}
+                    {/*        onPress={onGoogleLogin}*/}
+                    {/*        variant="outline"*/}
+                    {/*        fullWidth*/}
+                    {/*        icon="logo-google"*/}
+                    {/*        size="large"*/}
+                    {/*    />*/}
 
-                        <Button
-                            title="Sign in with Apple"
-                            onPress={onAppleLogin}
-                            variant="outline"
-                            fullWidth
-                            icon="logo-apple"
-                            size="large"
-                        />
-                    </View>
+                    {/*    <Button*/}
+                    {/*        title="Sign in with Apple"*/}
+                    {/*        onPress={onAppleLogin}*/}
+                    {/*        variant="outline"*/}
+                    {/*        fullWidth*/}
+                    {/*        icon="logo-apple"*/}
+                    {/*        size="large"*/}
+                    {/*    />*/}
+                    {/*</View>*/}
 
                     {/* Sign Up Link */}
                     <View style={styles.signupContainer}>

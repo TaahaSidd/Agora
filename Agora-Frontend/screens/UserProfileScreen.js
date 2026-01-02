@@ -1,208 +1,174 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     View,
     Text,
     SafeAreaView,
     StyleSheet,
-    Image,
-    TextInput,
     ScrollView,
     ActivityIndicator,
-    Alert,
     TouchableOpacity,
+    RefreshControl,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
+import {Image} from 'expo-image';
+import {Ionicons} from '@expo/vector-icons';
+
+import {useUserStore} from '../stores/userStore';
 import AppHeader from '../components/AppHeader';
-import { apiGet } from '../services/api';
-import QuickActions from '../components/QuickActions';
-import ProfileSection from '../components/ProfileSection';
 
-import { useUserStats } from '../hooks/useUserStats';
-import { useFavorites } from '../hooks/useFavorites';
-import { useAverageRating } from '../hooks/useAverageRating';
-import { useCurrentUser } from '../hooks/useCurrentUser';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
 
-const UserProfileScreen = ({ navigation, route }) => {
-    const { user: currentUser, loading: userLoading, isGuest } = useCurrentUser();
-    const [user, setUser] = useState(null);
-    const { profileImage } = route.params || {};
-    const [loading, setLoading] = useState(true);
+const UserProfileScreen = ({navigation, route}) => {
+    const {currentUser, loading: userLoading, isGuest, fetchUser} = useUserStore();
+    const {profileImage} = route.params || {};
+    const [refreshing, setRefreshing] = useState(false);
 
-    const { listingsCount, loading: statsLoading } = useUserStats();
-    const { favorites = [], loading: favLoading } = useFavorites();
-
-    const currentUserId = currentUser?.id || null;
-    const { rating, loading: ratingLoading } = useAverageRating('user', currentUserId);
-
-    const averageRating = rating ?? 0;
-
-    const statsActions = [
-        {
-            icon: 'list-outline',
-            iconColor: '#2563EB',
-            bgColor: '#E0E7FF',
-            number: statsLoading || listingsCount == null ? '-' : listingsCount,
-            label: 'Listings',
-            onPress: () => navigation.navigate('MyListings'),
-        },
-        {
-            icon: 'heart-outline',
-            iconColor: '#DC2626',
-            bgColor: '#FEE2E2',
-            number: favLoading ? '-' : favorites.length,
-            label: 'Favorites',
-            onPress: () => navigation.navigate('Favorites'),
-        },
-        {
-            icon: 'star-outline',
-            iconColor: '#B45309',
-            bgColor: '#FEF3C7',
-            number: ratingLoading || averageRating == null ? '-' : averageRating.toFixed(1),
-            label: 'Rating',
-            onPress: () => navigation.navigate('MyReviews'),
-        },
-    ];
-
-    const fetchProfile = async () => {
-        try {
-            const data = await apiGet('/profile/myProfile');
-            const mappedUser = {
-                name: data.username || 'User',
-                email: data.userEmail || data.email || 'email@example.com',
-                ...data,
-            };
-
-            setUser(mappedUser);
-            // console.log('------Fetched User Profile:-------', mappedUser);
-        } catch (error) {
-            console.error('Error fetching profile:', error.response?.data || error.message);
-            Alert.alert('Error', 'Unable to fetch profile information.');
-        } finally {
-            setLoading(false);
-        }
-    };
     useEffect(() => {
-        fetchProfile();
+        fetchUser();
     }, []);
 
-    if (loading) {
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchUser();
+        setRefreshing(false);
+    };
+
+    if (userLoading) {
         return (
             <SafeAreaView style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
+                <AppHeader title="My Profile" onBack={() => navigation.goBack()}/>
+                <View style={styles.loadingContent}>
+                    <ActivityIndicator size="large" color={COLORS.primary}/>
+                </View>
             </SafeAreaView>
         );
     }
 
-    if (!user) {
+    if (!currentUser || isGuest) {
         return (
             <SafeAreaView style={styles.loadingContainer}>
-                <Text style={{ color: COLORS.gray }}>No profile data found.</Text>
+                <AppHeader title="My Profile" onBack={() => navigation.goBack()}/>
+                <View style={styles.emptyState}>
+                    <Ionicons name="person-outline" size={80} color={COLORS.dark.textTertiary}/>
+                    <Text style={styles.emptyTitle}>Sign in Required</Text>
+                    <Text style={styles.emptyText}>Please log in to view your profile</Text>
+                </View>
             </SafeAreaView>
         );
     }
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <AppHeader title="My Profile" onBack={() => navigation.goBack()} />
+            <AppHeader
+                title="My Profile"
+                onBack={() => navigation.goBack()}
+                rightComponent={
+                    <TouchableOpacity
+                        onPress={() =>
+                            navigation.navigate('EditProfileScreen', {
+                                user: currentUser,
+                                profileImage: currentUser?.avatar
+                            })
+                        }
+                        style={styles.editButton}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="create-outline" size={22} color={COLORS.primary}/>
+                    </TouchableOpacity>
+                }
+            />
+
             <ScrollView
                 contentContainerStyle={styles.scrollContainer}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={COLORS.primary}
+                    />
+                }
             >
-                {/* Profile Header Card */}
-                <ProfileSection
-                    user={user}
-                    profileImage={profileImage || user?.avatar || 'https://i.pravatar.cc/100'}
-                    buttonLabel="Edit Profile"
-                    onButtonPress={() =>
-                        navigation.navigate('EditProfileScreen', { user, profileImage })
-                    }
-                />
-                <QuickActions title="Stats" actions={statsActions} />
+                {/* Profile Header */}
+                <View style={styles.profileHeader}>
+                    <View style={styles.avatarContainer}>
+                        <Image
+                            source={{uri: currentUser?.avatar || profileImage || 'https://i.pravatar.cc/100'}}
+                            style={styles.avatar}
+                            cachePolicy="disk"
+                        />
+                        <View style={styles.verifiedBadge}>
+                            <Ionicons name="checkmark-circle" size={28} color={COLORS.success}/>
+                        </View>
+                    </View>
+
+                    <Text style={styles.userName}>{currentUser.name || 'User'}</Text>
+                    <Text style={styles.userEmail}>{currentUser.email || 'email@example.com'}</Text>
+                </View>
 
                 {/* Personal Information Card */}
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
-                        <View style={styles.iconBadge}>
-                            <Ionicons name="person" size={20} color={COLORS.primary} />
+                        <View style={styles.iconCircle}>
+                            <Ionicons name="person" size={20} color={COLORS.primary}/>
                         </View>
-                        <View style={styles.cardHeaderText}>
-                            <Text style={styles.cardTitle}>Personal Information</Text>
-                            <Text style={styles.cardSubtitle}>Your basic details</Text>
-                        </View>
+                        <Text style={styles.cardTitle}>Personal Information</Text>
                     </View>
 
-                    {/* First Name */}
-                    <View style={styles.infoRow}>
+                    <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="person-outline" size={18} color="#9CA3AF" />
-                            <Text style={styles.infoLabel}>First Name</Text>
+                            <Ionicons name="person-outline" size={18} color={COLORS.dark.textTertiary}/>
+                            <Text style={styles.infoLabel}>Full Name</Text>
                         </View>
-                        <Text style={styles.infoValue}>{user.firstName || 'N/A'}</Text>
+                        <Text style={styles.infoValue}>{currentUser.name || 'N/A'}</Text>
                     </View>
 
-                    {/* Last Name */}
-                    <View style={styles.infoRow}>
+                    <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="person-outline" size={18} color="#9CA3AF" />
-                            <Text style={styles.infoLabel}>Last Name</Text>
+                            <Ionicons name="mail-outline" size={18} color={COLORS.dark.textTertiary}/>
+                            <Text style={styles.infoLabel}>Email</Text>
                         </View>
-                        <Text style={styles.infoValue}>{user.lastName || 'N/A'}</Text>
+                        <Text style={styles.infoValue} numberOfLines={1}>{currentUser.email || 'N/A'}</Text>
                     </View>
 
-                    {/* Email */}
-                    <View style={styles.infoRow}>
+                    <View style={[styles.infoItem, styles.infoItemLast]}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="mail-outline" size={18} color="#9CA3AF" />
-                            <Text style={styles.infoLabel}>Email Address</Text>
+                            <Ionicons name="call-outline" size={18} color={COLORS.dark.textTertiary}/>
+                            <Text style={styles.infoLabel}>Phone</Text>
                         </View>
-                        <Text style={styles.infoValue}>{user.userEmail || 'N/A'}</Text>
-                    </View>
-
-                    {/* Phone */}
-                    <View style={[styles.infoRow, styles.infoRowLast]}>
-                        <View style={styles.infoLeft}>
-                            <Ionicons name="call-outline" size={18} color="#9CA3AF" />
-                            <Text style={styles.infoLabel}>Phone Number</Text>
-                        </View>
-                        <Text style={styles.infoValue}>{user.mobileNumber || 'N/A'}</Text>
+                        <Text style={styles.infoValue}>
+                            {currentUser.mobileNumber || 'Not provided'}
+                        </Text>
                     </View>
                 </View>
 
                 {/* Academic Information Card */}
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
-                        <View style={[styles.iconBadge, { backgroundColor: '#FEF3C7' }]}>
-                            <Ionicons name="school" size={20} color="#CA8A04" />
+                        <View style={[styles.iconCircle, {backgroundColor: COLORS.warning + '15'}]}>
+                            <Ionicons name="school" size={20} color={COLORS.warning}/>
                         </View>
-                        <View style={styles.cardHeaderText}>
-                            <Text style={styles.cardTitle}>Academic Information</Text>
-                            <Text style={styles.cardSubtitle}>Your student details</Text>
-                        </View>
+                        <Text style={styles.cardTitle}>Academic Information</Text>
                     </View>
 
-                    {/* Student ID */}
-                    <View style={styles.infoRow}>
+                    <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="card-outline" size={18} color="#9CA3AF" />
+                            <Ionicons name="card-outline" size={18} color={COLORS.dark.textTertiary}/>
                             <Text style={styles.infoLabel}>Student ID</Text>
                         </View>
-                        <Text style={styles.infoValue}>{user.idCardNo || 'N/A'}</Text>
+                        <Text style={styles.infoValue}>{currentUser.idCardNo || 'N/A'}</Text>
                     </View>
 
-                    {/* College */}
-                    <View style={[styles.infoRow, styles.infoRowLast]}>
+                    <View style={[styles.infoItem, styles.infoItemLast]}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="school-outline" size={18} color="#9CA3AF" />
+                            <Ionicons name="school-outline" size={18} color={COLORS.dark.textTertiary}/>
                             <Text style={styles.infoLabel}>College</Text>
                         </View>
-                        <Text style={styles.infoValue}>
-                            {user.college?.collegeName || 'N/A'}
+                        <Text style={styles.infoValue} numberOfLines={1}>
+                            {currentUser.collegeName || 'N/A'}
                         </Text>
                     </View>
                 </View>
-
             </ScrollView>
         </SafeAreaView>
     );
@@ -213,94 +179,140 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.dark.bg,
     },
-
     scrollContainer: {
-        padding: 20,
-        paddingBottom: 40,
+        paddingBottom: THEME.spacing['3xl'],
     },
-
     loadingContainer: {
+        flex: 1,
+        backgroundColor: COLORS.dark.bg,
+    },
+    loadingContent: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    emptyState: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: THEME.spacing['2xl'],
+    },
+    emptyTitle: {
+        fontSize: THEME.fontSize.xl,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginTop: THEME.spacing.lg,
+        marginBottom: THEME.spacing[2],
+    },
+    emptyText: {
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        textAlign: 'center',
+    },
+    editButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: COLORS.primary + '15',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    // Profile Header
+    profileHeader: {
+        alignItems: 'center',
+        paddingVertical: THEME.spacing['2xl'],
+        paddingHorizontal: THEME.spacing.md,
+    },
+    avatarContainer: {
+        position: 'relative',
+        marginBottom: THEME.spacing.md,
+    },
+    avatar: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: COLORS.dark.card,
+        borderWidth: 3,
+        borderColor: COLORS.dark.border,
+    },
+    verifiedBadge: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
         backgroundColor: COLORS.dark.bg,
+        borderRadius: 14,
+    },
+    userName: {
+        fontSize: THEME.fontSize['2xl'],
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing[1],
+        textAlign: 'center',
+    },
+    userEmail: {
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        fontWeight: THEME.fontWeight.medium,
+        textAlign: 'center',
     },
 
     // Card Styles
     card: {
         backgroundColor: COLORS.dark.card,
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
-        shadowColor: COLORS.shadow.light,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        marginHorizontal: THEME.spacing.md,
+        marginBottom: THEME.spacing.md,
+        borderRadius: THEME.borderRadius.lg,
+        padding: THEME.spacing.md,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
     },
-
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
-        gap: 12,
+        marginBottom: THEME.spacing.md,
+        gap: THEME.spacing[3],
     },
-
-    iconBadge: {
+    iconCircle: {
         width: 40,
         height: 40,
-        borderRadius: 10,
-        backgroundColor: COLORS.primaryLightest,
+        borderRadius: 20,
+        backgroundColor: COLORS.primary + '15',
         alignItems: 'center',
         justifyContent: 'center',
     },
-
-    cardHeaderText: {
-        flex: 1,
-    },
-
     cardTitle: {
-        fontSize: 16,
-        fontWeight: '800',
+        fontSize: THEME.fontSize.base,
+        fontWeight: THEME.fontWeight.bold,
         color: COLORS.dark.text,
     },
 
-    cardSubtitle: {
-        fontSize: 12,
-        color: COLORS.dark.textTertiary,
-        marginTop: 2,
-    },
-
-    // Info Row Styles
-    infoRow: {
+    // Info Items
+    infoItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 12,
+        paddingVertical: THEME.spacing[3],
         borderBottomWidth: 1,
         borderBottomColor: COLORS.dark.border,
     },
-
-    infoRowLast: {
+    infoItemLast: {
         borderBottomWidth: 0,
     },
-
     infoLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: THEME.spacing[2],
         flex: 1,
     },
-
     infoLabel: {
-        fontSize: 14,
+        fontSize: THEME.fontSize.sm,
         color: COLORS.dark.textTertiary,
-        fontWeight: '500',
+        fontWeight: THEME.fontWeight.medium,
     },
-
     infoValue: {
-        fontSize: 14,
-        fontWeight: '700',
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
         color: COLORS.dark.text,
         textAlign: 'right',
         flex: 1,

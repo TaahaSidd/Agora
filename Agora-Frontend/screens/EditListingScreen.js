@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     View,
     Text,
@@ -11,13 +11,13 @@ import {
     StatusBar,
     ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {Ionicons} from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
-import { apiPut } from '../services/api';
-import { uploadToCloudinary } from '../utils/upload';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
+import {apiPut} from '../services/api';
+import {uploadToCloudinary} from '../utils/upload';
 
 import ModalComponent from '../components/Modal';
 import Button from '../components/Button';
@@ -26,8 +26,8 @@ import AppHeader from '../components/AppHeader';
 import CustomPicker from '../components/CustomPicker';
 import InfoBox from '../components/InfoBox';
 
-const EditListingScreen = ({ navigation, route }) => {
-    const { listing: existingListing } = route.params;
+const EditListingScreen = ({navigation, route}) => {
+    const {listing: existingListing} = route.params;
 
     const [listing, setListing] = useState({
         title: existingListing.title || existingListing.name || '',
@@ -43,46 +43,46 @@ const EditListingScreen = ({ navigation, route }) => {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState(false);
-    const [toast, setToast] = useState({ visible: false, type: 'info', message: '' });
+    const [toast, setToast] = useState({visible: false, type: 'info', message: ''});
 
     const categoryItems = [
-        { label: "Select Category", value: "", icon: null },
-        { label: "Textbooks & Study Materials", value: "textbooks", icon: "book-outline" },
-        { label: "Electronics & Gadgets", value: "electronics", icon: "laptop-outline" },
-        { label: "Clothing & Accessories", value: "clothing", icon: "shirt-outline" },
-        { label: "Furniture & Dorm Supplies", value: "furniture", icon: "bed-outline" },
-        { label: "Stationery & Office Supplies", value: "stationery", icon: "pencil-outline" },
-        { label: "Sports & Fitness Equipment", value: "sports", icon: "basketball-outline" },
-        { label: "Bicycles & Transportation", value: "bicycles", icon: "bicycle-outline" },
-        { label: "Food & Snacks", value: "food", icon: "fast-food-outline" },
-        { label: "Housing & Roommates", value: "housing", icon: "home-outline" },
-        { label: "Tutoring & Academic Services", value: "tutoring", icon: "school-outline" },
-        { label: "Events & Tickets", value: "events", icon: "ticket-outline" },
-        { label: "Miscellaneous", value: "miscellaneous", icon: "apps-outline" },
+        {label: "Select Category", value: "", icon: null},
+        {label: "Textbooks & Study Materials", value: "textbooks", icon: "book-outline"},
+        {label: "Electronics & Gadgets", value: "electronics", icon: "laptop-outline"},
+        {label: "Clothing & Accessories", value: "clothing", icon: "shirt-outline"},
+        {label: "Furniture & Dorm Supplies", value: "furniture", icon: "bed-outline"},
+        {label: "Stationery & Office Supplies", value: "stationery", icon: "pencil-outline"},
+        {label: "Sports & Fitness Equipment", value: "sports", icon: "basketball-outline"},
+        {label: "Bicycles & Transportation", value: "bicycles", icon: "bicycle-outline"},
+        {label: "Food & Snacks", value: "food", icon: "fast-food-outline"},
+        {label: "Housing & Roommates", value: "housing", icon: "home-outline"},
+        {label: "Tutoring & Academic Services", value: "tutoring", icon: "school-outline"},
+        {label: "Events & Tickets", value: "events", icon: "ticket-outline"},
+        {label: "Miscellaneous", value: "miscellaneous", icon: "apps-outline"},
     ];
 
     const conditionItems = [
-        { label: "Select Condition", value: "" },
-        { label: "New", value: "NEW" },
-        { label: "Used", value: "USED" },
-        { label: "Good", value: "GOOD" },
-        { label: "Refurbished", value: "REFURBISHED" },
-        { label: "Repaired", value: "REPAIRED" },
-        { label: "Damaged", value: "DAMAGED" },
+        {label: "Select Condition", value: ""},
+        {label: "New", value: "NEW"},
+        {label: "Used", value: "USED"},
+        {label: "Good", value: "GOOD"},
+        {label: "Refurbished", value: "REFURBISHED"},
+        {label: "Repaired", value: "REPAIRED"},
+        {label: "Damaged", value: "DAMAGED"},
     ];
 
     const statusItems = [
-        { label: "Available", value: "AVAILABLE" },
-        { label: "Sold", value: "SOLD" },
-        { label: "Reserved", value: "RESERVED" },
-        { label: "Rented", value: "RENTED" },
-        { label: "Exchanged", value: "EXCHANGED" },
-        { label: "Deactivated", value: "DEACTIVATED" },
+        {label: "Available", value: "AVAILABLE"},
+        {label: "Sold", value: "SOLD"},
+        {label: "Reserved", value: "RESERVED"},
+        {label: "Rented", value: "RENTED"},
+        {label: "Exchanged", value: "EXCHANGED"},
+        {label: "Deactivated", value: "DEACTIVATED"},
     ];
 
     const handleChange = (key, value) => {
-        setListing({ ...listing, [key]: value });
-        setErrors((prev) => ({ ...prev, [key]: null }));
+        setListing({...listing, [key]: value});
+        setErrors((prev) => ({...prev, [key]: null}));
     };
 
     const MAX_IMAGES = 5;
@@ -151,8 +151,8 @@ const EditListingScreen = ({ navigation, route }) => {
             const cloudinaryResults = await Promise.all(uploadPromises);
 
             const allImages = [
-                ...existingImages.map(url => ({ url, publicId: null })),
-                ...cloudinaryResults.map(img => ({ url: img.url, publicId: img.publicId }))
+                ...existingImages.map(url => ({url, publicId: null})),
+                ...cloudinaryResults.map(img => ({url: img.url, publicId: img.publicId}))
             ];
 
             const payload = {
@@ -182,14 +182,14 @@ const EditListingScreen = ({ navigation, route }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
-            <AppHeader title="Edit Your Listing" onBack={() => navigation.goBack()} />
+            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content"/>
+            <AppHeader title="Edit Your Listing" onBack={() => navigation.goBack()}/>
 
             {toast.visible && (
                 <ToastMessage
                     type={toast.type}
                     message={toast.message}
-                    onHide={() => setToast({ ...toast, visible: false })}
+                    onHide={() => setToast({...toast, visible: false})}
                 />
             )}
 
@@ -217,7 +217,7 @@ const EditListingScreen = ({ navigation, route }) => {
                         {/* Existing Images */}
                         {listing.images.map((imageUri, index) => (
                             <View key={index} style={styles.imageCard}>
-                                <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
+                                <Image source={{uri: imageUri}} style={styles.uploadedImage}/>
                                 {index === 0 && (
                                     <View style={styles.primaryBadge}>
                                         <Text style={styles.primaryText}>Primary</Text>
@@ -228,7 +228,7 @@ const EditListingScreen = ({ navigation, route }) => {
                                     onPress={() => removeImage(index)}
                                     activeOpacity={0.7}
                                 >
-                                    <Ionicons name="close-circle" size={24} color="#EF4444" />
+                                    <Ionicons name="close-circle" size={24} color="#EF4444"/>
                                 </TouchableOpacity>
                             </View>
                         ))}
@@ -241,7 +241,7 @@ const EditListingScreen = ({ navigation, route }) => {
                                 activeOpacity={0.7}
                             >
                                 <View style={styles.uploadIcon}>
-                                    <Ionicons name="add" size={32} color={COLORS.primary} />
+                                    <Ionicons name="add" size={32} color={COLORS.primary}/>
                                 </View>
                                 <Text style={styles.addImageText}>Add Photo</Text>
                             </TouchableOpacity>
@@ -250,7 +250,7 @@ const EditListingScreen = ({ navigation, route }) => {
 
                     {listing.images.length === 0 && (
                         <Text style={styles.helperText}>
-                            <Ionicons name="information-circle" size={14} color="#6B7280" />
+                            <Ionicons name="information-circle" size={14} color="#6B7280"/>
                             {' '}First image will be the primary photo
                         </Text>
                     )}
@@ -261,7 +261,7 @@ const EditListingScreen = ({ navigation, route }) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionLabel}>Title *</Text>
                     <View style={[styles.inputContainer, errors.title && styles.inputError]}>
-                        <Ionicons name="pricetag-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                        <Ionicons name="pricetag-outline" size={20} color="#9CA3AF" style={styles.inputIcon}/>
                         <TextInput
                             style={styles.input}
                             placeholder="e.g. iPhone 13 Pro"
@@ -273,7 +273,7 @@ const EditListingScreen = ({ navigation, route }) => {
                         <Text
                             style={[
                                 styles.counterText,
-                                { color: listing.title.length > 45 ? '#EF4444' : '#6B7280' }
+                                {color: listing.title.length > 45 ? '#EF4444' : '#6B7280'}
                             ]}
                         >{listing.title.length}/50</Text>
                     </View>
@@ -282,8 +282,10 @@ const EditListingScreen = ({ navigation, route }) => {
 
                 <View style={styles.section}>
                     <Text style={styles.sectionLabel}>Description *</Text>
-                    <View style={[styles.inputContainer, styles.textAreaContainer, errors.description && styles.inputError]}>
-                        <Ionicons name="document-text-outline" size={20} color="#9CA3AF" style={[styles.inputIcon, { alignSelf: 'flex-start', marginTop: 12 }]} />
+                    <View
+                        style={[styles.inputContainer, styles.textAreaContainer, errors.description && styles.inputError]}>
+                        <Ionicons name="document-text-outline" size={20} color="#9CA3AF"
+                                  style={[styles.inputIcon, {alignSelf: 'flex-start', marginTop: 12}]}/>
                         <TextInput
                             style={[styles.input, styles.textArea]}
                             placeholder="Describe your item in detail..."
@@ -295,7 +297,11 @@ const EditListingScreen = ({ navigation, route }) => {
                             textAlignVertical="top"
                             maxLength={800}
                         />
-                        <Text style={{ textAlign: 'right', color: listing.description.length > 750 ? '#EF4444' : '#6B7280', marginTop: 12 }}>
+                        <Text style={{
+                            textAlign: 'right',
+                            color: listing.description.length > 750 ? '#EF4444' : '#6B7280',
+                            marginTop: 12
+                        }}>
                             {listing.description.length}/800
                         </Text>
                     </View>
@@ -305,7 +311,7 @@ const EditListingScreen = ({ navigation, route }) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionLabel}>Price (₹) *</Text>
                     <View style={[styles.inputContainer, errors.price && styles.inputError]}>
-                        <Ionicons name="cash-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                        <Ionicons name="cash-outline" size={20} color="#9CA3AF" style={styles.inputIcon}/>
                         <TextInput
                             style={styles.input}
                             placeholder="0.00"
@@ -318,13 +324,13 @@ const EditListingScreen = ({ navigation, route }) => {
 
                                 const numericValue = Number(value);
                                 if (value === '') {
-                                    setErrors((prev) => ({ ...prev, price: 'Price is required' }));
+                                    setErrors((prev) => ({...prev, price: 'Price is required'}));
                                 } else if (numericValue < 10) {
-                                    setErrors((prev) => ({ ...prev, price: 'Price cannot be less than ₹10' }));
+                                    setErrors((prev) => ({...prev, price: 'Price cannot be less than ₹10'}));
                                 } else if (numericValue > 15000) {
-                                    setErrors((prev) => ({ ...prev, price: 'Price cannot exceed ₹15,000' }));
+                                    setErrors((prev) => ({...prev, price: 'Price cannot exceed ₹15,000'}));
                                 } else {
-                                    setErrors((prev) => ({ ...prev, price: null }));
+                                    setErrors((prev) => ({...prev, price: null}));
                                 }
                             }}
                         />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     View,
     Text,
@@ -9,16 +9,16 @@ import {
     Image,
     ScrollView,
     StatusBar,
-    ActivityIndicator,
-    FlatList,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {Ionicons} from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
-import { apiPost } from '../services/api';
-import { uploadToCloudinary } from "../utils/upload";
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
+import {apiPost} from '../services/api';
+import {uploadToCloudinary} from "../utils/upload";
 
 import ModalComponent from '../components/Modal';
 import ToastMessage from '../components/ToastMessage';
@@ -27,7 +27,7 @@ import AppHeader from '../components/AppHeader';
 import CustomPicker from '../components/CustomPicker';
 import InfoBox from '../components/InfoBox';
 
-const AddListingScreen = ({ navigation }) => {
+const AddListingScreen = ({navigation}) => {
     const [listing, setListing] = useState({
         title: '',
         description: '',
@@ -40,37 +40,37 @@ const AddListingScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState(false);
-    const [toast, setToast] = useState({ visible: false, type: 'info', message: '' });
+    const [toast, setToast] = useState({visible: false, type: 'info', message: ''});
 
     const categoryItems = [
-        { label: "Select Category", value: "", icon: null },
-        { label: "Textbooks & Study Materials", value: "textbooks", icon: "book-outline" },
-        { label: "Electronics & Gadgets", value: "electronics", icon: "laptop-outline" },
-        { label: "Clothing & Accessories", value: "clothing", icon: "shirt-outline" },
-        { label: "Furniture & Dorm Supplies", value: "furniture", icon: "bed-outline" },
-        { label: "Stationery & Office Supplies", value: "stationery", icon: "pencil-outline" },
-        { label: "Sports & Fitness Equipment", value: "sports", icon: "basketball-outline" },
-        { label: "Bicycles & Transportation", value: "bicycles", icon: "bicycle-outline" },
-        { label: "Food & Snacks", value: "food", icon: "fast-food-outline" },
-        { label: "Housing & Roommates", value: "housing", icon: "home-outline" },
-        { label: "Tutoring & Academic Services", value: "tutoring", icon: "school-outline" },
-        { label: "Events & Tickets", value: "events", icon: "ticket-outline" },
-        { label: "Miscellaneous", value: "miscellaneous", icon: "apps-outline" },
+        {label: "Select Category", value: "", icon: null},
+        {label: "Textbooks & Study Materials", value: "textbooks", icon: "book-outline"},
+        {label: "Electronics & Gadgets", value: "electronics", icon: "laptop-outline"},
+        {label: "Clothing & Accessories", value: "clothing", icon: "shirt-outline"},
+        {label: "Furniture & Dorm Supplies", value: "furniture", icon: "bed-outline"},
+        {label: "Stationery & Office Supplies", value: "stationery", icon: "pencil-outline"},
+        {label: "Sports & Fitness Equipment", value: "sports", icon: "basketball-outline"},
+        {label: "Bicycles & Transportation", value: "bicycles", icon: "bicycle-outline"},
+        {label: "Food & Snacks", value: "food", icon: "fast-food-outline"},
+        {label: "Housing & Roommates", value: "housing", icon: "home-outline"},
+        {label: "Tutoring & Academic Services", value: "tutoring", icon: "school-outline"},
+        {label: "Events & Tickets", value: "events", icon: "ticket-outline"},
+        {label: "Miscellaneous", value: "miscellaneous", icon: "apps-outline"},
     ];
 
     const conditionItems = [
-        { label: "Select Condition", value: "" },
-        { label: "New", value: "NEW" },
-        { label: "Used", value: "USED" },
-        { label: "Good", value: "GOOD" },
-        { label: "Refurbished", value: "REFURBISHED" },
-        { label: "Repaired", value: "REPAIRED" },
-        { label: "Damaged", value: "DAMAGED" },
+        {label: "Select Condition", value: ""},
+        {label: "New", value: "NEW"},
+        {label: "Used", value: "USED"},
+        {label: "Good", value: "GOOD"},
+        {label: "Refurbished", value: "REFURBISHED"},
+        {label: "Repaired", value: "REPAIRED"},
+        {label: "Damaged", value: "DAMAGED"},
     ];
 
     const handleChange = (key, value) => {
-        setListing({ ...listing, [key]: value });
-        setErrors((prev) => ({ ...prev, [key]: null }));
+        setListing({...listing, [key]: value});
+        setErrors((prev) => ({...prev, [key]: null}));
     };
 
     const MAX_IMAGES = 5;
@@ -164,213 +164,225 @@ const AddListingScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
-            <AppHeader title="Add Your Listing" onBack={() => navigation.goBack()} />
+            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content"/>
+            <AppHeader title="Add Your Listing" onBack={() => navigation.goBack()}/>
 
             {toast.visible && (
                 <ToastMessage
                     type={toast.type}
                     message={toast.message}
-                    onHide={() => setToast({ ...toast, visible: false })}
+                    onHide={() => setToast({...toast, visible: false})}
                 />
             )}
 
-            <ScrollView
-                contentContainerStyle={styles.container}
-                showsVerticalScrollIndicator={false}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{flex: 1}}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
             >
-                {/* Header Info */}
-                <View style={styles.headerInfo}>
-                    <Text style={styles.headerTitle}>Create New Listing</Text>
-                    <Text style={styles.headerSubtitle}>Fill in the details to list your item</Text>
-                </View>
-
-                {/* Multiple Image Upload Section */}
-                <View style={styles.section}>
-                    <View style={styles.labelRow}>
-                        <Text style={styles.sectionLabel}>Product Photos *</Text>
-                        <Text style={styles.imageCount}>
-                            {listing.images.length}/{MAX_IMAGES}
-                        </Text>
+                <ScrollView
+                    contentContainerStyle={styles.container}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Header Info */}
+                    <View style={styles.headerInfo}>
+                        <Text style={styles.headerTitle}>Create New Listing</Text>
+                        <Text style={styles.headerSubtitle}>Fill in the details to list your item</Text>
                     </View>
 
-                    {/* Images Grid */}
-                    <View style={styles.imagesGrid}>
-                        {/* Existing Images */}
-                        {listing.images.map((imageUri, index) => (
-                            <View key={index} style={styles.imageCard}>
-                                <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
-                                {index === 0 && (
-                                    <View style={styles.primaryBadge}>
-                                        <Text style={styles.primaryText}>Primary</Text>
-                                    </View>
-                                )}
+                    {/* Multiple Image Upload Section */}
+                    <View style={styles.section}>
+                        <View style={styles.labelRow}>
+                            <Text style={styles.sectionLabel}>Product Photos *</Text>
+                            <Text style={styles.imageCount}>
+                                {listing.images.length}/{MAX_IMAGES}
+                            </Text>
+                        </View>
+
+                        {/* Images Grid */}
+                        <View style={styles.imagesGrid}>
+                            {/* Existing Images */}
+                            {listing.images.map((imageUri, index) => (
+                                <View key={index} style={styles.imageCard}>
+                                    <Image source={{uri: imageUri}} style={styles.uploadedImage}/>
+                                    {index === 0 && (
+                                        <View style={styles.primaryBadge}>
+                                            <Text style={styles.primaryText}>Primary</Text>
+                                        </View>
+                                    )}
+                                    <TouchableOpacity
+                                        style={styles.removeButton}
+                                        onPress={() => removeImage(index)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons name="close-circle" size={24} color="#EF4444"/>
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+
+                            {/* Add More Button */}
+                            {listing.images.length < MAX_IMAGES && (
                                 <TouchableOpacity
-                                    style={styles.removeButton}
-                                    onPress={() => removeImage(index)}
+                                    style={[styles.addImageCard, errors.images && listing.images.length === 0 && styles.inputError]}
+                                    onPress={pickImages}
                                     activeOpacity={0.7}
                                 >
-                                    <Ionicons name="close-circle" size={24} color="#EF4444" />
+                                    <View style={styles.uploadIcon}>
+                                        <Ionicons name="add" size={32} color={COLORS.primary}/>
+                                    </View>
+                                    <Text style={styles.addImageText}>Add Photo</Text>
                                 </TouchableOpacity>
-                            </View>
-                        ))}
+                            )}
+                        </View>
 
-                        {/* Add More Button */}
-                        {listing.images.length < MAX_IMAGES && (
-                            <TouchableOpacity
-                                style={[styles.addImageCard, errors.images && listing.images.length === 0 && styles.inputError]}
-                                onPress={pickImages}
-                                activeOpacity={0.7}
-                            >
-                                <View style={styles.uploadIcon}>
-                                    <Ionicons name="add" size={32} color={COLORS.primary} />
-                                </View>
-                                <Text style={styles.addImageText}>Add Photo</Text>
-                            </TouchableOpacity>
+                        {listing.images.length === 0 && (
+                            <Text style={styles.helperText}>
+                                <Ionicons name="information-circle" size={14} color="#6B7280"/>
+                                {' '}First image will be the primary photo
+                            </Text>
+                        )}
+                        {errors.images && <Text style={styles.errorText}>{errors.images}</Text>}
+                    </View>
+
+                    {/* Basic Info Section */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionLabel}>Title *</Text>
+                        <View style={[styles.inputContainer, errors.title && styles.inputError]}>
+                            <Ionicons name="pricetag-outline" size={20} color="#9CA3AF" style={styles.inputIcon}/>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="e.g. iPhone 13 Pro"
+                                placeholderTextColor="#9CA3AF"
+                                value={listing.title}
+                                onChangeText={(text) => handleChange('title', text)}
+                                maxLength={50}
+                            />
+                            <Text
+                                style={[
+                                    styles.counterText,
+                                    {color: listing.title.length > 45 ? '#EF4444' : '#6B7280'}
+                                ]}
+                            >{listing.title.length}/50</Text>
+                        </View>
+                        {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+                    </View>
+
+                    <View style={styles.section}>
+                        <Text style={styles.sectionLabel}>Description *</Text>
+                        <View
+                            style={[styles.inputContainer, styles.textAreaContainer, errors.description && styles.inputError]}>
+                            <Ionicons name="document-text-outline" size={20} color="#9CA3AF"
+                                      style={[styles.inputIcon, {alignSelf: 'flex-start', marginTop: 12}]}/>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                placeholder="Describe your item in detail..."
+                                placeholderTextColor="#9CA3AF"
+                                multiline
+                                numberOfLines={5}
+                                value={listing.description}
+                                onChangeText={(text) => handleChange('description', text)}
+                                textAlignVertical="top"
+                                maxLength={800}
+                            />
+                            <Text style={{
+                                textAlign: 'right',
+                                color: listing.description.length > 750 ? '#EF4444' : '#6B7280',
+                                marginTop: 12
+                            }}>
+                                {listing.description.length}/800
+                            </Text>
+                        </View>
+                        {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+                    </View>
+
+                    <View style={styles.section}>
+                        <Text style={styles.sectionLabel}>Price (₹) *</Text>
+                        <View style={[styles.inputContainer, errors.price && styles.inputError]}>
+                            <Ionicons name="cash-outline" size={20} color="#9CA3AF" style={styles.inputIcon}/>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="0.00"
+                                placeholderTextColor="#9CA3AF"
+                                keyboardType="numeric"
+                                value={listing.price}
+                                onChangeText={(text) => {
+                                    const value = text.replace(/[^0-9.]/g, '');
+                                    handleChange('price', value);
+
+                                    const numericValue = Number(value);
+                                    if (value === '') {
+                                        setErrors((prev) => ({...prev, price: 'Price is required'}));
+                                    } else if (numericValue < 10) {
+                                        setErrors((prev) => ({...prev, price: 'Price cannot be less than ₹10'}));
+                                    } else if (numericValue > 15000) {
+                                        setErrors((prev) => ({...prev, price: 'Price cannot exceed ₹15,000'}));
+                                    } else {
+                                        setErrors((prev) => ({...prev, price: null}));
+                                    }
+                                }}
+                            />
+                        </View>
+                        {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
+                        {!errors.price && !listing.price && touched && (
+                            <Text style={styles.helperText}>Enter a price between ₹10 and ₹15,000</Text>
                         )}
                     </View>
 
-                    {listing.images.length === 0 && (
-                        <Text style={styles.helperText}>
-                            <Ionicons name="information-circle" size={14} color="#6B7280" />
-                            {' '}First image will be the primary photo
-                        </Text>
-                    )}
-                    {errors.images && <Text style={styles.errorText}>{errors.images}</Text>}
-                </View>
-
-                {/* Basic Info Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Title *</Text>
-                    <View style={[styles.inputContainer, errors.title && styles.inputError]}>
-                        <Ionicons name="pricetag-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="e.g. iPhone 13 Pro"
-                            placeholderTextColor="#9CA3AF"
-                            value={listing.title}
-                            onChangeText={(text) => handleChange('title', text)}
-                            maxLength={50}
-                        />
-                        <Text
-                            style={[
-                                styles.counterText,
-                                { color: listing.title.length > 45 ? '#EF4444' : '#6B7280' }
-                            ]}
-                        >{listing.title.length}/50</Text>
-                    </View>
-                    {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Description *</Text>
-                    <View style={[styles.inputContainer, styles.textAreaContainer, errors.description && styles.inputError]}>
-                        <Ionicons name="document-text-outline" size={20} color="#9CA3AF" style={[styles.inputIcon, { alignSelf: 'flex-start', marginTop: 12 }]} />
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            placeholder="Describe your item in detail..."
-                            placeholderTextColor="#9CA3AF"
-                            multiline
-                            numberOfLines={5}
-                            value={listing.description}
-                            onChangeText={(text) => handleChange('description', text)}
-                            textAlignVertical="top"
-                            maxLength={800}
-                        />
-                        <Text style={{ textAlign: 'right', color: listing.description.length > 750 ? '#EF4444' : '#6B7280', marginTop: 12 }}>
-                            {listing.description.length}/800
-                        </Text>
-                    </View>
-                    {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Price (₹) *</Text>
-                    <View style={[styles.inputContainer, errors.price && styles.inputError]}>
-                        <Ionicons name="cash-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="0.00"
-                            placeholderTextColor="#9CA3AF"
-                            keyboardType="numeric"
-                            value={listing.price}
-                            onChangeText={(text) => {
-                                const value = text.replace(/[^0-9.]/g, '');
-                                handleChange('price', value);
-
-                                const numericValue = Number(value);
-                                if (value === '') {
-                                    setErrors((prev) => ({ ...prev, price: 'Price is required' }));
-                                } else if (numericValue < 10) {
-                                    setErrors((prev) => ({ ...prev, price: 'Price cannot be less than ₹10' }));
-                                } else if (numericValue > 15000) {
-                                    setErrors((prev) => ({ ...prev, price: 'Price cannot exceed ₹15,000' }));
-                                } else {
-                                    setErrors((prev) => ({ ...prev, price: null }));
-                                }
-                            }}
+                    {/* Category & Condition */}
+                    <View style={styles.section}>
+                        <CustomPicker
+                            label="Category *"
+                            value={listing.category}
+                            items={categoryItems}
+                            onValueChange={(value) => handleChange('category', value)}
+                            icon="grid-outline"
+                            placeholder="Select Category"
+                            error={errors.category}
                         />
                     </View>
-                    {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
-                    {!errors.price && !listing.price && touched && (
-                        <Text style={styles.helperText}>Enter a price between ₹10 and ₹15,000</Text>
-                    )}
-                </View>
 
-                {/* Category & Condition */}
-                <View style={styles.section}>
-                    <CustomPicker
-                        label="Category *"
-                        value={listing.category}
-                        items={categoryItems}
-                        onValueChange={(value) => handleChange('category', value)}
-                        icon="grid-outline"
-                        placeholder="Select Category"
-                        error={errors.category}
+                    <View style={styles.section}>
+                        <CustomPicker
+                            label="Condition *"
+                            value={listing.condition}
+                            items={conditionItems}
+                            onValueChange={(value) => handleChange('condition', value)}
+                            icon="shield-checkmark-outline"
+                            placeholder="Select Condition"
+                            error={errors.condition}
+                        />
+                    </View>
+
+                    {/* Info Box */}
+                    <InfoBox
+                        text="Your listing will be reviewed and published within 24 hours"
                     />
-                </View>
 
-                <View style={styles.section}>
-                    <CustomPicker
-                        label="Condition *"
-                        value={listing.condition}
-                        items={conditionItems}
-                        onValueChange={(value) => handleChange('condition', value)}
-                        icon="shield-checkmark-outline"
-                        placeholder="Select Condition"
-                        error={errors.condition}
+                    {/* Submit Button */}
+                    <Button
+                        title="Create Listing"
+                        onPress={handleCreate}
+                        variant="primary"
+                        size="large"
+                        icon="checkmark-circle-outline"
+                        iconPosition="left"
+                        loading={loading}
+                        disabled={loading}
                     />
-                </View>
+                </ScrollView>
 
-                {/* Info Box */}
-                <InfoBox
-                    text="Your listing will be reviewed and published within 24 hours"
+                <ModalComponent
+                    visible={modalVisible}
+                    type="success"
+                    title="Listing Created!"
+                    message="Your listing is now live and visible to buyers."
+                    primaryButtonText="Okay"
+                    onPrimaryPress={() => {
+                        setModalVisible(false);
+                        navigation.replace('MainLayout');
+                    }}
                 />
-
-                {/* Submit Button */}
-                <Button
-                    title="Create Listing"
-                    onPress={handleCreate}
-                    variant="primary"
-                    size="large"
-                    icon="checkmark-circle-outline"
-                    iconPosition="left"
-                    loading={loading}
-                    disabled={loading}
-                />
-            </ScrollView>
-
-            <ModalComponent
-                visible={modalVisible}
-                type="success"
-                title="Listing Created!"
-                message="Your listing is now live and visible to buyers."
-                primaryButtonText="Okay"
-                onPrimaryPress={() => {
-                    setModalVisible(false);
-                    navigation.navigate('MainLayout');
-                }}
-            />
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -378,193 +390,302 @@ const AddListingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
-    },
+        backgroundColor:
+        COLORS.dark.bg,
+    }
+    ,
 
     container: {
         padding: 20,
-        paddingBottom: 40,
-    },
+        paddingBottom:
+            40,
+    }
+    ,
 
     headerInfo: {
         marginBottom: 24,
-    },
+    }
+    ,
 
     headerTitle: {
         fontSize: 28,
-        fontWeight: '800',
-        color: COLORS.dark.text,
-        marginBottom: 4,
-        letterSpacing: -0.5,
-    },
+        fontWeight:
+            '800',
+        color:
+        COLORS.dark.text,
+        marginBottom:
+            4,
+        letterSpacing:
+            -0.5,
+    }
+    ,
 
     headerSubtitle: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
-        fontWeight: '500',
-    },
+        color:
+        COLORS.dark.textSecondary,
+        fontWeight:
+            '500',
+    }
+    ,
 
     section: {
         marginBottom: 20,
-    },
+    }
+    ,
 
     labelRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
+        justifyContent:
+            'space-between',
+        alignItems:
+            'center',
+        marginBottom:
+            10,
+    }
+    ,
 
     sectionLabel: {
         fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.dark.text,
-        marginBottom: 6,
-    },
+        fontWeight:
+            '700',
+        color:
+        COLORS.dark.text,
+        marginBottom:
+            6,
+    }
+    ,
 
     imageCount: {
         fontSize: 13,
-        fontWeight: '700',
-        color: COLORS.primary,
-        backgroundColor: COLORS.transparentWhite10,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
-    },
+        fontWeight:
+            '700',
+        color:
+        COLORS.primary,
+        backgroundColor:
+        COLORS.transparentWhite10,
+        paddingHorizontal:
+            10,
+        paddingVertical:
+            4,
+        borderRadius:
+            8,
+    }
+    ,
 
     imagesGrid: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-    },
+        flexWrap:
+            'wrap',
+        gap:
+            10,
+    }
+    ,
 
     imageCard: {
         width: '31%',
-        aspectRatio: 1,
-        borderRadius: 12,
-        overflow: 'hidden',
-        position: 'relative',
-        backgroundColor: COLORS.dark.cardElevated,
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-    },
+        aspectRatio:
+            1,
+        borderRadius:
+            12,
+        overflow:
+            'hidden',
+        position:
+            'relative',
+        backgroundColor:
+        COLORS.dark.cardElevated,
+        borderWidth:
+            1,
+        borderColor:
+        COLORS.dark.border,
+    }
+    ,
 
     uploadedImage: {
         width: 100,
-        height: 100,
-    },
+        height:
+            100,
+    }
+    ,
 
     primaryBadge: {
         position: 'absolute',
-        top: 6,
-        left: 6,
-        backgroundColor: COLORS.primary,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 6,
-    },
+        top:
+            6,
+        left:
+            6,
+        backgroundColor:
+        COLORS.primary,
+        paddingHorizontal:
+            8,
+        paddingVertical:
+            3,
+        borderRadius:
+            6,
+    }
+    ,
 
     primaryText: {
         color: COLORS.white,
-        fontSize: 9,
-        fontWeight: '800',
-        textTransform: 'uppercase',
-    },
+        fontSize:
+            9,
+        fontWeight:
+            '800',
+        textTransform:
+            'uppercase',
+    }
+    ,
 
     removeButton: {
         position: 'absolute',
-        top: 6,
-        right: 6,
-        backgroundColor: COLORS.transparentWhite20,
-        borderRadius: 12,
-    },
+        top:
+            6,
+        right:
+            6,
+        backgroundColor:
+        COLORS.transparentWhite20,
+        borderRadius:
+            12,
+    }
+    ,
 
     addImageCard: {
         width: '31%',
-        aspectRatio: 1,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: COLORS.dark.border,
-        borderStyle: 'dashed',
-        backgroundColor: COLORS.dark.card,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+        aspectRatio:
+            1,
+        borderRadius:
+            12,
+        borderWidth:
+            2,
+        borderColor:
+        COLORS.dark.border,
+        borderStyle:
+            'dashed',
+        backgroundColor:
+        COLORS.dark.card,
+        justifyContent:
+            'center',
+        alignItems:
+            'center',
+    }
+    ,
 
     uploadIcon: {
         width: 50,
-        height: 50,
-        borderRadius: 24,
-        backgroundColor: COLORS.transparentWhite10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 8,
-    },
+        height:
+            50,
+        borderRadius:
+            24,
+        backgroundColor:
+        COLORS.transparentWhite10,
+        alignItems:
+            'center',
+        justifyContent:
+            'center',
+        marginBottom:
+            8,
+    }
+    ,
 
     addImageText: {
         fontSize: 12,
-        fontWeight: '600',
-        color: COLORS.dark.textSecondary,
-    },
+        fontWeight:
+            '600',
+        color:
+        COLORS.dark.textSecondary,
+    }
+    ,
 
     helperText: {
         fontSize: 12,
-        color: COLORS.dark.textSecondary,
-        marginTop: 8,
-        fontWeight: '500',
-    },
+        color:
+        COLORS.dark.textSecondary,
+        marginTop:
+            8,
+        fontWeight:
+            '500',
+    }
+    ,
 
     inputContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: COLORS.dark.border,
-        paddingHorizontal: 16,
-    },
+        alignItems:
+            'center',
+        backgroundColor:
+        COLORS.dark.card,
+        borderRadius:
+            14,
+        borderWidth:
+            1.5,
+        borderColor:
+        COLORS.dark.border,
+        paddingHorizontal:
+            16,
+    }
+    ,
 
     textAreaContainer: {
         alignItems: 'flex-start',
-    },
+    }
+    ,
 
     inputIcon: {
         marginRight: 12,
-    },
+    }
+    ,
 
     input: {
         flex: 1,
-        fontSize: 15,
-        color: COLORS.dark.text,
-        paddingVertical: 14,
-        fontWeight: '500',
-    },
+        fontSize:
+            15,
+        color:
+        COLORS.dark.text,
+        paddingVertical:
+            14,
+        fontWeight:
+            '500',
+    }
+    ,
 
     textArea: {
         minHeight: 120,
-        paddingTop: 14,
-        paddingBottom: 14,
-    },
+        paddingTop:
+            14,
+        paddingBottom:
+            14,
+    }
+    ,
 
     counterText: {
         textAlign: 'right',
-        fontSize: 13,
-        fontWeight: '500',
-        color: COLORS.dark.textSecondary,
-    },
+        fontSize:
+            13,
+        fontWeight:
+            '500',
+        color:
+        COLORS.dark.textSecondary,
+    }
+    ,
 
     inputError: {
         borderColor: COLORS.error,
-        borderWidth: 2,
-    },
+        borderWidth:
+            2,
+    }
+    ,
 
     errorText: {
         color: COLORS.error,
-        fontSize: 12,
-        marginTop: 2,
-        marginLeft: 4,
-        fontWeight: '500',
-    },
+        fontSize:
+            12,
+        marginTop:
+            2,
+        marginLeft:
+            4,
+        fontWeight:
+            '500',
+    }
+    ,
 });
 
 

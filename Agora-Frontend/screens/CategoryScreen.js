@@ -1,109 +1,48 @@
-// import React, { useEffect, useState } from "react";
-// import { View, Text, FlatList, StyleSheet, ActivityIndicator, SafeAreaView } from "react-native";
-// import axios from "axios";
-
-// import Card from '../components/Cards';
-// import AppHeader from '../components/AppHeader';
-
-// import { useCategoryItems } from '../hooks/useCategoryItems';
-
-// const CategoryScreen = ({ route }) => {
-//     const { categoryId, categoryName } = route.params;
-//     const { items, loading, error } = useCategoryItems(categoryId);
-
-//     const mappedItems = items.map(i => ({
-//         ...i,
-//         images: i.imageUrl && i.imageUrl.length > 0
-//             ? i.imageUrl.map(url => ({ uri: url }))
-//             : [require('../assets/LW.jpg')],
-//         name: i.title || 'Untitled',
-//     }));
-
-//     if (loading) {
-//         return <ActivityIndicator size="large" color="#008CFE" style={{ marginTop: 20 }} />;
-//     }
-
-//     if (error) {
-//         return <Text style={{ textAlign: 'center', marginTop: 20 }}>Something went wrong!</Text>;
-//     }
-
-//     return (
-//         <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-//             <AppHeader title={categoryName} />
-//             <View style={styles.container}>
-//                 <FlatList
-//                     data={mappedItems}
-//                     renderItem={({ item }) => <Card item={item} />}
-//                     keyExtractor={item => item.id.toString()}
-//                     numColumns={2}
-//                     columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 12 }}
-//                     contentContainerStyle={{ padding: 16 }}
-//                     ListEmptyComponent={<View><Text style={{ textAlign: 'center', marginTop: 20 }}>No items found</Text></View>}
-//                 />
-//             </View>
-//         </SafeAreaView>
-//     );
-// };
-
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//         backgroundColor: '#fff',
-//     },
-// });
-
-
-// export default CategoryScreen;
-
-
-
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, SafeAreaView, TouchableOpacity } from "react-native";
+import React, {useEffect, useState} from "react";
+import {View, Text, FlatList, StyleSheet, ActivityIndicator, SafeAreaView, TouchableOpacity} from "react-native";
 import axios from "axios";
-import { Ionicons } from '@expo/vector-icons';
+import {Ionicons} from '@expo/vector-icons';
 
 import Card from '../components/Cards';
 import AppHeader from '../components/AppHeader';
 import Button from '../components/Button';
 import EmptyBoxSvg from '../assets/svg/NoCatSVG.svg';
 
-import { useCategoryItems } from '../hooks/useCategoryItems';
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
+import {useCategoryItems} from '../hooks/useCategoryItems';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
 
-const CategoryScreen = ({ route, navigation }) => {
-    const { categoryId, categoryName } = route.params;
-    const { items, loading, error } = useCategoryItems(categoryId);
+const CategoryScreen = ({route, navigation}) => {
+    const {categoryId, categoryName} = route.params;
+    const {items, loading, error} = useCategoryItems(categoryId);
 
     const mappedItems = items.map(i => ({
         ...i,
         images: i.imageUrl && i.imageUrl.length > 0
-            ? i.imageUrl.map(url => ({ uri: url }))
+            ? i.imageUrl.map(url => ({uri: url}))
             : [require('../assets/LW.jpg')],
         name: i.title || 'Untitled',
     }));
 
-    // Loading state
     if (loading) {
         return (
             <SafeAreaView style={styles.safeArea}>
-                <AppHeader title={categoryName} onBack={() => navigation.goBack()} />
+                <AppHeader title={categoryName} onBack={() => navigation.goBack()}/>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={COLORS.primary} />
+                    <ActivityIndicator size="large" color={COLORS.primary}/>
                     <Text style={styles.loadingText}>Loading {categoryName}...</Text>
                 </View>
             </SafeAreaView>
         );
     }
 
-    // Error state
     if (error) {
         return (
             <SafeAreaView style={styles.safeArea}>
-                <AppHeader title={categoryName} onBack={() => navigation.goBack()} />
+                <AppHeader title={categoryName} onBack={() => navigation.goBack()}/>
                 <View style={styles.errorContainer}>
                     <View style={styles.errorIconCircle}>
-                        <Ionicons name="alert-circle-outline" size={48} color={COLORS.error} />
+                        <Ionicons name="alert-circle-outline" size={48} color={COLORS.error}/>
                     </View>
                     <Text style={styles.errorTitle}>Something went wrong</Text>
                     <Text style={styles.errorText}>
@@ -115,20 +54,19 @@ const CategoryScreen = ({ route, navigation }) => {
                         size="medium"
                         icon="refresh-outline"
                         iconPosition="left"
-                        onPress={() => navigation.replace('CategoryScreen', { categoryId, categoryName })}
+                        onPress={() => navigation.replace('CategoryScreen', {categoryId, categoryName})}
                     />
                 </View>
             </SafeAreaView>
         );
     }
 
-    // Empty state component
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <EmptyBoxSvg width={180} height={180} />
+            <EmptyBoxSvg width={180} height={180}/>
             <Text style={styles.emptyTitle}>No Items Found</Text>
             <Text style={styles.emptyText}>
-                There are no items in {categoryName} yet. Check back later or explore other categories!
+                Check back later or explore other categories!
             </Text>
             <Button
                 title="Explore Categories"
@@ -144,11 +82,11 @@ const CategoryScreen = ({ route, navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <AppHeader title={categoryName} onBack={() => navigation.goBack()} />
+            <AppHeader title={categoryName} onBack={() => navigation.goBack()}/>
             <View style={styles.container}>
                 <FlatList
                     data={mappedItems}
-                    renderItem={({ item }) => <Card item={item} />}
+                    renderItem={({item}) => <Card item={item}/>}
                     keyExtractor={item => item.id.toString()}
                     numColumns={2}
                     columnWrapperStyle={styles.columnWrapper}

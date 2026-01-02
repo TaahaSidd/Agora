@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
     View,
     Text,
@@ -6,235 +6,57 @@ import {
     FlatList,
     StyleSheet,
     StatusBar,
-    LogBox,
+    ActivityIndicator,
 } from "react-native";
-LogBox.ignoreAllLogs(false);
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import Icon from "react-native-vector-icons/Ionicons";
-import Ionicons from "react-native-vector-icons/Ionicons";
 
-import { useNavigation } from "@react-navigation/native";
-import { apiGet, apiPatch, apiDelete } from "../services/api";
-import { useUserStore } from "../stores/userStore";
-import { useNotificationCount } from "../hooks/useNotificationCount";
+import {useNavigation} from "@react-navigation/native";
+import {apiGet, apiPatch, apiDelete} from "../services/api";
+import {useUserStore} from "../stores/userStore";
+import {useNotificationCount} from "../hooks/useNotificationCount";
 
 import AppHeader from "../components/AppHeader";
-
-import { COLORS } from "../utils/colors";
-import { THEME } from "../utils/theme";
+import {COLORS} from "../utils/colors";
 
 import RelaxSVG from '../assets/svg/RelaxSVG.svg';
 
-const STORAGE_KEY = "notifications";
-
 const getNotificationIcon = (type) => {
-    const normalizedType = type?.toLowerCase().replace(/_/g, '');
-
-    const iconMap = {
+    const normalized = type?.toLowerCase().replace(/_/g, '');
+    const icons = {
         'listingliked': 'heart',
         'listingsold': 'checkmark-circle',
-        'listingapproved': 'checkmark-circle',
+        'listingapproved': 'shield-checkmark',
         'listingrejected': 'close-circle',
         'newlisting': 'add-circle',
-        'listingexpired': 'time-outline',
-
         'message': 'chatbubble-ellipses',
-        'newmessage': 'chatbubble',
-        'chat': 'chatbubble',
-        'reply': 'chatbubbles',
-
         'offer': 'pricetag',
-        'newoffer': 'pricetag',
-        'offersent': 'paper-plane',
-        'offeraccepted': 'checkmark-circle',
-        'offerrejected': 'close-circle',
         'pricedrop': 'trending-down',
-        'pricealert': 'notifications',
-        'discount': 'gift',
-
         'order': 'receipt',
-        'neworder': 'cart',
-        'orderconfirmed': 'checkmark-circle',
-        'ordercancelled': 'close-circle',
         'payment': 'card',
-        'paymentreceived': 'cash',
-        'transaction': 'cash',
-        'delivery': 'location',
-
-        'alert': 'alert-circle',
-        'warning': 'warning',
-        'report': 'flag',
-        'reportreceived': 'shield',
-
-        'info': 'information-circle',
-        'announcement': 'megaphone',
-        'update': 'sync',
-        'reminder': 'time',
-
-        'like': 'heart',
         'follow': 'person-add',
-        'newfollower': 'person-add',
-        'share': 'share-social',
-        'comment': 'chatbox',
-        'newcomment': 'chatbox',
-
-        'achievement': 'trophy',
-        'badge': 'ribbon',
-        'reward': 'star',
-
         'review': 'star',
-        'newreview': 'star',
-        'rating': 'star-half',
+        'alert': 'alert-circle',
+        'info': 'information-circle',
     };
-
-    return iconMap[normalizedType] || 'notifications-outline';
+    return icons[normalized] || 'notifications';
 };
 
 const getIconColor = (type) => {
-    const normalizedType = type?.toLowerCase().replace(/_/g, '');
-
-    const colorMap = {
-        // Listing - Pink/Purple
+    const normalized = type?.toLowerCase().replace(/_/g, '');
+    const colors = {
         'listingliked': '#EC4899',
         'listingsold': '#10B981',
         'listingapproved': '#10B981',
         'listingrejected': '#EF4444',
-        'newlisting': '#8B5CF6',
-        'listingexpired': '#F59E0B',
-
-        // Messages - Blue
         'message': '#3B82F6',
-        'newmessage': '#3B82F6',
-        'chat': '#3B82F6',
-        'reply': '#3B82F6',
-        'comment': '#3B82F6',
-        'newcomment': '#3B82F6',
-
-        // Offers/Money - Green
         'offer': '#10B981',
-        'newoffer': '#10B981',
-        'offersent': '#10B981',
-        'offeraccepted': '#10B981',
-        'offerrejected': '#EF4444',
-        'pricedrop': '#10B981',
-        'payment': '#10B981',
-        'paymentreceived': '#10B981',
-        'transaction': '#10B981',
-        'discount': '#10B981',
-
-        // Alerts/Warnings - Red
-        'alert': '#EF4444',
-        'warning': '#EF4444',
-        'report': '#EF4444',
-        'reportreceived': '#EF4444',
-
-        // Info - Purple
-        'info': '#8B5CF6',
-        'announcement': '#8B5CF6',
-        'update': '#8B5CF6',
-
-        // Orders - Orange
-        'order': '#F59E0B',
-        'neworder': '#F59E0B',
-        'orderconfirmed': '#10B981',
-        'ordercancelled': '#EF4444',
-        'delivery': '#F59E0B',
-
-        // Social - Pink
-        'like': '#EC4899',
+        'pricedrop': '#F59E0B',
         'follow': '#EC4899',
-        'newfollower': '#EC4899',
-        'share': '#EC4899',
-
-        // Achievement - Yellow
-        'achievement': '#F59E0B',
-        'badge': '#F59E0B',
-        'reward': '#F59E0B',
-
-        // Review - Yellow
         'review': '#F59E0B',
-        'newreview': '#F59E0B',
-        'rating': '#F59E0B',
-
-        // Reminder - Yellow
-        'reminder': '#F59E0B',
+        'alert': '#EF4444',
     };
-
-    return colorMap[normalizedType] || COLORS.primary;
-};
-
-const getIconBg = (type) => {
-    const normalizedType = type?.toLowerCase().replace(/_/g, '');
-
-    // For dark mode, use more subtle backgrounds
-    const bgMap = {
-        // Listing - Pink/Purple backgrounds
-        'listingliked': 'rgba(236, 72, 153, 0.15)',
-        'listingsold': 'rgba(16, 185, 129, 0.15)',
-        'listingapproved': 'rgba(16, 185, 129, 0.15)',
-        'listingrejected': 'rgba(239, 68, 68, 0.15)',
-        'newlisting': 'rgba(139, 92, 246, 0.15)',
-        'listingexpired': 'rgba(245, 158, 11, 0.15)',
-
-        // Messages - Blue background
-        'message': 'rgba(59, 130, 246, 0.15)',
-        'newmessage': 'rgba(59, 130, 246, 0.15)',
-        'chat': 'rgba(59, 130, 246, 0.15)',
-        'reply': 'rgba(59, 130, 246, 0.15)',
-        'comment': 'rgba(59, 130, 246, 0.15)',
-        'newcomment': 'rgba(59, 130, 246, 0.15)',
-
-        // Offers/Money - Green background
-        'offer': 'rgba(16, 185, 129, 0.15)',
-        'newoffer': 'rgba(16, 185, 129, 0.15)',
-        'offersent': 'rgba(16, 185, 129, 0.15)',
-        'offeraccepted': 'rgba(16, 185, 129, 0.15)',
-        'offerrejected': 'rgba(239, 68, 68, 0.15)',
-        'pricedrop': 'rgba(16, 185, 129, 0.15)',
-        'payment': 'rgba(16, 185, 129, 0.15)',
-        'paymentreceived': 'rgba(16, 185, 129, 0.15)',
-        'transaction': 'rgba(16, 185, 129, 0.15)',
-        'discount': 'rgba(16, 185, 129, 0.15)',
-
-        // Alerts - Red background
-        'alert': 'rgba(239, 68, 68, 0.15)',
-        'warning': 'rgba(239, 68, 68, 0.15)',
-        'report': 'rgba(239, 68, 68, 0.15)',
-        'reportreceived': 'rgba(239, 68, 68, 0.15)',
-
-        // Info - Purple background
-        'info': 'rgba(139, 92, 246, 0.15)',
-        'announcement': 'rgba(139, 92, 246, 0.15)',
-        'update': 'rgba(139, 92, 246, 0.15)',
-
-        // Orders - Orange background
-        'order': 'rgba(245, 158, 11, 0.15)',
-        'neworder': 'rgba(245, 158, 11, 0.15)',
-        'orderconfirmed': 'rgba(16, 185, 129, 0.15)',
-        'ordercancelled': 'rgba(239, 68, 68, 0.15)',
-        'delivery': 'rgba(245, 158, 11, 0.15)',
-
-        // Social - Pink background
-        'like': 'rgba(236, 72, 153, 0.15)',
-        'follow': 'rgba(236, 72, 153, 0.15)',
-        'newfollower': 'rgba(236, 72, 153, 0.15)',
-        'share': 'rgba(236, 72, 153, 0.15)',
-
-        // Achievement - Yellow background
-        'achievement': 'rgba(245, 158, 11, 0.15)',
-        'badge': 'rgba(245, 158, 11, 0.15)',
-        'reward': 'rgba(245, 158, 11, 0.15)',
-
-        // Review - Yellow background
-        'review': 'rgba(245, 158, 11, 0.15)',
-        'newreview': 'rgba(245, 158, 11, 0.15)',
-        'rating': 'rgba(245, 158, 11, 0.15)',
-
-        // Reminder - Yellow background
-        'reminder': 'rgba(245, 158, 11, 0.15)',
-    };
-
-    return bgMap[normalizedType] || 'rgba(59, 130, 246, 0.15)';
+    return colors[normalized] || '#8B5CF6';
 };
 
 const formatTime = (timestamp) => {
@@ -246,64 +68,65 @@ const formatTime = (timestamp) => {
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
     if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return `${Math.floor(diffDays / 7)}w`;
 };
 
-const NotificationItem = ({ item, onPress }) => {
+const NotificationItem = ({item, onPress}) => {
     const iconName = getNotificationIcon(item.type);
     const iconColor = getIconColor(item.type);
-    const iconBg = getIconBg(item.type);
 
     return (
         <TouchableOpacity
             onPress={() => onPress(item)}
-            style={[styles.notificationCard, !item.read && styles.unreadCard]}
-            activeOpacity={0.7}
+            style={styles.notificationItem}
+            activeOpacity={0.6}
         >
-            <View style={[styles.iconWrapper, { backgroundColor: iconBg }]}>
-                <Icon name={iconName} size={24} color={iconColor} />
+            {/* Left indicator for unread */}
+            {!item.read && <View style={styles.unreadIndicator}/>}
+
+            {/* Icon */}
+            <View style={[styles.iconContainer, {backgroundColor: iconColor + '15'}]}>
+                <Icon name={iconName} size={22} color={iconColor}/>
             </View>
 
-            <View style={styles.contentWrapper}>
-                <View style={styles.topRow}>
-                    <Text style={[styles.title, !item.read && styles.unreadTitle]}>
-                        {item.title}
-                    </Text>
-                    {!item.read && <View style={styles.unreadDot} />}
-                </View>
+            {/* Content */}
+            <View style={styles.content}>
+                <Text style={[styles.title, !item.read && styles.unreadTitle]} numberOfLines={1}>
+                    {item.title}
+                </Text>
                 <Text style={styles.description} numberOfLines={2}>
                     {item.description}
                 </Text>
-                <View style={styles.bottomRow}>
-                    <Icon name="time-outline" size={12} color="#9CA3AF" />
-                    <Text style={styles.time}>{item.time}</Text>
-                </View>
+                <Text style={styles.time}>{item.time}</Text>
             </View>
 
-            <Icon name="chevron-forward" size={20} color="#D1D5DB" />
+            {/* Unread dot */}
+            {!item.read && <View style={styles.unreadDot}/>}
         </TouchableOpacity>
     );
 };
 
-
 export default function NotificationScreen() {
     const navigation = useNavigation();
-    const { currentUser, loading, isGuest } = useUserStore();
+    const {currentUser, loading, isGuest} = useUserStore();
     const [notifications, setNotifications] = useState([]);
     const [filter, setFilter] = useState('all');
-    const { unreadCount, refresh } = useNotificationCount(currentUser, loading, isGuest);
+    const [isLoading, setIsLoading] = useState(true);
+    const {unreadCount, refresh} = useNotificationCount(currentUser, loading, isGuest);
 
     const loadNotifications = async () => {
-        if (!currentUser?.id) return;
+        if (!currentUser?.id) {
+            setIsLoading(false);
+            return;
+        }
 
         try {
+            setIsLoading(true);
             const data = await apiGet(`/notifications/${currentUser.id}`);
-            //console.log("DATA IS -> ", data);
 
             const formatted = data.map(noti => ({
                 id: noti.id.toString(),
@@ -318,62 +141,38 @@ export default function NotificationScreen() {
             setNotifications(formatted);
         } catch (e) {
             console.error("Failed to load notifications:", e);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
         if (loading) return;
-        if (!currentUser || isGuest) return;
-
+        if (!currentUser || isGuest) {
+            setIsLoading(false);
+            return;
+        }
         loadNotifications();
     }, [currentUser, loading, isGuest]);
-
-    // const handleNotificationPress = async (notification) => {
-
-    //     //console.log("🔍 Full notification object:", notification);
-    //     if (!notification?.id) return;
-
-    //     if (!notification.read) {
-    //         try {
-    //             await apiPatch(`/notifications/read/${notification.id}`);
-    //             //console.log("✅ Marked as read:", notification.id);
-
-    //             refresh();
-    //             await loadNotifications();
-    //         } catch (error) {
-    //             console.error('Error marking as read:', error);
-    //         }
-    //     }
-
-    //     if (notification.type === 'LISTING_LIKED' && notification.listingsId) {
-    //         navigation.navigate('ProductDetailsScreen', { listingId: notification.listingsId });
-    //     } else if (notification.type === 'REVIEW' && notification.listingsId) {
-    //         navigation.navigate('ProductDetailsScreen', { listingId: notification.listingsId });
-    //     } else if (notification.type === 'FOLLOW') {
-    //         navigation.navigate('ProfileScreen');
-    //     }
-    // };
 
     const handleNotificationPress = async (notification) => {
         if (!notification?.id) return;
 
-        // Mark as read locally
+        // Mark as read immediately in UI
         if (!notification.read) {
             setNotifications(prev =>
-                prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+                prev.map(n => n.id === notification.id ? {...n, read: true} : n)
             );
-
-            // Update backend silently
             apiPatch(`/notifications/read/${notification.id}`).catch(console.error);
-
             refresh();
         }
 
+        // Navigate based on type
         switch (notification.type) {
             case 'LISTING_LIKED':
             case 'REVIEW':
                 if (notification.listingsId) {
-                    navigation.navigate('ProductDetailsScreen', { listingId: notification.listingsId });
+                    navigation.navigate('ProductDetailsScreen', {listingId: notification.listingsId});
                 }
                 break;
             case 'FOLLOW':
@@ -383,18 +182,15 @@ export default function NotificationScreen() {
     };
 
     const handleMarkAllRead = async () => {
-        if (!currentUser?.id) return;
+        if (!currentUser?.id || unreadCount === 0) return;
 
         try {
-
+            setNotifications(prev => prev.map(n => ({...n, read: true})));
             await apiPatch(`/notifications/mark-all-read/${currentUser.id}`);
-
-            const updated = notifications.map((n) => ({ ...n, read: true }));
-            setNotifications(updated);
-
             refresh();
         } catch (error) {
             console.error("Failed to mark all as read:", error);
+            loadNotifications();
         }
     };
 
@@ -402,11 +198,12 @@ export default function NotificationScreen() {
         if (!currentUser?.id) return;
 
         try {
-            await apiDelete(`/notifications/clear/${currentUser.id}`);
             setNotifications([]);
+            await apiDelete(`/notifications/clear/${currentUser.id}`);
             refresh();
         } catch (error) {
             console.error("Failed to clear notifications:", error);
+            loadNotifications();
         }
     };
 
@@ -416,177 +213,159 @@ export default function NotificationScreen() {
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <RelaxSVG width={200} height={200} />
+            <RelaxSVG width={180} height={180}/>
             <Text style={styles.emptyTitle}>All Caught Up!</Text>
             <Text style={styles.emptyText}>
-                You have no new notifications.
+                {filter === 'unread'
+                    ? "No unread notifications"
+                    : "You have no notifications yet"}
             </Text>
         </View>
     );
 
+    const renderLoadingState = () => (
+        <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary}/>
+        </View>
+    );
+
     return (
-        <SafeAreaProvider style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
+        <SafeAreaProvider style={styles.container}>
+            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
 
+            {/* Header */}
             <AppHeader
-                onBack={() =>
-                    navigation.canGoBack()
-                        ? navigation.goBack()
-                        : navigation.navigate("Explore")
-                }
+                onBack={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate("Explore")}
                 centerComponent={
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ color: COLORS.dark.text, fontSize: 20, fontWeight: '700' }}>
-                            Notifications
-                        </Text>
-
+                    <View style={styles.headerCenter}>
+                        <Text style={styles.headerTitle}>Notifications</Text>
                         {unreadCount > 0 && (
-                            <View style={[styles.unreadBadge, { marginLeft: 6 }]}>
-                                <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
+                            <View style={styles.headerBadge}>
+                                <Text style={styles.headerBadgeText}>{unreadCount}</Text>
                             </View>
                         )}
                     </View>
                 }
-                rightComponent={
-                    <TouchableOpacity activeOpacity={0.7}>
-                        <Ionicons name="ellipsis-vertical" size={20} color={COLORS.dark.textSecondary} />
-                    </TouchableOpacity>
-                }
             />
 
+            {/* Filters */}
             {notifications.length > 0 && (
-                <View style={styles.filterContainer}>
-                    <TouchableOpacity
-                        style={[styles.filterTab, filter === 'all' && styles.activeFilter]}
-                        onPress={() => setFilter('all')}
-                        activeOpacity={0.7}
-                    >
-                        <Text style={[styles.filterText, filter === 'all' && styles.activeFilterText]}>
-                            All
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.filterTab, filter === 'unread' && styles.activeFilter]}
-                        onPress={() => setFilter('unread')}
-                        activeOpacity={0.7}
-                    >
-                        <Text style={[styles.filterText, filter === 'unread' && styles.activeFilterText]}>
-                            Unread ({unreadCount})
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-
-            {notifications.length > 0 && (
-                <View style={styles.actionsRow}>
-                    {unreadCount > 0 && (
+                <View style={styles.filterBar}>
+                    <View style={styles.filterTabs}>
                         <TouchableOpacity
-                            onPress={handleMarkAllRead}
-                            style={styles.actionButton}
+                            style={[styles.filterTab, filter === 'all' && styles.activeTab]}
+                            onPress={() => setFilter('all')}
                             activeOpacity={0.7}
                         >
-                            <Icon name="checkmark-done" size={16} color={COLORS.primary} />
-                            <Text style={styles.actionText}>Mark all read</Text>
+                            <Text style={[styles.filterText, filter === 'all' && styles.activeText]}>
+                                All
+                            </Text>
                         </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                        onPress={handleClearAll}
-                        style={styles.actionButton}
-                        activeOpacity={0.7}
-                    >
-                        <Icon name="trash-outline" size={16} color="#EF4444" />
-                        <Text style={[styles.actionText, { color: '#EF4444' }]}>Clear all</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.filterTab, filter === 'unread' && styles.activeTab]}
+                            onPress={() => setFilter('unread')}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={[styles.filterText, filter === 'unread' && styles.activeText]}>
+                                Unread
+                            </Text>
+                            {unreadCount > 0 && (
+                                <View style={styles.filterBadge}>
+                                    <Text style={styles.filterBadgeText}>{unreadCount}</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Actions */}
+                    <View style={styles.actions}>
+                        {unreadCount > 0 && (
+                            <TouchableOpacity onPress={handleMarkAllRead} style={styles.actionBtn}>
+                                <Icon name="checkmark-done" size={18} color={COLORS.primary}/>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={handleClearAll} style={styles.actionBtn}>
+                            <Icon name="trash-outline" size={18} color="#EF4444"/>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             )}
 
-            <FlatList
-                data={filteredNotifications}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <NotificationItem item={item} onPress={handleNotificationPress} />
-                )}
-                ListEmptyComponent={renderEmptyState}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-            />
+            {/* List */}
+            {isLoading ? (
+                renderLoadingState()
+            ) : (
+                <FlatList
+                    data={filteredNotifications}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({item}) => (
+                        <NotificationItem item={item} onPress={handleNotificationPress}/>
+                    )}
+                    ListEmptyComponent={renderEmptyState}
+                    contentContainerStyle={[
+                        styles.listContent,
+                        filteredNotifications.length === 0 && styles.listContentEmpty
+                    ]}
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
         </SafeAreaProvider>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    container: {
         flex: 1,
         backgroundColor: COLORS.dark.bg,
     },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: COLORS.dark.bgElevated,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
-        marginTop: StatusBar.currentHeight || 0,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        alignItems: "center",
-        justifyContent: "center",
-    },
     headerCenter: {
-        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 40,
+        gap: 8,
     },
     headerTitle: {
         fontSize: 18,
-        fontWeight: "700",
+        fontWeight: '700',
         color: COLORS.dark.text,
     },
-    unreadBadge: {
+    headerBadge: {
         backgroundColor: COLORS.error,
         minWidth: 20,
         height: 20,
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: 8,
         paddingHorizontal: 6,
     },
-    unreadBadgeText: {
-        color: COLORS.dark.text,
+    headerBadgeText: {
+        color: '#fff',
         fontSize: 11,
         fontWeight: '700',
     },
-    moreButton: {
-        width: 36,
-        height: 36,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 18,
-        backgroundColor: COLORS.dark.card,
-    },
-    filterContainer: {
+    filterBar: {
         flexDirection: 'row',
-        paddingHorizontal: 20,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: COLORS.dark.bgElevated,
-        gap: 12,
+        backgroundColor: COLORS.dark.card,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.divider,
+        borderBottomColor: COLORS.dark.border,
+    },
+    filterTabs: {
+        flexDirection: 'row',
+        gap: 8,
     },
     filterTab: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.dark.bg,
+        gap: 6,
     },
-    activeFilter: {
+    activeTab: {
         backgroundColor: COLORS.primary,
     },
     filterText: {
@@ -594,118 +373,122 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: COLORS.dark.textSecondary,
     },
-    activeFilterText: {
-        color: COLORS.dark.text,
+    activeText: {
+        color: '#fff',
     },
-    actionsRow: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        backgroundColor: COLORS.dark.bgElevated,
-        gap: 16,
-    },
-    actionButton: {
-        flexDirection: 'row',
+    filterBadge: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
         alignItems: 'center',
-        gap: 6,
+        justifyContent: 'center',
+        paddingHorizontal: 5,
     },
-    actionText: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: COLORS.primary,
+    filterBadgeText: {
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: '700',
+    },
+    actions: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    actionBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: COLORS.dark.bg,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     listContent: {
         padding: 16,
         paddingBottom: 40,
+    },
+    listContentEmpty: {
         flexGrow: 1,
     },
-    notificationCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        padding: 14,
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 16,
-        marginBottom: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    unreadCard: {
-        backgroundColor: COLORS.dark.cardElevated,
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-    },
-    iconWrapper: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: "center",
-        alignItems: "center",
-        marginRight: 14,
-        backgroundColor: COLORS.dark.card,
-    },
-    contentWrapper: {
-        flex: 1,
-    },
-    topRow: {
+    notificationItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 4,
+        padding: 12,
+        backgroundColor: COLORS.dark.card,
+        borderRadius: 12,
+        marginBottom: 8,
+        position: 'relative',
+    },
+    unreadIndicator: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: 3,
+        backgroundColor: COLORS.primary,
+        borderTopLeftRadius: 12,
+        borderBottomLeftRadius: 12,
+    },
+    iconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 4,
+        marginRight: 12,
+    },
+    content: {
+        flex: 1,
     },
     title: {
         fontSize: 15,
-        color: COLORS.dark.textSecondary,
         fontWeight: '600',
-        flex: 1,
+        color: COLORS.dark.textSecondary,
+        marginBottom: 2,
     },
     unreadTitle: {
-        fontWeight: '800',
         color: COLORS.dark.text,
+        fontWeight: '700',
+    },
+    description: {
+        fontSize: 13,
+        color: COLORS.dark.textTertiary,
+        lineHeight: 18,
+        marginBottom: 4,
+    },
+    time: {
+        fontSize: 12,
+        color: COLORS.dark.textQuaternary,
+        fontWeight: '500',
     },
     unreadDot: {
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: COLORS.error,
+        backgroundColor: COLORS.primary,
         marginLeft: 8,
     },
-    description: {
-        fontSize: 13,
-        color: COLORS.dark.textTertiary,
-        marginBottom: 6,
-        lineHeight: 18,
-    },
-    bottomRow: {
-        flexDirection: 'row',
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-    },
-    time: {
-        fontSize: 12,
-        color: COLORS.dark.textQuaternary,
-        marginLeft: 4,
-        fontWeight: '500',
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 32,
     },
     emptyTitle: {
-        fontSize: THEME.fontSize['2xl'],
-        fontWeight: THEME.fontWeight.extrabold,
+        fontSize: 20,
+        fontWeight: '700',
         color: COLORS.dark.text,
-        marginTop: THEME.spacing.lg,
-        marginBottom: THEME.spacing[2],
-        textAlign: 'center',
+        marginTop: 24,
+        marginBottom: 8,
     },
     emptyText: {
-        fontSize: THEME.fontSize.base,
+        fontSize: 14,
         color: COLORS.dark.textTertiary,
         textAlign: 'center',
-        lineHeight: THEME.fontSize.base * THEME.lineHeight.relaxed,
-        maxWidth: 300,
     },
 });

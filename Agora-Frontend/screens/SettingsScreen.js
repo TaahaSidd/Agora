@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import * as SecureStore from 'expo-secure-store';
 import * as Location from 'expo-location';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
+import {View, Text, SafeAreaView, StyleSheet, StatusBar} from 'react-native';
 
-import { apiPost } from '../services/api';
-import { useCurrentUser } from '../hooks/useCurrentUser';
-import { useProfileImage } from '../hooks/useProfileImage';
+import {apiPost} from '../services/api';
+import {useProfileImage} from '../hooks/useProfileImage';
+import {useUserStore} from "../stores/userStore";
 
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
-import { Animated } from 'react-native';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
+import {Animated} from 'react-native';
 
-import { SettingsScreenSkeleton } from '../components/skeletons/SkeletonItem';
+import {SettingsScreenSkeleton} from '../components/skeletons/SkeletonItem';
 import ModalComponent from '../components/Modal';
 import Button from '../components/Button';
 import ToastMessage from '../components/ToastMessage';
@@ -19,15 +19,22 @@ import QuickActions from '../components/QuickActions';
 import SettingsOptionList from '../components/SettingsOptionList';
 import ProfileSection from '../components/ProfileSection';
 
-const SettingsScreen = ({ navigation, scrollY }) => {
-    const { user, loading, isGuest } = useCurrentUser();
+import defaultProfile from '../assets/defaultProfile.png';
+
+const SettingsScreen = ({navigation, scrollY}) => {
+    const {currentUser: user, loading, isGuest, fetchUser} = useUserStore();
+
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-    const { profileImage } = useProfileImage();
-    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+    const {profileImage} = useProfileImage();
+    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
     const [userLocation, setUserLocation] = useState('Fetching...');
 
-    const showToast = ({ type, title, message }) => {
-        setToast({ visible: true, type, title, message });
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+    const showToast = ({type, title, message}) => {
+        setToast({visible: true, type, title, message});
     };
 
     const handleLogout = async () => {
@@ -36,16 +43,18 @@ const SettingsScreen = ({ navigation, scrollY }) => {
             const refreshToken = await SecureStore.getItemAsync('refreshToken');
 
             if (refreshToken) {
-                await apiPost('/auth/logout', { refreshToken });
+                await apiPost('/auth/logout', {refreshToken});
             }
 
             await SecureStore.deleteItemAsync('accessToken');
             await SecureStore.deleteItemAsync('refreshToken');
+            await SecureStore.deleteItemAsync('currentUser');
             navigation.replace('Login');
         } catch (err) {
             console.error('Logout failed:', err);
             await SecureStore.deleteItemAsync('accessToken');
             await SecureStore.deleteItemAsync('refreshToken');
+            await SecureStore.deleteItemAsync('currentUser');
             navigation.replace('Login');
         }
     };
@@ -53,7 +62,7 @@ const SettingsScreen = ({ navigation, scrollY }) => {
     useEffect(() => {
         (async () => {
             try {
-                const { status } = await Location.requestForegroundPermissionsAsync();
+                const {status} = await Location.requestForegroundPermissionsAsync();
                 if (status !== 'granted') {
                     setUserLocation('Permission denied');
                     return;
@@ -66,7 +75,7 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                 });
 
                 if (geo.length > 0) {
-                    const { city, region, country } = geo[0];
+                    const {city, region, country} = geo[0];
                     setUserLocation(city || region || country || 'Unknown');
                 } else {
                     setUserLocation('Unavailable');
@@ -81,21 +90,21 @@ const SettingsScreen = ({ navigation, scrollY }) => {
     if (loading || !user) {
         return (
             <SafeAreaView style={styles.safeArea}>
-                <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content" />
-                <SettingsScreenSkeleton />
+                <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+                <SettingsScreenSkeleton/>
             </SafeAreaView>
         );
     }
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content" />
+            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
             <Animated.ScrollView
                 contentContainerStyle={styles.container}
                 showsVerticalScrollIndicator={false}
                 onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: true })}
+                    [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                    {useNativeDriver: true})}
                 scrollEventThrottle={16}
             >
                 {/* Header */}
@@ -108,7 +117,7 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                 <ProfileSection
                     user={
                         isGuest
-                            ? { name: 'Guest User', email: 'guest@studex.app' }
+                            ? {name: 'Guest User', email: 'guest@studex.app'}
                             : user
                     }
                     profileImage={
@@ -132,28 +141,26 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                 <QuickActions
                     title="Quick Actions"
                     actions={[
-                        {
-                            icon: 'list',
-                            iconColor: COLORS.info,
-                            bgColor: COLORS.infoBg,
-                            label: 'My Listings',
-                            onPress: () => {
-                                if (isGuest) {
-                                    showToast({
-                                        type: 'info',
-                                        title: 'Sign in required',
-                                        message: 'Please log in to view your listings.',
-                                    });
-                                    return;
-                                }
-                                navigation.navigate('MyListingsScreen');
-                            },
-                        },
+                        // {
+                        //     icon: 'list',
+                        //     label: 'My Listings',
+                        //     gradient: ['#3B82F6', '#2563EB'],
+                        //     onPress: () => {
+                        //         if (isGuest) {
+                        //             showToast({
+                        //                 type: 'info',
+                        //                 title: 'Sign in required',
+                        //                 message: 'Please log in to view your listings.',
+                        //             });
+                        //             return;
+                        //         }
+                        //         navigation.navigate('MyListingsScreen');
+                        //     },
+                        // },
                         {
                             icon: 'heart',
-                            iconColor: COLORS.error,
-                            bgColor: COLORS.errorBg,
                             label: 'Favorites',
+                            gradient: ['#EC4899', '#DB2777'],
                             onPress: () => {
                                 if (isGuest) {
                                     showToast({
@@ -168,9 +175,8 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                         },
                         {
                             icon: 'person-add',
-                            iconColor: COLORS.accent,
-                            bgColor: COLORS.successBg,
                             label: 'Referral',
+                            gradient: ['#10B981', '#059669'],
                             onPress: () => {
                                 if (isGuest) {
                                     showToast({
@@ -193,19 +199,20 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                             icon: 'language',
                             iconType: 'ion',
                             label: 'Language',
-                            bgColor: COLORS.secondaryLight + '20',
-                            iconColor: COLORS.secondary,
+                            gradient: ['#6366F1', '#4F46E5'],
                             value: 'English',
-                            onPress: () => { },
+                            onPress: () => {
+                            },
                         },
                         {
                             icon: 'location',
                             iconType: 'ion',
                             label: 'Location',
-                            bgColor: COLORS.successBg,
-                            iconColor: COLORS.success,
+                            description: 'Your current city',
+                            gradient: ['#10B981', '#059669'],
                             value: userLocation,
-                            onPress: () => { },
+                            onPress: () => {
+                            },
                         },
                     ]}
                 />
@@ -217,32 +224,28 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                             icon: 'help-outline',
                             iconType: 'material',
                             label: 'FAQ',
-                            bgColor: COLORS.warningBg,
-                            iconColor: COLORS.warningDark,
+                            gradient: ['#F59E0B', '#D97706'],
                             onPress: () => navigation.navigate('FAQScreen'),
                         },
                         {
                             icon: 'headset',
                             iconType: 'ion',
                             label: 'Support',
-                            bgColor: COLORS.infoBg,
-                            iconColor: COLORS.infoDark,
+                            gradient: ['#3B82F6', '#2563EB'],
                             onPress: () => navigation.navigate('SupportScreen'),
                         },
                         {
                             icon: 'shield-checkmark',
                             iconType: 'ion',
                             label: 'Privacy Policy',
-                            bgColor: COLORS.category.books + '20',
-                            iconColor: COLORS.category.books,
+                            gradient: ['#8B5CF6', '#7C3AED'],
                             onPress: () => navigation.navigate('PrivacyPolicyScreen'),
                         },
                         {
                             icon: 'information-circle',
                             iconType: 'ion',
                             label: 'About',
-                            bgColor: COLORS.gray700,
-                            iconColor: COLORS.gray300,
+                            gradient: ['#6B7280', '#4B5563'],
                             onPress: () => navigation.navigate('AboutScreen'),
                         },
                     ]}
@@ -285,7 +288,7 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                         type={toast.type}
                         title={toast.title}
                         message={toast.message}
-                        onHide={() => setToast({ ...toast, visible: false })}
+                        onHide={() => setToast({...toast, visible: false})}
                     />
                 )
             }
