@@ -1,198 +1,165 @@
-import React, { useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import React from "react";
+import {View, Text, Image, TouchableOpacity, StyleSheet} from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useNavigation } from '@react-navigation/native';
+import {useAverageRating} from "../hooks/useAverageRating";
+import {COLORS} from "../utils/colors";
+import {THEME} from "../utils/theme";
 
-import { useAddSellerReview } from "../hooks/useAddSellerReview";
-import { useAverageRating } from "../hooks/useAverageRating";
-
-import { COLORS } from "../utils/colors";
-
-import InputModal from "../components/InputModal";
-import ToastMessage from "../components/ToastMessage";
-
-const SellerCard = ({ seller, sellerSince, onPress, currentUser, setReviews }) => {
-    const navigation = useNavigation();
-    const [modalVisible, setModalVisible] = useState(false);
-    const { addSellerReview, loading } = useAddSellerReview();
-    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
-    const { rating } = useAverageRating('seller', seller.id);
-    const canRate = currentUser?.id !== seller?.id;
+const SellerCard = ({seller, sellerSince, onPress}) => {
+    const {rating, loading} = useAverageRating('seller', seller.id);
 
     let sellerAvatar = seller?.profileImage || require("../assets/804948.png");
     if (typeof sellerAvatar === "string" && sellerAvatar.includes("localhost")) {
         sellerAvatar = sellerAvatar.replace("localhost", "192.168.8.15");
     }
 
-    const showToast = ({ type, title, message }) => setToast({ visible: true, type, title, message });
-
-    const handleReviewSubmit = async (comment, rating) => {
-        try {
-            await addSellerReview(seller.id, { rating, comment });
-            showToast({ type: 'success', title: 'Success', message: 'Review submitted!' });
-            setModalVisible(false);
-
-            if (setReviews) {
-                setReviews(prev => [
-                    ...prev,
-                    { id: Date.now(), user: currentUser, rating, comment, createdAt: new Date().toISOString() }
-                ]);
-            }
-        } catch (err) {
-            showToast({ type: 'error', title: 'Error', message: 'Failed to submit review.' });
+    // Dynamic rating badge colors
+    const getRatingStyle = (rating) => {
+        if (rating >= 4.5) {
+            return {
+                bg: COLORS.successBgDark,
+                text: COLORS.success,
+                border: COLORS.success + '30',
+            };
+        } else if (rating >= 3.5) {
+            return {
+                bg: COLORS.infoBgDark,
+                text: COLORS.info,
+                border: COLORS.info + '30',
+            };
+        } else if (rating >= 2.5) {
+            return {
+                bg: COLORS.warningBgDark,
+                text: COLORS.warning,
+                border: COLORS.warning + '30',
+            };
+        } else {
+            return {
+                bg: COLORS.errorBgDark,
+                text: COLORS.error,
+                border: COLORS.error + '30',
+            };
         }
     };
 
+    const ratingValue = rating || 0;
+    const ratingStyle = getRatingStyle(ratingValue);
+
     return (
-        <View style={styles.container}>
-            {/* Main Seller Card */}
-            <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-                <View style={styles.left}>
-                    <View style={styles.avatarContainer}>
-                        <Image
-                            source={typeof sellerAvatar === "string" ? { uri: sellerAvatar } : sellerAvatar}
-                            style={styles.avatar}
-                        />
-                        {seller?.isVerified && (
-                            <View style={styles.verifiedBadge}>
-                                <Icon name="checkmark" size={10} color="#fff" />
-                            </View>
-                        )}
+        <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+            {/* Avatar */}
+            <View style={styles.avatarContainer}>
+                <Image
+                    source={typeof sellerAvatar === "string" ? {uri: sellerAvatar} : sellerAvatar}
+                    style={styles.avatar}
+                />
+                {seller?.isVerified && (
+                    <View style={styles.verifiedBadge}>
+                        <Icon name="checkmark-circle" size={20} color={COLORS.success}/>
                     </View>
-                    <View style={styles.info}>
-                        <Text style={styles.name}>{seller.firstName} {seller.lastName}</Text>
-                        <View style={styles.meta}>
-                            <View style={styles.rating}>
-                                <Icon name="star" size={14} color="#FCD34D" />
-                                <Text style={styles.ratingText}>
-                                    {loading ? '...' : rating?.toFixed(1) || '0'}
-                                </Text>                            </View>
-                            <Text style={styles.since}>• Member since {sellerSince}</Text>
-                        </View>
+                )}
+            </View>
+
+            {/* Info */}
+            <View style={styles.info}>
+                <View style={styles.nameRow}>
+                    <Text style={styles.name}>
+                        {seller.firstName} {seller.lastName}
+                    </Text>
+
+                    {/* Rating Badge */}
+                    <View style={[
+                        styles.ratingBadge,
+                        {
+                            backgroundColor: ratingStyle.bg,
+                            borderColor: ratingStyle.border,
+                        }
+                    ]}>
+                        <Icon name="star" size={12} color={ratingStyle.text}/>
+                        <Text style={[styles.ratingText, {color: ratingStyle.text}]}>
+                            {loading ? '...' : ratingValue.toFixed(1)}
+                        </Text>
                     </View>
                 </View>
-                <Icon name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
 
-            {/* Review Button */}
-            {canRate && (
-                <TouchableOpacity
-                    style={styles.reviewButton}
-                    onPress={() => setModalVisible(true)}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.reviewContent}>
-                        <Text style={styles.reviewText}>Rate this seller</Text>
-                    </View>
-                </TouchableOpacity>
-            )}
+                {/* Member Since */}
+                <View style={styles.sinceRow}>
+                    <Icon name="calendar-outline" size={14} color={COLORS.dark.textTertiary}/>
+                    <Text style={styles.sinceText}>Member since {sellerSince}</Text>
+                </View>
+            </View>
 
-            {/* Review Modal */}
-            <InputModal
-                visible={modalVisible}
-                type="review"
-                enableRating
-                onPrimaryPress={handleReviewSubmit}
-                onSecondaryPress={() => setModalVisible(false)}
-                onClose={() => setModalVisible(false)}
-            />
-
-            {toast.visible && <ToastMessage {...toast} />}
-        </View>
+            {/* Arrow */}
+            <Icon name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
+        </TouchableOpacity>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: 26,
-        padding: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: COLORS.dark.card,
+        borderRadius: THEME.borderRadius.lg,
+        padding: THEME.spacing.md,
         borderWidth: 1,
         borderColor: COLORS.dark.border,
     },
-    card: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingVertical: 8,
-        paddingBottom: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
-    },
-    left: {
-        flexDirection: "row",
-        alignItems: "center",
-        flex: 1,
-    },
     avatarContainer: {
         position: "relative",
+        marginRight: THEME.spacing[3],
     },
     avatar: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        borderWidth: 3,
-        borderColor: COLORS.dark.card, // keep border consistent in dark mode
+        width: 64,
+        height: 64,
+        borderRadius: 32,
         backgroundColor: COLORS.dark.cardElevated,
+        borderWidth: 2,
+        borderColor: COLORS.dark.border,
     },
     verifiedBadge: {
         position: "absolute",
-        bottom: 0,
-        right: 0,
-        width: 18,
-        height: 18,
-        borderRadius: 9,
-        backgroundColor: COLORS.primary,
-        alignItems: "center",
-        justifyContent: "center",
-        borderWidth: 2,
-        borderColor: COLORS.dark.card,
+        bottom: -2,
+        right: -2,
+        backgroundColor: COLORS.dark.card,
+        borderRadius: 12,
     },
     info: {
-        marginLeft: 14,
         flex: 1,
+    },
+    nameRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: THEME.spacing[2],
     },
     name: {
-        fontSize: 17,
-        fontWeight: "700",
+        fontSize: THEME.fontSize.lg,
+        fontWeight: THEME.fontWeight.bold,
         color: COLORS.dark.text,
-        marginBottom: 4,
+        marginRight: THEME.spacing[2],
     },
-    meta: {
+    ratingBadge: {
         flexDirection: "row",
         alignItems: "center",
-    },
-    rating: {
-        flexDirection: "row",
-        alignItems: "center",
+        paddingHorizontal: THEME.spacing[2],
+        paddingVertical: THEME.spacing[1],
+        borderRadius: THEME.borderRadius.pill,
+        borderWidth: 1,
+        gap: 4,
     },
     ratingText: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: COLORS.dark.text,
-        marginLeft: 4,
+        fontSize: THEME.fontSize.xs,
+        fontWeight: THEME.fontWeight.bold,
     },
-    since: {
-        fontSize: 13,
+    sinceRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    sinceText: {
+        fontSize: THEME.fontSize.xs,
         color: COLORS.dark.textTertiary,
-        marginLeft: 4,
-        fontWeight: '500',
-    },
-    reviewButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 10,
-        paddingTop: 12,
-    },
-    reviewContent: {
-        flex: 1,
-        alignItems: 'center',
-    },
-    reviewText: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: COLORS.primary,
+        fontWeight: THEME.fontWeight.medium,
+        marginLeft: THEME.spacing[1],
     },
 });
 

@@ -1,131 +1,167 @@
-// import React from "react";
-// import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-// import Ionicons from "react-native-vector-icons/Ionicons";
-// import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
-// // Define colors for different tag types
-// const CONDITION_COLORS = {
-//     New: { bg: "#DCFCE7", text: "#047857" },
-//     Used: { bg: "#DBEAFE", text: "#1E40AF" },
-//     Bad: { bg: "#FEE2E2", text: "#B91C1C" },
-//     Default: { bg: "#E0F0FF", text: "#1370BC" },
-// };
-
-// const QUICK_INFO_COLORS = {
-//     verified: { bg: "#F0FDF4", text: "#10B981" },
-//     posted: { bg: "#F9FAFB", text: "#6B7280" },
-// };
-
-// const Tag = ({ label, type = "category", icon, onPress }) => {
-//     let bgColor = "#E0F0FF";
-//     let textColor = "#1370BC";
-
-//     // Assign colors based on type
-//     if (type === "condition") {
-//         const colors = CONDITION_COLORS[label] || CONDITION_COLORS.Default;
-//         bgColor = colors.bg;
-//         textColor = colors.text;
-//     } else if (type === "verified" || type === "time") {
-//         const colors = QUICK_INFO_COLORS[type] || { bg: "#F3F4F6", text: "#374151" };
-//         bgColor = colors.bg;
-//         textColor = colors.text;
-//     } else if (type === "location" || type === "college") {
-//         bgColor = "#F3F4F6";
-//         textColor = "#374151";
-//     }
-
-//     // Resolve the icon component
-//     let IconComponent = null;
-//     if (icon) {
-//         if (icon.library === "Ionicons") IconComponent = Ionicons;
-//         else if (icon.library === "MaterialCommunityIcons") IconComponent = MaterialCommunityIcons;
-//     }
-
-//     return (
-//         <TouchableOpacity
-//             style={[styles.tag, { backgroundColor: bgColor }]}
-//             onPress={onPress}
-//             activeOpacity={onPress ? 0.7 : 1}
-//         >
-//             {IconComponent && <IconComponent name={icon.name} size={14} color={icon.color} style={{ marginRight: 6 }} />}
-//             <Text style={[styles.text, { color: textColor }]}>{label}</Text>
-//         </TouchableOpacity>
-//     );
-// };
-
-// const styles = StyleSheet.create({
-//     tag: {
-//         flexDirection: "row",
-//         alignItems: "center",
-//         paddingHorizontal: 12,
-//         paddingVertical: 6,
-//         borderRadius: 20,
-//         marginRight: 8,
-//         marginBottom: 6,
-//         alignSelf: "flex-start",
-//         maxWidth: 200,
-//     },
-//     text: {
-//         fontSize: 12,
-//         fontWeight: "600",
-//         flexShrink: 1,
-//         flexWrap: "wrap",
-
-//     },
-// });
-
-// export default Tag;
-
-
-
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {View, Text, TouchableOpacity, StyleSheet} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import {COLORS} from "../utils/colors";
+import {THEME} from "../utils/theme";
 
-const CONDITION_COLORS_DARK = {
-    New: { bg: "#064E3B", text: "#DCFCE7" },
-    Used: { bg: "#1E3A8A", text: "#DBEAFE" },
-    Bad: { bg: "#7F1D1D", text: "#FEE2E2" },
-    Default: { bg: "#0B3B61", text: "#E0F0FF" },
+const TAG_STYLES = {
+    // Condition tags - for product listing
+    condition: {
+        New: {
+            bg: COLORS.successBgDark,
+            text: COLORS.success,
+            border: COLORS.success + '30',
+        },
+        'Like New': {
+            bg: COLORS.successBgDark,
+            text: COLORS.successLight,
+            border: COLORS.successLight + '30',
+        },
+        Used: {
+            bg: COLORS.infoBgDark,
+            text: COLORS.info,
+            border: COLORS.info + '30',
+        },
+        'Well Used': {
+            bg: COLORS.warningBgDark,
+            text: COLORS.warning,
+            border: COLORS.warning + '30',
+        },
+        Bad: {
+            bg: COLORS.errorBgDark,
+            text: COLORS.error,
+            border: COLORS.error + '30',
+        },
+        Default: {
+            bg: COLORS.dark.card,
+            text: COLORS.dark.textSecondary,
+            border: COLORS.dark.border,
+        },
+    },
+
+    // Category tags - for browse/explore
+    category: {
+        bg: COLORS.dark.card,
+        text: COLORS.dark.text,
+        border: COLORS.dark.border,
+        activeBg: COLORS.primary + '20',
+        activeText: COLORS.primary,
+        activeBorder: COLORS.primary + '50',
+    },
+
+    // Info tags - posted time, location, etc
+    info: {
+        bg: COLORS.dark.card,
+        text: COLORS.dark.textTertiary,
+        border: COLORS.dark.border,
+    },
+
+    // Verified badge
+    verified: {
+        bg: COLORS.successBgDark,
+        text: COLORS.success,
+        border: COLORS.success + '30',
+    },
+
+    // Location tag
+    location: {
+        bg: COLORS.dark.card,
+        text: COLORS.dark.textSecondary,
+        border: COLORS.dark.border,
+    },
+
+    // College tag
+    college: {
+        bg: COLORS.primary + '15',
+        text: COLORS.primaryLight,
+        border: COLORS.primary + '30',
+    },
+
+    // Time/posted tag
+    time: {
+        bg: COLORS.dark.card,
+        text: COLORS.dark.textTertiary,
+        border: COLORS.dark.border,
+    },
 };
 
-const QUICK_INFO_COLORS_DARK = {
-    verified: { bg: "#064E3B", text: "#A7F3D0" },
-    posted: { bg: "#1F2937", text: "#D1D5DB" },
-};
-
-const Tag = ({ label, type = "category", icon, onPress }) => {
-    let bgColor = "#1F2937";
-    let textColor = "#D1D5DB";
+const Tag = ({
+                 label,
+                 type = "category",
+                 icon,
+                 onPress,
+                 active = false, // for category tags
+                 variant = "default" // "default", "outlined", "filled"
+             }) => {
+    // Get style based on type
+    let tagStyle = TAG_STYLES.info; // default fallback
 
     if (type === "condition") {
-        const colors = CONDITION_COLORS_DARK[label] || CONDITION_COLORS_DARK.Default;
-        bgColor = colors.bg;
-        textColor = colors.text;
-    } else if (type === "verified" || type === "time") {
-        const colors = QUICK_INFO_COLORS_DARK[type] || { bg: "#111827", text: "#D1D5DB" };
-        bgColor = colors.bg;
-        textColor = colors.text;
-    } else if (type === "location" || type === "college" || type === "category") {
-        bgColor = "#1F2937";
-        textColor = "#D1D5DB";
+        tagStyle = TAG_STYLES.condition[label] || TAG_STYLES.condition.Default;
+    } else if (type === "category") {
+        tagStyle = active
+            ? {
+                bg: TAG_STYLES.category.activeBg,
+                text: TAG_STYLES.category.activeText,
+                border: TAG_STYLES.category.activeBorder,
+            }
+            : TAG_STYLES.category;
+    } else if (TAG_STYLES[type]) {
+        tagStyle = TAG_STYLES[type];
     }
 
+    // Determine if tag is interactive
+    const isInteractive = !!onPress;
+
+    // Choose icon component
     let IconComponent = null;
     if (icon) {
         if (icon.library === "Ionicons") IconComponent = Ionicons;
         else if (icon.library === "MaterialCommunityIcons") IconComponent = MaterialCommunityIcons;
     }
 
+    // Different sizes based on type
+    const isCategory = type === "category";
+    const isCondition = type === "condition";
+
     return (
         <TouchableOpacity
-            style={[styles.tag, { backgroundColor: bgColor }]}
+            style={[
+                styles.tag,
+                {
+                    backgroundColor: tagStyle.bg,
+                    borderColor: tagStyle.border,
+                    borderWidth: variant === "outlined" ? THEME.borderWidth.thin : 0,
+                },
+                isCategory && styles.categoryTag,
+                isCondition && styles.conditionTag,
+                isInteractive && styles.interactiveTag,
+                active && styles.activeTag,
+            ]}
             onPress={onPress}
-            activeOpacity={onPress ? 0.7 : 1}
+            activeOpacity={isInteractive ? 0.6 : 1}
+            disabled={!isInteractive}
         >
-            {IconComponent && <IconComponent name={icon.name} size={14} color={icon.color} style={{ marginRight: 6 }} />}
-            <Text style={[styles.text, { color: textColor }]}>{label}</Text>
+            {IconComponent && (
+                <IconComponent
+                    name={icon.name}
+                    size={isCategory ? 16 : 14}
+                    color={icon.color || tagStyle.text}
+                    style={styles.icon}
+                />
+            )}
+            <Text
+                style={[
+                    styles.text,
+                    {color: tagStyle.text},
+                    isCategory && styles.categoryText,
+                    isCondition && styles.conditionText,
+                ]}
+                numberOfLines={1}
+            >
+                {label}
+            </Text>
         </TouchableOpacity>
     );
 };
@@ -134,19 +170,67 @@ const styles = StyleSheet.create({
     tag: {
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
-        marginRight: 8,
-        marginBottom: 6,
+        paddingHorizontal: THEME.spacing[3],
+        paddingVertical: THEME.spacing[2],
+        borderRadius: THEME.borderRadius.pill,
+        marginRight: THEME.spacing[2],
+        marginBottom: THEME.spacing[2],
         alignSelf: "flex-start",
         maxWidth: 200,
     },
+
+    // Category tags (larger, more prominent)
+    categoryTag: {
+        paddingHorizontal: THEME.spacing[4],
+        paddingVertical: THEME.spacing[2] + 2,
+        borderRadius: THEME.borderRadius.lg,
+    },
+
+    // Condition tags (medium size, badge-like)
+    conditionTag: {
+        paddingHorizontal: THEME.spacing[3],
+        paddingVertical: THEME.spacing[1] + 2,
+    },
+
+    // Interactive tags have subtle hover effect
+    interactiveTag: {
+        shadowColor: COLORS.black,
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 1,
+    },
+
+    // Active state for category tags
+    activeTag: {
+        shadowColor: COLORS.primary,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+
+    icon: {
+        marginRight: THEME.spacing[1] + 2,
+    },
+
     text: {
-        fontSize: 12,
-        fontWeight: "600",
+        fontSize: THEME.fontSize.xs,
+        fontWeight: THEME.fontWeight.semibold,
         flexShrink: 1,
-        flexWrap: "wrap",
+        letterSpacing: THEME.letterSpacing.tight,
+    },
+
+    categoryText: {
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
+    },
+
+    conditionText: {
+        fontSize: THEME.fontSize.xs,
+        fontWeight: THEME.fontWeight.bold,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
 });
 

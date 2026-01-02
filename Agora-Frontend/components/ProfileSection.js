@@ -3,45 +3,42 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
 const DEFAULT_AVATAR = 'https://i.pravatar.cc/100';
 
 const ProfileSection = ({
-    user,
-    profileImage,
-    onPress,
-    verified = true,
-    buttonLabel = 'View Profile',
-    onButtonPress = () => { },
-}) => (
+                            user,
+                            profileImage,
+                            onPress,
+                            verified = true,
+                            buttonLabel = 'View Profile',
+                            onButtonPress = () => { },
+                        }) => (
     <TouchableOpacity style={styles.profileCard} onPress={onPress} activeOpacity={0.7}>
-        <View style={{ position: 'relative' }}>
-            <View style={styles.profileImageContainer}>
-                <Image
-                    source={{ uri: profileImage || user?.avatar || DEFAULT_AVATAR }}
-                    style={styles.profilePic}
-                    cachePolicy="disk"
-                />
-            </View>
+        <View style={styles.avatarContainer}>
+            <Image
+                source={{ uri: profileImage || user?.avatar || DEFAULT_AVATAR }}
+                style={styles.avatar}
+                cachePolicy="disk"
+            />
             {verified && (
                 <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark" size={12} color="#fff" />
+                    <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
                 </View>
             )}
         </View>
 
         <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
+            <Text style={styles.profileName} numberOfLines={1}>
                 {user?.name || user?.username || 'Your Name'}
             </Text>
-            <Text style={styles.profileEmail}>
+            <Text style={styles.profileEmail} numberOfLines={1}>
                 {user?.email || 'email@example.com'}
             </Text>
-            <TouchableOpacity style={styles.viewProfileBadge} onPress={onButtonPress}>
-                <Text style={styles.viewProfileText}>{buttonLabel}</Text>
-                <Ionicons name="arrow-forward" size={12} color={COLORS.primary} />
-            </TouchableOpacity>
         </View>
+
+        <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary} />
     </TouchableOpacity>
 );
 
@@ -49,83 +46,47 @@ const styles = StyleSheet.create({
     profileCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 20,
+        padding: THEME.spacing.md,
         backgroundColor: COLORS.dark.card,
-        borderRadius: 20,
-        marginBottom: 24,
-        shadowColor: COLORS.shadow.light,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        borderRadius: THEME.borderRadius.lg,
+        marginBottom: THEME.spacing.lg,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
     },
-
-    profileImageContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        borderWidth: 2,
-        borderColor: COLORS.primaryLightest,
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
+    avatarContainer: {
         position: 'relative',
+        marginRight: THEME.spacing[3],
     },
-
-    profilePic: {
-        width: '130%',
-        height: '100%',
-        resizeMode: 'cover',
-        marginRight: 6,
+    avatar: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: COLORS.dark.cardElevated,
+        borderWidth: 2,
+        borderColor: COLORS.dark.border,
     },
-
     verifiedBadge: {
         position: 'absolute',
-        bottom: 0,
-        right: 4,
-        width: 22,
-        height: 22,
-        borderRadius: 11,
-        backgroundColor: COLORS.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 3,
-        borderColor: COLORS.dark.cardElevated, // better dark-mode border
-    },
-
-    profileInfo: {
-        flex: 1,
-        marginLeft: 16,
-    },
-
-    profileName: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: COLORS.dark.text,
-        marginBottom: 4,
-    },
-
-    profileEmail: {
-        fontSize: 14,
-        color: COLORS.dark.textSecondary,
-        marginBottom: 8,
-    },
-
-    viewProfileBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.dark.cardElevated,
-        alignSelf: 'flex-start',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        bottom: -2,
+        right: -2,
+        backgroundColor: COLORS.dark.card,
         borderRadius: 12,
     },
-
-    viewProfileText: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: COLORS.primary,
-        marginRight: 4,
+    profileInfo: {
+        flex: 1,
+        marginRight: THEME.spacing[2],
+    },
+    profileName: {
+        fontSize: THEME.fontSize.lg,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
+        marginBottom: THEME.spacing[1],
+        letterSpacing: THEME.letterSpacing.tight,
+    },
+    profileEmail: {
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        fontWeight: THEME.fontWeight.medium,
     },
 });
 

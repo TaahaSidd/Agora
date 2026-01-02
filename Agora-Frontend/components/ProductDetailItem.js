@@ -1,29 +1,36 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { COLORS } from "../utils/colors";
-import { THEME } from "../utils/theme";
+import {View, Text, StyleSheet} from "react-native";
 
-const ProductDetailItem = ({ label, value, type }) => {
+import {COLORS} from "../utils/colors";
+import {THEME} from "../utils/theme";
+
+const ProductDetailItem = ({label, value, type}) => {
     const isAvailability = type === "availability";
 
     const statusMap = {
-        AVAILABLE: { text: "Available", color: COLORS.success },
-        SOLD: { text: "Sold", color: COLORS.error },
-        DEACTIVATED: { text: "Deactivated", color: COLORS.gray400 },
-        RESERVED: { text: "Reserved", color: COLORS.warning },
-        RENTED: { text: "Rented", color: COLORS.info },
-        EXCHANGED: { text: "Exchanged", color: COLORS.category.books },
+        AVAILABLE: {text: "Available", color: COLORS.success},
+        SOLD: {text: "Sold", color: COLORS.error},
+        DEACTIVATED: {text: "Deactivated", color: COLORS.gray400},
+        RESERVED: {text: "Reserved", color: COLORS.warning},
+        RENTED: {text: "Rented", color: COLORS.info},
+        EXCHANGED: {text: "Exchanged", color: COLORS.category.books},
     };
 
-    const status = statusMap[value] || { text: value || "Unknown", color: COLORS.gray500 };
+    const status = statusMap[value] || {text: value || "Unknown", color: COLORS.gray500};
 
     return (
-        <View style={[styles.detailRow, isAvailability && { borderBottomWidth: 0 }]}>
+        <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>{label}</Text>
             {isAvailability ? (
-                <View style={styles.availableBadge}>
-                    <View style={[styles.availableDot, { backgroundColor: status.color }]} />
-                    <Text style={[styles.availableText, { color: status.color }]}>
+                <View style={[
+                    styles.availabilityBadge,
+                    {
+                        backgroundColor: status.color + '15',
+                        borderColor: status.color + '30',
+                    }
+                ]}>
+                    <View style={[styles.statusDot, {backgroundColor: status.color}]}/>
+                    <Text style={[styles.availabilityText, {color: status.color}]}>
                         {status.text}
                     </Text>
                 </View>
@@ -39,37 +46,37 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingVertical: THEME.spacing.itemGap,
-        borderBottomWidth: THEME.borderWidth.hairline,
-        borderBottomColor: COLORS.dark.border,
+        paddingVertical: THEME.spacing[1],
     },
     detailLabel: {
-        fontSize: THEME.fontSize.base,
-        color: COLORS.dark.textSecondary,
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textTertiary,
         fontWeight: THEME.fontWeight.medium,
     },
     detailValue: {
-        fontSize: THEME.fontSize.base,
+        fontSize: THEME.fontSize.sm,
         color: COLORS.dark.text,
         fontWeight: THEME.fontWeight.semibold,
     },
-    availableBadge: {
+    availabilityBadge: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: COLORS.dark.cardElevated,
-        paddingHorizontal: THEME.spacing[2] + 2,
-        paddingVertical: THEME.spacing[1] + 2,
+        paddingHorizontal: THEME.spacing[3],
+        paddingVertical: THEME.spacing[2],
         borderRadius: THEME.borderRadius.pill,
+        borderWidth: 1,
     },
-    availableDot: {
-        width: 8,
-        height: 8,
-        borderRadius: THEME.borderRadius.full,
-        marginRight: THEME.spacing[1] + 2,
+    statusDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        marginRight: THEME.spacing[2],
     },
-    availableText: {
-        fontSize: THEME.fontSize.sm,
-        fontWeight: THEME.fontWeight.semibold,
+    availabilityText: {
+        fontSize: THEME.fontSize.xs,
+        fontWeight: THEME.fontWeight.bold,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
     },
 });
 

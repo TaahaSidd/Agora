@@ -1,12 +1,12 @@
 import React from 'react';
-import { Animated, View } from 'react-native';
+import { Animated } from 'react-native';
 import BottomNavBar from './BottomNavBar';
 
 export default function AnimatedBottomNavBar({ state, descriptors, navigation, scrollY, isGuest }) {
     const translateY = scrollY
         ? scrollY.interpolate({
             inputRange: [0, 100],
-            outputRange: [0, 100],
+            outputRange: [0, 120],
             extrapolate: 'clamp',
         })
         : new Animated.Value(0);
@@ -21,7 +21,9 @@ export default function AnimatedBottomNavBar({ state, descriptors, navigation, s
                 left: 0,
                 right: 0,
                 bottom: 0,
+                zIndex: 1000,
             }}
+            pointerEvents="box-none"
         >
             <BottomNavBar
                 active={activeRoute}

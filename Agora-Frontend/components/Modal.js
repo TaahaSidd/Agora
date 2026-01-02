@@ -1,114 +1,70 @@
 import React from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {View, Text, Modal, StyleSheet, TouchableOpacity} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 
 import Button from './Button';
 
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
 
 const ModalComponent = ({
-    visible,
-    type = 'success',
-    title,
-    message,
-    icon,
-    iconSize = 50,
-    iconColor,
-    iconBgColor,
-    primaryButtonText,
-    secondaryButtonText,
-    onPrimaryPress,
-    onSecondaryPress,
-    onClose,
-}) => {
+                            visible,
+                            type = 'success',
+                            title,
+                            message,
+                            primaryButtonText,
+                            secondaryButtonText,
+                            onPrimaryPress,
+                            onSecondaryPress,
+                            onClose,
+                        }) => {
     const getConfig = () => {
         switch (type) {
             case 'success':
                 return {
-                    icon: icon || 'checkmark-circle',
-                    iconColor: iconColor || COLORS.success,
-                    iconBgColor: iconBgColor || COLORS.successBg,
                     title: title || 'Success!',
                     primaryButtonText: primaryButtonText || 'Continue',
-                    primaryButtonColor: COLORS.primary,
                     showSecondary: false,
                 };
             case 'warning':
                 return {
-                    icon: icon || 'alert-circle',
-                    iconColor: iconColor || COLORS.warning,
-                    iconBgColor: iconBgColor || COLORS.warningBg,
                     title: title || 'Warning',
                     primaryButtonText: primaryButtonText || 'Yes, Continue',
                     secondaryButtonText: secondaryButtonText || 'Cancel',
-                    primaryButtonColor: COLORS.warning,
                     showSecondary: true,
                 };
             case 'error':
                 return {
-                    icon: icon || 'close-circle',
-                    iconColor: iconColor || COLORS.error,
-                    iconBgColor: iconBgColor || COLORS.errorBg,
                     title: title || 'Error',
                     primaryButtonText: primaryButtonText || 'Try Again',
                     secondaryButtonText: secondaryButtonText || 'Cancel',
-                    primaryButtonColor: COLORS.error,
                     showSecondary: true,
                 };
             case 'confirm':
                 return {
-                    icon: icon || 'help-circle',
-                    iconColor: iconColor || COLORS.primary,
-                    iconBgColor: iconBgColor || COLORS.primaryLightest,
                     title: title || 'Confirm Action',
                     primaryButtonText: primaryButtonText || 'Confirm',
                     secondaryButtonText: secondaryButtonText || 'Cancel',
-                    primaryButtonColor: COLORS.primary,
                     showSecondary: true,
                 };
             case 'delete':
                 return {
-                    icon: icon || 'trash',
-                    iconColor: iconColor || COLORS.error,
-                    iconBgColor: iconBgColor || COLORS.errorBg,
                     title: title || 'Delete Item?',
-                    primaryButtonText: primaryButtonText || 'Yes, Delete',
+                    primaryButtonText: primaryButtonText || 'Delete',
                     secondaryButtonText: secondaryButtonText || 'Cancel',
-                    primaryButtonColor: COLORS.error,
                     showSecondary: true,
                 };
             case 'logout':
                 return {
-                    icon: icon || 'log-out-outline',
-                    iconColor: iconColor || COLORS.error,
-                    iconBgColor: iconBgColor || COLORS.errorBg,
                     title: title || 'Logout?',
                     primaryButtonText: primaryButtonText || 'Logout',
                     secondaryButtonText: secondaryButtonText || 'Cancel',
-                    primaryButtonColor: COLORS.error,
                     showSecondary: true,
-                };
-            case 'text':
-                return {
-                    icon: null,
-                    iconColor: null,
-                    iconBgColor: null,
-                    title: title || '',
-                    message: message || '',
-                    primaryButtonText: primaryButtonText || 'OK',
-                    secondaryButtonText: secondaryButtonText || null,
-                    primaryButtonColor: COLORS.primary,
-                    showSecondary: !!secondaryButtonText,
                 };
             default:
                 return {
-                    icon: icon || 'information-circle',
-                    iconColor: iconColor || COLORS.primary,
-                    iconBgColor: iconBgColor || COLORS.primaryLightest,
                     title: title || 'Information',
                     primaryButtonText: primaryButtonText || 'OK',
-                    primaryButtonColor: COLORS.primary,
                     showSecondary: false,
                 };
         }
@@ -139,57 +95,60 @@ const ModalComponent = ({
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={styles.overlay}>
-                <View style={styles.container}>
-                    {/* Icon */}
-                    <View
-                        style={[
-                            styles.iconContainer,
-                            { backgroundColor: config.iconBgColor }
-                        ]}
-                    >
-                        <Ionicons
-                            name={config.icon}
-                            size={iconSize}
-                            color={config.iconColor}
-                        />
-                    </View>
+            <TouchableOpacity
+                style={styles.overlay}
+                activeOpacity={1}
+                onPress={config.showSecondary ? null : handleSecondaryPress}
+            >
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={(e) => e.stopPropagation()}
+                >
+                    <View style={styles.container}>
+                        {/* Title */}
+                        <Text style={styles.title}>{config.title}</Text>
 
-                    {/* Title */}
-                    <Text style={styles.title}>{config.title}</Text>
-
-                    {/* Message */}
-                    {message && (
-                        <Text style={styles.message}>{message}</Text>
-                    )}
-
-                    {/* Buttons */}
-                    <View style={styles.buttonsContainer}>
-                        {config.showSecondary && (
-                            <Button
-                                title={config.secondaryButtonText}
-                                variant="secondary"
-                                size="medium"
-                                onPress={handleSecondaryPress}
-                                style={styles.secondaryButton}
-                                textStyle={styles.secondaryButtonText}
-                            />
+                        {/* Message */}
+                        {message && (
+                            <Text style={styles.message}>{message}</Text>
                         )}
-                        <Button
-                            title={config.primaryButtonText}
-                            variant="primary"
-                            size="medium"
-                            onPress={handlePrimaryPress}
-                            style={[
-                                styles.primaryButton,
-                                { backgroundColor: config.primaryButtonColor },
-                                config.showSecondary && styles.buttonWithSecondary
-                            ]}
-                            textStyle={styles.primaryButtonText}
-                        />
+
+                        {/* Divider */}
+                        <View style={styles.divider}/>
+
+                        {/* Buttons */}
+                        <View style={styles.buttonsContainer}>
+                            {config.showSecondary && (
+                                <>
+                                    <TouchableOpacity
+                                        style={styles.button}
+                                        onPress={handleSecondaryPress}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Text style={styles.secondaryButtonText}>
+                                            {config.secondaryButtonText}
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <View style={styles.buttonDivider}/>
+                                </>
+                            )}
+                            <TouchableOpacity
+                                style={styles.button}
+                                onPress={handlePrimaryPress}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={[
+                                    styles.primaryButtonText,
+                                    type === 'delete' && styles.deleteButtonText,
+                                    type === 'logout' && styles.deleteButtonText,
+                                ]}>
+                                    {config.primaryButtonText}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
-            </View>
+                </TouchableOpacity>
+            </TouchableOpacity>
         </Modal>
     );
 };
@@ -197,71 +156,68 @@ const ModalComponent = ({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: COLORS.dark.overlay,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     container: {
-        width: '85%',
-        maxWidth: 400,
+        width: 300,
         backgroundColor: COLORS.dark.card,
-        borderRadius: THEME.borderRadius.xl,
-        padding: THEME.spacing['2xl'] - 8,
-        alignItems: 'center',
-        borderWidth: THEME.borderWidth.hairline,
+        borderRadius: 16,
+        overflow: 'hidden',
+        borderWidth: 1,
         borderColor: COLORS.dark.border,
-        ...THEME.shadows['2xl'],
-    },
-    iconContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: THEME.borderRadius.full,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: THEME.spacing.lg,
     },
     title: {
-        fontSize: THEME.fontSize['2xl'],
-        fontWeight: THEME.fontWeight.extrabold,
+        fontSize: 17,
+        fontWeight: '700',
         color: COLORS.dark.text,
-        marginBottom: THEME.spacing[2],
         textAlign: 'center',
-        letterSpacing: THEME.letterSpacing.tight,
+        paddingHorizontal: 24,
+        paddingTop: 24,
+        paddingBottom: 8,
+        letterSpacing: -0.3,
     },
     message: {
-        fontSize: THEME.fontSize.base,
+        fontSize: 14,
         color: COLORS.dark.textSecondary,
         textAlign: 'center',
-        marginBottom: THEME.spacing['2xl'] - 4,
-        lineHeight: THEME.fontSize.base * THEME.lineHeight.relaxed,
-        fontWeight: THEME.fontWeight.medium,
+        paddingHorizontal: 24,
+        paddingBottom: 20,
+        lineHeight: 20,
+        fontWeight: '500',
+        letterSpacing: -0.1,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: COLORS.dark.border,
     },
     buttonsContainer: {
-        flexDirection: 'row',
-        width: '100%',
-        gap: THEME.spacing.md,
+        flexDirection: 'column',
     },
-    primaryButton: {
-        flex: 1,
+    button: {
+        paddingVertical: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    buttonWithSecondary: {
-        // Style when secondary button is present
+    buttonDivider: {
+        height: 1,
+        backgroundColor: COLORS.dark.border,
     },
     primaryButtonText: {
-        color: COLORS.white,
-        fontWeight: THEME.fontWeight.bold,
-        fontSize: THEME.fontSize.base,
-    },
-    secondaryButton: {
-        flex: 1,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderWidth: THEME.borderWidth.hairline,
-        borderColor: COLORS.dark.border,
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.primary,
+        letterSpacing: -0.2,
     },
     secondaryButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
         color: COLORS.dark.textSecondary,
-        fontWeight: THEME.fontWeight.bold,
-        fontSize: THEME.fontSize.base,
+        letterSpacing: -0.2,
+    },
+    deleteButtonText: {
+        color: '#EF4444',
     },
 });
 

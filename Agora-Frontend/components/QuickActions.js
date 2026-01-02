@@ -9,7 +9,7 @@ export default function QuickActions({title, actions}) {
     return (
         <View style={styles.section}>
             {title && <Text style={styles.sectionTitle}>{title}</Text>}
-            <View style={styles.row}>
+            <View style={styles.actionsContainer}>
                 {actions.map((action, index) => (
                     <TouchableOpacity
                         key={index}
@@ -23,16 +23,15 @@ export default function QuickActions({title, actions}) {
                             end={{x: 1, y: 1}}
                             style={styles.iconCircle}
                         >
-                            <Ionicons name={action.icon} size={24} color="#fff"/>
+                            <Ionicons name={action.icon} size={20} color="#fff"/>
                         </LinearGradient>
 
-                        {action.number !== undefined && (
-                            <Text style={styles.statNumber}>{action.number}</Text>
-                        )}
-
-                        <Text style={action.number !== undefined ? styles.statLabel : styles.label}>
-                            {action.label}
-                        </Text>
+                        <View style={styles.textContainer}>
+                            {action.number !== undefined && (
+                                <Text style={styles.statNumber}>{action.number}</Text>
+                            )}
+                            <Text style={styles.label} numberOfLines={1}>{action.label}</Text>
+                        </View>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -51,17 +50,18 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         letterSpacing: -0.3,
     },
-    row: {
+    actionsContainer: {
         flexDirection: 'row',
         gap: 12,
     },
     actionButton: {
         flex: 1,
+        flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: COLORS.dark.card,
-        paddingVertical: 18,
-        paddingHorizontal: 8,
-        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 12,
+        borderRadius: 14,
         borderWidth: 1,
         borderColor: COLORS.dark.border,
         shadowColor: '#000',
@@ -69,40 +69,35 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
+        gap: 10,
     },
     iconCircle: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
+        width: 42,
+        height: 42,
+        borderRadius: 21,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 12,
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 4},
+        shadowOffset: {width: 0, height: 3},
         shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 4,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    textContainer: {
+        flex: 1,
+        justifyContent: 'center',
     },
     label: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '600',
-        color: COLORS.dark.text,
-        textAlign: 'center',
-        letterSpacing: -0.2,
+        color: COLORS.dark.textSecondary,
+        letterSpacing: -0.1,
     },
     statNumber: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: '800',
         color: COLORS.dark.text,
-        marginBottom: 2,
-        textAlign: 'center',
         letterSpacing: -0.5,
-    },
-    statLabel: {
-        fontSize: 12,
-        color: COLORS.dark.textSecondary,
-        fontWeight: '600',
-        textAlign: 'center',
-        letterSpacing: -0.1,
+        marginBottom: 2,
     },
 });

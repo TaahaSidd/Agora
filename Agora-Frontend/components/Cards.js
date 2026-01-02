@@ -36,7 +36,7 @@ const Card = ({item, horizontal = false}) => {
         >
             <View style={styles.imageWrapper}>
                 <Image
-                    source={item.images && item.images.length ? item.images[0] : require('../assets/LW.jpg')}
+                    source={item.images && item.images.length ? item.images[0] : require('../assets/no-image.jpg')}
                     style={[styles.image, horizontal && styles.horizontalImage]}
                 />
 

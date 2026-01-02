@@ -29,7 +29,7 @@ const MyListingRowCard = ({item, onEdit, onDelete}) => {
                 };
             case 'DEACTIVATED':
                 return {
-                    label: 'PAUSED',
+                    label: 'DEACTIVATED',
                     gradient: ['#6B7280', '#4B5563'],
                     icon: 'pause-circle'
                 };
@@ -47,7 +47,7 @@ const MyListingRowCard = ({item, onEdit, onDelete}) => {
                 };
             case 'EXCHANGED':
                 return {
-                    label: 'SWAPPED',
+                    label: 'EXCHANGED',
                     gradient: ['#8B5CF6', '#7C3AED'],
                     icon: 'swap-horizontal'
                 };
@@ -181,7 +181,9 @@ const MyListingRowCard = ({item, onEdit, onDelete}) => {
                             <View style={styles.infoRow}>
                                 <Ionicons name="school-outline" size={13} color={COLORS.dark.textTertiary}/>
                                 <Text style={styles.infoText} numberOfLines={1}>
-                                    {item.college.collegeName || item.college}
+                                    {typeof item.college === 'string'
+                                        ? item.college
+                                        : item.college?.collegeName || 'College'}
                                 </Text>
                             </View>
                         )}
