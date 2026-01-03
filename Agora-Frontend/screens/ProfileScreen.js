@@ -1,81 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, Platform, StatusBar, Image, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, {useState, useEffect} from 'react';
+import {
+    View,
+    Text,
+    SafeAreaView,
+    StyleSheet,
+    Platform,
+    StatusBar,
+    Image,
+    TouchableOpacity,
+    ScrollView,
+} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {LinearGradient} from 'expo-linear-gradient';
 
 import Button from '../components/Button';
 import Card from '../components/Cards';
-import AppHeader from '../components/AppHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BottomSheetMenu from '../components/BottomSheetMenu';
 
-import { shareItem } from '../services/share';
-import { useAverageRating } from '../hooks/useAverageRating';
-import { useSellerProfile } from '../hooks/useSellerProfile';
-import { apiPost, apiDelete, apiGet } from '../services/api';
-import { useCurrentUser } from "../hooks/useCurrentUser";
+import {useAverageRating} from '../hooks/useAverageRating';
+import {useSellerProfile} from '../hooks/useSellerProfile';
+import {apiPost, apiDelete, apiGet} from '../services/api';
+import {useUserStore} from "../stores/userStore";
 
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
 
-const isAndroid = Platform.OS === 'android';
+const ProfileScreen = ({navigation, route}) => {
+    const {sellerId} = route.params;
+    const {currentUser, loading: currentUserLoading, isGuest} = useUserStore();
+    const {seller, listings, loading} = useSellerProfile(sellerId);
 
-const ProfileScreen = ({ navigation, route }) => {
-    const { sellerId } = route.params;
-    const { user: currentUser, loading: currentUserLoading, isGuest } = useCurrentUser();
-    const { seller, listings, loading } = useSellerProfile(sellerId);
     const [isFollowing, setIsFollowing] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
-    const { rating } = useAverageRating('seller', sellerId);
+    const {rating} = useAverageRating('seller', sellerId);
     const [followersCount, setFollowersCount] = useState(0);
+    const [filter, setFilter] = useState('all');
+
     const isOwnProfile = currentUser?.id === seller?.id;
-
-
-    const openChatRoom = async () => {
-        if (loading) return;
-        if (isGuest || !currentUser?.id) {
-            showToast({
-                type: 'info',
-                title: 'Login Required',
-                message: 'Please log in to chat with the seller.',
-            });
-            return;
-        }
-
-        if (!product?.seller || !product.seller.id) {
-            console.warn("Seller data not loaded yet");
-            return;
-        }
-
-        try {
-            const buyer = {
-                id: currentUser.id,
-                email: currentUser.email,
-                name: currentUser.name,
-                avatar: currentUser.avatar || null,
-            };
-
-            const seller = {
-                id: product.seller.id,
-                email: product.seller.userEmail || product.seller.email || String(product.seller.id),
-                name: product.seller.firstName
-                    ? `${product.seller.firstName} ${product.seller.lastName}`
-                    : product.seller.userName || 'Seller',
-                avatar: product.seller.avatar || null,
-            };
-
-            const roomRef = await getOrCreateChatRoom(product.id, buyer, seller);
-
-            navigation.navigate('ChatRoomScreen', {
-                roomId: roomRef.id,
-                listing: product,
-                sellerName: seller.name,
-                sellerId: seller.id,
-                sellerAvatar: product.seller.profileImage || product.seller.avatar || null,
-            });
-        } catch (err) {
-            console.error('Failed to open chat room:', err);
-        }
-    };
 
     useEffect(() => {
         const fetchFollowers = async () => {
@@ -112,6 +74,35 @@ const ProfileScreen = ({ navigation, route }) => {
         }
     };
 
+    // Get rating badge style
+    const getRatingStyle = (rating) => {
+        if (rating >= 4.5) {
+            return {
+                bg: COLORS.successBgDark,
+                text: COLORS.success,
+                border: COLORS.success + '30',
+            };
+        } else if (rating >= 3.5) {
+            return {
+                bg: COLORS.infoBgDark,
+                text: COLORS.info,
+                border: COLORS.info + '30',
+            };
+        } else if (rating >= 2.5) {
+            return {
+                bg: COLORS.warningBgDark,
+                text: COLORS.warning,
+                border: COLORS.warning + '30',
+            };
+        } else {
+            return {
+                bg: COLORS.errorBgDark,
+                text: COLORS.error,
+                border: COLORS.error + '30',
+            };
+        }
+    };
+
     let sellerAvatar = seller?.profileImage;
     if (typeof sellerAvatar === 'string' && sellerAvatar.includes('localhost')) {
         sellerAvatar = sellerAvatar.replace('localhost', '192.168.8.15');
@@ -121,74 +112,68 @@ const ProfileScreen = ({ navigation, route }) => {
     }
 
     if (loading) {
-        return <LoadingSpinner />;
+        return <LoadingSpinner/>;
     }
 
-    const handleReport = () => {
-        setShowMenu(false);
-        navigation.navigate('ReportUserScreen', {
-            userId: sellerId,
-            userName: seller ? `${seller.firstName}${seller.lastName}` : 'User',
-        });
-    };
+    const ratingValue = rating || 0;
+    const ratingStyle = getRatingStyle(ratingValue);
 
-    const handleBlock = () => {
-        setShowMenu(false);
-        console.log('Block user');
-    };
-
-    const handleShare = () => {
-        setShowMenu(false);
-        console.log('Share profile');
-    };
+    // Filter listings
+    const filteredListings = filter === 'all' ? listings : listings.filter(item => {
+        if (filter === 'available') return item.itemStatus === 'AVAILABLE';
+        if (filter === 'sold') return item.itemStatus === 'SOLD';
+        return true;
+    });
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
+        <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent"/>
 
-            {/* Header */}
-            <AppHeader
-                title="Seller Profile"
-                onBack={() => navigation.goBack()}
-                rightIcon="ellipsis-vertical"
-                onRightPress={() => setShowMenu(true)}
-            />
+            {/* Floating Header */}
+            <View style={styles.floatingHeader}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
+                    <Ionicons name="arrow-back" size={24} color="#fff"/>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowMenu(true)} style={styles.headerBtn}>
+                    <Ionicons name="ellipsis-vertical" size={24} color="#fff"/>
+                </TouchableOpacity>
+            </View>
 
-            <ScrollView
-                style={styles.container}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* Profile Card */}
-                <View style={styles.profileCard}>
-                    <View style={styles.profileHeader}>
+            <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+                {/* Banner + Profile Section */}
+                <View style={styles.bannerSection}>
+                    {/* Banner with gradient */}
+                    <LinearGradient
+                        colors={['#1E3A8A', '#3B82F6', '#60A5FA']}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 1}}
+                        style={styles.banner}
+                    />
+
+                    {/* Avatar - positioned at bottom of banner */}
+                    <View style={styles.avatarWrapper}>
                         <View style={styles.avatarContainer}>
-                            <Image source={{ uri: sellerAvatar }} style={styles.avatar} />
+                            <Image source={{uri: sellerAvatar}} style={styles.avatar}/>
                             {seller?.verificationStatus === "VERIFIED" && (
                                 <View style={styles.verifiedBadge}>
-                                    <Ionicons name="checkmark" size={12} color="#fff" />
+                                    <Ionicons name="checkmark-circle" size={24} color={COLORS.success}/>
                                 </View>
                             )}
                         </View>
+                    </View>
+                </View>
 
-                        <View style={styles.profileInfo}>
-                            <View style={styles.nameRow}>
-                                <Text style={styles.name}>
-                                    {seller ? `${seller.firstName}${seller.lastName}` : 'Seller'}
-                                </Text>
-                            </View>
+                {/* Profile Info */}
+                <View style={styles.profileInfo}>
+                    <Text style={styles.name}>
+                        {seller ? `${seller.firstName} ${seller.lastName}` : 'Seller'}
+                    </Text>
 
-                            <View style={styles.collegeRow}>
-                                <Ionicons name="school" size={14} color="#6B7280" />
-                                <Text style={styles.collegeName}>
-                                    {seller?.collegeName || 'College'}
-                                </Text>
-                            </View>
-
-                            <View style={styles.joinedRow}>
-                                <Ionicons name="time-outline" size={14} color="#6B7280" />
-                                <Text style={styles.joinedText}>Joined Jan 2025</Text>
-                            </View>
-                        </View>
+                    <View style={styles.collegeRow}>
+                        <Ionicons name="school" size={16} color={COLORS.dark.textTertiary}/>
+                        <Text style={styles.collegeName}>
+                            {seller?.collegeName || 'College'}
+                        </Text>
                     </View>
 
                     {/* Stats Row */}
@@ -197,120 +182,102 @@ const ProfileScreen = ({ navigation, route }) => {
                             <Text style={styles.statNumber}>{listings?.length || 0}</Text>
                             <Text style={styles.statLabel}>Listings</Text>
                         </View>
-                        <View style={styles.statDivider} />
+
+                        <View style={styles.statDivider}/>
+
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber}>{followersCount}</Text>
                             <Text style={styles.statLabel}>Followers</Text>
                         </View>
-                        <View style={styles.statDivider} />
+
+                        <View style={styles.statDivider}/>
+
                         <View style={styles.statItem}>
-                            <View style={styles.ratingRow}>
-                                <Ionicons name="star" size={18} color="#FCD34D" />
-                                <Text style={styles.statNumber}>
-                                    {loading ? '...' : rating?.toFixed(1) || '0'}
+                            <View style={[
+                                styles.ratingBadge,
+                                {
+                                    backgroundColor: ratingStyle.bg,
+                                    borderColor: ratingStyle.border,
+                                }
+                            ]}>
+                                <Ionicons name="star" size={14} color={ratingStyle.text}/>
+                                <Text style={[styles.ratingText, {color: ratingStyle.text}]}>
+                                    {loading ? '...' : ratingValue.toFixed(1)}
                                 </Text>
                             </View>
                             <Text style={styles.statLabel}>Rating</Text>
                         </View>
                     </View>
 
-                    {/* Action Buttons */}
+                    {/* Follow Button */}
                     {!isOwnProfile && (
-                        <View style={styles.actionButtons}>
-                            {/* <TouchableOpacity
-                                style={[styles.actionBtn, isFollowing && styles.followingBtn]}
-                                onPress={handleFollowToggle}
-                                activeOpacity={0.8}
-                            >
-                                <Ionicons
-                                    name={isFollowing ? "checkmark-circle" : "person-add"}
-                                    size={18}
-                                    color={isFollowing ? "#fff" : COLORS.primary}
-                                />
-                                <Text style={[styles.actionBtnText, isFollowing && styles.followingBtnText]}>
-                                    {isFollowing ? "Following" : "Follow"}
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.messageBtn}
-                                activeOpacity={0.8}
-                                onPress={openChatRoom}
-                            >
-                                <Ionicons name="chatbubble-ellipses" size={18} color="#fff" />
-                                <Text style={styles.messageBtnText}>Message</Text>
-                            </TouchableOpacity> */}
-                            <Button
-                                title={isFollowing ? "Following" : "Follow"}
-                                onPress={handleFollowToggle}
-                                variant={isFollowing ? "primary" : "outline"}
-                                icon={isFollowing ? "checkmark-circle" : "person-add"}
-                                iconPosition="left"
-                                fullWidth={false}
-                                style={{ flex: 1 }}
-                            />
-
-                            <Button
-                                title="Message"
-                                onPress={openChatRoom}
-                                variant="primary"
-                                icon="chatbubble-ellipses"
-                                iconPosition="left"
-                                fullWidth={false}
-                                style={{ flex: 1 }}
-
-                            />
-                        </View>
+                        <Button
+                            title={isFollowing ? "Following" : "Follow"}
+                            onPress={handleFollowToggle}
+                            variant={isFollowing ? "primary" : "outline"}
+                            icon={isFollowing ? "checkmark-circle" : "person-add"}
+                            iconPosition="left"
+                            fullWidth
+                            size="medium"
+                        />
                     )}
                 </View>
 
-                {/* About Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>About</Text>
-                    <View style={styles.aboutCard}>
-                        <Text style={styles.aboutText}>
-                            Hey! I'm a student selling quality items at great prices. All my products are genuine and in excellent condition. Feel free to reach out with any questions!
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Badges */}
-                {/* <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Achievements</Text>
-                    <View style={styles.badgesContainer}>
-                        <View style={styles.badge}>
-                            <Ionicons name="shield-checkmark" size={20} color="#10B981" />
-                            <Text style={styles.badgeText}>Verified</Text>
-                        </View>
-                        <View style={styles.badge}>
-                            <Ionicons name="flash" size={20} color="#F59E0B" />
-                            <Text style={styles.badgeText}>Fast Reply</Text>
-                        </View>
-                        <View style={styles.badge}>
-                            <Ionicons name="star" size={20} color="#FCD34D" />
-                            <Text style={styles.badgeText}>Top Seller</Text>
-                        </View>
-                    </View>
-                </View> */}
-
                 {/* Listings Section */}
-                <View style={styles.section}>
+                <View style={styles.listingsSection}>
                     <View style={styles.listingsHeader}>
                         <Text style={styles.sectionTitle}>Listings</Text>
                         <View style={styles.listingsCount}>
-                            <Text style={styles.listingsCountText}>{listings?.length || 0}</Text>
+                            <Text style={styles.listingsCountText}>{filteredListings?.length || 0}</Text>
                         </View>
                     </View>
 
-                    {listings && listings.length > 0 ? (
+                    {/* Filter Tabs */}
+                    <View style={styles.filterContainer}>
+                        <TouchableOpacity
+                            style={[styles.filterTab, filter === 'all' && styles.filterTabActive]}
+                            onPress={() => setFilter('all')}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>
+                                All
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.filterTab, filter === 'available' && styles.filterTabActive]}
+                            onPress={() => setFilter('available')}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={[styles.filterText, filter === 'available' && styles.filterTextActive]}>
+                                Available
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.filterTab, filter === 'sold' && styles.filterTabActive]}
+                            onPress={() => setFilter('sold')}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={[styles.filterText, filter === 'sold' && styles.filterTextActive]}>
+                                Sold
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Listings Grid */}
+                    {filteredListings && filteredListings.length > 0 ? (
                         <View style={styles.listingsGrid}>
-                            {listings.map((item) => (
-                                <Card key={item.id} item={item} />
+                            {filteredListings.map((item) => (
+                                <Card
+                                    key={item.id}
+                                    item={item}
+                                    onPress={() => navigation.navigate('ProductDetailsScreen', {item})}
+                                />
                             ))}
                         </View>
                     ) : (
                         <View style={styles.emptyListings}>
-                            <Ionicons name="cube-outline" size={48} color="#D1D5DB" />
-                            <Text style={styles.emptyText}>No listings yet</Text>
+                            <Ionicons name="cube-outline" size={48} color={COLORS.dark.textTertiary}/>
+                            <Text style={styles.emptyText}>No listings found</Text>
                         </View>
                     )}
                 </View>
@@ -322,13 +289,26 @@ const ProfileScreen = ({ navigation, route }) => {
                 onClose={() => setShowMenu(false)}
                 type="user"
                 title="Profile Options"
-                onShare={handleShare}
-                onReport={handleReport}
-                onBlock={handleBlock}
+                onShare={() => {
+                    setShowMenu(false);
+                    console.log('Share profile');
+                }}
+                onReport={() => {
+                    setShowMenu(false);
+                    navigation.navigate('ReportUserScreen', {
+                        userId: sellerId,
+                        userName: seller ? `${seller.firstName} ${seller.lastName}` : 'User',
+                    });
+                }}
+                onBlock={() => {
+                    setShowMenu(false);
+                    console.log('Block user');
+                }}
             />
         </SafeAreaView>
     );
 };
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -336,237 +316,197 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
     },
-    profileCard: {
-        backgroundColor: COLORS.dark.card,
-        marginHorizontal: 20,
-        marginTop: 20,
-        borderRadius: 20,
-        padding: 20,
-        elevation: 1,
-    },
-    profileHeader: {
+    floatingHeader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
         flexDirection: 'row',
-        marginBottom: 20,
+        justifyContent: 'space-between',
+        paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + THEME.spacing.xs : 50,
+        paddingHorizontal: THEME.spacing.md,
+        paddingBottom: THEME.spacing.xs,
+        zIndex: 10,
+    },
+    headerBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: COLORS.transparentBlack50,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    bannerSection: {
+        position: 'relative',
+        height: 200,
+    },
+    banner: {
+        width: '100%',
+        height: 160,
+    },
+    avatarWrapper: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
     },
     avatarContainer: {
         position: 'relative',
     },
     avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 4,
+        borderColor: COLORS.dark.bg,
         backgroundColor: COLORS.dark.card,
-        borderWidth: 3,
-        borderColor: COLORS.dark.border,
     },
     verifiedBadge: {
         position: 'absolute',
         bottom: 2,
         right: 2,
-        width: 24,
-        height: 24,
+        backgroundColor: COLORS.dark.bg,
         borderRadius: 12,
-        backgroundColor: COLORS.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 3,
-        borderColor: COLORS.dark.bg,
     },
     profileInfo: {
-        marginLeft: 16,
-        flex: 1,
-        justifyContent: 'center',
-    },
-    nameRow: {
-        flexDirection: 'row',
+        paddingHorizontal: THEME.spacing.lg,
+        paddingTop: THEME.spacing.md,
         alignItems: 'center',
-        marginBottom: 6,
     },
     name: {
-        fontSize: 20,
-        fontWeight: '800',
+        fontSize: THEME.fontSize['2xl'],
+        fontWeight: THEME.fontWeight.extrabold,
         color: COLORS.dark.text,
-        letterSpacing: -0.3,
+        marginBottom: THEME.spacing[2],
+        textAlign: 'center',
     },
     collegeRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: THEME.spacing.lg,
     },
     collegeName: {
-        fontSize: 14,
+        fontSize: THEME.fontSize.sm,
         color: COLORS.dark.textSecondary,
-        marginLeft: 6,
-        fontWeight: '500',
-    },
-    joinedRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    joinedText: {
-        fontSize: 13,
-        color: COLORS.dark.textTertiary,
-        marginLeft: 6,
-        fontWeight: '500',
+        marginLeft: THEME.spacing[1],
+        fontWeight: THEME.fontWeight.medium,
     },
     statsContainer: {
         flexDirection: 'row',
-        paddingVertical: 16,
-        borderTopWidth: 1,
-        borderBottomWidth: 1,
-        borderColor: COLORS.dark.divider,
-        marginBottom: 16,
+        width: '100%',
+        borderRadius: THEME.borderRadius.lg,
+        padding: THEME.spacing.lg,
+        marginBottom: THEME.spacing.lg,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
     },
     statItem: {
         flex: 1,
         alignItems: 'center',
     },
     statNumber: {
-        fontSize: 20,
-        fontWeight: '800',
+        fontSize: THEME.fontSize.xl,
+        fontWeight: THEME.fontWeight.extrabold,
         color: COLORS.dark.text,
-        marginBottom: 2,
+        marginBottom: THEME.spacing[1],
     },
     statLabel: {
-        fontSize: 12,
-        color: COLORS.dark.textSecondary,
-        fontWeight: '600',
+        fontSize: THEME.fontSize.xs,
+        color: COLORS.dark.textTertiary,
+        fontWeight: THEME.fontWeight.semibold,
     },
     statDivider: {
         width: 1,
         height: '100%',
-        backgroundColor: COLORS.dark.divider,
+        backgroundColor: COLORS.dark.border,
     },
-    ratingRow: {
+    ratingBadge: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: THEME.spacing[2],
+        paddingVertical: THEME.spacing[1],
+        borderRadius: THEME.borderRadius.pill,
+        borderWidth: 1,
         gap: 4,
+        marginBottom: THEME.spacing[1],
     },
-    actionButtons: {
-        flexDirection: 'row',
-        gap: 12,
+    ratingText: {
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.bold,
     },
-    actionBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        borderRadius: 12,
-        backgroundColor: COLORS.dark.card,
-        borderWidth: 2,
-        borderColor: COLORS.primary,
-        gap: 6,
-    },
-    followingBtn: {
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
-    },
-    actionBtnText: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.primary,
-    },
-    followingBtnText: {
-        color: COLORS.dark.text,
-    },
-    messageBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        borderRadius: 12,
-        backgroundColor: COLORS.primary,
-        gap: 6,
-        elevation: 1,
-    },
-    messageBtnText: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.dark.text,
-    },
-    section: {
-        marginTop: 16,
-        paddingHorizontal: 20,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: COLORS.dark.text,
-        marginBottom: 12,
-        letterSpacing: -0.3,
-    },
-    aboutCard: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 16,
-        padding: 16,
-        elevation: 1,
-    },
-    aboutText: {
-        fontSize: 14,
-        color: COLORS.dark.textSecondary,
-        lineHeight: 22,
-        fontWeight: '500',
-    },
-    badgesContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-    },
-    badge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.dark.card,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 12,
-        gap: 8,
-        elevation: 1,
-    },
-    badgeText: {
-        fontSize: 13,
-        fontWeight: '700',
-        color: COLORS.dark.textSecondary,
+    listingsSection: {
+        paddingHorizontal: THEME.spacing.md,
+        paddingTop: THEME.spacing.md,
     },
     listingsHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 12,
+        marginBottom: THEME.spacing.md,
+    },
+    sectionTitle: {
+        fontSize: THEME.fontSize.xl,
+        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.dark.text,
     },
     listingsCount: {
         backgroundColor: COLORS.primary,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
+        paddingHorizontal: THEME.spacing[3],
+        paddingVertical: THEME.spacing[1],
+        borderRadius: THEME.borderRadius.pill,
     },
     listingsCountText: {
-        fontSize: 12,
-        fontWeight: '800',
-        color: COLORS.dark.text,
+        fontSize: THEME.fontSize.xs,
+        fontWeight: THEME.fontWeight.bold,
+        color: '#fff',
+    },
+    filterContainer: {
+        flexDirection: 'row',
+        gap: THEME.spacing[2],
+        marginBottom: THEME.spacing.lg,
+    },
+    filterTab: {
+        paddingHorizontal: THEME.spacing.md,
+        paddingVertical: THEME.spacing[2],
+        borderRadius: THEME.borderRadius.pill,
+        backgroundColor: COLORS.dark.card,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+    },
+    filterTabActive: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
+    filterText: {
+        fontSize: THEME.fontSize.sm,
+        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.dark.textSecondary,
+    },
+    filterTextActive: {
+        color: '#fff',
     },
     listingsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: THEME.spacing['2xl'],
     },
     emptyListings: {
         backgroundColor: COLORS.dark.card,
-        borderRadius: 16,
-        padding: 40,
+        borderRadius: THEME.borderRadius.lg,
+        padding: THEME.spacing['3xl'],
         alignItems: 'center',
-        elevation: 1,
-        marginBottom: 20,
+        marginBottom: THEME.spacing['2xl'],
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
     },
     emptyText: {
-        fontSize: 15,
+        fontSize: THEME.fontSize.base,
         color: COLORS.dark.textSecondary,
-        marginTop: 12,
-        fontWeight: '500',
+        marginTop: THEME.spacing.md,
+        fontWeight: THEME.fontWeight.medium,
     },
 });
 
