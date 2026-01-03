@@ -2,6 +2,8 @@ package com.Agora.Agora.Repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -17,4 +19,6 @@ public interface ListingsRepo extends JpaRepository<Listings, Long>, JpaSpecific
             "GROUP BY l.category " +
             "ORDER BY COUNT(l) DESC")
     List<CategoryCountResponseDto> findPopularCategories();
+
+
 }

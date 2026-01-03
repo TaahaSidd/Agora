@@ -4,6 +4,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -81,12 +86,26 @@ public class ListingService {
         return dto.mapToListingResponseDto(listing);
     }
 
-    public List<ListingResponseDto> getAllListings() {
-        List<Listings> listing = listingRepo.findAll();
+//    public List<ListingResponseDto> getAllListings() {
+//        List<Listings> listing = listingRepo.findAll();
+//
+//        return listing.stream()
+//                .map(dto::mapToListingResponseDto)
+//                .collect(Collectors.toList());
+//    }
 
-        return listing.stream()
-                .map(dto::mapToListingResponseDto)
-                .collect(Collectors.toList());
+    public Page<ListingResponseDto> getAllListings(int page, int size, String sortBy, String sortDir) {
+        Sort.Direction direction = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+
+        Sort sort = Sort.by(direction, sortBy);
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Listings> listings = listingRepo.findAll(pageable);
+
+        return listings.map(dto::mapToListingResponseDto);
     }
 
     @Transactional
