@@ -11,6 +11,14 @@ const FavoriteButton = ({ listingId, size = 22, style }) => {
 
     const isFavorite = favorites.some(f => f.id === listingId);
 
+    // console.log('❤️ FavoriteButton:', {
+    //     listingId,
+    //     isFavorite,
+    //     favoritesCount: favorites.length,
+    //     allFavIds: favorites.map(f => f.id),
+    //     favoritesStructure: favorites[0], // See first item structure
+    // });
+
     const handlePress = async () => {
         if (loading) return;
         setLoading(true);

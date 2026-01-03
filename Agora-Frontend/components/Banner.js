@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
         right: 16,
     },
     title: {
-        fontSize: 20,
+        fontSize: 30,
         fontWeight: '800',
         color: '#fff',
         marginBottom: 4,
