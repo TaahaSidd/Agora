@@ -1,28 +1,23 @@
 package com.Agora.Agora.Controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.Agora.Agora.Dto.Request.LoginRequestDto;
 import com.Agora.Agora.Dto.Request.OtpLoginRequestDto;
-import com.Agora.Agora.Dto.Request.RegistrationReqDto;
+import com.Agora.Agora.Dto.Request.OtpRegistrationRequestDto;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
-import com.Agora.Agora.Dto.Response.RegistrationResponseDto;
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.UserRepo;
 import com.Agora.Agora.Service.AuthService;
 import com.Agora.Agora.Service.PasswordResetService;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("Agora/auth")
@@ -32,21 +27,24 @@ public class AuthController {
     private final AuthService authService;
     private final PasswordResetService resetService;
     private final UserRepo userRepo;
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    @PostMapping("/register")
-    public ResponseEntity<RegistrationResponseDto> Register(@Valid @RequestBody RegistrationReqDto req) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(authService.register(req));
+    @PostMapping("/otp")
+    public ResponseEntity<LoginResponseDto> loginOrSignupWithOtp(@RequestBody OtpLoginRequestDto req) {
+        log.info("🔥 /auth/otp HIT! Payload: {}", req);
+        return ResponseEntity.ok(authService.loginOrSignupWithOtp(req));
+    }
+
+    @PutMapping("/complete-profile")
+    public ResponseEntity<LoginResponseDto> completeProfile(
+            @AuthenticationPrincipal AgoraUser user,
+            @Valid @RequestBody OtpRegistrationRequestDto req) {
+        return ResponseEntity.ok(authService.completeProfile(user.getId(), req));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> Login(@Valid @RequestBody LoginRequestDto req) {
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto req) {
         return ResponseEntity.ok(authService.login(req));
-    }
-
-    @PostMapping("/login/otp")
-    public ResponseEntity<LoginResponseDto> loginOtp(@RequestBody OtpLoginRequestDto req) {
-        return ResponseEntity.ok(authService.loginOtp(req.getFirebaseToken()));
     }
 
     @PostMapping("/forgot-password")

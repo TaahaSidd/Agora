@@ -58,12 +58,11 @@ public class InitialAdmin {
                         .mobileNumber("1234598760")
                         .password(passwordEncoder.encode("ADMINPASSWORD"))
                         .role(UserRole.ADMIN)
-                        .idCardNo("testIdCardno")
                         .college(college)
                         .userStatus(UserStatus.ACTIVE)
                         .verificationStatus(VerificationStatus.VERIFIED)
-                        .verificationToken(UUID.randomUUID().toString())
-                        .tokenExpiryDate(LocalDateTime.now().plusYears(100))
+                       // .verificationToken(UUID.randomUUID().toString())
+                        //.tokenExpiryDate(LocalDateTime.now().plusYears(100))
                         .build();
 
                 userRepo.save(adminUser);

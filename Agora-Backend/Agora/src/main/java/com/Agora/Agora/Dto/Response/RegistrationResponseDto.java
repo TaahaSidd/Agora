@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-//this class is used to return the response of the user.
 @Getter
 @Setter
 @Builder

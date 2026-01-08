@@ -41,55 +41,59 @@ public class AgoraUser implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // User Details.
-    @Column(unique = true, nullable = false, length = 50)
+    // User Details
+    @Column(unique = true, length = 50)
     private String userName;
-    @Column(unique = true, nullable = false, length = 100)
+
+    @Column(unique = true, length = 100)
     private String userEmail;
-    @Column(nullable = false)
+
+    @Column
     private String firstName;
-    @Column(nullable = false)
+
+    @Column
     private String lastName;
+
     @Column(unique = true, nullable = false, length = 20)
     private String mobileNumber;
-    @Column(nullable = false, length = 255)
+
+    @Column(length = 255)
     private String password;
-    @Column(nullable = false)
-    private String idCardNo; // will be adding college id images url. will be using cloudinary for that.
 
     @Column(length = 255)
     private String profileImage;
 
+    // Role and Status
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private VerificationStatus verificationStatus;
-
-    @Column(nullable = false)
-    private String verificationToken;
-
-    @Column(nullable = false)
-    private LocalDateTime tokenExpiryDate;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "college_id", nullable = false)
-    private College college;
+    private UserStatus userStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserStatus userStatus;
+    private VerificationStatus verificationStatus;
 
+    // College Association
+    @ManyToOne
+    @JoinColumn(name = "college_id")
+    private College college;
+
+    // Push Notifications
     @Column(name = "expo_push_token")
     private String expoPushToken;
 
+    // Account Creation
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    // Helper Methods
     public boolean isAdmin() {
         return UserRole.ADMIN.equals(this.role);
     }
 
-    // Methods for User Details
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
@@ -102,7 +106,7 @@ public class AgoraUser implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.userEmail;
+        return this.userEmail != null ? this.userEmail : this.mobileNumber;
     }
 
     public String getUserName() {
@@ -126,6 +130,6 @@ public class AgoraUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return UserStatus.ACTIVE.equals(this.userStatus);
     }
 }

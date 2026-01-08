@@ -1,22 +1,20 @@
 package com.Agora.Agora.Jwt;
 
-import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
 import com.Agora.Agora.Model.AgoraUser;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Component
 public class JwtTokenProvider {
@@ -31,19 +29,19 @@ public class JwtTokenProvider {
         Map<String, Object> extraClaims = new HashMap<>();
 
         if (userDetails instanceof AgoraUser user) {
-            extraClaims.put("email", user.getUserEmail());
+            extraClaims.put("phone", user.getMobileNumber());
             extraClaims.put("username", user.getUserName());
-        } else {
-            extraClaims.put("email", userDetails.getUsername());
+
+            return generateToken(extraClaims, user.getMobileNumber());
         }
-        return generateToken(extraClaims, userDetails);
+        return generateToken(extraClaims, userDetails.getUsername());
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateToken(Map<String, Object> extraClaims, String subject) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + tokenExpiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -86,4 +84,8 @@ public class JwtTokenProvider {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    public Long getUserIdFromToken(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("userId", Long.class);
+    }
 }
