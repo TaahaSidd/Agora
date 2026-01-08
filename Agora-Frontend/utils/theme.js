@@ -1,16 +1,15 @@
-// Enhanced Theme System - Following Industry Standards (8pt Grid System)
+
 export const THEME = {
-    // Border Radius - Following iOS/Material Design patterns
     borderRadius: {
         none: 0,
-        xs: 4,      // Tiny elements, chips
-        sm: 8,      // Small buttons, inputs
-        md: 12,     // Standard buttons, cards
-        lg: 16,     // Large cards, modals
-        xl: 20,     // Extra large cards, sheets
-        '2xl': 24,  // Very large containers
-        '3xl': 28,  // Huge containers
-        full: 999,  // Pills, circular buttons
+        xs: 4,
+        sm: 8,
+        md: 12,
+        lg: 16,
+        xl: 20,
+        '2xl': 24,
+        '3xl': 28,
+        full: 999,
 
         // Specific use cases
         button: 12,
@@ -21,12 +20,11 @@ export const THEME = {
         avatar: 999,
     },
 
-    // Spacing - 8pt Grid System (most real-world apps use this)
     spacing: {
         0: 0,
-        1: 4,      // 0.25rem - Tiny gaps
-        2: 8,      // 0.5rem  - Small gaps, icon margins
-        3: 12,     // 0.75rem - Medium-small gaps
+        1: 4,
+        2: 8,
+        3: 12,
         4: 16,     // 1rem    - Standard spacing
         5: 20,     // 1.25rem - Medium gaps
         6: 24,     // 1.5rem  - Large gaps
@@ -46,7 +44,6 @@ export const THEME = {
         56: 224,   // 14rem
         64: 256,   // 16rem
 
-        // Semantic naming (easier to remember)
         xs: 4,
         sm: 8,
         md: 16,
@@ -57,7 +54,6 @@ export const THEME = {
         '4xl': 64,
         '5xl': 80,
 
-        // Component-specific spacing
         screenPadding: 16,     // Standard screen horizontal padding
         cardPadding: 16,       // Standard card padding
         sectionGap: 24,        // Gap between sections
@@ -66,10 +62,9 @@ export const THEME = {
         inputPadding: 12,      // Input field padding
     },
 
-    // Typography - Following iOS/Material Design scales
     fontSize: {
-        xs: 11,    // Very small text, captions
-        sm: 13,    // Small text, labels
+        xs: 11,
+        sm: 13,
         base: 15,  // Body text (iOS standard)
         md: 15,    // Alias for base
         lg: 17,    // Slightly larger body, headings
@@ -83,7 +78,6 @@ export const THEME = {
         '8xl': 72, // Extra large display
     },
 
-    // Font Weights
     fontWeight: {
         thin: '100',
         extralight: '200',
@@ -96,7 +90,6 @@ export const THEME = {
         black: '900',
     },
 
-    // Line Heights
     lineHeight: {
         none: 1,
         tight: 1.25,
@@ -106,7 +99,6 @@ export const THEME = {
         loose: 2,
     },
 
-    // Letter Spacing
     letterSpacing: {
         tighter: -0.8,
         tight: -0.4,
@@ -116,7 +108,6 @@ export const THEME = {
         widest: 1.6,
     },
 
-    // Shadows - iOS-style elevation
     shadows: {
         none: {
             shadowColor: '#000',
@@ -168,7 +159,6 @@ export const THEME = {
             elevation: 16,
         },
 
-        // Colored shadows
         primary: {
             shadowColor: '#008CFE',
             shadowOffset: { width: 0, height: 4 },
@@ -178,7 +168,6 @@ export const THEME = {
         },
     },
 
-    // Icon Sizes
     iconSize: {
         xs: 14,
         sm: 16,
@@ -190,7 +179,6 @@ export const THEME = {
         '4xl': 48,
     },
 
-    // Avatar Sizes
     avatarSize: {
         xs: 24,
         sm: 32,
@@ -202,22 +190,19 @@ export const THEME = {
         '4xl': 128,
     },
 
-    // Button Heights
     buttonHeight: {
         sm: 32,
-        md: 44,  // iOS standard tap target
+        md: 44,
         lg: 52,
         xl: 60,
     },
 
-    // Input Heights
     inputHeight: {
         sm: 36,
         md: 44,
         lg: 52,
     },
 
-    // Z-Index (Layering)
     zIndex: {
         hide: -1,
         base: 0,
@@ -231,7 +216,6 @@ export const THEME = {
         max: 9999,
     },
 
-    // Opacity
     opacity: {
         0: 0,
         5: 0.05,
@@ -249,13 +233,11 @@ export const THEME = {
         95: 0.95,
         100: 1,
 
-        // Semantic
         disabled: 0.5,
         hover: 0.8,
         pressed: 0.6,
     },
 
-    // Border Widths
     borderWidth: {
         none: 0,
         hairline: 0.5,
@@ -266,7 +248,6 @@ export const THEME = {
         extraHeavy: 4,
     },
 
-    // Animation Durations (in milliseconds)
     animation: {
         fastest: 100,
         faster: 150,
@@ -277,7 +258,6 @@ export const THEME = {
         slowest: 600,
     },
 
-    // Screen Breakpoints (for responsive design)
     breakpoints: {
         xs: 320,   // Small phones
         sm: 375,   // Standard phones
@@ -287,7 +267,6 @@ export const THEME = {
         '2xl': 1280, // Small desktops
     },
 
-    // Common Layout Dimensions
     layout: {
         headerHeight: 56,
         tabBarHeight: 80,
@@ -299,7 +278,6 @@ export const THEME = {
     },
 };
 
-// Helper function to get responsive spacing
 export const getResponsiveSpacing = (screenWidth) => {
     if (screenWidth < THEME.breakpoints.sm) {
         return THEME.spacing.screenPadding;
@@ -310,33 +288,10 @@ export const getResponsiveSpacing = (screenWidth) => {
     }
 };
 
-// Helper function to scale fonts based on screen size
 export const getScaledFontSize = (size, screenWidth) => {
-    const baseWidth = 375; // iPhone standard width
+    const baseWidth = 375;
     const scale = screenWidth / baseWidth;
     const scaledSize = size * scale;
 
-    // Limit scaling to reasonable bounds
     return Math.min(Math.max(scaledSize, size * 0.85), size * 1.15);
 };
-
-// Usage examples:
-// 
-// 1. Direct usage:
-//    borderRadius: THEME.borderRadius.card
-//    padding: THEME.spacing.md
-//    fontSize: THEME.fontSize.base
-//
-// 2. With shadow:
-//    style={[styles.card, THEME.shadows.md]}
-//
-// 3. With responsive spacing:
-//    const { width } = useWindowDimensions();
-//    padding: getResponsiveSpacing(width)
-//
-// 4. Combined:
-//    style={{
-//      padding: THEME.spacing.md,
-//      borderRadius: THEME.borderRadius.card,
-//      ...THEME.shadows.md
-//    }}
