@@ -17,7 +17,7 @@ public class FirebaseConfig {
     @PostConstruct
     public void init() throws IOException {
         FileInputStream serviceAccount = new FileInputStream(
-                "src/main/resources/agora-d0903-firebase-adminsdk-fbsvc-0d8e863a20.json");
+                "src/main/resources/agoraapp-e84de-firebase-adminsdk-fbsvc-48f429f78e.json");
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                 .build();
