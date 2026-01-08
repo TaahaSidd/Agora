@@ -1,147 +1,134 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
-    StatusBar,
     ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
+import auth from '@react-native-firebase/auth';
 
-import { apiPost } from '../services/api';
-import { saveExpoPushToken } from '../services/notificationTokenService';
-import { useUserStore } from '../stores/userStore';
-import { jwtDecode } from 'jwt-decode';
-
-import InputField from '../components/InputField';
 import ToastMessage from '../components/ToastMessage';
 import Button from '../components/Button';
 
-import { COLORS } from '../utils/colors';
+import {COLORS} from '../utils/colors';
+import PhoneInputField from "../components/PhoneInputField";
 
-export default function LoginScreen({ navigation }) {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+export default function LoginScreen({navigation}) {
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
     const [errors, setErrors] = useState({});
-    const { fetchUser } = useUserStore();
+    const [expoPushToken, setExpoPushToken] = useState(null);
 
-    const showToast = ({ type, title, message }) => {
-        setToast({ visible: true, type, title, message });
+    useEffect(() => {
+        requestNotificationPermission();
+    }, []);
+
+    const requestNotificationPermission = async () => {
+        try {
+            const {status: existingStatus} = await Notifications.getPermissionsAsync();
+            let finalStatus = existingStatus;
+
+            if (existingStatus !== 'granted') {
+                const {status} = await Notifications.requestPermissionsAsync();
+                finalStatus = status;
+            }
+
+            if (finalStatus !== 'granted') {
+                console.log('❌ Notification permission denied');
+                return;
+            }
+
+            const token = (await Notifications.getExpoPushTokenAsync()).data;
+            setExpoPushToken(token);
+            console.log('✅ Expo Push Token obtained:', token);
+
+            if (Platform.OS === 'android') {
+                await Notifications.setNotificationChannelAsync('default', {
+                    name: 'default',
+                    importance: Notifications.AndroidImportance.MAX,
+                    vibrationPattern: [0, 250, 250, 250],
+                    lightColor: '#FF231F7C',
+                });
+            }
+        } catch (error) {
+            console.error('❌ Error getting push token:', error);
+        }
+    };
+
+    const showToast = ({type, title, message}) => {
+        setToast({visible: true, type, title, message});
     };
 
     const validateFields = () => {
         const validationErrors = {};
-        if (!email.trim()) validationErrors.email = 'Email is required';
-        else if (!/\S+@\S+\.\S+/.test(email)) validationErrors.email = 'Email format is invalid';
 
-        if (!password) validationErrors.password = 'Password is required';
+        if (!phoneNumber.trim()) {
+            validationErrors.phoneNumber = 'Phone number is required';
+        } else if (!/^[6-9][0-9]{9}$/.test(phoneNumber.replace(/[\s-]/g, ''))) {
+            validationErrors.phoneNumber = 'Enter valid 10-digit Indian mobile number';
+        }
 
         setErrors(validationErrors);
         return Object.keys(validationErrors).length === 0;
     };
 
-    const storeTokens = async (jwt, refreshToken) => {
-        await SecureStore.setItemAsync('accessToken', jwt);
-        await SecureStore.setItemAsync('refreshToken', refreshToken);
-    };
-
-    const registerPushTokenForUser = async (userId) => {
-        console.log('📱 registerPushTokenForUser called with userId:', userId);
-
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-
-        if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
-            finalStatus = status;
-        }
-
-        if (finalStatus !== 'granted') {
-            console.log('❌ Notification permission denied');
-            return;
-        }
-
-        const token = (await Notifications.getExpoPushTokenAsync()).data;
-        console.log('🔔 Expo push token:', token);
-        console.log('👤 Saving for userId:', userId);
-
-        await saveExpoPushToken(userId, token);
-
-        if (Platform.OS === 'android') {
-            Notifications.setNotificationChannelAsync('default', {
-                name: 'default',
-                importance: Notifications.AndroidImportance.MAX,
-                vibrationPattern: [0, 250, 250, 250],
-                lightColor: '#FF231F7C',
-            });
-        }
-    };
-
-    const onLogin = async () => {
+    const handleLogin = async () => {
         if (!validateFields()) return;
 
         setLoading(true);
         try {
-            const data = await apiPost('/auth/login', { email, password });
-            console.log("LOGIN RESPONSE:", data);
-            console.log("USER ID:", data.id);
+            const fullPhoneNumber = '+91' + phoneNumber;
+            console.log('📤 Sending OTP to:', fullPhoneNumber);
 
-            const decoded = jwtDecode(data.jwt);
-            console.log('🔍 JWT payload:', decoded);
+            const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
 
-            await storeTokens(data.jwt, data.refreshToken);
+            console.log('✅ OTP sent successfully');
 
-            if (data.id) {
-                console.log('🔔 Registering push token for user:', data.id);
-                await registerPushTokenForUser(data.id);
-            } else {
-                console.error('❌ No user ID found in response');
-            }
+            showToast({
+                type: 'success',
+                title: 'OTP Sent',
+                message: 'Verification code sent to your phone',
+            });
 
-            await fetchUser();
-            const { currentUser } = useUserStore.getState();
-            console.log('❤️ Current User:', currentUser);
-
-            navigation.replace('MainLayout');
+            setTimeout(() => {
+                navigation.navigate('OTPVerificationScreen', {
+                    phoneNumber: fullPhoneNumber,
+                    collegeId: null,
+                    expoPushToken: expoPushToken,
+                    confirmation: confirmation,
+                });
+            }, 1500);
 
         } catch (error) {
+            console.error('❌ Send OTP error:', error);
+
+            let errorMessage = 'Failed to send OTP. Please try again.';
+
+            if (error.code === 'auth/invalid-phone-number') {
+                errorMessage = 'Invalid phone number format';
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = 'Too many attempts. Please try again later';
+            }
+
             showToast({
                 type: 'error',
-                title: 'Login Failed',
-                message: error.response?.data?.message || error.message || 'Something went wrong.',
+                title: 'Failed',
+                message: errorMessage,
             });
         } finally {
             setLoading(false);
         }
     };
 
-    // const onGoogleLogin = () => {
-    //     showToast({
-    //         type: 'info',
-    //         title: 'Continue with Google',
-    //         message: 'Google login feature is not implemented yet.',
-    //     });
-    // };
-    //
-    // const onAppleLogin = () => {
-    //     showToast({
-    //         type: 'info',
-    //         title: 'Sign in with Apple',
-    //         message: 'Apple login feature is not implemented yet.',
-    //     });
-    // };
-
-
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor={COLORS.dark.bg} />
+            <StatusBar barStyle="light-content" backgroundColor={COLORS.dark.bg}/>
 
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -162,25 +149,18 @@ export default function LoginScreen({ navigation }) {
 
                     {/* Input Fields */}
                     <View style={styles.inputSection}>
-                        <InputField
-                            label="Email"
-                            value={email}
-                            onChangeText={setEmail}
-                            error={errors.email}
-                            leftIcon="email-outline"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
+                        <PhoneInputField
+                            label="Phone Number *"
+                            value={phoneNumber}
+                            onChangeText={(text) => {
+                                setPhoneNumber(text);
+                                if (errors.phoneNumber) {
+                                    setErrors({...errors, phoneNumber: null});
+                                }
+                            }}
+                            error={errors.phoneNumber}
+                            placeholder="98765 43210"
                         />
-
-                        <InputField
-                            label="Password"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            error={errors.password}
-                            leftIcon="lock-outline"
-                        />
-
                         <TouchableOpacity
                             style={styles.forgotTextContainer}
                             onPress={() => navigation.navigate('ForgotPassword')}
@@ -192,18 +172,18 @@ export default function LoginScreen({ navigation }) {
                     {/* Login Button */}
                     <Button
                         title="Login"
-                        onPress={onLogin}
+                        onPress={handleLogin}
                         loading={loading}
                         disabled={loading}
                         fullWidth
                         size="large"
-                        style={{ marginBottom: 12 }}
+                        style={{marginBottom: 12}}
                     />
 
                     {/* Guest Button */}
                     <Button
                         title="Continue as Guest"
-                        onPress={() => navigation.replace('MainLayout', { guest: true })}
+                        onPress={() => navigation.replace('MainLayout', {guest: true})}
                         variant="outline"
                         fullWidth
                         size="large"
@@ -211,31 +191,10 @@ export default function LoginScreen({ navigation }) {
 
                     {/* Separator */}
                     <View style={styles.separatorContainer}>
-                        <View style={styles.separatorLine} />
+                        <View style={styles.separatorLine}/>
                         <Text style={styles.separatorText}>Or</Text>
-                        <View style={styles.separatorLine} />
+                        <View style={styles.separatorLine}/>
                     </View>
-
-                    {/* Social Login Buttons */}
-                    {/*<View style={styles.socialButtonsContainer}>*/}
-                    {/*    <Button*/}
-                    {/*        title="Sign in with Google"*/}
-                    {/*        onPress={onGoogleLogin}*/}
-                    {/*        variant="outline"*/}
-                    {/*        fullWidth*/}
-                    {/*        icon="logo-google"*/}
-                    {/*        size="large"*/}
-                    {/*    />*/}
-
-                    {/*    <Button*/}
-                    {/*        title="Sign in with Apple"*/}
-                    {/*        onPress={onAppleLogin}*/}
-                    {/*        variant="outline"*/}
-                    {/*        fullWidth*/}
-                    {/*        icon="logo-apple"*/}
-                    {/*        size="large"*/}
-                    {/*    />*/}
-                    {/*</View>*/}
 
                     {/* Sign Up Link */}
                     <View style={styles.signupContainer}>
@@ -251,7 +210,7 @@ export default function LoginScreen({ navigation }) {
                         type={toast.type}
                         title={toast.title}
                         message={toast.message}
-                        onHide={() => setToast({ ...toast, visible: false })}
+                        onHide={() => setToast({...toast, visible: false})}
                     />
                 )}
             </KeyboardAvoidingView>

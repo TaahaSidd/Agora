@@ -1,138 +1,165 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
-    StatusBar,
     ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import {Ionicons} from '@expo/vector-icons';
+import auth from '@react-native-firebase/auth';
 import * as Notifications from 'expo-notifications';
 
-import { apiPost } from '../services/api';
-import { saveExpoPushToken } from '../services/notificationTokenService';
-import { useUserStore } from '../stores/userStore';
-
-import ImageUploadField from '../components/ImageUploadField';
+import {getColleges} from '../services/api';
 import PhoneInputField from '../components/PhoneInputField';
-import ToastMessage from '../components/ToastMessage';
+import InputField from '../components/InputField';
 import Button from '../components/Button';
+import ToastMessage from '../components/ToastMessage';
 
-import { COLORS } from '../utils/colors';
+import {COLORS} from '../utils/colors';
 
-export default function SignUpScreen({ navigation }) {
+export default function SignUpScreen({navigation}) {
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [idCardImage, setIdCardImage] = useState(null);
+    const [colleges, setColleges] = useState([]);
+    const [query, setQuery] = useState('');
+    const [selectedCollege, setSelectedCollege] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
     const [errors, setErrors] = useState({});
-    const { fetchUser } = useUserStore();
+    const [expoPushToken, setExpoPushToken] = useState(null); // ✅ NEW
 
-    const showToast = ({ type, title, message }) => {
-        setToast({ visible: true, type, title, message });
+    useEffect(() => {
+        fetchColleges();
+        requestNotificationPermission();
+    }, []);
+
+    const requestNotificationPermission = async () => {
+        try {
+            const {status: existingStatus} = await Notifications.getPermissionsAsync();
+            let finalStatus = existingStatus;
+
+            if (existingStatus !== 'granted') {
+                const {status} = await Notifications.requestPermissionsAsync();
+                finalStatus = status;
+            }
+
+            if (finalStatus !== 'granted') {
+                console.log('❌ Notification permission denied');
+                return;
+            }
+
+            // const token = (await Notifications.getExpoPushTokenAsync({
+            //     projectId: "ab8254ef-e49b-437f-be6a-ff0a040dd210"
+            // })).data;
+            const token = (await Notifications.getExpoPushTokenAsync()).data;
+            setExpoPushToken(token);
+            console.log('✅ Expo Push Token obtained:', token);
+
+            if (Platform.OS === 'android') {
+                await Notifications.setNotificationChannelAsync('default', {
+                    name: 'default',
+                    importance: Notifications.AndroidImportance.MAX,
+                    vibrationPattern: [0, 250, 250, 250],
+                    lightColor: '#FF231F7C',
+                });
+            }
+        } catch (error) {
+            console.error('❌ Error getting push token:', error);
+        }
+    };
+
+    const fetchColleges = async () => {
+        try {
+            const data = await getColleges();
+            setColleges(data);
+        } catch (error) {
+            console.error('Failed to fetch colleges:', error);
+            showToast({
+                type: 'error',
+                title: 'Error',
+                message: 'Failed to load colleges',
+            });
+        }
+    };
+
+    const showToast = ({type, title, message}) => {
+        setToast({visible: true, type, title, message});
+    };
+
+    const filteredColleges = query.trim()
+        ? colleges.filter(college =>
+            college.collegeName.toLowerCase().includes(query.toLowerCase())
+        )
+        : [];
+
+    const handleCollegeSelect = (college) => {
+        setSelectedCollege(college);
+        setQuery(college.collegeName);
+        setErrors({...errors, college: null});
     };
 
     const validateFields = () => {
         const validationErrors = {};
 
-        // Phone validation for India
         if (!phoneNumber.trim()) {
             validationErrors.phoneNumber = 'Phone number is required';
         } else if (!/^[6-9][0-9]{9}$/.test(phoneNumber.replace(/[\s-]/g, ''))) {
             validationErrors.phoneNumber = 'Enter valid 10-digit Indian mobile number';
         }
 
-        // ID Card validation
-        if (!idCardImage) {
-            validationErrors.idCard = 'ID card is required for verification';
+        if (!selectedCollege) {
+            validationErrors.college = 'Please select your college';
         }
 
         setErrors(validationErrors);
         return Object.keys(validationErrors).length === 0;
     };
 
-    const storeTokens = async (jwt, refreshToken) => {
-        await SecureStore.setItemAsync('accessToken', jwt);
-        await SecureStore.setItemAsync('refreshToken', refreshToken);
-    };
-
-    const registerPushTokenForUser = async (userId) => {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-
-        if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
-            finalStatus = status;
-        }
-
-        if (finalStatus !== 'granted') {
-            console.log('❌ Notification permission denied');
-            return;
-        }
-
-        const token = (await Notifications.getExpoPushTokenAsync()).data;
-        await saveExpoPushToken(userId, token);
-
-        if (Platform.OS === 'android') {
-            Notifications.setNotificationChannelAsync('default', {
-                name: 'default',
-                importance: Notifications.AndroidImportance.MAX,
-                vibrationPattern: [0, 250, 250, 250],
-                lightColor: '#FF231F7C',
-            });
-        }
-    };
-
-    const onSignUp = async () => {
-        if (!validateFields()) {
-            return;
-        }
+    const handleSendOTP = async () => {
+        if (!validateFields()) return;
 
         setLoading(true);
         try {
-            // Create FormData for signup
-            const formData = new FormData();
-            formData.append('phoneNumber', '+91' + phoneNumber); // Add +91 prefix
-            formData.append('idCard', {
-                uri: idCardImage,
-                type: 'image/jpeg',
-                name: `id_card_${Date.now()}.jpg`,
-            });
+            const fullPhoneNumber = '+91' + phoneNumber;
+            console.log('📤 Sending OTP to:', fullPhoneNumber);
 
-            const data = await apiPost('/auth/register', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
 
-            console.log('✅ SIGNUP RESPONSE:', data);
-
-            await storeTokens(data.jwt, data.refreshToken);
-
-            if (data.id) {
-                await registerPushTokenForUser(data.id);
-            }
-
-            await fetchUser();
+            console.log('✅ OTP sent successfully');
 
             showToast({
                 type: 'success',
-                title: 'Account Created',
-                message: 'Welcome to Agora!',
+                title: 'OTP Sent',
+                message: 'Verification code sent to your phone',
             });
 
             setTimeout(() => {
-                navigation.replace('MainLayout');
+                navigation.navigate('OTPVerificationScreen', {
+                    phoneNumber: fullPhoneNumber,
+                    collegeId: selectedCollege.id,
+                    expoPushToken: expoPushToken,
+                    confirmation: confirmation,
+                });
             }, 1500);
 
         } catch (error) {
+            console.error('❌ Send OTP error:', error);
+
+            let errorMessage = 'Failed to send OTP. Please try again.';
+
+            if (error.code === 'auth/invalid-phone-number') {
+                errorMessage = 'Invalid phone number format';
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = 'Too many attempts. Please try again later';
+            }
+
             showToast({
                 type: 'error',
-                title: 'Sign Up Failed',
-                message: error.response?.data?.message || error.message || 'Something went wrong.',
+                title: 'Failed',
+                message: errorMessage,
             });
         } finally {
             setLoading(false);
@@ -141,7 +168,7 @@ export default function SignUpScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor={COLORS.dark.bg} />
+            <StatusBar barStyle="light-content" backgroundColor={COLORS.dark.bg}/>
 
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -152,7 +179,6 @@ export default function SignUpScreen({ navigation }) {
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
-                    {/* Header Section */}
                     <View style={styles.header}>
                         <Text style={styles.mainHeader}>Sign Up</Text>
                         <Text style={styles.subHeader}>
@@ -160,44 +186,88 @@ export default function SignUpScreen({ navigation }) {
                         </Text>
                     </View>
 
-                    {/* Input Fields */}
                     <View style={styles.inputSection}>
                         <PhoneInputField
-                            label="Phone Number"
+                            label="Phone Number *"
                             value={phoneNumber}
-                            onChangeText={setPhoneNumber}
+                            onChangeText={(text) => {
+                                setPhoneNumber(text);
+                                if (errors.phoneNumber) {
+                                    setErrors({...errors, phoneNumber: null});
+                                }
+                            }}
                             error={errors.phoneNumber}
                             placeholder="98765 43210"
                         />
 
-                        <ImageUploadField
-                            label="Student ID / ID Card"
-                            value={idCardImage}
-                            onImageSelect={(uri) => {
-                                setIdCardImage(uri);
-                                setErrors({ ...errors, idCard: null });
-                            }}
-                            error={errors.idCard}
-                            placeholder="Upload your ID card"
-                            maxSizeInMB={5}
-                            aspectRatio={[16, 9]}
-                        />
+                        <View style={styles.dropdownWrapper}>
+                            <InputField
+                                label="College *"
+                                placeholder="Search your college"
+                                value={query}
+                                onChangeText={text => {
+                                    setQuery(text);
+                                    if (text !== selectedCollege?.collegeName) {
+                                        setSelectedCollege(null);
+                                    }
+                                }}
+                                leftIcon="school-outline"
+                                error={errors.college}
+                            />
+
+                            {filteredColleges.length > 0 && !selectedCollege && (
+                                <View style={styles.dropdown}>
+                                    <View style={styles.dropdownHeader}>
+                                        <Text style={styles.dropdownHeaderText}>
+                                            {filteredColleges.length} {filteredColleges.length === 1 ? 'college' : 'colleges'} found
+                                        </Text>
+                                    </View>
+                                    <ScrollView
+                                        style={{maxHeight: 220}}
+                                        nestedScrollEnabled={true}
+                                        showsVerticalScrollIndicator={true}
+                                    >
+                                        {filteredColleges.map((item, index) => (
+                                            <TouchableOpacity
+                                                key={item.id}
+                                                style={[
+                                                    styles.dropdownItem,
+                                                    index === filteredColleges.length - 1 && styles.dropdownItemLast
+                                                ]}
+                                                onPress={() => handleCollegeSelect(item)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <View style={styles.dropdownIconContainer}>
+                                                    <Ionicons name="school" size={18} color={COLORS.primary}/>
+                                                </View>
+                                                <Text style={styles.dropdownText} numberOfLines={2}>
+                                                    {item.collegeName}
+                                                </Text>
+                                                <Ionicons name="chevron-forward" size={16}
+                                                          color={COLORS.dark.textTertiary}/>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                </View>
+                            )}
+                        </View>
                     </View>
 
-                    {/* Sign Up Button */}
                     <Button
-                        title="Sign Up"
-                        onPress={onSignUp}
+                        title={loading ? "Sending OTP..." : "Send OTP"}
+                        onPress={handleSendOTP}
                         loading={loading}
                         disabled={loading}
                         fullWidth
                         size="large"
                     />
 
-                    {/* Login Link */}
                     <View style={styles.loginContainer}>
                         <Text style={styles.loginText}>Already have an account? </Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('Login')}
+                            disabled={loading}
+                        >
                             <Text style={styles.loginLink}>Log In</Text>
                         </TouchableOpacity>
                     </View>
@@ -208,7 +278,7 @@ export default function SignUpScreen({ navigation }) {
                         type={toast.type}
                         title={toast.title}
                         message={toast.message}
-                        onHide={() => setToast({ ...toast, visible: false })}
+                        onHide={() => setToast({...toast, visible: false})}
                     />
                 )}
             </KeyboardAvoidingView>
@@ -247,6 +317,70 @@ const styles = StyleSheet.create({
     },
     inputSection: {
         marginBottom: 24,
+    },
+    dropdownWrapper: {
+        position: 'relative',
+        zIndex: 999,
+        marginTop: 16,
+    },
+    dropdown: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        backgroundColor: COLORS.dark.card,
+        borderRadius: 16,
+        maxHeight: 280, // ✅ Increased from 240
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        shadowOffset: {width: 0, height: 6},
+        zIndex: 999,
+        borderWidth: 2,
+        borderColor: COLORS.primary,
+        overflow: 'hidden',
+        elevation: 10,
+    },
+    dropdownHeader: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: COLORS.dark.bgElevated,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.dark.border,
+    },
+    dropdownHeaderText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: COLORS.dark.textSecondary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    dropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.dark.border,
+        gap: 12,
+    },
+    dropdownItemLast: {
+        borderBottomWidth: 0,
+    },
+    dropdownIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: `${COLORS.primary}20`,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    dropdownText: {
+        flex: 1,
+        fontSize: 15,
+        color: COLORS.dark.text,
+        fontWeight: '500',
+        lineHeight: 20,
     },
     loginContainer: {
         flexDirection: 'row',
