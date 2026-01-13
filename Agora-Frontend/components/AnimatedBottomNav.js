@@ -2,7 +2,7 @@ import React from 'react';
 import { Animated } from 'react-native';
 import BottomNavBar from './BottomNavBar';
 
-export default function AnimatedBottomNavBar({ state, descriptors, navigation, scrollY, isGuest }) {
+export default function AnimatedBottomNavBar({ state, navigation, scrollY, isGuest, isPending }) {
     const translateY = scrollY
         ? scrollY.interpolate({
             inputRange: [0, 100],
@@ -28,6 +28,7 @@ export default function AnimatedBottomNavBar({ state, descriptors, navigation, s
             <BottomNavBar
                 active={activeRoute}
                 isGuest={isGuest}
+                isPending={isPending}
                 onNavigate={(routeName) => {
                     const route = state.routes.find(r => r.name === routeName);
                     if (route) {

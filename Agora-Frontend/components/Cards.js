@@ -15,19 +15,6 @@ const Card = ({item, horizontal = false}) => {
         navigation.navigate('ProductDetailsScreen', {item});
     };
 
-    // Status badge colors
-    const getStatusBadge = () => {
-        if (item.itemStatus === 'SOLD') {
-            return {bg: '#EF4444', text: 'Sold', icon: 'checkmark-circle'};
-        }
-        if (item.itemCondition === 'NEW' || item.itemCondition === 'new') {
-            return {bg: '#10B981', text: 'New', icon: 'sparkles'};
-        }
-        return null;
-    };
-
-    const statusBadge = getStatusBadge();
-
     return (
         <TouchableOpacity
             style={[styles.card, horizontal ? styles.horizontalCard : styles.gridCard]}
@@ -38,19 +25,19 @@ const Card = ({item, horizontal = false}) => {
                 <Image
                     source={item.images && item.images.length ? item.images[0] : require('../assets/no-image.jpg')}
                     style={[styles.image, horizontal && styles.horizontalImage]}
+                    resizeMode="cover"
                 />
 
-                {/* Gradient Overlay - subtle */}
+                {/* Gradient Overlay */}
                 <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.4)']}
+                    colors={['transparent', 'rgba(0,0,0,0.5)']}
                     style={styles.gradientOverlay}
                 />
 
                 {/* Status Badge */}
-                {statusBadge && (
-                    <View style={[styles.statusBadge, {backgroundColor: statusBadge.bg}]}>
-                        <Ionicons name={statusBadge.icon} size={10} color="#fff"/>
-                        <Text style={styles.statusText}>{statusBadge.text}</Text>
+                {item.itemStatus === 'SOLD' && (
+                    <View style={styles.soldBadge}>
+                        <Text style={styles.soldText}>SOLD</Text>
                     </View>
                 )}
 
@@ -69,20 +56,20 @@ const Card = ({item, horizontal = false}) => {
                     {item.name}
                 </Text>
 
+                {/*/!* Location - only if exists *!/*/}
+                {/*{item.college?.city && (*/}
+                {/*    <Text style={styles.locationText} numberOfLines={1}>*/}
+                {/*        {item.college.city}*/}
+                {/*    </Text>*/}
+                {/*)}*/}
+
                 {/* Price & Arrow */}
                 <View style={styles.priceRow}>
                     <Text style={styles.price}>{item.price}</Text>
-                </View>
-
-                {/* Location - only if exists */}
-                {item.college?.city && (
-                    <View style={styles.locationRow}>
-                        <Ionicons name="location" size={11} color={COLORS.dark.textTertiary}/>
-                        <Text style={styles.locationText} numberOfLines={1}>
-                            {item.college.city}
-                        </Text>
+                    <View style={styles.arrowCircle}>
+                        <Ionicons name="arrow-forward" size={12} color="#fff"/>
                     </View>
-                )}
+                </View>
             </View>
         </TouchableOpacity>
     );
@@ -90,10 +77,10 @@ const Card = ({item, horizontal = false}) => {
 
 const styles = StyleSheet.create({
     card: {
-        borderRadius: 16,
+        borderRadius: 20,
         backgroundColor: COLORS.dark.card,
         marginBottom: 12,
-        overflow: 'hidden',
+        padding: 8,
         borderWidth: 1,
         borderColor: COLORS.dark.border,
         shadowColor: '#000',
@@ -112,73 +99,75 @@ const styles = StyleSheet.create({
     imageWrapper: {
         position: 'relative',
         backgroundColor: COLORS.dark.cardElevated,
+        borderRadius: 14,
+        overflow: 'hidden',
     },
     image: {
         width: '100%',
-        height: 140,
+        height: 150,
     },
     horizontalImage: {
-        height: 120,
+        height: 130,
     },
     gradientOverlay: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: 40,
+        height: 50,
     },
-    statusBadge: {
+    soldBadge: {
         position: 'absolute',
         top: 8,
         left: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 7,
-        paddingVertical: 4,
+        backgroundColor: '#EF4444',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
         borderRadius: 8,
-        gap: 3,
     },
-    statusText: {
+    soldText: {
         color: '#fff',
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: '800',
-        letterSpacing: 0.3,
-        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     info: {
-        padding: 12,
+        padding: 10,
+        paddingTop: 8,
     },
     name: {
         fontSize: 14,
-        color: COLORS.dark.text,
+        color: COLORS.dark.textSecondary,
         fontWeight: '700',
         lineHeight: 19,
-        marginBottom: 6,
+        marginBottom: 4,
         letterSpacing: -0.2,
+    },
+    locationText: {
+        fontSize: 12,
+        color: COLORS.dark.textSecondary,
+        fontWeight: '500',
+        marginBottom: 8,
+        letterSpacing: -0.1,
     },
     priceRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 6,
     },
     price: {
         fontWeight: '800',
         fontSize: 17,
-        color: COLORS.primary,
-        letterSpacing: -0.3,
+        color: COLORS.gray400,
+        letterSpacing: -0.4,
     },
-    locationRow: {
-        flexDirection: 'row',
+    arrowCircle: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: COLORS.primary,
         alignItems: 'center',
-        gap: 3,
-    },
-    locationText: {
-        fontSize: 11,
-        color: COLORS.dark.textTertiary,
-        fontWeight: '600',
-        flex: 1,
-        letterSpacing: -0.1,
+        justifyContent: 'center',
     },
 });
 

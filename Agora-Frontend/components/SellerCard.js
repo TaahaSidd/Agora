@@ -1,9 +1,10 @@
 import React from "react";
-import {View, Text, Image, TouchableOpacity, StyleSheet} from "react-native";
+import {Image, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import {useAverageRating} from "../hooks/useAverageRating";
 import {COLORS} from "../utils/colors";
 import {THEME} from "../utils/theme";
+import {LinearGradient} from "expo-linear-gradient";
 
 const SellerCard = ({seller, sellerSince, onPress}) => {
     const {rating, loading} = useAverageRating('seller', seller.id);
@@ -63,7 +64,7 @@ const SellerCard = ({seller, sellerSince, onPress}) => {
             {/* Info */}
             <View style={styles.info}>
                 <View style={styles.nameRow}>
-                    <Text style={styles.name}>
+                    <Text style={styles.name} numberOfLines={1}>
                         {seller.firstName} {seller.lastName}
                     </Text>
 
@@ -82,11 +83,23 @@ const SellerCard = ({seller, sellerSince, onPress}) => {
                     </View>
                 </View>
 
-                {/* Member Since */}
-                <View style={styles.sinceRow}>
-                    <Icon name="calendar-outline" size={14} color={COLORS.dark.textTertiary}/>
-                    <Text style={styles.sinceText}>Member since {sellerSince}</Text>
+                <View style={styles.sellerBadge}>
+                    <LinearGradient
+                        colors={['#6366F1', '#4F46E5']} // Indigo/Blue vibe
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 0}}
+                        style={styles.pillGradient}
+                    >
+                        <Icon name="cart-outline" size={10} color="#fff"/>
+                        <Text style={styles.pillText}>CAMPUS SELLER</Text>
+                    </LinearGradient>
                 </View>
+
+                {/*/!* Member Since *!/*/}
+                {/*<View style={styles.sinceRow}>*/}
+                {/*    <Icon name="calendar-outline" size={14} color={COLORS.dark.textTertiary}/>*/}
+                {/*    <Text style={styles.sinceText}>Member since {sellerSince}</Text>*/}
+                {/*</View>*/}
             </View>
 
             {/* Arrow */}
@@ -160,6 +173,24 @@ const styles = StyleSheet.create({
         color: COLORS.dark.textTertiary,
         fontWeight: THEME.fontWeight.medium,
         marginLeft: THEME.spacing[1],
+    },
+    sellerBadge: {
+        marginBottom: THEME.spacing[2],
+        alignSelf: 'flex-start',
+    },
+    pillGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+        gap: 4,
+    },
+    pillText: {
+        color: '#fff',
+        fontSize: 9,
+        fontWeight: '900',
+        letterSpacing: 0.5,
     },
 });
 

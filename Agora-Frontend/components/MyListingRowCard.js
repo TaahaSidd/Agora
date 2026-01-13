@@ -144,6 +144,7 @@ const MyListingRowCard = ({item, onEdit, onDelete}) => {
                         <Image
                             source={item.images?.length ? item.images[0] : require('../assets/LW.jpg')}
                             style={styles.image}
+                            resizeMode="cover"
                         />
 
                         {/* Gradient Overlay */}
@@ -172,39 +173,38 @@ const MyListingRowCard = ({item, onEdit, onDelete}) => {
                             {item.name || item.title || 'Untitled'}
                         </Text>
 
-                        <Text style={styles.price}>
-                            {typeof item.price === 'number' ? `₹${item.price}` : item.price}
-                        </Text>
-
-                        {/* College */}
+                        {/* College/Location */}
                         {item.college && (
-                            <View style={styles.infoRow}>
-                                <Ionicons name="school-outline" size={13} color={COLORS.dark.textTertiary}/>
-                                <Text style={styles.infoText} numberOfLines={1}>
-                                    {typeof item.college === 'string'
-                                        ? item.college
-                                        : item.college?.collegeName || 'College'}
-                                </Text>
-                            </View>
+                            <Text style={styles.locationText} numberOfLines={1}>
+                                {typeof item.college === 'string'
+                                    ? item.college
+                                    : item.college?.city || item.college?.collegeName || 'College'}
+                            </Text>
                         )}
 
-                        {/* Stats Row */}
-                        <View style={styles.statsRow}>
-                            <View style={styles.statItem}>
-                                <Ionicons name="time-outline" size={12} color={COLORS.dark.textTertiary}/>
-                                <Text style={styles.statText}>
-                                    {item.postDate ? getTimeAgo(item.postDate) : 'Recently'}
-                                </Text>
+                        <View style={styles.bottomRow}>
+                            <Text style={styles.price}>
+                                {typeof item.price === 'number' ? `₹${item.price}` : item.price}
+                            </Text>
+
+                            {/* Stats Row */}
+                            <View style={styles.statsRow}>
+                                <View style={styles.statItem}>
+                                    <Ionicons name="time-outline" size={12} color={COLORS.dark.textTertiary}/>
+                                    <Text style={styles.statText}>
+                                        {item.postDate ? getTimeAgo(item.postDate) : 'Recent'}
+                                    </Text>
+                                </View>
+                                {item.views !== undefined && item.views > 0 && (
+                                    <>
+                                        <View style={styles.statDot}/>
+                                        <View style={styles.statItem}>
+                                            <Ionicons name="eye-outline" size={12} color={COLORS.dark.textTertiary}/>
+                                            <Text style={styles.statText}>{item.views}</Text>
+                                        </View>
+                                    </>
+                                )}
                             </View>
-                            {item.views && (
-                                <>
-                                    <View style={styles.statDot}/>
-                                    <View style={styles.statItem}>
-                                        <Ionicons name="eye-outline" size={12} color={COLORS.dark.textTertiary}/>
-                                        <Text style={styles.statText}>{item.views} views</Text>
-                                    </View>
-                                </>
-                            )}
                         </View>
                     </View>
 
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     },
     actionButton: {
         width: 75,
-        borderRadius: 18,
+        borderRadius: 20,
         height: '100%',
         overflow: 'hidden',
     },
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     },
     card: {
         backgroundColor: COLORS.dark.card,
-        borderRadius: 18,
+        borderRadius: 20,
         borderWidth: 1,
         borderColor: COLORS.dark.border,
         shadowColor: '#000',
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     imageWrapper: {
         width: 110,
         height: 110,
-        borderRadius: 14,
+        borderRadius: 16,
         overflow: 'hidden',
         marginRight: 14,
         backgroundColor: COLORS.dark.cardElevated,
@@ -295,8 +295,8 @@ const styles = StyleSheet.create({
     statusBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 7,
-        paddingVertical: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 5,
         borderRadius: 8,
         gap: 3,
         shadowColor: '#000',
@@ -314,35 +314,32 @@ const styles = StyleSheet.create({
     },
     contentSection: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'space-between',
     },
     title: {
         fontSize: 15,
         fontWeight: '700',
         color: COLORS.dark.text,
         lineHeight: 20,
-        marginBottom: 6,
-        letterSpacing: -0.2,
+        marginBottom: 4,
+        letterSpacing: -0.3,
+    },
+    locationText: {
+        fontSize: 12,
+        color: COLORS.dark.textSecondary,
+        fontWeight: '500',
+        marginBottom: 8,
+        letterSpacing: -0.1,
+    },
+    bottomRow: {
+        flexDirection: 'column',
+        gap: 6,
     },
     price: {
         fontSize: 18,
         fontWeight: '800',
-        color: COLORS.primary,
-        marginBottom: 8,
-        letterSpacing: -0.3,
-    },
-    infoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 6,
-        gap: 4,
-    },
-    infoText: {
-        fontSize: 12,
-        color: COLORS.dark.textTertiary,
-        fontWeight: '600',
-        flex: 1,
-        letterSpacing: -0.1,
+        color: COLORS.dark.text,
+        letterSpacing: -0.4,
     },
     statsRow: {
         flexDirection: 'row',

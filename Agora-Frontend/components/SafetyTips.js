@@ -1,48 +1,31 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import {StyleSheet, Text, View} from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { COLORS } from "../utils/colors";
-import { THEME } from "../utils/theme";
+import {COLORS} from "../utils/colors";
+import {THEME} from "../utils/theme";
 
-//fix the text and icon mismatch
-const SafetyTips = () => {
+const SafetyTips = ({style}) => {
     const tips = [
-        {
-            icon: "location",
-            text: "Meet in a public place on campus",
-        },
-        {
-            icon: "eye",
-            text: "Inspect the item before paying",
-        },
-        {
-            icon: "card",
-            text: "Avoid advance payments",
-        },
-        {
-            icon: "chatbubbles",
-            text: "Use in-app chat only",
-        },
+        "Meet at a busy campus spot (Canteen/Library)",
+        "Check item thoroughly before any payment",
+        "No advance payments — pay only at pickup",
+        "Keep all chats on Agora for your safety",
     ];
 
     return (
-        <View style={styles.container}>
-            {/* Header */}
+        <View style={[styles.container, style]}>
+            {/* Simple Header */}
             <View style={styles.header}>
-                <View style={styles.iconCircle}>
-                    <Icon name="shield-checkmark" size={18} color={COLORS.info} />
-                </View>
+                <Icon name="shield-checkmark-outline" size={20} color="#10B981"/>
                 <Text style={styles.title}>Safety Tips</Text>
             </View>
 
-            {/* Tips List */}
-            <View style={styles.tipsList}>
+            {/* Clean List */}
+            <View style={styles.tips}>
                 {tips.map((tip, index) => (
-                    <View key={index} style={styles.tipItem}>
-                        <View style={styles.tipIconContainer}>
-                            <Icon name={tip.icon} size={16} color={COLORS.primary} />
-                        </View>
-                        <Text style={styles.tipText}>{tip.text}</Text>
+                    <View key={index} style={styles.tipRow}>
+                        <View style={styles.dot}/>
+                        <Text style={styles.tipText}>{tip}</Text>
                     </View>
                 ))}
             </View>
@@ -52,53 +35,45 @@ const SafetyTips = () => {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.dark.bgElevated,
         borderRadius: THEME.borderRadius.lg,
-        padding: THEME.spacing.md,
+        padding: 20,
+        marginVertical: 16,
         borderWidth: 1,
         borderColor: COLORS.dark.border,
     },
     header: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: THEME.spacing.md,
-    },
-    iconCircle: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: COLORS.info + '15',
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: THEME.spacing[2],
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
     },
     title: {
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        fontSize: 18,
+        fontWeight: '600',
+        color: COLORS.white,
+        marginLeft: 12,
     },
-    tipsList: {
-        gap: THEME.spacing[1],
+    tips: {
+        gap: 12,
     },
-    tipItem: {
-        flexDirection: "row",
-        alignItems: "flex-start",
+    tipRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
     },
-    tipIconContainer: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: COLORS.primary + '15',
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: THEME.spacing[2],
-        marginTop: 2,
+    dot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#10B981',
+        marginTop: 6,
+        marginRight: 12,
     },
     tipText: {
         flex: 1,
-        fontSize: THEME.fontSize.sm,
+        fontSize: 14,
         color: COLORS.dark.textSecondary,
-        fontWeight: THEME.fontWeight.medium,
+        lineHeight: 20,
+        fontWeight: '500',
     },
 });
 

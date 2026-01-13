@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Animated, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, {useEffect, useRef, useState} from 'react';
+import {Animated, StyleSheet, Text, View} from 'react-native';
+import {LinearGradient} from 'expo-linear-gradient';
 
-const DynamicHeader = ({ userName = 'there' }) => {
+const DynamicHeader = ({userName = 'there'}) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const slideAnim = useRef(new Animated.Value(0)).current;
@@ -13,86 +13,43 @@ const DynamicHeader = ({ userName = 'there' }) => {
     const getTimeBasedGreeting = () => {
         const hour = new Date().getHours();
 
-        if (hour < 12) {
+        // 1. LATE NIGHT (00:00 - 04:59)
+        if (hour < 5) {
             return [
-                {
-                    main: 'Aaiye Aaiye!',
-                    sub: 'Subah subah ki taaza deals!',
-                    gradient: ['#FEF3C7', '#FDE68A'],
-                    textColor: '#92400E'
-                },
-                {
-                    main: 'Suprabhat, ' + userName,
-                    sub: 'Aaj kya dhoondh rahe ho?',
-                    gradient: ['#DBEAFE', '#BFDBFE'],
-                    textColor: '#1E40AF'
-                },
-                {
-                    main: 'Good Morning Dosto!',
-                    sub: 'Raat bhar ke naye listings dekho',
-                    gradient: ['#FCE7F3', '#FBCFE8'],
-                    textColor: '#9F1239'
-                },
-                {
-                    main: 'Jaldi Aao!',
-                    sub: 'Best deals disappear fast',
-                    gradient: ['#FEF3C7', '#FDE68A'],
-                    textColor: '#92400E'
-                },
+                {text: 'Maggi Break?', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6'},
+                {text: 'Late Night Deals?', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E'},
+                {text: 'One Last Scroll?', gradient: ['#E9D5FF', '#D8B4FE'], textColor: '#6B21A8'},
+                {text: 'Abhi tak jaag rahe ho?', gradient: ['#BFDBFE', '#93C5FD'], textColor: '#1E40AF'}
             ];
-        } else if (hour < 17) {
+        }
+        // 2. MORNING (05:00 - 11:59)
+        else if (hour < 12) {
             return [
-                {
-                    main: 'Namaste Ji!',
-                    sub: 'Dopahar ka special awaits',
-                    gradient: ['#E0E7FF', '#C7D2FE'],
-                    textColor: '#3730A3'
-                },
-                {
-                    main: 'Kya Haal Chaal?',
-                    sub: userName + ', aaj kuch naya try karo',
-                    gradient: ['#D1FAE5', '#A7F3D0'],
-                    textColor: '#065F46'
-                },
-                {
-                    main: 'Arrey Bhai!',
-                    sub: 'Hot deals are waiting for you',
-                    gradient: ['#FED7AA', '#FDBA74'],
-                    textColor: '#9A3412'
-                },
-                {
-                    main: 'Lunch Break Ho Gaya?',
-                    sub: 'Ab thoda shopping bhi kar lo',
-                    gradient: ['#E0E7FF', '#C7D2FE'],
-                    textColor: '#3730A3'
-                },
+                {text: 'Aaiye Aaiye!', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E'},
+                {text: 'Morning Hustle!', gradient: ['#DBEAFE', '#BFDBFE'], textColor: '#1E40AF'},
+                {text: 'Chalo, Uth Jao!', gradient: ['#FCE7F3', '#FBCFE8'], textColor: '#9F1239'},
+                {text: 'Early Bird Deals?', gradient: ['#D1FAE5', '#A7F3D0'], textColor: '#065F46'},
+                {text: '8 AM Lecture?', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E'}
             ];
-        } else {
+        }
+        // 3. AFTERNOON (12:00 - 16:59)
+        else if (hour < 17) {
             return [
-                {
-                    main: 'Shaam Ho Gayi!',
-                    sub: 'Trending items dekh lo',
-                    gradient: ['#DDD6FE', '#C4B5FD'],
-                    textColor: '#5B21B6'
-                },
-                {
-                    main: 'Good Evening!',
-                    sub: 'raat ko bhi chalti hai dukaan',
-                    gradient: ['#BFDBFE', '#93C5FD'],
-                    textColor: '#1E40AF'
-                },
-                {
-                    main: 'Sone Se Pehle',
-                    sub: 'Ek baar scroll toh kar lo!',
-                    gradient: ['#E9D5FF', '#D8B4FE'],
-                    textColor: '#6B21A8'
-                },
-                {
-                    main: 'Late Night Deals',
-                    sub: 'Kya pata kya mil jaaye!',
-                    gradient: ['#DDD6FE', '#C4B5FD'],
-                    textColor: '#5B21B6'
-                },
+                {text: 'Namaste Ji!', gradient: ['#E0E7FF', '#C7D2FE'], textColor: '#3730A3'},
+                {text: 'Kya Haal Chaal?', gradient: ['#D1FAE5', '#A7F3D0'], textColor: '#065F46'},
+                {text: 'Lecture Bored?', gradient: ['#FED7AA', '#FDBA74'], textColor: '#9A3412'},
+                {text: 'Lunch Break?', gradient: ['#E0E7FF', '#C7D2FE'], textColor: '#3730A3'},
+                {text: 'Arrey Machaa!', gradient: ['#FCE7F3', '#FBCFE8'], textColor: '#9F1239'}
+            ];
+        }
+        // 4. EVENING (17:00 - 23:59)
+        else {
+            return [
+                {text: 'Shaam ki Gedi!', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6'},
+                {text: 'Good Evening!', gradient: ['#BFDBFE', '#93C5FD'], textColor: '#1E40AF'},
+                {text: 'One Last Scroll?', gradient: ['#E9D5FF', '#D8B4FE'], textColor: '#6B21A8'},
+                {text: 'Maggi Break?', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6'},
+                {text: 'Late Night Deals?', gradient: ['#FDE68A', '#FEF3C7'], textColor: '#92400E'}
             ];
         }
     };
@@ -187,20 +144,20 @@ const DynamicHeader = ({ userName = 'there' }) => {
             <Animated.View
                 style={[
                     styles.gradientWrapper,
-                    { transform: [{ scale: pulseAnim }] }
+                    {transform: [{scale: pulseAnim}]}
                 ]}
             >
                 <LinearGradient
                     colors={currentMessage.gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 1}}
                     style={styles.gradient}
                 >
                     <Animated.View
                         style={[
                             styles.shimmer,
                             {
-                                transform: [{ translateX: shimmerTranslate }],
+                                transform: [{translateX: shimmerTranslate}],
                             },
                         ]}
                     />
@@ -212,18 +169,12 @@ const DynamicHeader = ({ userName = 'there' }) => {
                     styles.textContainer,
                     {
                         opacity: fadeAnim,
-                        transform: [
-                            { translateY: slideAnim },
-                            { scale: scaleAnim }
-                        ],
+                        transform: [{translateY: slideAnim}, {scale: scaleAnim}],
                     },
                 ]}
             >
-                <Text style={[styles.greeting, { color: currentMessage.textColor }]}>
-                    {currentMessage.main}
-                </Text>
-                <Text style={[styles.subGreeting, { color: currentMessage.textColor }]}>
-                    {currentMessage.sub}
+                <Text style={[styles.greetingOnly, {color: currentMessage.textColor}]}>
+                    {currentMessage.text}
                 </Text>
             </Animated.View>
         </View>
@@ -238,6 +189,7 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         overflow: 'hidden',
         marginBottom: 4,
+        minHeight: 60,
     },
     gradientWrapper: {
         position: 'absolute',
@@ -265,11 +217,12 @@ const styles = StyleSheet.create({
     textContainer: {
         zIndex: 1,
     },
-    greeting: {
-        fontSize: 20,
-        fontWeight: '800',
-        letterSpacing: -0.3,
-        marginBottom: 2,
+    greetingOnly: {
+        fontSize: 24,
+        fontWeight: '700',
+        letterSpacing: -0.5,
+        textAlign: 'center',
+        paddingVertical: 4,
     },
     subGreeting: {
         fontSize: 12,

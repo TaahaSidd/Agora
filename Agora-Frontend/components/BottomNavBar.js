@@ -1,25 +1,33 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { FontAwesome5, MaterialIcons, Ionicons, Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
+import React, {useState} from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Feather, FontAwesome5, Ionicons, MaterialIcons} from '@expo/vector-icons';
+import {useNavigation} from '@react-navigation/native';
+import {COLORS} from '../utils/colors';
 
 import ModalComponent from './Modal';
 
-const BottomNavBar = ({ active, onNavigate, isGuest }) => {
+const BottomNavBar = ({active, onNavigate, isGuest, isPending}) => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
+
+    // console.log('🔍 BottomNavBar - isGuest:', isGuest, 'isPending:', isPending);
+
 
     const handleAddPress = () => {
         if (isGuest) {
             setModalVisible(true);
             return;
         }
+
+        if (isPending) {
+            setModalVisible(true);
+            return;
+        }
+
         navigation.navigate('AddListingScreen');
     };
 
-    const NavItem = ({ name, icon, iconType, label, screen }) => {
+    const NavItem = ({name, icon, iconType, label, screen}) => {
         const isActive = active === screen;
 
         const renderIcon = () => {
@@ -28,14 +36,14 @@ const BottomNavBar = ({ active, onNavigate, isGuest }) => {
 
             switch (iconType) {
                 case 'FontAwesome5':
-                    return <FontAwesome5 name={icon} size={iconSize} color={iconColor} />;
+                    return <FontAwesome5 name={icon} size={iconSize} color={iconColor}/>;
                 case 'MaterialIcons':
-                    return <MaterialIcons name={icon} size={iconSize} color={iconColor} />;
+                    return <MaterialIcons name={icon} size={iconSize} color={iconColor}/>;
                 case 'Feather':
-                    return <Feather name={icon} size={iconSize} color={iconColor} />;
+                    return <Feather name={icon} size={iconSize} color={iconColor}/>;
                 case 'Ionicons':
                 default:
-                    return <Ionicons name={icon} size={iconSize} color={iconColor} />;
+                    return <Ionicons name={icon} size={iconSize} color={iconColor}/>;
             }
         };
 
@@ -74,7 +82,7 @@ const BottomNavBar = ({ active, onNavigate, isGuest }) => {
                     />
 
                     {/* Center Add Button Placeholder */}
-                    <View style={styles.centerPlaceholder} />
+                    <View style={styles.centerPlaceholder}/>
 
                     <NavItem
                         screen="Chats"
@@ -99,7 +107,7 @@ const BottomNavBar = ({ active, onNavigate, isGuest }) => {
                         onPress={handleAddPress}
                     >
                         <View style={styles.centerButtonInner}>
-                            <Ionicons name="add" size={32} color={COLORS.white} />
+                            <Ionicons name="add" size={32} color={COLORS.white}/>
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -108,13 +116,19 @@ const BottomNavBar = ({ active, onNavigate, isGuest }) => {
             <ModalComponent
                 visible={modalVisible}
                 type="warning"
-                title="Login Required"
-                message="You need to login to add a listing."
-                primaryButtonText="Login"
+                title={isGuest ? "Login Required" : "Complete Your Profile"}
+                message={isGuest
+                    ? "You need to login to add a listing."
+                    : "Please complete your profile to start selling items."}
+                primaryButtonText={isGuest ? "Login" : "Complete Profile"}
                 secondaryButtonText="Cancel"
                 onPrimaryPress={() => {
                     setModalVisible(false);
-                    navigation.replace('Login');
+                    if (isGuest) {
+                        navigation.replace('Login');
+                    } else {
+                        navigation.navigate('EditListingScreen');
+                    }
                 }}
                 onSecondaryPress={() => setModalVisible(false)}
                 onClose={() => setModalVisible(false)}

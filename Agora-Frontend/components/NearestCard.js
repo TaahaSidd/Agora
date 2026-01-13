@@ -7,19 +7,6 @@ import {COLORS} from '../utils/colors';
 const {width} = Dimensions.get('window');
 
 export default function NearestCard({item, onPress}) {
-    // Status badge logic
-    const getStatusBadge = () => {
-        if (item.itemStatus === 'SOLD') {
-            return {bg: '#EF4444', text: 'Sold', icon: 'checkmark-circle'};
-        }
-        if (item.itemCondition === 'NEW' || item.itemCondition === 'new') {
-            return {bg: '#10B981', text: 'New', icon: 'sparkles'};
-        }
-        return null;
-    };
-
-    const statusBadge = getStatusBadge();
-
     return (
         <TouchableOpacity
             style={styles.card}
@@ -35,6 +22,7 @@ export default function NearestCard({item, onPress}) {
                             : require('../assets/LW.jpg')
                     }
                     style={styles.image}
+                    resizeMode="cover"
                 />
 
                 {/* Gradient Overlay */}
@@ -44,18 +32,11 @@ export default function NearestCard({item, onPress}) {
                 />
 
                 {/* Status Badge */}
-                {statusBadge && (
-                    <View style={[styles.statusBadge, {backgroundColor: statusBadge.bg}]}>
-                        <Ionicons name={statusBadge.icon} size={10} color="#fff"/>
-                        <Text style={styles.statusText}>{statusBadge.text}</Text>
+                {item.itemStatus === 'SOLD' && (
+                    <View style={styles.soldBadge}>
+                        <Text style={styles.soldText}>SOLD</Text>
                     </View>
                 )}
-
-                {/* Distance Badge */}
-                <View style={styles.distanceBadge}>
-                    <Ionicons name="location" size={10} color="#fff"/>
-                    <Text style={styles.distanceText}>2.5 km</Text>
-                </View>
             </View>
 
             {/* Content Section */}
@@ -65,18 +46,19 @@ export default function NearestCard({item, onPress}) {
                 </Text>
 
                 {/* College/Location */}
-                <View style={styles.locationRow}>
-                    <Ionicons name="school-outline" size={13} color={COLORS.dark.textTertiary}/>
+                {item.college?.city && (
                     <Text style={styles.location} numberOfLines={1}>
-                        {item.college?.collegeName || item.college?.city || 'Nearby'}
+                        {item.college.city}
                     </Text>
-                </View>
+                )}
 
                 {/* Price Row */}
                 <View style={styles.bottomRow}>
-                    <Text style={styles.price}>{item.price}</Text>
+                    <View style={styles.priceContainer}>
+                        <Text style={styles.price}>{item.price}</Text>
+                    </View>
                     <View style={styles.arrowCircle}>
-                        <Ionicons name="arrow-forward" size={14} color={COLORS.primary}/>
+                        <Ionicons name="arrow-forward" size={14} color="#fff"/>
                     </View>
                 </View>
             </View>
@@ -90,9 +72,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: width * 0.90,
         backgroundColor: COLORS.dark.card,
-        borderRadius: 18,
-        marginRight: 16,
-        padding: 12,
+        borderRadius: 20,
+        marginBottom: 12,
+        marginRight: 20,
+        padding: 10,
         borderWidth: 1,
         borderColor: COLORS.dark.border,
         shadowColor: '#000',
@@ -103,9 +86,9 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         position: 'relative',
-        width: 100,
-        height: 100,
-        borderRadius: 14,
+        width: 110,
+        height: 110,
+        borderRadius: 16,
         backgroundColor: COLORS.dark.cardElevated,
         overflow: 'hidden',
     },
@@ -118,69 +101,42 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 35,
+        height: 40,
     },
-    statusBadge: {
+    soldBadge: {
         position: 'absolute',
-        top: 6,
-        left: 6,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 6,
-        paddingVertical: 3,
-        borderRadius: 6,
-        gap: 3,
-    },
-    statusText: {
-        color: '#fff',
-        fontSize: 9,
-        fontWeight: '800',
-        letterSpacing: 0.3,
-        textTransform: 'uppercase',
-    },
-    distanceBadge: {
-        position: 'absolute',
-        bottom: 6,
-        right: 6,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        paddingHorizontal: 6,
-        paddingVertical: 3,
+        top: 8,
+        left: 8,
+        backgroundColor: '#EF4444',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
         borderRadius: 8,
-        gap: 3,
     },
-    distanceText: {
+    soldText: {
         color: '#fff',
-        fontSize: 10,
-        fontWeight: '700',
-        letterSpacing: -0.1,
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
     textContainer: {
         flex: 1,
         marginLeft: 14,
         justifyContent: 'space-between',
-        paddingVertical: 4,
+        paddingVertical: 6,
     },
     title: {
         fontSize: 16,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.dark.textSecondary,
         lineHeight: 21,
-        marginBottom: 6,
-        letterSpacing: -0.2,
-    },
-    locationRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-        gap: 4,
+        marginBottom: 4,
+        letterSpacing: -0.3,
     },
     location: {
-        fontSize: 12,
-        color: COLORS.dark.textTertiary,
-        fontWeight: '600',
-        flex: 1,
+        fontSize: 13,
+        color: COLORS.dark.textSecondary,
+        fontWeight: '500',
+        marginBottom: 10,
         letterSpacing: -0.1,
     },
     bottomRow: {
@@ -188,17 +144,32 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    priceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
     price: {
-        fontSize: 19,
+        fontSize: 20,
         fontWeight: '800',
-        color: COLORS.primary,
-        letterSpacing: -0.4,
+        color: COLORS.gray400,
+        letterSpacing: -0.5,
+    },
+    viewContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    viewCount: {
+        fontSize: 13,
+        color: COLORS.dark.textSecondary,
+        fontWeight: '600',
     },
     arrowCircle: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: COLORS.primaryLightest,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: COLORS.primary,
         alignItems: 'center',
         justifyContent: 'center',
     },

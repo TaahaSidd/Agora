@@ -24,7 +24,6 @@ const InputField = ({
 
     const shakeAnim = useRef(new Animated.Value(0)).current;
 
-    // Shake animation on error
     useEffect(() => {
         if (error) {
             Animated.sequence([
