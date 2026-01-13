@@ -1,34 +1,3 @@
-// import { useState, useEffect } from 'react';
-// import { apiGet } from '../services/api';
-
-// export const useProfileImage = () => {
-//     const [profileImage, setProfileImage] = useState(null);
-//     const [loading, setLoading] = useState(true);
-
-//     useEffect(() => {
-//         const fetchProfileImage = async () => {
-//             try {
-//                 const res = await apiGet('/profile/image');
-//                 let imgUrl = res.profileImage;
-//                 if (imgUrl?.includes('localhost')) {
-//                     imgUrl = imgUrl.replace('localhost', '192.168.8.15');
-//                 }
-
-//                 setProfileImage(imgUrl);
-//             } catch (error) {
-//                 console.error('Error fetching profile image:', error);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-
-//         fetchProfileImage();
-//     }, []);
-
-//     return { profileImage, loading };
-// };
-
-
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import { apiGet } from '../services/api';

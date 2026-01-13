@@ -1,57 +1,7 @@
-// import { useState, useEffect } from 'react';
-// import * as SecureStore from 'expo-secure-store';
-// import { jwtDecode } from 'jwt-decode';
-
-// import { apiGet } from '../services/api';
-
-// export const useCurrentUser = () => {
-//     const [user, setUser] = useState(null);
-//     const [loading, setLoading] = useState(true);
-
-//     useEffect(() => {
-//         const loadUser = async () => {
-//             try {
-//                 const token = await SecureStore.getItemAsync("accessToken");
-//                 console.log("🔹 Token from SecureStore:", token ? "Found" : "Not found");
-
-//                 if (!token) {
-//                     console.warn("⚠️ No access token found");
-//                     setUser(null);
-//                     return;
-//                 }
-
-//                 const decoded = jwtDecode(token);
-//                 console.log("🔹 Decoded Token Data:", decoded);
-
-//                 const mappedUser = {
-//                     id: decoded.sub,
-//                     name: decoded.username || decoded.name || "User",
-//                     email: decoded.email || "unknown@example.com",
-//                     profileImage: decoded.profileImage || null,
-//                 };
-
-//                 console.log("✅ Final User Object:", mappedUser);
-
-//                 setUser(mappedUser);
-//             } catch (error) {
-//                 console.error("❌ Failed to decode token:", error);
-//                 setUser(null);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-
-//         loadUser();
-//     }, []);
-
-//     return { user, loading };
-// };
-
-
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { jwtDecode } from 'jwt-decode';
-import { apiGet } from '../services/api';
+import {jwtDecode} from 'jwt-decode';
+import {apiGet} from '../services/api';
 
 export const useCurrentUser = () => {
     const [user, setUser] = useState(null);
@@ -69,6 +19,7 @@ export const useCurrentUser = () => {
                         id: null,
                         name: 'Guest',
                         email: 'guest@Agora.app',
+                        mobileNumber: null,
                         profileImage: 'https://i.pravatar.cc/100?img=1',
                     });
                     return;
@@ -79,15 +30,18 @@ export const useCurrentUser = () => {
 
                 const finalUser = {
                     id: data.id,
-                    name: decoded.username || decoded.name || 'User',
-                    email: decoded.email || 'unknown@example.com',
+                    name: decoded.username || data.firstName || 'User',
+                    mobileNumber: data.mobileNumber,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
                     profileImage: data.profileImage || null,
                     collegeId: data.college?.id,
                     collegeName: data.college?.collegeName,
                     collegeEmail: data.college?.collegeEmail,
+                    verificationStatus: data.verificationStatus,
                 };
 
-                // console.log('✅ Final User Object:', finalUser);
+                console.log('✅ Final User Object:', finalUser);
 
                 setUser(finalUser);
                 setIsGuest(false);
@@ -109,5 +63,5 @@ export const useCurrentUser = () => {
         loadUser();
     }, []);
 
-    return { user, loading, isGuest };
+    return {user, loading, isGuest};
 };

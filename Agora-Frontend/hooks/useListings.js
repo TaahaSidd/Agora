@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { apiGet } from '../services/api';
+import {useState, useEffect} from 'react';
+import {apiGet} from '../services/api';
 
 export const useListings = () => {
     const [items, setItems] = useState([]);
@@ -11,15 +11,16 @@ export const useListings = () => {
         setError(null);
 
         try {
-            const data = await apiGet('/listing/all');
+            const response = await apiGet('/listing/all', {page: 0, size: 20});
+            const data = response.content || [];
 
             const formatted = data.map(item => ({
                 ...item,
                 name: item.title || item.name || 'Unnamed Item',
                 price: item.price ? `₹ ${item.price}` : 'N/A',
                 images: item.imageUrl && item.imageUrl.length > 0
-                    ? item.imageUrl.map(url => ({ uri: url }))
-                    : [require('../assets/LW.jpg')],
+                    ? item.imageUrl.map(url => ({uri: url}))
+                    : [require('../assets/no-image.jpg')],
             }));
 
             setItems(formatted);
@@ -35,5 +36,5 @@ export const useListings = () => {
         fetchListings();
     }, []);
 
-    return { items, loading, error, refetch: fetchListings };
+    return {items, loading, error, refetch: fetchListings};
 };

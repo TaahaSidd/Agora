@@ -21,7 +21,7 @@ export const useSellerProfile = (sellerId) => {
                     ...item,
                     images: item.imageUrl && item.imageUrl.length > 0
                         ? item.imageUrl.map(url => ({ uri: url }))
-                        : [require('../assets/LW.jpg')],
+                        : [require('../assets/defaultProfile.png')],
                     name: item.title || 'Untitled',
                     price: item.price ? `₹ ${item.price}` : 'N/A',
                 }));
