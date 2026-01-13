@@ -1,27 +1,34 @@
 import React, {useEffect, useState} from 'react';
 import {
-    View,
-    Text,
-    SafeAreaView,
-    StyleSheet,
-    ScrollView,
     ActivityIndicator,
-    TouchableOpacity,
     RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import {Image} from 'expo-image';
 import {Ionicons} from '@expo/vector-icons';
 
 import {useUserStore} from '../stores/userStore';
 import AppHeader from '../components/AppHeader';
+import SellerCelebrationModal from "../components/SellerCelebrationModal";
 
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
 
 const UserProfileScreen = ({navigation, route}) => {
-    const {currentUser, loading: userLoading, isGuest, fetchUser} = useUserStore();
+    const {
+        currentUser,
+        loading: userLoading,
+        isGuest,
+        fetchUser,
+    } = useUserStore();
     const {profileImage} = route.params || {};
     const [refreshing, setRefreshing] = useState(false);
+    const [celebrationVisible, setCelebrationVisible] = useState(false);
 
     useEffect(() => {
         fetchUser();
@@ -32,6 +39,7 @@ const UserProfileScreen = ({navigation, route}) => {
         await fetchUser();
         setRefreshing(false);
     };
+
 
     if (userLoading) {
         return (
@@ -148,16 +156,9 @@ const UserProfileScreen = ({navigation, route}) => {
                         <View style={[styles.iconCircle, {backgroundColor: COLORS.warning + '15'}]}>
                             <Ionicons name="school" size={20} color={COLORS.warning}/>
                         </View>
-                        <Text style={styles.cardTitle}>Academic Information</Text>
+                        <Text style={styles.cardTitle}>College Information</Text>
                     </View>
 
-                    <View style={styles.infoItem}>
-                        <View style={styles.infoLeft}>
-                            <Ionicons name="card-outline" size={18} color={COLORS.dark.textTertiary}/>
-                            <Text style={styles.infoLabel}>Student ID</Text>
-                        </View>
-                        <Text style={styles.infoValue}>{currentUser.idCardNo || 'N/A'}</Text>
-                    </View>
 
                     <View style={[styles.infoItem, styles.infoItemLast]}>
                         <View style={styles.infoLeft}>

@@ -1,14 +1,14 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
-    View,
-    Text,
-    SafeAreaView,
-    StyleSheet,
-    Platform,
-    StatusBar,
+    Animated,
     Image,
-    TouchableOpacity,
+    SafeAreaView,
     ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
@@ -17,15 +17,21 @@ import Button from '../components/Button';
 import Card from '../components/Cards';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BottomSheetMenu from '../components/BottomSheetMenu';
+import ReputationModal from '../components/ReputationModal';
+import ToastMessage from "../components/ToastMessage";
+import ModalComponent from "../components/Modal";
 
 import {useAverageRating} from '../hooks/useAverageRating';
 import {useSellerProfile} from '../hooks/useSellerProfile';
-import {apiPost, apiDelete, apiGet} from '../services/api';
+import {useModeration} from "../hooks/useModeration";
+import {apiDelete, apiGet, apiPost} from '../services/api';
 import {useUserStore} from "../stores/userStore";
 
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
 
+
+//subtle animations
 const ProfileScreen = ({navigation, route}) => {
     const {sellerId} = route.params;
     const {currentUser, loading: currentUserLoading, isGuest} = useUserStore();
@@ -36,6 +42,84 @@ const ProfileScreen = ({navigation, route}) => {
     const {rating} = useAverageRating('seller', sellerId);
     const [followersCount, setFollowersCount] = useState(0);
     const [filter, setFilter] = useState('all');
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+    const [isBlockModalVisible, setIsBlockModalVisible] = useState(false);
+    const {blockUser} = useModeration();
+
+    const scaleValue = useRef(new Animated.Value(0.95)).current;
+    const opacityValue = useRef(new Animated.Value(0.6)).current;
+
+    const scaleValues = useRef({
+        all: new Animated.Value(1),
+        available: new Animated.Value(1),
+        sold: new Animated.Value(1),
+    }).current;
+
+    const handlePress = (filterType) => {
+        // Animate the pressed tab
+        Animated.sequence([
+            Animated.spring(scaleValues[filterType], {
+                toValue: 0.92,
+                friction: 3,
+                tension: 40,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleValues[filterType], {
+                toValue: 1,
+                friction: 3,
+                tension: 40,
+                useNativeDriver: true,
+            }),
+        ]).start();
+
+        // Update filter immediately (no delay!)
+        setFilter(filterType);
+    };
+
+    const showToast = ({type, title, message}) => {
+        setToast({visible: true, type, title, message});
+    };
+
+    const handleBlockPress = () => {
+        setShowMenu(false);
+        setIsBlockModalVisible(true);
+    };
+
+    const handleBlockConfirm = async () => {
+        setIsBlockModalVisible(false);
+
+        await blockUser(sellerId, () => {
+            showToast({
+                type: 'success',
+                title: 'User Blocked',
+                message: `${seller?.firstName || 'User'} has been removed from your feed.`
+            });
+
+            setTimeout(() => {
+                navigation.reset({
+                    index: 0,
+                    routes: [{name: 'MainLayout'}],
+                });
+            }, 1500);
+        });
+    };
+
+    const getMilestones = (listings, followers, rating) => {
+        const milestones = [];
+
+        if (listings.length >= 1) milestones.push({id: 1, label: 'First Sale', icon: 'rocket', color: '#F59E0B'});
+        if (listings.length >= 10) milestones.push({id: 2, label: 'Power Seller', icon: 'flame', color: '#EF4444'});
+        if (followers >= 20) milestones.push({id: 3, label: 'Campus Star', icon: 'star', color: '#3B82F6'});
+        if (rating >= 4.8 && listings.length > 5) milestones.push({
+            id: 4,
+            label: 'Top Trusted',
+            icon: 'shield-checkmark',
+            color: '#10B981'
+        });
+
+        return milestones;
+    };
 
     const isOwnProfile = currentUser?.id === seller?.id;
 
@@ -54,7 +138,11 @@ const ProfileScreen = ({navigation, route}) => {
 
     const handleFollowToggle = async () => {
         if (!currentUser?.id) {
-            alert("Please login first.");
+            showToast({
+                type: 'info',
+                title: 'Login Required',
+                message: 'Please log in to follow sellers',
+            });
             return;
         }
 
@@ -74,7 +162,6 @@ const ProfileScreen = ({navigation, route}) => {
         }
     };
 
-    // Get rating badge style
     const getRatingStyle = (rating) => {
         if (rating >= 4.5) {
             return {
@@ -103,6 +190,18 @@ const ProfileScreen = ({navigation, route}) => {
         }
     };
 
+    const getBannerGradient = (rating) => {
+        if (rating >= 4.5) {
+            return ['#7C3AED', '#EC4899', '#F59E0B'];
+        } else if (rating >= 3.5) {
+            return ['#1E3A8A', '#3B82F6', '#10B981'];
+        } else if (rating >= 2.5) {
+            return ['#EA580C', '#F59E0B', '#FCD34D'];
+        } else {
+            return ['#374151', '#4B5563', '#6B7280'];
+        }
+    };
+
     let sellerAvatar = seller?.profileImage;
     if (typeof sellerAvatar === 'string' && sellerAvatar.includes('localhost')) {
         sellerAvatar = sellerAvatar.replace('localhost', '192.168.8.15');
@@ -118,7 +217,6 @@ const ProfileScreen = ({navigation, route}) => {
     const ratingValue = rating || 0;
     const ratingStyle = getRatingStyle(ratingValue);
 
-    // Filter listings
     const filteredListings = filter === 'all' ? listings : listings.filter(item => {
         if (filter === 'available') return item.itemStatus === 'AVAILABLE';
         if (filter === 'sold') return item.itemStatus === 'SOLD';
@@ -144,11 +242,15 @@ const ProfileScreen = ({navigation, route}) => {
                 <View style={styles.bannerSection}>
                     {/* Banner with gradient */}
                     <LinearGradient
-                        colors={['#1E3A8A', '#3B82F6', '#60A5FA']}
+                        colors={getBannerGradient(ratingValue)}
                         start={{x: 0, y: 0}}
                         end={{x: 1, y: 1}}
                         style={styles.banner}
-                    />
+                    >
+                        <View style={styles.patternOverlay}>
+                            <Ionicons name="grid" size={200} color="rgba(255,255,255,0.03)"/>
+                        </View>
+                    </LinearGradient>
 
                     {/* Avatar - positioned at bottom of banner */}
                     <View style={styles.avatarWrapper}>
@@ -178,6 +280,7 @@ const ProfileScreen = ({navigation, route}) => {
 
                     {/* Stats Row */}
                     <View style={styles.statsContainer}>
+                        {/* Listings */}
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber}>{listings?.length || 0}</Text>
                             <Text style={styles.statLabel}>Listings</Text>
@@ -185,6 +288,7 @@ const ProfileScreen = ({navigation, route}) => {
 
                         <View style={styles.statDivider}/>
 
+                        {/* Followers */}
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber}>{followersCount}</Text>
                             <Text style={styles.statLabel}>Followers</Text>
@@ -192,7 +296,12 @@ const ProfileScreen = ({navigation, route}) => {
 
                         <View style={styles.statDivider}/>
 
-                        <View style={styles.statItem}>
+                        {/* Rating - Now Tappable */}
+                        <TouchableOpacity
+                            style={styles.statItem}
+                            onPress={() => setShowRatingModal(true)}
+                            activeOpacity={0.7}
+                        >
                             <View style={[
                                 styles.ratingBadge,
                                 {
@@ -206,7 +315,7 @@ const ProfileScreen = ({navigation, route}) => {
                                 </Text>
                             </View>
                             <Text style={styles.statLabel}>Rating</Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Follow Button */}
@@ -223,6 +332,25 @@ const ProfileScreen = ({navigation, route}) => {
                     )}
                 </View>
 
+                <View style={styles.badgeSection}>
+                    <Text style={styles.badgeTitle}>Campus Achievements</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.badgeScroll}>
+                        {getMilestones(listings, followersCount, ratingValue).map(badge => (
+                            <View
+                                key={badge.id}
+                                style={[
+                                    styles.badgePill,
+                                    {borderColor: badge.color + '40'}
+                                ]}
+                            >
+                                <Ionicons name={badge.icon} size={14} color={badge.color}/>
+                                <Text style={styles.badgeLabel}>{badge.label}</Text>
+                            </View>
+                        ))}
+                    </ScrollView>
+                </View>
+
                 {/* Listings Section */}
                 <View style={styles.listingsSection}>
                     <View style={styles.listingsHeader}>
@@ -234,33 +362,68 @@ const ProfileScreen = ({navigation, route}) => {
 
                     {/* Filter Tabs */}
                     <View style={styles.filterContainer}>
-                        <TouchableOpacity
-                            style={[styles.filterTab, filter === 'all' && styles.filterTabActive]}
-                            onPress={() => setFilter('all')}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>
-                                All
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.filterTab, filter === 'available' && styles.filterTabActive]}
-                            onPress={() => setFilter('available')}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={[styles.filterText, filter === 'available' && styles.filterTextActive]}>
-                                Available
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.filterTab, filter === 'sold' && styles.filterTabActive]}
-                            onPress={() => setFilter('sold')}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={[styles.filterText, filter === 'sold' && styles.filterTextActive]}>
-                                Sold
-                            </Text>
-                        </TouchableOpacity>
+                        {/* All Tab */}
+                        <Animated.View style={{ transform: [{ scale: scaleValues.all }] }}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.filterTab,
+                                    filter === 'all' && styles.filterTabActive,
+                                ]}
+                                onPress={() => handlePress('all')}
+                                activeOpacity={0.8}
+                            >
+                                <Animated.Text
+                                    style={[
+                                        styles.filterText,
+                                        filter === 'all' && styles.filterTextActive,
+                                    ]}
+                                >
+                                    All
+                                </Animated.Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+
+                        {/* Available Tab */}
+                        <Animated.View style={{ transform: [{ scale: scaleValues.available }] }}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.filterTab,
+                                    filter === 'available' && styles.filterTabActive,
+                                ]}
+                                onPress={() => handlePress('available')}
+                                activeOpacity={0.8}
+                            >
+                                <Animated.Text
+                                    style={[
+                                        styles.filterText,
+                                        filter === 'available' && styles.filterTextActive,
+                                    ]}
+                                >
+                                    Available
+                                </Animated.Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+
+                        {/* Sold Tab */}
+                        <Animated.View style={{ transform: [{ scale: scaleValues.sold }] }}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.filterTab,
+                                    filter === 'sold' && styles.filterTabActive,
+                                ]}
+                                onPress={() => handlePress('sold')}
+                                activeOpacity={0.8}
+                            >
+                                <Animated.Text
+                                    style={[
+                                        styles.filterText,
+                                        filter === 'sold' && styles.filterTextActive,
+                                    ]}
+                                >
+                                    Sold
+                                </Animated.Text>
+                            </TouchableOpacity>
+                        </Animated.View>
                     </View>
 
                     {/* Listings Grid */}
@@ -300,11 +463,39 @@ const ProfileScreen = ({navigation, route}) => {
                         userName: seller ? `${seller.firstName} ${seller.lastName}` : 'User',
                     });
                 }}
-                onBlock={() => {
-                    setShowMenu(false);
-                    console.log('Block user');
+                onBlock={handleBlockPress}
+            />
+
+            <ModalComponent
+                visible={isBlockModalVisible}
+                type="delete"
+                title="Block User?"
+                message={`Are you sure? You and ${seller?.firstName || 'this user'} will no longer see each other's content.`}
+                primaryButtonText="Block"
+                secondaryButtonText="Cancel"
+                onPrimaryPress={handleBlockConfirm}
+                onSecondaryPress={() => setIsBlockModalVisible(false)}
+                onClose={() => setIsBlockModalVisible(false)}
+            />
+
+            <ReputationModal
+                visible={showRatingModal}
+                onClose={() => setShowRatingModal(false)}
+                rating={ratingValue}
+                onRatePress={() => {
+                    setShowRatingModal(false);
+                    navigation.navigate('AllReviewsScreen', {sellerId});
                 }}
             />
+
+            {toast.visible && (
+                <ToastMessage
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                    onHide={() => setToast({...toast, visible: false})}
+                />
+            )}
         </SafeAreaView>
     );
 };
@@ -344,6 +535,13 @@ const styles = StyleSheet.create({
     banner: {
         width: '100%',
         height: 160,
+    },
+    patternOverlay: {
+        position: 'absolute',
+        top: -20,
+        right: -40,
+        opacity: 0.5,
+        transform: [{rotate: '15deg'}],
     },
     avatarWrapper: {
         position: 'absolute',
@@ -507,6 +705,85 @@ const styles = StyleSheet.create({
         color: COLORS.dark.textSecondary,
         marginTop: THEME.spacing.md,
         fontWeight: THEME.fontWeight.medium,
+    },
+
+    bigRatingBadge: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    modalRatingTitle: {
+        fontSize: 20,
+        fontWeight: '900',
+        marginBottom: 8,
+    },
+    modalRatingMsg: {
+        fontSize: 14,
+        color: COLORS.dark.textSecondary,
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24,
+        paddingHorizontal: 20,
+    },
+    rateUserCTA: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.dark.cardElevated,
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: THEME.borderRadius.lg,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        gap: 8,
+    },
+    rateUserCTAText: {
+        color: COLORS.primary,
+        fontWeight: '800',
+        fontSize: 14,
+    },
+
+    badgeSection: {
+        marginTop: THEME.spacing.md,
+        paddingHorizontal: THEME.spacing.lg,
+        marginBottom: THEME.spacing.md,
+    },
+    badgeTitle: {
+        fontSize: 12,
+        fontWeight: '800',
+        color: COLORS.dark.textTertiary,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: THEME.spacing.sm,
+    },
+    badgeScroll: {
+        paddingVertical: 4,
+        gap: 10, // Adds spacing between badges
+    },
+    badgePill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.dark.cardElevated,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        // Shadow to give it that "sticker" lift
+        shadowColor: "#000",
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 3,
+        marginRight: 8, // Backup for older RN versions
+    },
+    badgeLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: COLORS.dark.text,
+        marginLeft: 6,
     },
 });
 

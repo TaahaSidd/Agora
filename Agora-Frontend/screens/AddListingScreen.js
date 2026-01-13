@@ -1,22 +1,24 @@
 import React, {useState} from 'react';
 import {
-    View,
-    Text,
-    SafeAreaView,
-    StyleSheet,
-    TouchableOpacity,
-    TextInput,
     Image,
-    ScrollView,
-    StatusBar,
     KeyboardAvoidingView,
     Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
+
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+
 import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
+import {useUserStore} from "../stores/userStore";
 import {apiPost} from '../services/api';
 import {uploadToCloudinary} from "../utils/upload";
 
@@ -76,18 +78,65 @@ const AddListingScreen = ({navigation}) => {
     const MAX_IMAGES = 5;
     const MAX_FILE_SIZE_MB = 5;
 
+    // const pickImages = async () => {
+    //     const result = await ImagePicker.launchImageLibraryAsync({
+    //         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    //         allowsEditing: true,
+    //         quality: 0.7,
+    //     });
+    //     if (!result.canceled) {
+    //         const pickedImage = result.assets[0];
+    //         try {
+    //             const file = new FileSystem.File(pickedImage.uri);
+    //             const info = await file.info();
+    //             if (info.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+    //                 setToast({
+    //                     visible: true,
+    //                     type: 'error',
+    //                     message: `Image too large! Please select one under ${MAX_FILE_SIZE_MB}MB.`,
+    //                 });
+    //                 return;
+    //             }
+    //         } catch (e) {
+    //             console.warn('FileSystem info failed:', e);
+    //         }
+    //         const newImages = [...listing.images, pickedImage.uri];
+    //         handleChange('images', newImages);
+    //     }
+    // };
+
+
     const pickImages = async () => {
+        // Request permissions first
+        console.log('🔍 pickImages called!');
+
+        const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        console.log('📸 Permission status:', status);
+
+        if (status !== 'granted') {
+            setToast({
+                visible: true,
+                type: 'error',
+                message: 'Sorry, we need camera roll permissions to upload images!',
+            });
+            return;
+        }
+
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             quality: 0.7,
+            allowsMultipleSelection: false,
         });
+
         if (!result.canceled) {
             const pickedImage = result.assets[0];
+
             try {
-                const file = new FileSystem.File(pickedImage.uri);
-                const info = await file.info();
-                if (info.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                const fileInfo = await FileSystem.getInfoAsync(pickedImage.uri);
+
+                if (fileInfo.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
                     setToast({
                         visible: true,
                         type: 'error',
@@ -98,6 +147,7 @@ const AddListingScreen = ({navigation}) => {
             } catch (e) {
                 console.warn('FileSystem info failed:', e);
             }
+
             const newImages = [...listing.images, pickedImage.uri];
             handleChange('images', newImages);
         }
@@ -125,18 +175,16 @@ const AddListingScreen = ({navigation}) => {
         setErrors(validationErrors);
         return Object.keys(validationErrors).length === 0;
     };
-
     const handleCreate = async () => {
         if (!validateFields()) return;
 
+        const {currentUser, fetchUser, setCelebrationPending} = useUserStore.getState();
+        const roleBefore = currentUser?.role;
+
         setLoading(true);
         try {
-            console.log("Uploading images to Cloudinary...");
-
             const uploadPromises = listing.images.map(imageUri => uploadToCloudinary(imageUri));
             const cloudinaryUrls = await Promise.all(uploadPromises);
-
-            console.log("Cloudinary URLs:", cloudinaryUrls);
 
             const payload = {
                 title: listing.title,
@@ -147,9 +195,18 @@ const AddListingScreen = ({navigation}) => {
                 images: cloudinaryUrls,
             };
 
-            console.log("Sending payload to backend:", payload);
-            await apiPost("/listing/create", payload);
-            setModalVisible(true);
+            const response = await apiPost("/listing/create", payload);
+
+            if (response) {
+                await fetchUser();
+                const updatedUser = useUserStore.getState().currentUser;
+
+                if (roleBefore === 'STUDENT' && updatedUser?.role === 'SELLER') {
+                    setCelebrationPending(true);
+                }
+
+                setModalVisible(true);
+            }
         } catch (error) {
             console.log("Error creating listing:", error.message || error);
             setToast({
@@ -187,7 +244,7 @@ const AddListingScreen = ({navigation}) => {
                     {/* Header Info */}
                     <View style={styles.headerInfo}>
                         <Text style={styles.headerTitle}>Create New Listing</Text>
-                        <Text style={styles.headerSubtitle}>Fill in the details to list your item</Text>
+                        <Text style={styles.headerSubtitle}>Enter the item details to reach more buyers</Text>
                     </View>
 
                     {/* Multiple Image Upload Section */}
@@ -238,7 +295,7 @@ const AddListingScreen = ({navigation}) => {
                         {listing.images.length === 0 && (
                             <Text style={styles.helperText}>
                                 <Ionicons name="information-circle" size={14} color="#6B7280"/>
-                                {' '}First image will be the primary photo
+                                {' '}First image is your cover photo. Make it your best one!
                             </Text>
                         )}
                         {errors.images && <Text style={styles.errorText}>{errors.images}</Text>}
@@ -256,6 +313,7 @@ const AddListingScreen = ({navigation}) => {
                                 value={listing.title}
                                 onChangeText={(text) => handleChange('title', text)}
                                 maxLength={50}
+                                returnKeyType="next"
                             />
                             <Text
                                 style={[
@@ -275,7 +333,7 @@ const AddListingScreen = ({navigation}) => {
                                       style={[styles.inputIcon, {alignSelf: 'flex-start', marginTop: 12}]}/>
                             <TextInput
                                 style={[styles.input, styles.textArea]}
-                                placeholder="Describe your item in detail..."
+                                placeholder="Describe your item (e.g. any scratches, original packaging)..."
                                 placeholderTextColor="#9CA3AF"
                                 multiline
                                 numberOfLines={5}
@@ -313,18 +371,26 @@ const AddListingScreen = ({navigation}) => {
                                     if (value === '') {
                                         setErrors((prev) => ({...prev, price: 'Price is required'}));
                                     } else if (numericValue < 10) {
-                                        setErrors((prev) => ({...prev, price: 'Price cannot be less than ₹10'}));
-                                    } else if (numericValue > 15000) {
-                                        setErrors((prev) => ({...prev, price: 'Price cannot exceed ₹15,000'}));
+                                        setErrors((prev) => ({...prev, price: 'Min price is ₹10'}));
+                                    } else if (numericValue > 1000000) {
+                                        setErrors((prev) => ({...prev, price: 'Max price is ₹10,00,000'}));
                                     } else {
                                         setErrors((prev) => ({...prev, price: null}));
                                     }
                                 }}
                             />
                         </View>
+
+                        {listing.price && !errors.price && (
+                            <Text style={styles.formattedPrice}>
+                                Preview: ₹{Number(listing.price).toLocaleString('en-IN')}
+                            </Text>
+                        )}
+
                         {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
+
                         {!errors.price && !listing.price && touched && (
-                            <Text style={styles.helperText}>Enter a price between ₹10 and ₹15,000</Text>
+                            <Text style={styles.helperText}>Enter a price between ₹10 and ₹10,00,000</Text>
                         )}
                     </View>
 
@@ -355,7 +421,7 @@ const AddListingScreen = ({navigation}) => {
 
                     {/* Info Box */}
                     <InfoBox
-                        text="Your listing will be reviewed and published within 24 hours"
+                        text="Your listing will go live instantly for everyone on campus!"
                     />
 
                     {/* Submit Button */}
@@ -382,6 +448,7 @@ const AddListingScreen = ({navigation}) => {
                         navigation.replace('MainLayout');
                     }}
                 />
+
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -472,7 +539,6 @@ const styles = StyleSheet.create({
             8,
     }
     ,
-
     imagesGrid: {
         flexDirection: 'row',
         flexWrap:
@@ -481,23 +547,17 @@ const styles = StyleSheet.create({
             10,
     }
     ,
-
     imageCard: {
         width: '31%',
         aspectRatio:
             1,
-        borderRadius:
-            12,
+        borderRadius: 12,
         overflow:
             'hidden',
-        position:
-            'relative',
-        backgroundColor:
-        COLORS.dark.cardElevated,
-        borderWidth:
-            1,
-        borderColor:
-        COLORS.dark.border,
+        position: 'relative',
+        backgroundColor: COLORS.dark.cardElevated,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
     }
     ,
 
@@ -507,7 +567,6 @@ const styles = StyleSheet.create({
             100,
     }
     ,
-
     primaryBadge: {
         position: 'absolute',
         top:
@@ -686,6 +745,13 @@ const styles = StyleSheet.create({
             '500',
     }
     ,
+    formattedPrice: {
+        fontSize: 14,
+        color: '#10B981',
+        marginTop: 4,
+        fontWeight: '600',
+        paddingLeft: 4
+    },
 });
 
 

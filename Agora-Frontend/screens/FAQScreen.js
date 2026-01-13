@@ -1,13 +1,5 @@
 import React, {useState} from 'react';
-import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    StyleSheet,
-    SafeAreaView,
-    StatusBar,
-} from 'react-native';
+import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 
@@ -15,58 +7,58 @@ import AppHeader from '../components/AppHeader';
 import Button from '../components/Button';
 
 import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
 
 const faqData = [
     {
         question: "How do I buy or sell items?",
-        answer: "Explore listings, tap an item to see details, and contact the seller via the in-app chat.",
+        answer: "Browse the feed, tap an item to see details, and chat with the seller. To sell, just tap the '+' icon and upload your item details.",
         icon: "cart-outline",
         gradient: ['#3B82F6', '#2563EB'],
     },
     {
-        question: "Is my data safe?",
-        answer: "Yes, we follow strict privacy policies. Your personal info is never shared without consent.",
-        icon: "shield-checkmark-outline",
-        gradient: ['#10B981', '#059669'],
-    },
-    {
-        question: "Can I delete my account?",
-        answer: "Yes, navigate to Settings → Account → Delete Account. Please note this is permanent.",
-        icon: "trash-outline",
-        gradient: ['#EF4444', '#DC2626'],
-    },
-    {
-        question: "What payment methods are supported?",
-        answer: "Currently, all transactions happen in person. Online payment methods may be added in future updates.",
+        question: "How do I pay for items?",
+        answer: "All payments happen directly between students. We recommend using UPI or cash only AFTER you have inspected the item in person.",
         icon: "card-outline",
         gradient: ['#8B5CF6', '#7C3AED'],
     },
     {
-        question: "How do I report a user or listing?",
-        answer: "Go to the listing or user profile, tap 'Report', and provide details. Our team will review it promptly.",
-        icon: "flag-outline",
-        gradient: ['#F59E0B', '#D97706'],
-    },
-    {
-        question: "Can I search for items by category?",
-        answer: "Yes, use the category filters on the Explore screen to narrow down listings by type and price.",
-        icon: "search-outline",
-        gradient: ['#06B6D4', '#0891B2'],
-    },
-    {
-        question: "How can I see items near my college?",
-        answer: "We currently show listings from your selected college. Future updates may include real-time location filters.",
+        question: "Where should I meet the seller?",
+        answer: "Always meet in public campus areas like the Library, Canteens, or Main Gate. Never meet in isolated areas or off-campus alone.",
         icon: "location-outline",
         gradient: ['#EC4899', '#DB2777'],
     },
     {
-        question: "How do I contact the seller?",
-        answer: "Each listing has a chat button. Tap it to start a conversation with the seller.",
-        icon: "chatbubble-outline",
+        question: "Is my data safe?",
+        answer: "Absolutely. We only use your data for campus verification. Your phone number is only shared if you choose to show it.",
+        icon: "shield-checkmark-outline",
+        gradient: ['#10B981', '#059669'],
+    },
+    {
+        question: "How do I report a scam or issue?",
+        answer: "Tap the 'Flag' icon on any listing or user profile. Our student moderation team reviews all reports within 24 hours.",
+        icon: "flag-outline",
+        gradient: ['#F59E0B', '#D97706'],
+    },
+    {
+        question: "Can I search for specific items?",
+        answer: "Yes! Use the search bar at the top or filter by categories like Textbooks, Electronics, or Cycle to find what you need.",
+        icon: "search-outline",
+        gradient: ['#06B6D4', '#0891B2'],
+    },
+    {
+        question: "Can I delete my account?",
+        answer: "Yes. Go to Profile → Settings → Delete Account. All your listings and data will be permanently removed from our servers.",
+        icon: "trash-outline",
+        gradient: ['#EF4444', '#DC2626'],
+    },
+    {
+        question: "Who runs Agora?",
+        answer: "Agora is a student-led initiative built to help the college community. We aren't a business—we're your peers!",
+        icon: "people-outline",
         gradient: ['#14B8A6', '#0D9488'],
     }
 ];
+
 
 export default function FAQScreen({navigation}) {
     const [expandedIndex, setExpandedIndex] = useState(null);

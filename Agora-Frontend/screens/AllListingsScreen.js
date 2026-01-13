@@ -1,106 +1,200 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-    View,
-    Text,
-    SafeAreaView,
-    StyleSheet,
-    TouchableOpacity,
+    ActivityIndicator,
     FlatList,
-    StatusBar,
     Modal,
     Pressable,
+    SafeAreaView,
     ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useListings } from '../hooks/useListings';
+import {Ionicons} from '@expo/vector-icons';
+import {apiGet} from '../services/api';
 
 import AppHeader from '../components/AppHeader';
 import Card from '../components/Cards';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
 
-const AllListingsScreen = ({ navigation }) => {
-    const { items, loading, error, refetch } = useListings();
-
+const AllListingsScreen = ({navigation}) => {
+    const [items, setItems] = useState([]);
     const [filteredItems, setFilteredItems] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+
     const [filterModalVisible, setFilterModalVisible] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedCondition, setSelectedCondition] = useState('all');
     const [priceRange, setPriceRange] = useState('all');
     const [sortBy, setSortBy] = useState('recent');
 
-    useEffect(() => {
-        setFilteredItems(items);
-    }, [items]);
+    const PAGE_SIZE = 20;
 
     const categories = [
-        { id: 'all', name: 'All Categories', icon: 'apps-outline' },
-        { id: 'textbooks', name: 'Textbooks & Study Materials', icon: 'book-outline' },
-        { id: 'electronics', name: 'Electronics & Gadgets', icon: 'laptop-outline' },
-        { id: 'clothing', name: 'Clothing & Accessories', icon: 'shirt-outline' },
-        { id: 'furniture', name: 'Furniture & Dorm Supplies', icon: 'bed-outline' },
-        { id: 'stationery', name: 'Stationery & Office Supplies', icon: 'pencil-outline' },
+        {id: 'all', name: 'All Categories', icon: 'apps-outline'},
+        {id: 'textbooks', name: 'Textbooks & Study Materials', icon: 'book-outline'},
+        {id: 'electronics', name: 'Electronics & Gadgets', icon: 'laptop-outline'},
+        {id: 'clothing', name: 'Clothing & Accessories', icon: 'shirt-outline'},
+        {id: 'furniture', name: 'Furniture & Dorm Supplies', icon: 'bed-outline'},
+        {id: 'stationery', name: 'Stationery & Office Supplies', icon: 'pencil-outline'},
     ];
 
     const conditions = [
-        { id: 'all', name: 'All Conditions' },
-        { id: 'NEW', name: 'New' },
-        { id: 'USED', name: 'Used' },
-        { id: 'GOOD', name: 'Good' },
-        { id: 'REFURBISHED', name: 'Refurbished' },
-        { id: 'REPAIRED', name: 'Repaired' },
-        { id: 'DAMAGED', name: 'Damaged' },
+        {id: 'all', name: 'All Conditions'},
+        {id: 'NEW', name: 'New'},
+        {id: 'USED', name: 'Used'},
+        {id: 'GOOD', name: 'Good'},
+        {id: 'REFURBISHED', name: 'Refurbished'},
+        {id: 'REPAIRED', name: 'Repaired'},
+        {id: 'DAMAGED', name: 'Damaged'},
     ];
 
     const priceRanges = [
-        { id: 'all', name: 'All Prices' },
-        { id: '0-100', name: 'Under ₹100' },
-        { id: '100-500', name: '₹100 - ₹500' },
-        { id: '500-1000', name: '₹500 - ₹1,000' },
-        { id: '1000-5000', name: '₹1,000 - ₹5,000' },
-        { id: '5000+', name: 'Above ₹5,000' },
+        {id: 'all', name: 'All Prices'},
+        {id: '0-100', name: 'Under ₹100'},
+        {id: '100-500', name: '₹100 - ₹500'},
+        {id: '500-1000', name: '₹500 - ₹1,000'},
+        {id: '1000-5000', name: '₹1,000 - ₹5,000'},
+        {id: '5000+', name: 'Above ₹5,000'},
     ];
 
     const sortOptions = [
-        { id: 'recent', name: 'Most Recent' },
-        { id: 'price-low', name: 'Price: Low to High' },
-        { id: 'price-high', name: 'Price: High to Low' },
-        { id: 'popular', name: 'Most Popular' },
+        {id: 'recent', name: 'Most Recent'},
+        {id: 'price-low', name: 'Price: Low to High'},
+        {id: 'price-high', name: 'Price: High to Low'},
+        {id: 'popular', name: 'Most Popular'},
     ];
 
-    const handleApplyFilters = () => {
-        setFilterModalVisible(false);
+    // Fetch listings with pagination
+    const fetchListings = async (page = 0, isRefresh = false) => {
+        if (loading || loadingMore) return;
+        if (!hasMore && !isRefresh && page > 0) return;
 
-        let updated = [...items];
+        try {
+            if (page === 0) {
+                setLoading(true);
+            } else {
+                setLoadingMore(true);
+            }
+
+            const response = await apiGet('/listing/all', {page, size: PAGE_SIZE});
+
+            //console.log('API Response:', response);
+
+            const rawItems = response?.content || [];
+            const totalPagesFromApi = response?.totalPages || 0;
+
+            const formattedItems = rawItems.map(item => ({
+                ...item,
+                title: item.title || 'Unnamed Item',
+                name: item.title || item.name || 'Unnamed Item',
+                price: `₹ ${item.price || 0}`,
+                actualPrice: Number(item.price) || 0,
+                images: item.imageUrl && item.imageUrl.length > 0
+                    ? item.imageUrl.map(url => ({uri: url}))
+                    : [],
+            }));
+
+            if (isRefresh || page === 0) {
+                setItems(formattedItems);
+                setFilteredItems(formattedItems);
+            } else {
+                setItems(prev => [...prev, ...formattedItems]);
+                setFilteredItems(prev => [...prev, ...formattedItems]);
+            }
+
+            setCurrentPage(page);
+            setTotalPages(totalPagesFromApi);
+            setHasMore(page + 1 < totalPagesFromApi);
+
+        } catch (error) {
+            console.error('Error fetching listings:', error);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchListings(0);
+    }, []);
+
+    const handleLoadMore = () => {
+        if (!loadingMore && hasMore) {
+            fetchListings(currentPage + 1);
+        }
+    };
+
+    const handleRefresh = () => {
+        setRefreshing(true);
+        setCurrentPage(0);
+        setHasMore(true);
+        fetchListings(0, true);
+    };
+
+    const applyFilters = (itemsToFilter) => {
+        let updated = [...itemsToFilter];
 
         // Category filter
         if (selectedCategory !== 'all') {
-            updated = updated.filter(item => item.category === selectedCategory);
+            updated = updated.filter(item =>
+                item.category?.toLowerCase() === selectedCategory.toLowerCase()
+            );
         }
 
         // Condition filter
         if (selectedCondition !== 'all') {
-            updated = updated.filter(item => item.condition === selectedCondition);
+            updated = updated.filter(item =>
+                item.itemCondition?.toUpperCase() === selectedCondition.toUpperCase()
+            );
         }
 
         // Price filter
         if (priceRange !== 'all') {
-            const [min, max] = priceRange.includes('+')
-                ? [parseInt(priceRange), Infinity]
-                : priceRange.split('-').map(Number);
-            updated = updated.filter(item => item.price.replace('₹ ', '') >= min && item.price.replace('₹ ', '') <= max);
+            if (priceRange.includes('+')) {
+                const min = parseInt(priceRange);
+                updated = updated.filter(item => {
+                    const price = parseFloat(item.actualPrice || item.price || 0);
+                    return price >= min;
+                });
+            } else {
+                const [min, max] = priceRange.split('-').map(Number);
+                updated = updated.filter(item => {
+                    const price = parseFloat(item.actualPrice || item.price || 0);
+                    return price >= min && price <= max;
+                });
+            }
         }
 
         // Sort
         switch (sortBy) {
             case 'price-low':
-                updated.sort((a, b) => parseFloat(a.price.replace('₹ ', '')) - parseFloat(b.price.replace('₹ ', '')));
+                updated.sort((a, b) => {
+                    const priceA = parseFloat(a.actualPrice || a.price || 0);
+                    const priceB = parseFloat(b.actualPrice || b.price || 0);
+                    return priceA - priceB;
+                });
                 break;
             case 'price-high':
-                updated.sort((a, b) => parseFloat(b.price.replace('₹ ', '')) - parseFloat(a.price.replace('₹ ', '')));
+                updated.sort((a, b) => {
+                    const priceA = parseFloat(a.actualPrice || a.price || 0);
+                    const priceB = parseFloat(b.actualPrice || b.price || 0);
+                    return priceB - priceA;
+                });
                 break;
             case 'recent':
                 updated.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -109,7 +203,14 @@ const AllListingsScreen = ({ navigation }) => {
                 updated.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
                 break;
         }
-        setFilteredItems(updated);
+
+        return updated;
+    };
+
+    const handleApplyFilters = () => {
+        setFilterModalVisible(false);
+        const filtered = applyFilters(items);
+        setFilteredItems(filtered);
     };
 
     const handleResetFilters = () => {
@@ -118,6 +219,7 @@ const AllListingsScreen = ({ navigation }) => {
         setPriceRange('all');
         setSortBy('recent');
         setFilteredItems(items);
+        setFilterModalVisible(false);
     };
 
     const activeFiltersCount = [
@@ -127,11 +229,20 @@ const AllListingsScreen = ({ navigation }) => {
         sortBy !== 'recent',
     ].filter(Boolean).length;
 
+    const renderFooter = () => {
+        if (!loadingMore) return null;
+        return (
+            <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={COLORS.primary}/>
+                <Text style={styles.footerLoaderText}>Loading more...</Text>
+            </View>
+        );
+    };
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-                <Ionicons name="search-outline" size={60} color="#D1D5DB" />
+                <Ionicons name="search-outline" size={60} color="#D1D5DB"/>
             </View>
             <Text style={styles.emptyTitle}>No Listings Found</Text>
             <Text style={styles.emptyText}>
@@ -149,8 +260,8 @@ const AllListingsScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
-            <AppHeader title="All Listings" onBack={() => navigation.goBack()} />
+            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content"/>
+            <AppHeader title="All Listings" onBack={() => navigation.goBack()}/>
 
             {/* Filter Bar */}
             <View style={styles.filterBar}>
@@ -159,7 +270,7 @@ const AllListingsScreen = ({ navigation }) => {
                     onPress={() => setFilterModalVisible(true)}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="options-outline" size={20} color={COLORS.primary} />
+                    <Ionicons name="options-outline" size={20} color={COLORS.primary}/>
                     <Text style={styles.filterButtonText}>Filters</Text>
                     {activeFiltersCount > 0 && (
                         <View style={styles.filterBadge}>
@@ -173,7 +284,7 @@ const AllListingsScreen = ({ navigation }) => {
                     onPress={() => setFilterModalVisible(true)}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="swap-vertical-outline" size={20} color="#6B7280" />
+                    <Ionicons name="swap-vertical-outline" size={20} color="#6B7280"/>
                     <Text style={styles.sortButtonText}>
                         {sortOptions.find(s => s.id === sortBy)?.name}
                     </Text>
@@ -181,9 +292,9 @@ const AllListingsScreen = ({ navigation }) => {
             </View>
 
             {/* Listings Grid */}
-            {loading ? (
+            {loading && currentPage === 0 ? (
                 <View style={styles.loadingContainer}>
-                    <LoadingSpinner />
+                    <LoadingSpinner/>
                     <Text style={styles.loadingText}>Loading listings...</Text>
                 </View>
             ) : filteredItems.length === 0 ? (
@@ -191,15 +302,21 @@ const AllListingsScreen = ({ navigation }) => {
             ) : (
                 <FlatList
                     data={filteredItems}
-                    renderItem={({ item }) => <Card item={item} />}
-                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({item}) => <Card item={item}/>}
+                    keyExtractor={(item, index) => `${item.id}-${index}`}
                     numColumns={2}
-                    columnWrapperStyle={{ justifyContent: 'space-between' }}
+                    columnWrapperStyle={{justifyContent: 'space-between'}}
                     contentContainerStyle={{
                         paddingHorizontal: 12,
                         paddingBottom: 60,
+                        marginTop: 20,
                     }}
                     showsVerticalScrollIndicator={false}
+                    onEndReached={handleLoadMore}
+                    onEndReachedThreshold={0.5}
+                    ListFooterComponent={renderFooter}
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
                 />
             )}
 
@@ -210,18 +327,14 @@ const AllListingsScreen = ({ navigation }) => {
                 animationType="slide"
                 onRequestClose={() => setFilterModalVisible(false)}
             >
-                <Pressable
-                    style={styles.modalOverlay}
-                    onPress={() => setFilterModalVisible(false)}
-                >
+                <View style={styles.modalOverlay}>
                     <Pressable
-                        style={styles.bottomSheet}
-                        onPress={(e) => e.stopPropagation()}
-                    >
-                        {/* Handle Bar */}
-                        <View style={styles.handleBar} />
+                        style={styles.modalOverlayTouchable}
+                        onPress={() => setFilterModalVisible(false)}
+                    />
+                    <View style={styles.bottomSheet}>
+                        <View style={styles.handleBar}/>
 
-                        {/* Header */}
                         <View style={styles.sheetHeader}>
                             <Text style={styles.sheetTitle}>Filters & Sort</Text>
                             <TouchableOpacity
@@ -229,7 +342,7 @@ const AllListingsScreen = ({ navigation }) => {
                                 style={styles.closeButton}
                                 activeOpacity={0.7}
                             >
-                                <Ionicons name="close" size={24} color="#6B7280" />
+                                <Ionicons name="close" size={24} color="#6B7280"/>
                             </TouchableOpacity>
                         </View>
 
@@ -258,7 +371,7 @@ const AllListingsScreen = ({ navigation }) => {
                                                 {option.name}
                                             </Text>
                                             {sortBy === option.id && (
-                                                <Ionicons name="checkmark" size={16} color={COLORS.primary} />
+                                                <Ionicons name="checkmark" size={16} color={COLORS.primary}/>
                                             )}
                                         </TouchableOpacity>
                                     ))}
@@ -344,30 +457,32 @@ const AllListingsScreen = ({ navigation }) => {
                                     ))}
                                 </View>
                             </View>
+
+                            <View style={{height: 20}}/>
                         </ScrollView>
 
-                        {/* Bottom Actions */}
                         <View style={styles.sheetFooter}>
                             <Button
                                 title="Clear All"
                                 variant="outline"
-                                style={{ flex: 1 }}
+                                style={{flex: 1}}
                                 onPress={handleResetFilters}
                             />
 
                             <Button
                                 title="Apply Filters"
                                 variant="primary"
-                                style={{ flex: 1 }}
+                                style={{flex: 1}}
                                 onPress={handleApplyFilters}
                             />
                         </View>
-                    </Pressable>
-                </Pressable>
+                    </View>
+                </View>
             </Modal>
         </SafeAreaView>
     );
 };
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -377,7 +492,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: THEME.spacing.screenPadding,
         paddingVertical: THEME.spacing.itemGap,
-        backgroundColor: COLORS.dark.cardE,
+        backgroundColor: COLORS.dark.cardElevated,
         borderBottomWidth: THEME.borderWidth.hairline,
         borderBottomColor: COLORS.dark.border,
     },
@@ -433,18 +548,6 @@ const styles = StyleSheet.create({
         marginLeft: THEME.spacing[1] + 2,
         flex: 1,
     },
-    listContainer: {
-        padding: THEME.spacing.md,
-        paddingBottom: THEME.spacing['3xl'],
-    },
-    allListingsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        paddingHorizontal: THEME.spacing.md,
-        paddingBottom: THEME.spacing.md,
-        marginTop: THEME.spacing.md,
-    },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -453,6 +556,16 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         marginTop: THEME.spacing.itemGap,
+        fontSize: THEME.fontSize.sm,
+        color: COLORS.dark.textSecondary,
+        fontWeight: THEME.fontWeight.medium,
+    },
+    footerLoader: {
+        paddingVertical: 20,
+        alignItems: 'center',
+    },
+    footerLoaderText: {
+        marginTop: 8,
         fontSize: THEME.fontSize.sm,
         color: COLORS.dark.textSecondary,
         fontWeight: THEME.fontWeight.medium,
@@ -489,8 +602,11 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: COLORS.dark.overlay,
         justifyContent: 'flex-end',
+    },
+    modalOverlayTouchable: {
+        flex: 1,
+        backgroundColor: COLORS.dark.overlay,
     },
     bottomSheet: {
         width: '100%',
@@ -501,7 +617,7 @@ const styles = StyleSheet.create({
         borderTopWidth: THEME.borderWidth.hairline,
         borderTopColor: COLORS.dark.border,
         ...THEME.shadows.xl,
-        //overflow: 'hidden',
+        paddingBottom: 0,
     },
     handleBar: {
         width: 40,
@@ -540,6 +656,7 @@ const styles = StyleSheet.create({
     sheetContent: {
         paddingHorizontal: THEME.spacing.screenPadding,
         paddingTop: THEME.spacing.itemGap,
+        maxHeight: '60%',
     },
     filterSection: {
         marginBottom: THEME.spacing.sectionGap,
@@ -610,37 +727,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: THEME.spacing.screenPadding,
         paddingVertical: THEME.spacing.md,
+        paddingBottom: THEME.spacing.lg,
         borderTopWidth: THEME.borderWidth.hairline,
         borderTopColor: COLORS.dark.border,
         gap: THEME.spacing.itemGap,
-        backgroundColor: COLORS.dark.bgElevated,
-    },
-    clearButton: {
-        flex: 1,
-        backgroundColor: COLORS.dark.cardElevated,
-        paddingVertical: THEME.spacing.sm + 2,
-        borderRadius: THEME.borderRadius.button,
-        alignItems: 'center',
-        borderWidth: THEME.borderWidth.hairline,
-        borderColor: COLORS.dark.border,
-    },
-    clearButtonText: {
-        color: COLORS.dark.textSecondary,
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.bold,
-    },
-    applyButton: {
-        flex: 1,
-        backgroundColor: COLORS.primary,
-        paddingVertical: THEME.spacing.sm + 2,
-        borderRadius: THEME.borderRadius.button,
-        alignItems: 'center',
-        ...THEME.shadows.primary,
-    },
-    applyButtonText: {
-        color: COLORS.white,
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.bold,
+        backgroundColor: COLORS.dark.card,
     },
 });
 

@@ -1,15 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import * as SecureStore from 'expo-secure-store';
 import * as Location from 'expo-location';
-import {View, Text, SafeAreaView, StyleSheet, StatusBar} from 'react-native';
+import {Animated, SafeAreaView, StatusBar, StyleSheet, Text, View} from 'react-native';
 
-import {apiPost} from '../services/api';
+import {apiDelete, apiPost} from '../services/api';
 import {useProfileImage} from '../hooks/useProfileImage';
 import {useUserStore} from "../stores/userStore";
 
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
-import {Animated} from 'react-native';
 
 import {SettingsScreenSkeleton} from '../components/skeletons/SkeletonItem';
 import ModalComponent from '../components/Modal';
@@ -19,12 +18,11 @@ import QuickActions from '../components/QuickActions';
 import SettingsOptionList from '../components/SettingsOptionList';
 import ProfileSection from '../components/ProfileSection';
 
-import defaultProfile from '../assets/defaultProfile.png';
-
 const SettingsScreen = ({navigation, scrollY}) => {
     const {currentUser: user, loading, isGuest, fetchUser} = useUserStore();
 
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const {profileImage} = useProfileImage();
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
     const [userLocation, setUserLocation] = useState('Fetching...');
@@ -87,6 +85,32 @@ const SettingsScreen = ({navigation, scrollY}) => {
         })();
     }, []);
 
+
+    const handleDeleteAccount = async () => {
+        try {
+            await apiDelete('/profile/me');
+
+            showToast({
+                type: 'success',
+                title: 'Account Deleted',
+                message: 'Your data has been successfully removed.'
+            });
+
+            setTimeout(async () => {
+                await clearAuthData();
+                navigation.reset({index: 0, routes: [{name: 'Auth'}]});
+            }, 2000);
+        } catch (error) {
+            showToast({
+                type: 'error',
+                title: 'Error',
+                message: 'Failed to delete account. Try again later.'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     if (loading || !user) {
         return (
             <SafeAreaView style={styles.safeArea}>
@@ -129,34 +153,32 @@ const SettingsScreen = ({navigation, scrollY}) => {
                     buttonLabel={isGuest ? 'Login to Continue' : 'View Profile'}
                     onButtonPress={() => {
                         if (isGuest) {
+                            // Button: Toast + Login
+                            showToast({
+                                type: 'info',
+                                title: 'Login Required',
+                                message: 'Sign in to view your full profile'
+                            });
                             navigation.replace('Login');
                         } else {
                             navigation.navigate('UserProfileScreen');
                         }
                     }}
-                    onPress={isGuest ? null : () => navigation.navigate('UserProfileScreen')}
+                    onPress={isGuest ? () => {
+                        // Card tap: Toast only
+                        showToast({
+                            type: 'info',
+                            title: 'Profile Locked',
+                            message: 'Login to unlock your profile features'
+                        });
+                    } : () => navigation.navigate('UserProfileScreen')}
                 />
+
 
                 {/* Quick Actions */}
                 <QuickActions
                     title="Quick Actions"
                     actions={[
-                        // {
-                        //     icon: 'list',
-                        //     label: 'My Listings',
-                        //     gradient: ['#3B82F6', '#2563EB'],
-                        //     onPress: () => {
-                        //         if (isGuest) {
-                        //             showToast({
-                        //                 type: 'info',
-                        //                 title: 'Sign in required',
-                        //                 message: 'Please log in to view your listings.',
-                        //             });
-                        //             return;
-                        //         }
-                        //         navigation.navigate('MyListingsScreen');
-                        //     },
-                        // },
                         {
                             icon: 'heart',
                             label: 'Favorites',
@@ -174,19 +196,11 @@ const SettingsScreen = ({navigation, scrollY}) => {
                             },
                         },
                         {
-                            icon: 'person-add',
-                            label: 'Referral',
-                            gradient: ['#10B981', '#059669'],
+                            icon: 'shield-checkmark',
+                            label: 'Safety Center',
+                            gradient: ['#6366F1', '#4F46E5'],
                             onPress: () => {
-                                if (isGuest) {
-                                    showToast({
-                                        type: 'info',
-                                        title: 'Sign in required',
-                                        message: 'Please log in to access referral.',
-                                    });
-                                    return;
-                                }
-                                navigation.navigate('ReferralScreen');
+                                navigation.navigate('SafetyCenterScreen');
                             },
                         },
                     ]}
@@ -216,6 +230,63 @@ const SettingsScreen = ({navigation, scrollY}) => {
                         },
                     ]}
                 />
+
+                <SettingsOptionList
+                    title="Privacy & Security"
+                    options={[
+                        {
+                            icon: 'ban',
+                            iconType: 'ion',
+                            label: 'Blocked Users',
+                            description: 'Manage users you have blocked',
+                            gradient: ['#EF4444', '#B91C1C'],
+                            onPress: () => navigation.navigate('BlockedUsersScreen'),
+                        },
+                        {
+                            icon: 'flag',
+                            iconType: 'ion',
+                            label: 'Report History',
+                            description: 'Track the status of your reports',
+                            gradient: ['#F59E0B', '#D97706'],
+                            onPress: () => navigation.navigate('ReportHistoryScreen'),
+                        },
+                    ]}
+                />
+
+                {/*<SettingsOptionList*/}
+                {/*    title="Account Actions"*/}
+                {/*    options={[*/}
+                {/*        {*/}
+                {/*            icon: 'trash-outline',*/}
+                {/*            iconType: 'ion',*/}
+                {/*            label: 'Delete Account',*/}
+                {/*            description: 'Permanently remove your data',*/}
+                {/*            gradient: ['#FF416C', '#FF4B2B'],*/}
+                {/*            onPress: () => {*/}
+                {/*                if (isGuest) {*/}
+                {/*                    showToast({*/}
+                {/*                        type: 'info',*/}
+                {/*                        title: 'Guest Mode',*/}
+                {/*                        message: 'No account found to delete.',*/}
+                {/*                    });*/}
+                {/*                    return;*/}
+                {/*                }*/}
+                {/*                Alert.alert(*/}
+                {/*                    "Delete Account",*/}
+                {/*                    "Are you sure? This action is permanent and all your listings will be removed.",*/}
+                {/*                    [*/}
+                {/*                        {text: "Cancel", style: "cancel"},*/}
+                {/*                        {*/}
+                {/*                            text: "Delete",*/}
+                {/*                            style: "destructive",*/}
+                {/*                            onPress: () => handleDeleteAccount()*/}
+                {/*                        }*/}
+                {/*                    ]*/}
+                {/*                );*/}
+                {/*            },*/}
+                {/*        },*/}
+                {/*    ]}*/}
+                {/*/>*/}
 
                 <SettingsOptionList
                     title="Support & About"
@@ -251,6 +322,30 @@ const SettingsScreen = ({navigation, scrollY}) => {
                     ]}
                 />
 
+                <SettingsOptionList
+                    title="Account Actions"
+                    options={[
+                        {
+                            icon: 'trash-outline',
+                            iconType: 'ion',
+                            label: 'Delete Account',
+                            description: 'Permanently remove your data',
+                            gradient: ['#FF416C', '#FF4B2B'],
+                            onPress: () => {
+                                if (isGuest) {
+                                    showToast({
+                                        type: 'info',
+                                        title: 'Guest Mode',
+                                        message: 'No account found to delete.',
+                                    });
+                                    return;
+                                }
+                                setDeleteModalVisible(true);
+                            },
+                        },
+                    ]}
+                />
+
                 {/* App Version */}
                 <View style={styles.versionContainer}>
                     <Text style={styles.versionText}>Agora v1.0.0</Text>
@@ -280,6 +375,21 @@ const SettingsScreen = ({navigation, scrollY}) => {
                 secondaryButtonText="Cancel"
                 onPrimaryPress={handleLogout}
                 onSecondaryPress={() => setLogoutModalVisible(false)}
+            />
+
+            {/* Delete Account Modal */}
+            <ModalComponent
+                visible={deleteModalVisible}
+                type="delete"
+                title="Delete Account?"
+                message="This action is permanent. All your listings and data will be removed forever."
+                primaryButtonText="Delete Permanently"
+                secondaryButtonText="Cancel"
+                onPrimaryPress={() => {
+                    setDeleteModalVisible(false);
+                    handleDeleteAccount();
+                }}
+                onSecondaryPress={() => setDeleteModalVisible(false)}
             />
 
             {

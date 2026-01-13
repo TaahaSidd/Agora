@@ -1,15 +1,20 @@
-import React, {useState, useRef} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
-    View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, StatusBar, Platform, FlatList, Linking,
+    Dimensions,
+    FlatList,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {useNavigation, useRoute} from "@react-navigation/native";
 import {Image} from "expo-image";
-import MapView, {Marker} from 'react-native-maps';
 import ImageViewing from 'react-native-image-viewing';
 import Icon from "react-native-vector-icons/Ionicons";
-import Ionicons from 'react-native-vector-icons/Ionicons';
-
-import Tag from "../components/Tag";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import SellerCard from "../components/SellerCard";
 import Button from "../components/Button";
 import Card from "../components/Cards";
@@ -21,7 +26,6 @@ import BottomSheetMenu from "../components/BottomSheetMenu";
 import ToastMessage from "../components/ToastMessage";
 
 import {shareItem} from '../services/share';
-import {getOrCreateChatRoom} from '../services/chatService';
 import {useUserStore} from "../stores/userStore";
 import {useListings} from "../hooks/useListings";
 
@@ -78,33 +82,38 @@ export default function ProductDetailsScreen() {
         latitude: 0, longitude: 0, latitudeDelta: 0.01, longitudeDelta: 0.01,
     };
 
-    const openInMaps = () => {
-        if (!product?.college?.latitude || !product?.college?.longitude) return;
+    const scrollViewRef = useRef(null);
 
-        const lat = Number(product.college.latitude);
-        const lng = Number(product.college.longitude);
-        const label = product.college.collegeName || "College";
+    //Scroll to top
+    useEffect(() => {
+        scrollViewRef.current?.scrollTo({y: 0, animated: false});
+    }, [product?.id]);
 
-        const scheme = Platform.select({
-            ios: 'maps://0,0?q=', android: 'geo:0,0?q='
-        });
-
-        const latLng = `${lat},${lng}`;
-
-        const url = Platform.select({
-            ios: `${scheme}${label}@${latLng}`, android: `${scheme}${latLng}(${label})`
-        });
-
-        Linking.openURL(url);
-    };
+    // const openInMaps = () => {
+    //     if (!product?.college?.latitude || !product?.college?.longitude) return;
+    //
+    //     const lat = Number(product.college.latitude);
+    //     const lng = Number(product.college.longitude);
+    //     const label = product.college.collegeName || "College";
+    //
+    //     const scheme = Platform.select({
+    //         ios: 'maps://0,0?q=', android: 'geo:0,0?q='
+    //     });
+    //
+    //     const latLng = `${lat},${lng}`;
+    //
+    //     const url = Platform.select({
+    //         ios: `${scheme}${label}@${latLng}`, android: `${scheme}${latLng}(${label})`
+    //     });
+    //
+    //     Linking.openURL(url);
+    // };
 
     const openChatRoom = async () => {
         if (loading || chatLoading) return;
         if (isGuest || !currentUser?.id) {
             showToast({
-                type: 'info',
-                title: 'Login Required',
-                message: 'Please log in to chat with the seller.',
+                type: 'info', title: 'Login Required', message: 'Please log in to chat with the seller.',
             });
             return;
         }
@@ -132,9 +141,7 @@ export default function ProductDetailsScreen() {
             };
 
             const listingData = {
-                title: product.title || product.name,
-                price: product.price,
-                imageUrl: product.imageUrl || [],
+                title: product.title || product.name, price: product.price, imageUrl: product.imageUrl || [],
             };
 
             const roomId = `${product.id}_${buyer.email}_${seller.email}`;
@@ -152,9 +159,7 @@ export default function ProductDetailsScreen() {
         } catch (err) {
             console.error('Failed to open chat room:', err);
             showToast({
-                type: 'error',
-                title: 'Error',
-                message: 'Failed to open chat. Please try again.',
+                type: 'error', title: 'Error', message: 'Failed to open chat. Please try again.',
             });
         } finally {
             setChatLoading(false);
@@ -212,17 +217,18 @@ export default function ProductDetailsScreen() {
             </TouchableOpacity>
 
             <View style={styles.headerActions}>
-                <FavoriteButton listingId={product.id} size={24}/>
+                {/*<FavoriteButton listingId={product.id} size={24}/>*/}
                 <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setShowMenu(true)}
-                    style={styles.iconBtn}>
+                    style={styles.iconBtn}
+                >
                     <Ionicons name="ellipsis-vertical" size={20} color="#fff"/>
                 </TouchableOpacity>
             </View>
         </View>
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
             {/* Image Carousel */}
             <View style={styles.imageContainer}>
                 <FlatList
@@ -279,13 +285,11 @@ export default function ProductDetailsScreen() {
                 {/* Title  */}
                 <View style={styles.titleSection}>
                     <Text style={styles.productName}>{productName}</Text>
+                    <FavoriteButton listingId={product.id} size={28}/>
                 </View>
 
                 {/* Price + Condition Badge */}
-                <View style={styles.priceSection}>
-                    <Text style={styles.productPrice}>{productPrice}</Text>
-                    <Tag label={productCondition} type="condition"/>
-                </View>
+                <Text style={styles.productPrice}>{productPrice}</Text>
 
                 {/* College Row */}
                 <View style={styles.infoRow}>
@@ -299,6 +303,9 @@ export default function ProductDetailsScreen() {
                         </View>
                     </View>
                 </View>
+
+                <Text style={styles.sectionTitle}>Description</Text>
+                <ExpandableText text={productDescription || "No description available."}/>
 
                 <View style={styles.sectionDivider}/>
 
@@ -314,10 +321,9 @@ export default function ProductDetailsScreen() {
 
                 <View style={styles.sectionDivider}/>
 
-                <Text style={styles.sectionTitle}>Description</Text>
-                <ExpandableText text={productDescription || "No description available."}/>
-
-                <View style={styles.sectionDivider}/>
+                {/*<Text style={styles.sectionTitle}>Description</Text>*/}
+                {/*<ExpandableText text={productDescription || "No description available."}/>*/}
+                {/*<View style={styles.sectionDivider}/>*/}
 
                 <Text style={styles.sectionTitle}>Product Details</Text>
                 <View style={styles.detailsGrid}>
@@ -331,31 +337,31 @@ export default function ProductDetailsScreen() {
 
                 <View style={styles.sectionDivider}/>
 
-                {/* Enhanced Map Section */}
-                <View style={styles.mapHeader}>
-                    <Text style={styles.sectionTitle}>Location</Text>
-                    <TouchableOpacity
-                        style={styles.viewMapButton}
-                        onPress={openInMaps}
-                        activeOpacity={0.7}
-                    >
-                        <Icon name="navigate" size={16} color={COLORS.primary}/>
-                        <Text style={styles.viewMapText}>Directions</Text>
-                    </TouchableOpacity>
-                </View>
+                {/*/!* Enhanced Map Section *!/*/}
+                {/*<View style={styles.mapHeader}>*/}
+                {/*    <Text style={styles.sectionTitle}>Location</Text>*/}
+                {/*    <TouchableOpacity*/}
+                {/*        style={styles.viewMapButton}*/}
+                {/*        onPress={openInMaps}*/}
+                {/*        activeOpacity={0.7}*/}
+                {/*    >*/}
+                {/*        <Icon name="navigate" size={16} color={COLORS.primary}/>*/}
+                {/*        <Text style={styles.viewMapText}>Directions</Text>*/}
+                {/*    </TouchableOpacity>*/}
+                {/*</View>*/}
 
-                <View style={styles.mapCard}>
-                    <MapView
-                        style={styles.map}
-                        initialRegion={productCoordinates}
-                        scrollEnabled={false}
-                        zoomEnabled={false}
-                    >
-                        <Marker coordinate={productCoordinates} title={productName}/>
-                    </MapView>
-                </View>
+                {/*<View style={styles.mapCard}>*/}
+                {/*    <MapView*/}
+                {/*        style={styles.map}*/}
+                {/*        initialRegion={productCoordinates}*/}
+                {/*        scrollEnabled={false}*/}
+                {/*        zoomEnabled={false}*/}
+                {/*    >*/}
+                {/*        <Marker coordinate={productCoordinates} title={productName}/>*/}
+                {/*    </MapView>*/}
+                {/*</View>*/}
 
-                <View style={styles.sectionDivider}/>
+                {/*<View style={styles.sectionDivider}/>*/}
 
                 {/* Enhanced Related Listings */}
                 <View style={styles.relatedHeader}>
@@ -390,19 +396,35 @@ export default function ProductDetailsScreen() {
         </ScrollView>
 
         {/* Floating Bottom Action Bar */}
-        {!isOwnListing && (<View style={styles.bottomBar}>
-            <Button
-                title={chatLoading ? "Opening..." : "Chat with Seller"}
-                variant="primary"
-                size="large"
-                icon="chatbubble-ellipses"
-                iconPosition="left"
-                onPress={openChatRoom}
-                fullWidth
-                loading={chatLoading}
-                disabled={chatLoading}
-            />
-        </View>)}
+        {!isOwnListing && (
+            <View style={styles.bottomBar}>
+                {isGuest ? (
+                    // ✅ Guest sees sign-in button
+                    <Button
+                        title="Log In to Chat"
+                        variant="primary"
+                        size="large"
+                        icon="log-in-outline"
+                        iconPosition="left"
+                        onPress={() => navigation.navigate('Login')}
+                        fullWidth
+                    />
+                ) : (
+                    // ✅ Logged-in users see chat button
+                    <Button
+                        title={chatLoading ? "Opening..." : "Chat with Seller"}
+                        variant="primary"
+                        size="large"
+                        icon="chatbubble-ellipses"
+                        iconPosition="left"
+                        onPress={openChatRoom}
+                        fullWidth
+                        loading={chatLoading}
+                        disabled={chatLoading}
+                    />
+                )}
+            </View>
+        )}
 
         {/* Bottom Sheet Menu */}
         <BottomSheetMenu
@@ -444,7 +466,7 @@ const styles = StyleSheet.create({
         paddingBottom: THEME.spacing.xs,
         zIndex: THEME.zIndex.fixed,
     }, headerActions: {
-        flexDirection: "row", gap: THEME.spacing[2], alignItems: "center",
+        flexDirection: "row", gap: THEME.spacing.sm, alignItems: "center",
     }, iconBtn: {
         width: 40,
         height: 40,
@@ -497,21 +519,26 @@ const styles = StyleSheet.create({
         paddingBottom: 100,
     },
     titleSection: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
         marginBottom: THEME.spacing.sm,
-    }, productName: {
-        fontSize: THEME.fontSize['2xl'],
+    },
+    productName: {
+        flex: 1,
+        fontSize: THEME.fontSize['3xl'],
         fontWeight: THEME.fontWeight.bold,
         color: COLORS.dark.text,
-        marginBottom: THEME.spacing[2],
-        lineHeight: THEME.fontSize['2xl'] * 1.2,
+        lineHeight: THEME.fontSize['2xl'] * 1.3,
+        letterSpacing: -0.5,
+        paddingRight: THEME.spacing.md,
     },
-    priceSection: {
-        flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: THEME.spacing.lg,
-    }, productPrice: {
+    productPrice: {
         fontSize: THEME.fontSize['3xl'],
         fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.primary,
-        letterSpacing: -0.5,
+        color: COLORS.primaryLight,
+        letterSpacing: -0.8,
+        marginBottom: THEME.spacing.lg,
     }, infoRow: {
         flexDirection: "row",
         backgroundColor: COLORS.dark.card,

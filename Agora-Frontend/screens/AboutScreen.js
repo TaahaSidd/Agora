@@ -1,14 +1,14 @@
 import React from 'react';
 import {
-    View,
-    Text,
+    Image,
+    Linking,
     SafeAreaView,
     ScrollView,
-    StyleSheet,
     StatusBar,
-    Image,
+    StyleSheet,
+    Text,
     TouchableOpacity,
-    Linking
+    View
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
@@ -18,11 +18,11 @@ import {THEME} from '../utils/theme';
 
 export default function AboutScreen({navigation}) {
     const handleEmail = () => {
-        Linking.openURL('mailto:support@agora.com');
+        Linking.openURL('mailto:hello.spicalabs@gmail.com');
     };
 
     const handleWebsite = () => {
-        Linking.openURL('https://agora.com');
+        Linking.openURL('https://spicalabs.netlify.app/products/agora');
     };
 
     const handleSocial = (platform) => {
@@ -43,7 +43,7 @@ export default function AboutScreen({navigation}) {
         },
         {icon: 'flash', label: 'Fast & Easy', desc: 'List items in seconds', gradient: ['#10B981', '#059669']},
         {icon: 'people', label: 'Community', desc: 'Connect with peers', gradient: ['#F59E0B', '#D97706']},
-        {icon: 'leaf', label: 'Sustainable', desc: 'Reduce, reuse, recycle', gradient: ['#EC4899', '#DB2777']},
+        {icon: 'leaf', label: 'Sustainable', desc: 'Give items a second life', gradient: ['#EC4899', '#DB2777']},
     ];
 
     const socialButtons = [
@@ -75,20 +75,27 @@ export default function AboutScreen({navigation}) {
                         Connecting students to buy, sell, and trade items within their college community.
                     </Text>
 
-                    <View style={styles.versionBadge}>
-                        <Ionicons name="code-outline" size={16} color={COLORS.primary}/>
-                        <Text style={styles.versionText}>Version 1.0.0</Text>
-                    </View>
+                    {/*<View style={styles.versionBadge}>*/}
+                    {/*    <Ionicons name="code-outline" size={16} color={COLORS.primary}/>*/}
+                    {/*    <Text style={styles.versionText}>Version 1.0.0</Text>*/}
+                    {/*</View>*/}
                 </View>
 
                 {/* Mission Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Our Mission</Text>
                     <View style={styles.missionCard}>
+                        {/* Added a subtle icon background for personality */}
+                        <Ionicons
+                            name="megaphone-outline"
+                            size={40}
+                            color={`${COLORS.primary}15`}
+                            style={styles.quoteIcon}
+                        />
                         <Text style={styles.missionText}>
-                            Agora empowers students to build a sustainable campus economy by making it easy to buy,
-                            sell, and exchange items with peers. We're creating a trusted community marketplace that
-                            puts students first.
+                            Agora was built by students, for students. We believe campus life is better when we help
+                            each other out—whether it’s passing down a textbook or finding a deal on a cycle. Our
+                            mission is to create a trusted, sustainable marketplace that belongs to the community.
                         </Text>
                     </View>
                 </View>
@@ -133,7 +140,7 @@ export default function AboutScreen({navigation}) {
                             </LinearGradient>
                             <View style={styles.contactInfo}>
                                 <Text style={styles.contactLabel}>Email Support</Text>
-                                <Text style={styles.contactValue}>support@agora.com</Text>
+                                <Text style={styles.contactValue}>hello.spicalabs@gmail.com</Text>
                             </View>
                             <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
                         </TouchableOpacity>
@@ -155,7 +162,7 @@ export default function AboutScreen({navigation}) {
                             </LinearGradient>
                             <View style={styles.contactInfo}>
                                 <Text style={styles.contactLabel}>Website</Text>
-                                <Text style={styles.contactValue}>www.agora.com</Text>
+                                <Text style={styles.contactValue}>spicalabs.netlify.app/agora</Text>
                             </View>
                             <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
                         </TouchableOpacity>
@@ -203,7 +210,7 @@ export default function AboutScreen({navigation}) {
 
                         <TouchableOpacity
                             style={styles.legalItem}
-                            onPress={() => navigation.navigate('TermsScreen')}
+                            onPress={() => navigation.navigate('PrivacyPolicyScreen')}
                             activeOpacity={0.85}
                         >
                             <Ionicons name="document-text-outline" size={18} color={COLORS.dark.textSecondary}/>
@@ -219,7 +226,7 @@ export default function AboutScreen({navigation}) {
                     <Text style={styles.footerText}>by the Agora Team</Text>
                 </View>
 
-                <Text style={styles.copyright}>© 2025 Agora. All rights reserved.</Text>
+                <Text style={styles.copyright}>© 2026 Agora. All rights reserved.</Text>
             </ScrollView>
         </SafeAreaView>
     );
@@ -307,21 +314,31 @@ const styles = StyleSheet.create({
     missionCard: {
         backgroundColor: COLORS.dark.card,
         borderRadius: 16,
-        padding: 20,
+        padding: 24,
         borderWidth: 1,
         borderColor: COLORS.dark.border,
+        borderLeftWidth: 5,
+        borderLeftColor: COLORS.primary,
+        position: 'relative',
+        overflow: 'hidden',
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 2,
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 3,
     },
     missionText: {
-        fontSize: 14,
-        color: COLORS.dark.textSecondary,
-        lineHeight: 22,
+        fontSize: 15,
+        color: COLORS.dark.text,
+        lineHeight: 24,
         fontWeight: '500',
-        letterSpacing: -0.1,
+        fontStyle: 'italic',
+    },
+    quoteIcon: {
+        position: 'absolute',
+        top: -5,
+        right: -5,
+        transform: [{rotate: '-15deg'}],
     },
     featuresGrid: {
         flexDirection: 'row',

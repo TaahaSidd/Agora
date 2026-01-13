@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, SafeAreaView, FlatList, Animated} from 'react-native';
+import {Animated, SafeAreaView, StyleSheet, Text, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {apiDelete} from '../services/api';
 import * as SecureStore from 'expo-secure-store';
@@ -14,9 +14,11 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 import {COLORS} from '../utils/colors';
 import {useMyListings} from '../hooks/useMyListings';
+import {useUserStore} from "../stores/userStore";
 
 const MyListingsScreen = ({navigation, scrollY}) => {
     const theme = COLORS.dark;
+    const {currentUser, isGuest} = useUserStore();
 
     const {listings, loading, setListings, setLoading} = useMyListings();
     const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -33,6 +35,39 @@ const MyListingsScreen = ({navigation, scrollY}) => {
         };
         checkTooltip();
     }, []);
+
+    if (isGuest || !currentUser || currentUser?.verificationStatus === 'PENDING') {
+        return (
+            <SafeAreaView style={[dynamicStyles.safeArea, {backgroundColor: theme.bg}]}>
+                <AppHeader title="My Listings"/>
+                <View style={dynamicStyles.emptyContainer}>
+                    <Ionicons
+                        name={currentUser?.verificationStatus === 'PENDING' ? "shield-checkmark-outline" : "list-outline"}
+                        size={80}
+                        color={theme.textTertiary}
+                    />
+                    <Text style={[dynamicStyles.emptyTitle, {color: theme.text}]}>
+                        {isGuest ? "Log in Required" : "Complete Profile Required"}
+                    </Text>
+                    <Text style={[dynamicStyles.emptyText, {color: theme.textSecondary}]}>
+                        {isGuest
+                            ? "Please log in to view and manage your listings"
+                            : "Please complete your profile to view and manage listings"
+                        }
+                    </Text>
+                    <Button
+                        title={isGuest ? "Log In" : "Complete Profile"}
+                        variant="primary"
+                        icon={isGuest ? "log-in-outline" : "person-outline"}
+                        onPress={() => navigation[isGuest ? 'replace' : 'navigate'](
+                            isGuest ? 'Login' : 'EditListingScreen'
+                        )}
+                    />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
 
     const handleCloseTooltip = async () => {
         setTooltipVisible(false);

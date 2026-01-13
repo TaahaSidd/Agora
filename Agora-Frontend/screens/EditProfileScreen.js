@@ -1,15 +1,15 @@
-import React, {useState, useMemo} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
-    View,
-    Text,
-    SafeAreaView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    ScrollView,
-    StatusBar,
     ActivityIndicator,
     Alert,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import {Image} from 'expo-image';
 import {Ionicons} from '@expo/vector-icons';
@@ -17,13 +17,14 @@ import * as ImagePicker from 'expo-image-picker';
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
 
-import {apiPut} from '../services/api';
+import {apiPut, completeProfile} from '../services/api';
 import {uploadProfilePicture} from '../utils/upload';
 import {useUserStore} from '../stores/userStore';
 
 import SuccessModal from '../components/Modal';
 import Button from '../components/Button';
 import AppHeader from '../components/AppHeader';
+import ToastMessage from "../components/ToastMessage";
 
 const EditProfileScreen = ({navigation, route}) => {
     const {currentUser, fetchUser, updateUser, updateAvatar} = useUserStore();
@@ -55,6 +56,11 @@ const EditProfileScreen = ({navigation, route}) => {
     const [loading, setLoading] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+
+    const showToast = ({type, title, message}) => {
+        setToast({visible: true, type, title, message});
+    };
 
     const handleChange = (key, value) => {
         setForm({...form, [key]: value});
@@ -68,7 +74,11 @@ const EditProfileScreen = ({navigation, route}) => {
 
         const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission Required', 'Please allow access to your photo library.');
+            showToast({
+                type: 'error',
+                title: 'Permission Required',
+                message: 'Please allow access to your photo library',
+            });
             return;
         }
 
@@ -93,11 +103,19 @@ const EditProfileScreen = ({navigation, route}) => {
                 setUploadedImageUrl(url);
                 setLocalProfileImage(url);
 
-                Alert.alert('Image Ready', 'Click "Save Changes" to update your profile');
+                showToast({
+                    type: 'success',
+                    title: 'Image Ready',
+                    message: 'Click "Save Changes" to update your profile',
+                });
 
             } catch (error) {
                 console.error('❌ Upload error:', error);
-                Alert.alert('Error', 'Failed to upload image');
+                showToast({
+                    type: 'error',
+                    title: 'Upload Failed',
+                    message: 'Failed to upload image. Please try again',
+                });
                 setLocalProfileImage(originalData.profileImage);
             } finally {
                 setUploadingImage(false);
@@ -109,7 +127,6 @@ const EditProfileScreen = ({navigation, route}) => {
         form.firstName.trim() !== originalData.firstName ||
         form.lastName.trim() !== originalData.lastName ||
         form.userEmail.trim() !== originalData.userEmail ||
-        form.mobileNumber.trim() !== originalData.mobileNumber ||
         form.idCardNo.trim() !== originalData.idCardNo ||
         uploadedImageUrl !== null;
 
@@ -122,66 +139,72 @@ const EditProfileScreen = ({navigation, route}) => {
 
     const handleSave = async () => {
         if (!hasChanges) {
-            Alert.alert('No Changes', 'No changes detected');
+            showToast({
+                type: 'info',
+                title: 'No Changes',
+                message: 'Make some changes before saving',
+            });
             return;
         }
 
         if (!isFormValid) {
-            Alert.alert('Invalid Form', 'Please fill in all required fields');
+            showToast({
+                type: 'error',
+                title: 'Invalid Form',
+                message: 'Please fill in all required fields',
+            });
             return;
         }
 
         try {
             setLoading(true);
 
-            const payload = {
+            const profileData = {
                 firstName: form.firstName.trim(),
                 lastName: form.lastName.trim(),
                 userEmail: form.userEmail.trim(),
                 mobileNumber: form.mobileNumber.trim(),
-                idCardNo: form.idCardNo.trim(),
             };
 
             if (uploadedImageUrl) {
-                payload.profileImage = uploadedImageUrl;
+                profileData.profileImage = uploadedImageUrl;
             }
 
-            console.log('💾 Saving all changes:', payload);
+            console.log('💾 Saving:', profileData);
 
-            await apiPut(`/profile/update/${user.id}`, payload);
+            const isPendingUser = user?.verificationStatus === 'PENDING';
 
-            console.log('✅ All changes saved to backend');
-
-            console.log('🔄 Updating Zustand store...');
+            if (isPendingUser) {
+                await completeProfile(jwt, profileData);
+            } else {
+                await apiPut(`/profile/update/${user.id}`, profileData);
+            }
 
             updateUser({
-                firstName: payload.firstName,
-                lastName: payload.lastName,
-                userEmail: payload.userEmail,
-                email: payload.userEmail,
-                mobileNumber: payload.mobileNumber,
-                idCardNo: payload.idCardNo,
+                firstName: profileData.firstName,
+                lastName: profileData.lastName,
+                userEmail: profileData.userEmail,
+                email: profileData.userEmail,
             });
 
             if (uploadedImageUrl) {
                 updateAvatar(uploadedImageUrl);
             }
 
-            console.log('✅ Zustand store updated');
-
             await fetchUser();
-
             setModalVisible(true);
+
         } catch (error) {
-            console.error('Error updating profile:', error.response?.data || error.message);
-            Alert.alert(
-                'Error',
-                error.response?.data?.message || 'Something went wrong while updating your profile.'
-            );
+            showToast({
+                type: 'error',
+                title: 'Save Failed',
+                message: error.response?.data?.message || 'Failed to save changes',
+            });
         } finally {
             setLoading(false);
         }
     };
+
 
     if (loading) {
         return (
@@ -301,18 +324,26 @@ const EditProfileScreen = ({navigation, route}) => {
 
                     {/* Phone Input */}
                     <View style={[styles.inputWrapper, styles.inputWrapperLast]}>
-                        <Text style={styles.label}>Phone Number</Text>
-                        <View style={styles.inputContainer}>
+                        <View style={styles.labelRow}>
+                            <Text style={styles.label}>Phone Number</Text>
+                            <View style={styles.lockedBadge}>
+                                <Ionicons name="lock-closed" size={12} color={COLORS.gray500}/>
+                                <Text style={styles.lockedText}>Locked</Text>
+                            </View>
+                        </View>
+                        <View style={[styles.inputContainer, styles.inputDisabled]}>
                             <Ionicons name="call-outline" size={18} color={COLORS.dark.textTertiary}/>
                             <TextInput
                                 style={styles.input}
                                 value={form.mobileNumber}
-                                onChangeText={(text) => handleChange('mobileNumber', text)}
+                                editable={false}
                                 placeholder="+91 00000 00000"
                                 placeholderTextColor={COLORS.dark.textTertiary}
-                                keyboardType="phone-pad"
                             />
                         </View>
+                        <Text style={styles.helperText}>
+                            Used for login and security. Cannot be edited.
+                        </Text>
                     </View>
                 </View>
 
@@ -322,22 +353,7 @@ const EditProfileScreen = ({navigation, route}) => {
                         <View style={[styles.iconCircle, {backgroundColor: COLORS.warning + '15'}]}>
                             <Ionicons name="school" size={20} color={COLORS.warning}/>
                         </View>
-                        <Text style={styles.cardTitle}>Academic Information</Text>
-                    </View>
-
-                    {/* Student ID Input */}
-                    <View style={styles.inputWrapper}>
-                        <Text style={styles.label}>Student ID</Text>
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="card-outline" size={18} color={COLORS.dark.textTertiary}/>
-                            <TextInput
-                                style={styles.input}
-                                value={form.idCardNo}
-                                onChangeText={(text) => handleChange('idCardNo', text)}
-                                placeholder="Enter your student ID"
-                                placeholderTextColor={COLORS.dark.textTertiary}
-                            />
-                        </View>
+                        <Text style={styles.cardTitle}>College Information</Text>
                     </View>
 
                     {/* College Input (Disabled) */}
@@ -360,7 +376,7 @@ const EditProfileScreen = ({navigation, route}) => {
                             />
                         </View>
                         <Text style={styles.helperText}>
-                            College cannot be changed after registration
+                            Verified college. Contact support to update.
                         </Text>
                     </View>
                 </View>
@@ -369,12 +385,12 @@ const EditProfileScreen = ({navigation, route}) => {
                 <View style={styles.infoBanner}>
                     <Ionicons name="information-circle" size={20} color={COLORS.primary}/>
                     <Text style={styles.infoBannerText}>
-                        Make sure your information is accurate for verification purposes
+                        Accurate information helps maintain a safe community for everyone
                     </Text>
                 </View>
 
                 {/* Save Button */}
-                <View style={{ marginHorizontal: THEME.spacing.md }}>
+                <View style={{marginHorizontal: THEME.spacing.md}}>
                     <Button
                         title="Save Changes"
                         onPress={handleSave}
@@ -406,6 +422,15 @@ const EditProfileScreen = ({navigation, route}) => {
                 iconBgColor={COLORS.successBg}
                 buttonText="Done"
             />
+
+            {toast.visible && (
+                <ToastMessage
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                    onHide={() => setToast({...toast, visible: false})}
+                />
+            )}
         </SafeAreaView>
     );
 };

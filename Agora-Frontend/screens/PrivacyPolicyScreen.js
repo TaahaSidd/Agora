@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, SafeAreaView, ScrollView, StyleSheet, StatusBar} from 'react-native';
+import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 
@@ -21,7 +21,7 @@ export default function PrivacyPolicyScreen({navigation}) {
                 {/* Header */}
                 <View style={styles.headerCard}>
                     <LinearGradient
-                        colors={['#10B981', '#059669']}
+                        colors={['#6366F1', '#4F46E5']}
                         style={styles.headerIconCircle}
                         start={{x: 0, y: 0}}
                         end={{x: 1, y: 1}}
@@ -135,6 +135,37 @@ export default function PrivacyPolicyScreen({navigation}) {
                         </Text>
                     </View>
 
+                    {/* Platform Terms & Disclaimer */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, {color: COLORS.error}]}>Terms & Disclaimer</Text>
+                        <Text style={styles.paragraph}>
+                            Agora is a peer-to-peer campus marketplace. By using this platform, you acknowledge and
+                            agree to the following:
+                        </Text>
+                        <View style={styles.list}>
+                            <View style={styles.listItem}>
+                                <View style={[styles.bullet, {backgroundColor: COLORS.error}]}/>
+                                <Text style={styles.listText}>Agora does not own, inspect, or guarantee any items
+                                    listed.</Text>
+                            </View>
+                            <View style={styles.listItem}>
+                                <View style={[styles.bullet, {backgroundColor: COLORS.error}]}/>
+                                <Text style={styles.listText}>All transactions, payments, and meetings are strictly at
+                                    your own risk.</Text>
+                            </View>
+                            <View style={styles.listItem}>
+                                <View style={[styles.bullet, {backgroundColor: COLORS.error}]}/>
+                                <Text style={styles.listText}>Agora is not liable for any financial losses, damages, or
+                                    disputes between users.</Text>
+                            </View>
+                            <View style={styles.listItem}>
+                                <View style={[styles.bullet, {backgroundColor: COLORS.error}]}/>
+                                <Text style={styles.listText}>For safety, always meet in public, well-lit campus
+                                    areas.</Text>
+                            </View>
+                        </View>
+                    </View>
+
                     {/* Contact */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Contact Us</Text>
@@ -146,7 +177,7 @@ export default function PrivacyPolicyScreen({navigation}) {
 
                 {/* Footer Note */}
                 <InfoBox
-                    text="By using Agora, you agree to our Privacy Policy and Terms of Service."
+                    text="By using Agora, you acknowledge that you have read our safety guidelines and agree that all campus trades are conducted at your own discretion."
                     icon="information-circle"
                 />
             </ScrollView>

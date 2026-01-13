@@ -10,32 +10,25 @@ import {COLORS} from '../utils/colors';
 
 const SupportScreen = ({navigation}) => {
     const contactOptions = [
-        {
-            title: 'Live Chat',
-            description: 'Chat with our support team',
-            icon: 'chatbubble-ellipses',
-            gradient: ['#3B82F6', '#2563EB'],
-            iconType: 'ion',
-        },
-        {
-            title: 'Submit a Ticket',
-            description: "We'll respond within 24hrs",
-            icon: 'support-agent',
-            gradient: ['#EF4444', '#DC2626'],
-            iconType: 'material',
-        },
+        // {
+        //     title: 'Live Chat',
+        //     description: 'Chat with our support team',
+        //     icon: 'chatbubble-ellipses',
+        //     gradient: ['#3B82F6', '#2563EB'],
+        //     iconType: 'ion',
+        // },
+        // {
+        //     title: 'Submit a Ticket',
+        //     description: "We'll respond within 24hrs",
+        //     icon: 'support-agent',
+        //     gradient: ['#EF4444', '#DC2626'],
+        //     iconType: 'material',
+        // },
         {
             title: 'Email Us',
-            description: 'support@agora.com',
+            description: 'hello.spicalabs@gmail.com',
             icon: 'mail',
             gradient: ['#10B981', '#059669'],
-            iconType: 'ion',
-        },
-        {
-            title: 'Phone Support',
-            description: '+91 123 456 7890',
-            icon: 'call',
-            gradient: ['#F59E0B', '#D97706'],
             iconType: 'ion',
         },
     ];

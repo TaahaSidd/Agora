@@ -99,7 +99,13 @@ const ReportListingScreen = ({ navigation, route }) => {
             return;
         }
 
-        const success = await submitReport("LISTING", selectedReason, listingId);
+        const success = await submitReport(
+            "LISTING",
+            selectedReason,
+            listingId,
+            additionalDetails
+        );
+
         if (success) {
             setShowSuccessModal(true);
         } else {
