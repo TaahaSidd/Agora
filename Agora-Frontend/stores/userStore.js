@@ -6,6 +6,8 @@ export const useUserStore = create((set, get) => ({
     currentUser: null,
     loading: true,
     isGuest: true,
+    isCelebrationPending: false,
+    setCelebrationPending: (value) => set({isCelebrationPending: value}),
 
     fetchUser: async () => {
         set({loading: true});
@@ -46,18 +48,20 @@ export const useUserStore = create((set, get) => ({
             // ✅ Map ALL user fields
             const mappedUser = {
                 id: data.id,
-                name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'User',
+                name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
                 firstName: data.firstName,
                 lastName: data.lastName,
-                email: data.userEmail || data.email || 'email@example.com',
+                email: data.userEmail || data.email,
                 userEmail: data.userEmail,
                 mobileNumber: data.mobileNumber,
                 idCardNo: data.idCardNo,
+                role: data.role,
                 avatar: data.profileImage || 'https://i.pravatar.cc/100',
                 profileImage: data.profileImage,
                 collegeId: data.college?.id || null,
                 collegeName: data.college?.collegeName || null,
                 collegeEmail: data.college?.collegeEmail || null,
+                verificationStatus: data.verificationStatus,
             };
 
             set({
@@ -66,7 +70,7 @@ export const useUserStore = create((set, get) => ({
                 isGuest: false
             });
             await SecureStore.setItemAsync('currentUser', JSON.stringify(mappedUser));
-            //console.log("Mapped User", mappedUser);
+            console.log("Mapped User", mappedUser);
 
         } catch (err) {
             console.error('Failed to fetch user:', err);
