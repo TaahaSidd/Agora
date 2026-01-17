@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { apiGet } from '../services/api';
+import {useEffect, useState} from 'react';
+import {apiGet} from '../services/api';
 
 export const useSellerProfile = (sellerId) => {
     const [seller, setSeller] = useState(null);
@@ -13,14 +13,15 @@ export const useSellerProfile = (sellerId) => {
             try {
                 setLoading(true);
                 const response = await apiGet(`/profile/seller/${sellerId}`);
+                //  console.log("RESPONSE - >", response);
 
                 const sellerData = response?.seller || response?.data?.seller || null;
                 const listingsData = response?.listing || response?.data?.listing || [];
-                
+
                 const formattedListings = listingsData.map(item => ({
                     ...item,
                     images: item.imageUrl && item.imageUrl.length > 0
-                        ? item.imageUrl.map(url => ({ uri: url }))
+                        ? item.imageUrl.map(url => ({uri: url}))
                         : [require('../assets/defaultProfile.png')],
                     name: item.title || 'Untitled',
                     price: item.price ? `₹ ${item.price}` : 'N/A',
@@ -38,5 +39,5 @@ export const useSellerProfile = (sellerId) => {
         loadSellerData();
     }, [sellerId]);
 
-    return { seller, listings, loading };
+    return {seller, listings, loading};
 };

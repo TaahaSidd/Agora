@@ -15,6 +15,8 @@ export const useAddSellerReview = () => {
                 comment,
             });
 
+            console.log("RES", res);
+
             return res.data;
         } catch (err) {
             console.error('Error posting seller review:', err);
