@@ -15,6 +15,7 @@ export default function SignUpNavigator() {
                 headerStyle: { backgroundColor: '#003366' },
                 headerTintColor: '#fff',
                 headerTitleAlign: 'center',
+                headerShown: false,
                 animation: 'slide_from_right',
             }}
         >
