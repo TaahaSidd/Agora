@@ -29,6 +29,7 @@ public class JwtTokenProvider {
         Map<String, Object> extraClaims = new HashMap<>();
 
         if (userDetails instanceof AgoraUser user) {
+            extraClaims.put("userId", user.getId());
             extraClaims.put("phone", user.getMobileNumber());
             extraClaims.put("username", user.getUserName());
 
