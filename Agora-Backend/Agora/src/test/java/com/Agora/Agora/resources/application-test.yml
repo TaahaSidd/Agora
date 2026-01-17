@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    gcp:
+      firebase:
+        enabled: false
+  profiles:
+    active: test
