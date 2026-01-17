@@ -127,7 +127,7 @@ public class AuthService {
             user.setUserName("phone_" + last8Digits);
 
             user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            user.setProfileImage("http://localhost:9000/images/placeholder.jpg");
+            user.setProfileImage("http://localhost:9000/images/placeHolder.png");
             user.setRole(UserRole.STUDENT);
             user.setUserStatus(UserStatus.ACTIVE);
             user.setVerificationStatus(VerificationStatus.PENDING);
