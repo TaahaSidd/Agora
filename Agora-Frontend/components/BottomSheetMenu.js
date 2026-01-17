@@ -1,24 +1,34 @@
 import React from 'react';
-import {
-    View,
-    Text,
-    Modal,
-    TouchableOpacity,
-    Platform,
-    StyleSheet,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../utils/colors';
+import {Modal, Platform, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {COLORS} from '../utils/colors';
 
 const BottomSheetMenu = ({
-    visible,
-    onClose,
-    type = 'user',
-    onShare,
-    onReport,
-    onBlock,
-    title = 'Options',
-}) => {
+                             visible,
+                             onClose,
+                             type = 'user',
+                             onShare,
+                             onReport,
+                             onBlock,
+                             title = 'Options',
+                             isGuest,
+                             onAuthRequired,
+                         }) => {
+    const handleAction = (item) => {
+        if (item.label.includes('Share')) {
+            onClose();
+            item.action?.();
+            return;
+        }
+        if (isGuest) {
+            onClose();
+            onAuthRequired?.();
+            return;
+        }
+        onClose();
+        item.action?.();
+    };
+
     const userOptions = [
         {
             label: 'Share Profile',
@@ -66,7 +76,8 @@ const BottomSheetMenu = ({
         },
     ];
 
-    const options = type === 'user' ? userOptions : listingOptions;
+    const options = (type === 'user' ? userOptions : listingOptions).filter(item => item.action !== null && item.action !== undefined);
+
 
     return (
         <Modal
@@ -81,12 +92,12 @@ const BottomSheetMenu = ({
                 onPress={onClose}
             >
                 <View style={styles.bottomSheet}>
-                    <View style={styles.sheetHandle} />
+                    <View style={styles.sheetHandle}/>
 
                     <View style={styles.sheetHeader}>
                         <Text style={styles.sheetTitle}>{title}</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color="#6B7280" />
+                            <Ionicons name="close" size={24} color="#6B7280"/>
                         </TouchableOpacity>
                     </View>
 
@@ -94,35 +105,40 @@ const BottomSheetMenu = ({
                         {options.map((item, index) => (
                             <React.Fragment key={index}>
                                 <TouchableOpacity
-                                    style={styles.menuOption}
-                                    onPress={() => {
-                                        onClose();
-                                        item.action?.();
-                                    }}
+                                    key={index}
+                                    style={[
+                                        styles.menuOption,
+                                        (isGuest && !item.label.includes('Share')) && {opacity: 0.6}
+                                    ]}
+                                    onPress={() => handleAction(item)}
                                     activeOpacity={0.7}
                                 >
                                     <View
                                         style={[
                                             styles.menuIconCircle,
-                                            { backgroundColor: item.iconBg },
+                                            {backgroundColor: item.iconBg},
                                         ]}
                                     >
-                                        <Ionicons name={item.icon} size={22} color={item.iconColor} />
+                                        <Ionicons name={item.icon} size={22} color={item.iconColor}/>
                                     </View>
                                     <View style={styles.menuTextContainer}>
                                         <Text
                                             style={[
                                                 styles.menuTitle,
-                                                item.labelColor ? { color: item.labelColor } : {},
+                                                item.labelColor ? {color: item.labelColor} : {},
                                             ]}
                                         >
                                             {item.label}
                                         </Text>
                                         <Text style={styles.menuDescription}>{item.description}</Text>
                                     </View>
-                                    <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+                                    {isGuest && !item.label.includes('Share') ? (
+                                        <Ionicons name="lock-closed" size={18} color="#9CA3AF" />
+                                    ) : (
+                                        <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+                                    )}
                                 </TouchableOpacity>
-                                {index !== options.length - 1 && <View style={styles.menuDivider} />}
+                                {index !== options.length - 1 && <View style={styles.menuDivider}/>}
                             </React.Fragment>
                         ))}
                     </View>

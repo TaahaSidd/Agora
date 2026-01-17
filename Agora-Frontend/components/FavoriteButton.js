@@ -1,35 +1,44 @@
-import React, { useState } from 'react';
-import { TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, {useState} from 'react';
+import {ActivityIndicator, StyleSheet, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
-import { useFavorites } from '../context/FavoritesContext';
+import {THEME} from '../utils/theme';
+import {useFavorites} from '../context/FavoritesContext';
+import {useUserStore} from '../stores/userStore';
 
-const FavoriteButton = ({ listingId, size = 22, style }) => {
-    const { favorites, toggleFavorite } = useFavorites();
+const FavoriteButton = ({listingId, size = 22, style, onGuestPress}) => {
+    const {favorites, toggleFavorite} = useFavorites();
+    const {isGuest} = useUserStore();
     const [loading, setLoading] = useState(false);
 
     const isFavorite = favorites.some(f => f.id === listingId);
 
-    // console.log('❤️ FavoriteButton:', {
-    //     listingId,
-    //     isFavorite,
-    //     favoritesCount: favorites.length,
-    //     allFavIds: favorites.map(f => f.id),
-    //     favoritesStructure: favorites[0], // See first item structure
-    // });
-
     const handlePress = async () => {
+        if (isGuest) {
+            if (onGuestPress) {
+                onGuestPress();
+            }
+            return;
+        }
+
         if (loading) return;
         setLoading(true);
-        await toggleFavorite(listingId);
-        setLoading(false);
+        try {
+            await toggleFavorite(listingId);
+        } catch (err) {
+            console.log("Favorite toggle failed:", err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <TouchableOpacity onPress={handlePress} style={[styles.button, style]}>
+        <TouchableOpacity
+            onPress={handlePress}
+            style={[styles.button, style]}
+            activeOpacity={0.7}
+        >
             {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color="#fff"/>
             ) : (
                 <Icon
                     name={isFavorite ? 'heart' : 'heart-outline'}

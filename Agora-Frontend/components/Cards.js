@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
@@ -7,12 +7,22 @@ import {THEME} from '../utils/theme';
 import {COLORS} from '../utils/colors';
 import FavoriteButton from './FavoriteButton';
 
-const Card = ({item, horizontal = false}) => {
+const Card = ({item, horizontal = false, showToast}) => {
     const navigation = useNavigation();
     const [isFavorite, setIsFavorite] = useState(item.isFavorite || false);
 
     const handlePress = () => {
         navigation.navigate('ProductDetailsScreen', {item});
+    };
+
+    const handleGuestFavorite = () => {
+        if (showToast) {
+            showToast({
+                type: 'info',
+                title: 'Save for later?',
+                message: 'Sign up to keep track of your favorite items!'
+            });
+        }
     };
 
     return (
@@ -47,6 +57,7 @@ const Card = ({item, horizontal = false}) => {
                     isFavorite={isFavorite}
                     onToggle={setIsFavorite}
                     size={THEME.iconSize.md}
+                    onGuestPress={handleGuestFavorite}
                 />
             </View>
 

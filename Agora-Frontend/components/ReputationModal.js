@@ -3,7 +3,7 @@ import {Modal, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-n
 import {Ionicons} from '@expo/vector-icons';
 import {COLORS} from '../utils/colors';
 
-const ReputationModal = ({visible, onClose, rating, onRatePress}) => {
+const ReputationModal = ({visible, onClose, rating, onRatePress, isOwnProfile, isGuest, onAuthPress}) => {
     const getVibe = (score, reviewCount = 0) => {
 
         if (reviewCount === 0 || score === 0) return {
@@ -42,8 +42,17 @@ const ReputationModal = ({visible, onClose, rating, onRatePress}) => {
 
     const vibe = getVibe(rating || 0);
 
+    const handleAction = () => {
+        if (isGuest) {
+            onClose();
+            onAuthPress();
+        } else {
+            onRatePress();
+        }
+    };
+
     return (
-        <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
             <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
                 <View style={styles.content}>
                     <View style={styles.handle}/>
@@ -52,13 +61,34 @@ const ReputationModal = ({visible, onClose, rating, onRatePress}) => {
                         <Ionicons name={vibe.icon} size={40} color={vibe.color}/>
                     </View>
 
-                    <Text style={[styles.title, {color: vibe.color}]}>{vibe.title}</Text>
-                    <Text style={styles.message}>{vibe.msg}</Text>
+                    <Text style={[styles.title, {color: vibe.color}]}>
+                        {isGuest ? "Join the Community" : vibe.title}
+                    </Text>
 
-                    <TouchableOpacity style={styles.cta} onPress={onRatePress}>
-                        <Text style={styles.ctaText}>Rate this Seller</Text>
-                        <Ionicons name="chevron-forward" size={16} color={COLORS.primary}/>
-                    </TouchableOpacity>
+                    <Text style={styles.message}>
+                        {isGuest
+                            ? "Want to help other students? Sign up to leave ratings and share your trading experience!"
+                            : isOwnProfile
+                                ? "This is how other students see your trading reputation on campus."
+                                : vibe.msg}
+                    </Text>
+
+                    {/* Show the button if it's not their own profile */}
+                    {!isOwnProfile && (
+                        <TouchableOpacity
+                            style={[styles.cta, isGuest && styles.guestCta]}
+                            onPress={handleAction}
+                        >
+                            <Text style={[styles.ctaText, isGuest && styles.guestCtaText]}>
+                                {isGuest ? "Login to Rate" : "Rate this Seller"}
+                            </Text>
+                            <Ionicons
+                                name={isGuest ? "log-in-outline" : "chevron-forward"}
+                                size={16}
+                                color={isGuest ? "#fff" : COLORS.primary}
+                            />
+                        </TouchableOpacity>
+                    )}
 
                     <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
                         <Text style={styles.closeBtnText}>Close</Text>
@@ -70,12 +100,12 @@ const ReputationModal = ({visible, onClose, rating, onRatePress}) => {
 };
 
 const styles = StyleSheet.create({
-    overlay: {flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end'},
+    overlay: {flex: 1, backgroundColor: COLORS.dark.overlayHeavy, justifyContent: 'flex-end'},
     content: {
         backgroundColor: COLORS.dark.card,
         borderTopLeftRadius: 24, borderTopRightRadius: 24,
         padding: 24, alignItems: 'center',
-        paddingBottom: Platform.OS === 'ios' ? 40 : 24
+        paddingBottom: Platform.OS === 'ios' ? 34 : 24
     },
     handle: {width: 40, height: 4, backgroundColor: COLORS.dark.divider, borderRadius: 2, marginBottom: 20},
     iconCircle: {
@@ -101,7 +131,14 @@ const styles = StyleSheet.create({
     },
     ctaText: {color: COLORS.primary, fontWeight: '800'},
     closeBtn: {marginTop: 20},
-    closeBtnText: {color: COLORS.dark.textTertiary, fontWeight: '600'}
+    closeBtnText: {color: COLORS.dark.textTertiary, fontWeight: '600'},
+    guestCta: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
+    guestCtaText: {
+        color: '#fff',
+    },
 });
 
 export default ReputationModal;

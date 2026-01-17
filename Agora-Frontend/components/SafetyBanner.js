@@ -45,7 +45,6 @@ const SafetyBanner = ({onPress}) => {
 
 const styles = StyleSheet.create({
     container: {
-        marginVertical: 12,
     },
     banner: {
         width: '100%',
