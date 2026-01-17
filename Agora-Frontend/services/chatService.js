@@ -1,10 +1,13 @@
-import { db } from '../firebase/firebaseConfig';
-import { doc, collection, getDoc, setDoc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import {db} from '../firebase/firebaseConfig';
+import {addDoc, arrayRemove, collection, doc, getDoc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore';
 
-export const getOrCreateChatRoom = async (listingId, buyer, seller) => {
+const sanitizeEmail = (email) => email.replace(/\./g, '_');
+
+export const getOrCreateChatRoom = async (listingId, buyer, seller, listingData = null) => {
     const roomId = `${listingId}_${buyer.email}_${seller.email}`;
     const roomRef = doc(db, 'chatRooms', roomId);
     const roomSnap = await getDoc(roomRef);
+
 
     if (!roomSnap.exists()) {
         await setDoc(roomRef, {
@@ -13,19 +16,56 @@ export const getOrCreateChatRoom = async (listingId, buyer, seller) => {
             sellerId: String(seller.email),
             participants: [String(buyer.email), String(seller.email)],
             participantsInfo: [
-                { id: String(buyer.email), name: buyer.name, avatar: buyer.avatar },
-                { id: String(seller.email), name: seller.name, avatar: seller.avatar },
+                {
+                    id: String(buyer.email),
+                    userId: buyer.id,
+                    name: buyer.name,
+                    avatar: buyer.avatar
+                },
+                {
+                    id: String(seller.email),
+                    userId: seller.id,
+                    name: seller.name,
+                    avatar: seller.avatar
+                },
             ],
+            listing: listingData ? {
+                title: listingData.title || listingData.name || 'Item',
+                price: listingData.price || 0,
+                imageUrl: listingData.images || listingData.imageUrl || [],
+            } : null,
             lastRead: {
-                [buyer.email]: null,
-                [seller.email]: null,
+                [sanitizeEmail(buyer.email)]: null,
+                [sanitizeEmail(seller.email)]: null,
             },
             createdAt: serverTimestamp(),
             lastUpdated: serverTimestamp(),
             lastMessage: null,
+            deletedFor: [],
         });
-    }
+    } else {
+        const chatData = roomSnap.data();
+        const deletedFor = chatData.deletedFor || [];
 
+        const updates = {};
+
+        if (deletedFor.includes(buyer.email)) {
+            updates.deletedFor = arrayRemove(buyer.email);
+        }
+
+        if (listingData && (!chatData.listing || !chatData.listing.imageUrl)) {
+            updates.listing = {
+                title: listingData.title || listingData.name || 'Item',
+                price: listingData.price || 0,
+                imageUrl: listingData.images || listingData.imageUrl || [],
+            };
+        }
+
+        if (Object.keys(updates).length > 0) {
+            await updateDoc(roomRef, updates);
+            console.log('✅ Chat updated:', Object.keys(updates));
+        }
+    }
     return roomRef;
 };
 
@@ -44,8 +84,8 @@ export const sendMessage = async (roomId, senderId, text, messageType = 'text', 
     });
 
     await updateDoc(roomRef, {
-        lastMessage: { text, senderId },
+        lastMessage: {text, senderId, createdAt: serverTimestamp()},
         lastUpdated: serverTimestamp(),
-        [`lastRead.${senderId}`]: serverTimestamp(),
+        [`lastRead.${sanitizeEmail(senderId)}`]: serverTimestamp(),  // ✅ Fixed
     });
 };
