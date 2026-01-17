@@ -1,33 +1,17 @@
 package com.Agora.Agora.Model;
 
+import com.Agora.Agora.Model.Enums.ItemCondition;
+import com.Agora.Agora.Model.Enums.ItemStatus;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.Agora.Agora.Model.Enums.ItemCondition;
-import com.Agora.Agora.Model.Enums.ItemStatus;
-
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
@@ -49,8 +33,8 @@ public class Listings {
 
     @NotNull
     @DecimalMin(value = "10.0", message = "Price must be at least ₹10")
-    @DecimalMax(value = "20000.0", message = "Price cannot exceed ₹10,000")
-    @Column(nullable = false)
+    @DecimalMax(value = "999999.0", message = "Price cannot exceed ₹9,99,999")
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
     @Column(nullable = false)
     private String category;

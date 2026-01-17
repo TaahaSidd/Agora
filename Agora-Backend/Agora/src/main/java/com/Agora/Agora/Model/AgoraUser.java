@@ -1,32 +1,20 @@
 package com.Agora.Agora.Model;
 
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-
+import com.Agora.Agora.Model.Enums.UserRole;
+import com.Agora.Agora.Model.Enums.UserStatus;
+import com.Agora.Agora.Model.Enums.VerificationStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.Agora.Agora.Model.Enums.UserRole;
-import com.Agora.Agora.Model.Enums.UserStatus;
-import com.Agora.Agora.Model.Enums.VerificationStatus;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -72,6 +60,19 @@ public class AgoraUser implements UserDetails {
     @Column(nullable = false)
     private UserStatus userStatus;
 
+    @ManyToMany
+    @JoinTable(
+            name = "user_blocks",
+            joinColumns = @JoinColumn(name = "blocker_id"),
+            inverseJoinColumns = @JoinColumn(name = "blocked_id")
+    )
+    @JsonIgnore
+    private Set<AgoraUser> blockedUsers = new HashSet<>();
+
+    @ManyToMany(mappedBy = "blockedUsers")
+    @JsonIgnore
+    private Set<AgoraUser> blockedByUsers = new HashSet<>();
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VerificationStatus verificationStatus;
@@ -106,7 +107,7 @@ public class AgoraUser implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.userEmail != null ? this.userEmail : this.mobileNumber;
+        return this.mobileNumber;
     }
 
     public String getUserName() {
