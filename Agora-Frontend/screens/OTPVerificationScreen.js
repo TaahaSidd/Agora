@@ -1,277 +1,351 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    TextInput,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-} from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { apiPost } from '../services/api';
+import React, {useEffect, useRef, useState} from 'react';
+import {StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+
+import * as SecureStore from 'expo-secure-store';
+import {useUserStore} from '../stores/userStore';
+
 import Button from '../components/Button';
-import InputField from '../components/InputField';
-import { COLORS } from '../utils/colors';
+import ToastMessage from '../components/ToastMessage';
 
-const OTPVerificationScreen = () => {
-    const [otp, setOtp] = useState(Array(6).fill(''));
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [timer, setTimer] = useState(600);
-    const [isResendDisabled, setIsResendDisabled] = useState(true);
+import {COLORS} from '../utils/colors';
+import {loginWithOtp, signupWithOtp} from "../services/api";
+import auth from "@react-native-firebase/auth";
 
-    const navigation = useNavigation();
-    const route = useRoute();
-    const email = route.params?.email || '';
+export default function OTPVerificationScreen({route, navigation}) {
+    const {phoneNumber, collegeId, collegeName, expoPushToken, confirmation} = route.params;
+    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [loading, setLoading] = useState(false);
+    const [resendTimer, setResendTimer] = useState(60);
+    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+    const {fetchUser} = useUserStore();
 
     const inputRefs = useRef([]);
 
-    const isPasswordStrong = (password) => {
-        const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        return strongRegex.test(password);
+    // Timer countdown
+    useEffect(() => {
+        if (resendTimer > 0) {
+            const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendTimer]);
+
+    const showToast = ({type, title, message}) => {
+        setToast({visible: true, type, title, message});
     };
 
-    useEffect(() => {
-        if (timer > 0) {
-            const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-            return () => clearInterval(interval);
-        } else {
-            setIsResendDisabled(false);
+    const handleOtpChange = (index, value) => {
+        if (value && !/^\d+$/.test(value)) return;
+
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+
+        if (value && index < 5) {
+            inputRefs.current[index + 1]?.focus();
         }
-    }, [timer]);
+    };
 
-    const handleOtpChange = (value, index) => {
-        if (/^\d$/.test(value) || value === '') {
-            const newOtp = [...otp];
-            newOtp[index] = value;
-            setOtp(newOtp);
+    const handleKeyPress = (index, key) => {
+        if (key === 'Backspace' && !otp[index] && index > 0) {
+            inputRefs.current[index - 1]?.focus();
+        }
+    };
 
-            if (value && index < 5) {
-                inputRefs.current[index + 1].focus();
+    const handleVerifyOTP = async () => {
+        const otpCode = otp.join('');
+
+        if (otpCode.length !== 6) {
+            showToast({
+                type: 'error',
+                title: 'Invalid OTP',
+                message: 'Please enter 6-digit code',
+            });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            console.log('🔐 Verifying OTP...');
+
+            const userCredential = await confirmation.confirm(otpCode);
+
+            const firebaseToken = await userCredential.user.getIdToken();
+
+            const payload = {
+                firebaseToken,
+                collegeId,
+                expoPushToken
+            };
+
+            let response;
+
+            if (collegeId) {
+                response = await signupWithOtp(firebaseToken, collegeId, expoPushToken);
+            } else {
+                response = await loginWithOtp(firebaseToken, expoPushToken);
             }
+
+            console.log('✅ Backend response:', response);
+
+            await Promise.all([
+                SecureStore.deleteItemAsync('accessToken'),
+                SecureStore.deleteItemAsync('refreshToken'),
+                SecureStore.deleteItemAsync('currentUser'),
+                SecureStore.deleteItemAsync('userId')
+            ]);
+
+            await Promise.all([
+                SecureStore.setItemAsync('accessToken', response.jwt),
+                SecureStore.setItemAsync('refreshToken', response.refreshToken),
+                SecureStore.setItemAsync('userId', response.id.toString())
+            ]);
+
+            const userStore = useUserStore.getState();
+            await userStore.fetchUser();
+
+            const finalCollegeName = userStore.currentUser?.college?.name || response.collegeName || collegeName;
+
+            if (response.verificationStatus === 'VERIFIED') {
+                showToast({
+                    type: 'success',
+                    title: 'Welcome Back!',
+                    message: 'Login successful',
+                });
+                navigation.replace('MainLayout');
+            } else {
+                // User is PENDING, must complete profile
+                showToast({
+                    type: 'success',
+                    title: 'Phone Verified!',
+                    message: 'Please complete your profile details',
+                });
+                navigation.replace('CompleteProfileScreen', {
+                    collegeName: finalCollegeName
+                });
+            }
+
+        } catch (error) {
+            console.error('❌ Verification error:', error);
+            let errorMessage = 'Verification failed. Please try again.';
+
+            if (error.code === 'auth/invalid-verification-code') {
+                errorMessage = 'Invalid OTP code. Please try again.';
+            } else if (error.code === 'auth/code-expired') {
+                errorMessage = 'OTP expired. Please request a new code.';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            showToast({
+                type: 'error',
+                title: 'Verification Failed',
+                message: errorMessage,
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleResendOTP = async () => {
-        setError('');
-        setSuccess('');
         try {
-            await apiPost('/auth/forgot-password', { email });
-            setSuccess('OTP resent to your email.');
-            setTimer(600);
-            setIsResendDisabled(true);
-        } catch (err) {
-            setError(err.message || 'Failed to resend OTP.');
+            setLoading(true);
+            console.log('🔄 Resending OTP to:', phoneNumber);
+
+            const newConfirmation = await auth().signInWithPhoneNumber(phoneNumber);
+
+            navigation.setParams({ confirmation: newConfirmation });
+
+            setResendTimer(60);
+            showToast({
+                type: 'success',
+                title: 'OTP Sent',
+                message: 'A new 6-digit code has been sent.',
+            });
+        } catch (error) {
+            console.error('❌ Resend error:', error);
+            showToast({
+                type: 'error',
+                title: 'Resend Failed',
+                message: 'Too many requests. Please try again later.',
+            });
+        } finally {
+            setLoading(false);
         }
-    };
-
-    const handleResetPassword = async () => {
-        setError('');
-        setSuccess('');
-
-        const enteredOtp = otp.join('');
-
-        if (enteredOtp.length !== 6) {
-            setError('Please enter all 6 digits of the OTP.');
-            return;
-        }
-
-        if (!isPasswordStrong(newPassword)) {
-            setError(
-                'Password must be at least 8 characters, include uppercase, lowercase, number, and special character.'
-            );
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            setError('Passwords do not match.');
-            return;
-        }
-
-        try {
-            await apiPost('/auth/reset-password', { email, otp: enteredOtp, newPassword });
-            setSuccess('Password reset successfully!');
-            setTimeout(() => navigation.navigate('LoginScreen'), 1500);
-        } catch (err) {
-            setError(err.message || 'Password reset failed. Try again.');
-        }
-    };
-
-    const formatTime = (seconds) => {
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
     };
 
     return (
-        <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-            <ScrollView contentContainerStyle={styles.container}>
-                {/* Header */}
-                <View style={styles.headerContainer}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="#000" />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Verify OTP & Reset Password</Text>
-                    <Text style={styles.subtitle}>Enter the 6-digit OTP sent to {email}</Text>
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor={COLORS.dark.bg}/>
+
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    style={styles.backButton}
+                    disabled={loading}
+                >
+                    <Ionicons name="arrow-back" size={24} color={COLORS.dark.text}/>
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.content}>
+                {/* Icon */}
+                <View style={styles.iconContainer}>
+                    <Ionicons name="chatbox-ellipses" size={60} color={COLORS.primary}/>
                 </View>
 
-                {/* Timer */}
-                <Text style={styles.timerText}>OTP valid for: {formatTime(timer)}</Text>
+                {/* Title */}
+                <Text style={styles.title}>Verify Your Phone</Text>
+                <Text style={styles.subtitle}>
+                    Enter the 6-digit code sent to{'\n'}
+                    <Text style={styles.phoneNumber}>{phoneNumber}</Text>
+                </Text>
 
-                {/* Error / Success Messages */}
-                {error ? <Text style={styles.errorText}>{error}</Text> : null}
-                {success ? <Text style={styles.successText}>{success}</Text> : null}
-
-                {/* OTP Boxes */}
+                {/* OTP Input */}
                 <View style={styles.otpContainer}>
                     {otp.map((digit, index) => (
                         <TextInput
                             key={index}
-                            ref={(ref) => (inputRefs.current[index] = ref)}
+                            ref={ref => inputRefs.current[index] = ref}
                             style={[
-                                styles.otpBox,
-                                digit ? styles.otpFilled : {},
+                                styles.otpInput,
+                                digit && styles.otpInputFilled
                             ]}
-                            keyboardType="numeric"
-                            maxLength={1}
                             value={digit}
-                            onChangeText={(value) => handleOtpChange(value, index)}
-                            onKeyPress={({ nativeEvent }) => {
-                                if (
-                                    nativeEvent.key === 'Backspace' &&
-                                    otp[index] === '' &&
-                                    index > 0
-                                ) {
-                                    inputRefs.current[index - 1].focus();
-                                }
-                            }}
+                            onChangeText={(value) => handleOtpChange(index, value)}
+                            onKeyPress={({nativeEvent: {key}}) => handleKeyPress(index, key)}
+                            keyboardType="number-pad"
+                            maxLength={1}
+                            selectTextOnFocus
+                            editable={!loading}
                         />
                     ))}
                 </View>
 
-                {/* Password Fields */}
-                <InputField
-                    placeholder="New Password"
-                    secureTextEntry
-                    value={newPassword}
-                    onChangeText={setNewPassword}
-                    style={styles.input}
-                />
-                <InputField
-                    placeholder="Confirm New Password"
-                    secureTextEntry
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    style={styles.input}
-                />
-                <Text style={styles.hintText}>
-                    Use at least 8 characters, including upper & lowercase letters, numbers, and
-                    symbols.
-                </Text>
+                {/* Resend */}
+                <View style={styles.resendContainer}>
+                    {resendTimer > 0 ? (
+                        <Text style={styles.timerText}>
+                            Resend code in {resendTimer}s
+                        </Text>
+                    ) : (
+                        <TouchableOpacity
+                            onPress={handleResendOTP}
+                            disabled={loading}
+                        >
+                            <Text style={styles.resendText}>Resend Code</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
 
-                {/* Buttons */}
-                <Button title="Reset Password" onPress={handleResetPassword} style={styles.button} />
+                {/* Verify Button */}
                 <Button
-                    title={isResendDisabled ? `Resend OTP (${formatTime(timer)})` : 'Resend OTP'}
-                    onPress={handleResendOTP}
-                    disabled={isResendDisabled}
-                    variant="secondary"
-                    style={styles.resendButton}
+                    title={loading ? "Verifying..." : "Verify & Continue"}
+                    onPress={handleVerifyOTP}
+                    loading={loading}
+                    disabled={loading || otp.join('').length !== 6}
+                    fullWidth
+                    size="large"
                 />
-            </ScrollView>
-        </KeyboardAvoidingView>
+            </View>
+
+            {toast.visible && (
+                <ToastMessage
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                    onHide={() => setToast({...toast, visible: false})}
+                />
+            )}
+        </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
-        padding: 20,
-        backgroundColor: '#fff',
+        flex: 1,
+        backgroundColor: COLORS.dark.bg,
     },
-    headerContainer: {
-        alignItems: 'center',
-        marginBottom: 30,
-        position: 'relative',
+    header: {
+        paddingTop: 50,
+        paddingHorizontal: 24,
+        marginBottom: 20,
     },
     backButton: {
-        position: 'absolute',
-        left: 0,
-        top: 5,
-        padding: 5,
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    content: {
+        flex: 1,
+        paddingHorizontal: 24,
+        alignItems: 'center',
+    },
+    iconContainer: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: COLORS.primary + '20',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 32,
     },
     title: {
-        fontSize: 22,
-        fontWeight: '700',
-        color: COLORS.textPrimary || '#000',
-        textAlign: 'center',
-        marginTop: 10,
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: COLORS.dark.text,
+        marginBottom: 12,
     },
     subtitle: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: 15,
+        color: COLORS.dark.textSecondary,
         textAlign: 'center',
-        marginTop: 6,
+        lineHeight: 22,
+        marginBottom: 40,
     },
-    timerText: {
-        textAlign: 'center',
+    phoneNumber: {
+        fontWeight: 'bold',
         color: COLORS.primary,
-        fontWeight: '600',
-        marginBottom: 10,
     },
     otpContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginVertical: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 32,
+        paddingHorizontal: 10,
+        width: '100%',
     },
-    otpBox: {
-        width: 45,
-        height: 55,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
+    otpInput: {
+        width: 48,
+        height: 56,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: COLORS.dark.border,
+        backgroundColor: COLORS.dark.card,
         textAlign: 'center',
-        fontSize: 18,
-        color: '#000',
-        backgroundColor: '#fafafa',
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: COLORS.dark.text,
     },
-    otpFilled: {
+    otpInputFilled: {
         borderColor: COLORS.primary,
-        backgroundColor: '#e6f2ff',
+        backgroundColor: COLORS.primary + '10',
     },
-    input: {
-        marginVertical: 8,
+    resendContainer: {
+        marginBottom: 32,
+        minHeight: 24,
     },
-    hintText: {
-        fontSize: 12,
-        color: '#777',
-        marginBottom: 10,
-        textAlign: 'left',
+    timerText: {
+        fontSize: 14,
+        color: COLORS.dark.textSecondary,
+        fontWeight: '500',
     },
-    button: {
-        marginTop: 10,
-    },
-    resendButton: {
-        marginTop: 10,
-    },
-    errorText: {
-        color: 'red',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    successText: {
-        color: 'green',
-        textAlign: 'center',
-        marginBottom: 10,
+    resendText: {
+        fontSize: 15,
+        color: COLORS.primary,
+        fontWeight: 'bold',
     },
 });
-
-export default OTPVerificationScreen;

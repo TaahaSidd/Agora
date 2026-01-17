@@ -29,7 +29,7 @@ export default function SignUpScreen({navigation}) {
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
     const [errors, setErrors] = useState({});
-    const [expoPushToken, setExpoPushToken] = useState(null); // ✅ NEW
+    const [expoPushToken, setExpoPushToken] = useState(null);
 
     useEffect(() => {
         fetchColleges();
@@ -140,6 +140,7 @@ export default function SignUpScreen({navigation}) {
                 navigation.navigate('OTPVerificationScreen', {
                     phoneNumber: fullPhoneNumber,
                     collegeId: selectedCollege.id,
+                    collegeName: selectedCollege.collegeName,
                     expoPushToken: expoPushToken,
                     confirmation: confirmation,
                 });

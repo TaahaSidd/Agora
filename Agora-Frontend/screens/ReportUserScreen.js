@@ -1,32 +1,22 @@
-import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    SafeAreaView,
-    StyleSheet,
-    TouchableOpacity,
-    TextInput,
-    ScrollView,
-    StatusBar,
-    Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../utils/colors';
+import React, {useState} from 'react';
+import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {COLORS} from '../utils/colors';
 
-import { useReport } from '../hooks/useReport';
+import {useReport} from '../hooks/useReport';
 
 import AppHeader from '../components/AppHeader';
 import Button from '../components/Button';
 import ToastMessage from '../components/ToastMessage';
 import ModalComponent from '../components/Modal';
 
-const ReportUserScreen = ({ navigation, route }) => {
-    const { userId, userName } = route.params;
+const ReportUserScreen = ({navigation, route}) => {
+    const {userId, userName} = route.params;
     const [selectedReason, setSelectedReason] = useState('');
     const [additionalDetails, setAdditionalDetails] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const { submitReport, loading } = useReport();
-    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+    const {submitReport, loading} = useReport();
+    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
 
     const reportReasons = [
         {
@@ -84,7 +74,8 @@ const ReportUserScreen = ({ navigation, route }) => {
             return;
         }
 
-        const success = await submitReport("USER", selectedReason, userId);
+        const success = await submitReport("USER", selectedReason, userId, additionalDetails);
+
         if (success) {
             setShowSuccessModal(true);
         } else {
@@ -99,8 +90,8 @@ const ReportUserScreen = ({ navigation, route }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
-            <AppHeader title="Report User" onBack={() => navigation.goBack()} />
+            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content"/>
+            <AppHeader title="Report User" onBack={() => navigation.goBack()}/>
 
             <ScrollView
                 contentContainerStyle={styles.container}
@@ -109,7 +100,7 @@ const ReportUserScreen = ({ navigation, route }) => {
                 {/* Header Info */}
                 <View style={styles.headerCard}>
                     <View style={styles.warningIconCircle}>
-                        <Ionicons name="flag" size={32} color="#EF4444" />
+                        <Ionicons name="flag" size={32} color="#EF4444"/>
                     </View>
                     <Text style={styles.headerTitle}>Report {userName}</Text>
                     <Text style={styles.headerSubtitle}>
@@ -134,10 +125,10 @@ const ReportUserScreen = ({ navigation, route }) => {
                             <View
                                 style={[
                                     styles.reasonIconCircle,
-                                    { backgroundColor: `${reason.color}15` },
+                                    {backgroundColor: `${reason.color}15`},
                                 ]}
                             >
-                                <Ionicons name={reason.icon} size={24} color={reason.color} />
+                                <Ionicons name={reason.icon} size={24} color={reason.color}/>
                             </View>
                             <View style={styles.reasonContent}>
                                 <Text style={styles.reasonTitle}>{reason.title}</Text>
@@ -145,7 +136,7 @@ const ReportUserScreen = ({ navigation, route }) => {
                             </View>
                             <View style={styles.radioButton}>
                                 {selectedReason === reason.id && (
-                                    <View style={styles.radioButtonInner} />
+                                    <View style={styles.radioButtonInner}/>
                                 )}
                             </View>
                         </TouchableOpacity>
@@ -179,7 +170,7 @@ const ReportUserScreen = ({ navigation, route }) => {
 
                 {/* Info Box */}
                 <View style={styles.infoBox}>
-                    <Ionicons name="shield-checkmark" size={20} color="#3B82F6" />
+                    <Ionicons name="shield-checkmark" size={20} color="#3B82F6"/>
                     <Text style={styles.infoText}>
                         We take reports seriously. False reports may result in action against your account.
                     </Text>
@@ -215,7 +206,7 @@ const ReportUserScreen = ({ navigation, route }) => {
                         type={toast.type}
                         title={toast.title}
                         message={toast.message}
-                        onHide={() => setToast({ ...toast, visible: false })}
+                        onHide={() => setToast({...toast, visible: false})}
                     />
                 )
             }
@@ -239,7 +230,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 24,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
@@ -286,7 +277,7 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: COLORS.dark.divider,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.03,
         shadowRadius: 4,
         elevation: 1,
@@ -340,7 +331,7 @@ const styles = StyleSheet.create({
         borderColor: COLORS.dark.divider,
         padding: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.03,
         shadowRadius: 3,
         elevation: 1,

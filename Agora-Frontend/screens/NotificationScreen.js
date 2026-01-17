@@ -1,22 +1,25 @@
 import React, {useEffect, useState} from "react";
 import {
-    View,
+    ActivityIndicator,
+    FlatList,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
     Text,
     TouchableOpacity,
-    FlatList,
-    StyleSheet,
-    StatusBar,
-    ActivityIndicator,
+    View,
 } from "react-native";
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import Icon from "react-native-vector-icons/Ionicons";
+import {Ionicons} from '@expo/vector-icons';
 
 import {useNavigation} from "@react-navigation/native";
-import {apiGet, apiPatch, apiDelete} from "../services/api";
+import {apiDelete, apiGet, apiPatch} from "../services/api";
 import {useUserStore} from "../stores/userStore";
 import {useNotificationCount} from "../hooks/useNotificationCount";
 
 import AppHeader from "../components/AppHeader";
+import Button from '../components/Button';
 import {COLORS} from "../utils/colors";
 
 import RelaxSVG from '../assets/svg/RelaxSVG.svg';
@@ -116,7 +119,7 @@ export default function NotificationScreen() {
     const [notifications, setNotifications] = useState([]);
     const [filter, setFilter] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
-    const {unreadCount, refresh} = useNotificationCount(currentUser, loading, isGuest);
+    const {unreadCount, refresh} = useNotificationCount(currentUser?.id, loading, isGuest);
 
     const loadNotifications = async () => {
         if (!currentUser?.id) {
@@ -155,10 +158,30 @@ export default function NotificationScreen() {
         loadNotifications();
     }, [currentUser, loading, isGuest]);
 
+    if (isGuest || !currentUser) {
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <AppHeader title="Notifications" onBack={() => navigation.goBack()}/>
+                <View style={styles.emptyContainer}>
+                    <Ionicons name="notifications-outline" size={80} color={COLORS.dark.textTertiary}/>
+                    <Text style={styles.emptyTitle}>Sign in Required</Text>
+                    <Text style={styles.emptyText}>
+                        Please log in to view your notifications
+                    </Text>
+                    <Button
+                        title="Login In"
+                        variant="primary"
+                        icon="log-in-outline"
+                        onPress={() => navigation.navigate('Login')}
+                    />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     const handleNotificationPress = async (notification) => {
         if (!notification?.id) return;
 
-        // Mark as read immediately in UI
         if (!notification.read) {
             setNotifications(prev =>
                 prev.map(n => n.id === notification.id ? {...n, read: true} : n)
@@ -217,8 +240,8 @@ export default function NotificationScreen() {
             <Text style={styles.emptyTitle}>All Caught Up!</Text>
             <Text style={styles.emptyText}>
                 {filter === 'unread'
-                    ? "No unread notifications"
-                    : "You have no notifications yet"}
+                    ? "You've read everything. Time to relax!"
+                    : "Your inbox is clear. We’ll ping you when something exciting happens."}
             </Text>
         </View>
     );
@@ -314,6 +337,10 @@ export default function NotificationScreen() {
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: COLORS.dark.bg,
+    },
     container: {
         flex: 1,
         backgroundColor: COLORS.dark.bg,
@@ -361,7 +388,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 8,
-        borderRadius: 20,
+        borderRadius: 30,
         backgroundColor: COLORS.dark.bg,
         gap: 6,
     },
@@ -403,8 +430,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     listContent: {
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingTop: 16,
         paddingBottom: 40,
+        gap: 12,
     },
     listContentEmpty: {
         flexGrow: 1,
@@ -412,30 +441,25 @@ const styles = StyleSheet.create({
     notificationItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 12,
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 12,
-        marginBottom: 8,
+        padding: 14,
+        //backgroundColor: COLORS.dark.card,
+        borderRadius: 26,
         position: 'relative',
-    },
-    unreadIndicator: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 3,
-        backgroundColor: COLORS.primary,
-        borderTopLeftRadius: 12,
-        borderBottomLeftRadius: 12,
+        shadowColor: "#000",
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: COLORS.dark.cardElevated,
     },
     iconContainer: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 62,
+        height: 62,
+        borderRadius: 26,
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: 4,
-        marginRight: 12,
+        marginRight: 16,
     },
     content: {
         flex: 1,
@@ -490,5 +514,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.dark.textTertiary,
         textAlign: 'center',
+        marginBottom: 20,
     },
 });

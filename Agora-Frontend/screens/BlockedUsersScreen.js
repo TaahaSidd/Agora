@@ -26,11 +26,11 @@ const BlockedUsersScreen = ({ navigation }) => {
         setToast({visible: true, type, title, message});
     };
 
-
     const loadData = async () => {
         const data = await fetchBlockedUsers();
-        setBlockedList(data);
-    };
+        console.log("BLOCKED USErs = ", data);
+
+        setBlockedList(data.blocked || []);    };
 
     useEffect(() => {
         loadData();

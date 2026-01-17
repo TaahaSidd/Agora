@@ -1,37 +1,44 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
-    View,
+    FlatList,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    FlatList,
-    Image,
-    StyleSheet,
-    SafeAreaView,
-    Platform,
-    StatusBar,
-    KeyboardAvoidingView,
-    Keyboard,
+    View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
-import { useChatMessages } from '../hooks/useChatMessages';
-import { sendMessage } from '../services/chatService';
-import { useCurrentUser } from '../hooks/useCurrentUser';
+import {Ionicons} from '@expo/vector-icons';
+
+import {COLORS} from '../utils/colors';
+
+import {useChatMessages} from '../hooks/useChatMessages';
+import {getOrCreateChatRoom, sendMessage} from '../services/chatService';
+import {useMarkChatAsRead} from "../hooks/useMarkChatAsRead";
+import {useUserStore} from "../stores/userStore";
+import {useChatBlocking} from '../context/ChatBlockingProvider';
 
 const isAndroid = Platform.OS === 'android';
 
-const ChatRoomScreen = ({ route, navigation }) => {
-    const { roomId } = route.params;
+const ChatRoomScreen = ({route, navigation}) => {
+    const {roomId, sellerId} = route.params;
     const messages = useChatMessages(roomId);
-    const { sellerName, productInfo } = route.params || {};
+    const {sellerName, productInfo} = route.params || {};
+    //console.log('productInfo:', productInfo);
     const [input, setInput] = useState('');
-    const [isTyping, setIsTyping] = useState(false);
-    const { user: currentUser, loading } = useCurrentUser();
+    const {currentUser, loading, fetchUser} = useUserStore();
+    const {isUserBlocked} = useChatBlocking();
     const flatListRef = useRef(null);
-    const typingTimeout = useRef(null);
-    const { sellerAvatar } = route.params;
+    const {sellerAvatar} = route.params;
+    const markChatAsRead = useMarkChatAsRead();
+
+    const isOtherUserBlocked = isUserBlocked(sellerId);
+
 
     let avatarUri = sellerAvatar;
 
@@ -43,49 +50,90 @@ const ChatRoomScreen = ({ route, navigation }) => {
         avatarUri = require('../assets/defaultProfile.png');
     }
 
-    // Scroll to bottom when keyboard appears
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener(
             'keyboardDidShow',
             () => {
                 setTimeout(() => {
-                    flatListRef.current?.scrollToEnd({ animated: true });
+                    flatListRef.current?.scrollToEnd({animated: true});
+                }, 100);
+            }
+        );
+
+        const keyboardDidHideListener = Keyboard.addListener(
+            'keyboardDidHide',
+            () => {
+                setTimeout(() => {
+                    flatListRef.current?.scrollToEnd({animated: false});
                 }, 100);
             }
         );
 
         return () => {
             keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
         };
     }, []);
+
+
+    useEffect(() => {
+        const markAsRead = async () => {
+            if (!roomId || !currentUser?.email) return;
+
+            if (messages && messages.length > 0) {
+                try {
+                    const sanitizedEmail = currentUser.email.replace(/\./g, '_');
+                    await markChatAsRead(roomId, sanitizedEmail);
+                    //console.log('✅ ChatRoom marked as read');
+                } catch (err) {
+                    console.error('❌ ChatRoom mark failed:', err);
+                }
+            }
+        };
+
+        markAsRead();
+    }, [messages.length, roomId, currentUser?.email]);
+
 
     if (loading) return null;
 
     const handleSend = async () => {
+
+        if (isOtherUserBlocked) {
+            Alert.alert(
+                'Cannot Send Message',
+                'You cannot message this user.',
+                [{text: 'OK'}]
+            );
+            return;
+        }
+
         if (!input.trim()) return;
         const text = input.trim();
         setInput('');
 
         try {
-            await sendMessage(roomId, currentUser.email, text);
+            const {listingId, buyer, seller, listingData} = route.params;
+
+            if (listingId && buyer && seller) {
+                const roomRef = await getOrCreateChatRoom(listingId, buyer, seller, listingData);
+                await sendMessage(roomRef.id, currentUser.email, text);
+            } else {
+                await sendMessage(roomId, currentUser.email, text);
+            }
+
+            requestAnimationFrame(() => {
+                flatListRef.current?.scrollToEnd({animated: true});
+            });
+
             setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
+                flatListRef.current?.scrollToEnd({animated: false});
+            }, 50);
+
         } catch (e) {
             console.error('Error sending message:', e);
             setInput(text);
         }
-    };
-
-    const handleTyping = (text) => {
-        setInput(text);
-        if (typingTimeout.current) {
-            clearTimeout(typingTimeout.current);
-        }
-
-        typingTimeout.current = setTimeout(() => {
-            setIsTyping(false);
-        }, 1000);
     };
 
     const formatTime = (timestamp) => {
@@ -95,9 +143,9 @@ const ChatRoomScreen = ({ route, navigation }) => {
         const diffInHours = (now - date) / (1000 * 60 * 60);
 
         if (diffInHours < 24) {
-            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            return date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
         } else {
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
         }
     };
 
@@ -128,14 +176,12 @@ const ChatRoomScreen = ({ route, navigation }) => {
         }
     };
 
-    const renderMessage = ({ item, index }) => {
+    const renderMessage = ({item, index}) => {
         if (!item.createdAt) return null;
 
         const isSent = item.senderId === currentUser.email;
         const prevMsg = index > 0 ? messages[index - 1] : null;
-        const nextMsg = index < messages.length - 1 ? messages[index + 1] : null;
 
-        const showAvatar = !nextMsg || nextMsg.senderId !== item.senderId;
         const isFirstInGroup = !prevMsg || prevMsg.senderId !== item.senderId;
         const showDateSeparator = shouldShowDateSeparator(item, prevMsg);
 
@@ -143,9 +189,9 @@ const ChatRoomScreen = ({ route, navigation }) => {
             <>
                 {showDateSeparator && (
                     <View style={styles.dateSeparator}>
-                        <View style={styles.dateLine} />
+                        <View style={styles.dateLine}/>
                         <Text style={styles.dateText}>{formatDateSeparator(item.createdAt)}</Text>
-                        <View style={styles.dateLine} />
+                        <View style={styles.dateLine}/>
                     </View>
                 )}
 
@@ -153,22 +199,8 @@ const ChatRoomScreen = ({ route, navigation }) => {
                     style={[
                         styles.messageRow,
                         isSent ? styles.rowSent : styles.rowReceived,
-                        !showAvatar && styles.messageRowGrouped,
                     ]}
                 >
-                    {!isSent && (
-                        <View style={styles.avatarSpace}>
-                            {showAvatar ? (
-                                <Image
-                                    source={require('../assets/defaultProfile.png')}
-                                    style={styles.messageAvatar}
-                                />
-                            ) : (
-                                <View style={styles.avatarPlaceholder} />
-                            )}
-                        </View>
-                    )}
-
                     <View style={styles.messageContainer}>
                         <View
                             style={[
@@ -195,7 +227,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
                                         name={item.read ? "checkmark-done" : "checkmark"}
                                         size={14}
                                         color={item.read ? COLORS.success : COLORS.gray400}
-                                        style={{ marginLeft: 4 }}
+                                        style={{marginLeft: 4}}
                                     />
                                 )}
                             </View>
@@ -208,7 +240,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content" />
+            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
 
             {/* Header */}
             <View style={styles.header}>
@@ -217,7 +249,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
                     onPress={() => navigation.goBack()}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="arrow-back" size={24} color={COLORS.dark.text} />
+                    <Ionicons name="arrow-back" size={24} color={COLORS.dark.text}/>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -229,19 +261,12 @@ const ChatRoomScreen = ({ route, navigation }) => {
                 >
                     <View style={styles.avatarContainer}>
                         <Image
-                            source={typeof avatarUri === 'string' ? { uri: avatarUri } : avatarUri}
+                            source={typeof avatarUri === 'string' ? {uri: avatarUri} : avatarUri}
                             style={styles.headerAvatar}
                         />
-                        <View style={styles.onlineIndicator} />
                     </View>
                     <View style={styles.headerInfo}>
                         <Text style={styles.headerName}>{sellerName || 'Chat'}</Text>
-                        <View style={styles.statusRow}>
-                            <View style={styles.activeDot} />
-                            <Text style={styles.headerStatus}>
-                                {isTyping ? 'typing...' : 'Active now'}
-                            </Text>
-                        </View>
                     </View>
                 </TouchableOpacity>
 
@@ -252,33 +277,54 @@ const ChatRoomScreen = ({ route, navigation }) => {
                         console.log('Show menu');
                     }}
                 >
-                    <Ionicons name="ellipsis-vertical" size={20} color={COLORS.dark.textSecondary} />
+                    <Ionicons name="ellipsis-vertical" size={20} color={COLORS.dark.textSecondary}/>
                 </TouchableOpacity>
             </View>
 
-            {/* Product Context Card (if available) */}
-            {productInfo && (
-                <View style={styles.productCard}>
-                    <Image
-                        source={productInfo.image}
-                        style={styles.productImage}
-                    />
-                    <View style={styles.productInfo}>
-                        <Text style={styles.productName} numberOfLines={1}>
-                            {productInfo.name}
-                        </Text>
-                        <Text style={styles.productPrice}>{productInfo.price}</Text>
-                    </View>
-                    <TouchableOpacity
-                        style={styles.productViewButton}
-                        onPress={() => navigation.navigate('ProductDetailsScreen', { item: productInfo })}
-                    >
-                        <Ionicons name="eye-outline" size={18} color={COLORS.primary} />
-                    </TouchableOpacity>
+            {/* ✅ BLOCKED USER BANNER */}
+            {isOtherUserBlocked && (
+                <View style={styles.blockedBanner}>
+                    <Ionicons name="ban" size={16} color="#EF4444"/>
+                    <Text style={styles.blockedText}>
+                        You cannot message this user
+                    </Text>
                 </View>
             )}
 
-            {/* KeyboardAvoidingView wraps messages and input */}
+            {/*Product Context Card (if available)*/}
+            {/*{productInfo && (*/}
+            {/*    <View style={styles.productCard}>*/}
+            {/*        <Image*/}
+            {/*            source={*/}
+            {/*                productInfo?.imageUrl?.[0]*/}
+            {/*                    ? {uri: productInfo.imageUrl[0]}*/}
+            {/*                    : require('../assets/no-image.jpg')*/}
+            {/*            }*/}
+            {/*            style={styles.productImage}*/}
+            {/*        />*/}
+            {/*        <View style={styles.productInfo}>*/}
+            {/*            <Text style={styles.productName} numberOfLines={1}>*/}
+            {/*                {productInfo.name}*/}
+            {/*            </Text>*/}
+            {/*            <Text style={styles.productPrice}>{productInfo.price}</Text>*/}
+            {/*        </View>*/}
+            {/*        /!*<TouchableOpacity*!/*/}
+            {/*        /!*    style={styles.productViewButton}*!/*/}
+            {/*        /!*    onPress={() => navigation.navigate('ProductDetailsScreen', {item: productInfo})}*!/*/}
+            {/*        /!*>*!/*/}
+            {/*        <TouchableOpacity*/}
+            {/*            style={styles.productViewButton}*/}
+            {/*            onPress={() => {*/}
+            {/*                navigation.navigate('ProductDetailsScreen', {*/}
+            {/*                    listingId: productInfo.id*/}
+            {/*                });*/}
+            {/*            }}*/}
+            {/*        >*/}
+            {/*            <Ionicons name="eye-outline" size={18} color={COLORS.primary}/>*/}
+            {/*        </TouchableOpacity>*/}
+            {/*    </View>*/}
+            {/*)}*/}
+
             <KeyboardAvoidingView
                 style={styles.keyboardAvoiding}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -294,11 +340,16 @@ const ChatRoomScreen = ({ route, navigation }) => {
                     style={styles.messageList}
                     showsVerticalScrollIndicator={false}
                     onContentSizeChange={() => {
-                        flatListRef.current?.scrollToEnd({ animated: false });
+                        flatListRef.current?.scrollToEnd({animated: true});
+                    }}
+                    onLayout={() => {
+                        flatListRef.current?.scrollToEnd({animated: false});
+                    }}
+                    maintainVisibleContentPosition={{
+                        minIndexForVisible: 0,
                     }}
                 />
 
-                {/* Quick Replies (Optional) */}
                 {messages.length === 0 && (
                     <View style={styles.quickRepliesContainer}>
                         <Text style={styles.quickRepliesTitle}>Quick messages:</Text>
@@ -321,57 +372,38 @@ const ChatRoomScreen = ({ route, navigation }) => {
                 )}
 
                 {/* Input Bar */}
-                <View style={styles.inputBar}>
-                    <TouchableOpacity
-                        style={styles.attachButton}
-                        activeOpacity={0.7}
-                        onPress={() => {
-                            console.log('Attach file');
-                        }}
-                    >
-                        <Ionicons name="camera-outline" size={24} color={COLORS.dark.textSecondary} />
-                    </TouchableOpacity>
-
+                <View style={[
+                    styles.inputBar,
+                    isOtherUserBlocked && styles.inputBarDisabled
+                ]}>
                     <View style={styles.inputWrapper}>
                         <TextInput
                             style={styles.input}
-                            placeholder="Message..."
+                            placeholder={isOtherUserBlocked ? "Cannot send messages" : "Message..."}
                             placeholderTextColor={COLORS.dark.textTertiary}
                             value={input}
-                            onChangeText={handleTyping}
+                            onChangeText={setInput}
                             multiline
                             maxLength={1000}
+                            editable={!isOtherUserBlocked} // ← DISABLE INPUT IF BLOCKED
                         />
-
-                        {input.length > 0 && (
-                            <TouchableOpacity
-                                style={styles.emojiButton}
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons name="happy-outline" size={22} color={COLORS.dark.textSecondary} />
-                            </TouchableOpacity>
-                        )}
                     </View>
 
-                    {input.trim() ? (
-                        <TouchableOpacity
-                            onPress={handleSend}
-                            style={styles.sendButton}
-                            activeOpacity={0.8}
-                        >
-                            <Ionicons name="send" size={20} color={COLORS.white} />
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.voiceButton}
-                            activeOpacity={0.7}
-                            onPress={() => {
-                                console.log('Voice message');
-                            }}
-                        >
-                            <Ionicons name="mic-outline" size={24} color={COLORS.dark.textSecondary} />
-                        </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                        onPress={handleSend}
+                        style={[
+                            styles.sendButton,
+                            (!input.trim() || isOtherUserBlocked) && styles.sendButtonDisabled
+                        ]}
+                        activeOpacity={0.8}
+                        disabled={!input.trim() || isOtherUserBlocked}
+                    >
+                        <Ionicons
+                            name="send"
+                            size={20}
+                            color={(input.trim() && !isOtherUserBlocked) ? COLORS.white : COLORS.dark.textTertiary}
+                        />
+                    </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -442,15 +474,7 @@ const styles = StyleSheet.create({
     statusRow: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    activeDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: COLORS.status.online,
-        marginRight: 6,
-    },
-    headerStatus: {
+    }, headerStatus: {
         fontSize: 13,
         color: COLORS.dark.textSecondary,
         fontWeight: '500',
@@ -529,7 +553,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
     messageRow: {
-        marginVertical: 8,
+        marginVertical: 4,
         flexDirection: 'row',
         alignItems: 'flex-end',
     },
@@ -541,21 +565,6 @@ const styles = StyleSheet.create({
     },
     rowReceived: {
         justifyContent: 'flex-start',
-    },
-    avatarSpace: {
-        width: 40,
-        alignItems: 'center',
-    },
-    messageAvatar: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        borderWidth: 2,
-        borderColor: COLORS.dark.card,
-    },
-    avatarPlaceholder: {
-        width: 32,
-        height: 32,
     },
     messageContainer: {
         maxWidth: '75%',
@@ -638,29 +647,21 @@ const styles = StyleSheet.create({
     },
     inputBar: {
         flexDirection: 'row',
-        alignItems: 'flex-end',
+        alignItems: 'center',
         padding: 12,
         backgroundColor: COLORS.dark.bgElevated,
         borderTopWidth: 1,
         borderTopColor: COLORS.dark.border,
-    },
-    attachButton: {
-        width: 40,
-        height: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 8,
-    },
-    inputWrapper: {
+    }, inputWrapper: {
         flex: 1,
-        flexDirection: 'row',
-        alignItems: 'flex-end',
         backgroundColor: COLORS.dark.card,
-        borderRadius: 20,
+        borderRadius: 24,
         paddingHorizontal: 16,
         paddingVertical: 10,
         marginRight: 8,
-        minHeight: 40,
+        minHeight: 44,
+        maxHeight: 120,
+        justifyContent: 'center',
     },
     input: {
         flex: 1,
@@ -670,26 +671,35 @@ const styles = StyleSheet.create({
         paddingTop: 0,
         paddingBottom: 0,
     },
-    emojiButton: {
-        width: 28,
-        height: 28,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: 4,
-    },
     sendButton: {
         backgroundColor: COLORS.primary,
-        borderRadius: 20,
-        width: 40,
-        height: 40,
+        borderRadius: 22,
+        width: 44,
+        height: 44,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    voiceButton: {
-        width: 40,
-        height: 40,
+    sendButtonDisabled: {
+        backgroundColor: COLORS.dark.card,
+    },
+
+    blockedBanner: {
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        padding: 12,
+        backgroundColor: '#FEE2E2',
+        borderBottomWidth: 1,
+        borderBottomColor: '#FECACA',
+        gap: 8,
+    },
+    blockedText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#DC2626',
+    },
+    inputBarDisabled: {
+        opacity: 0.5,
     },
 });
 

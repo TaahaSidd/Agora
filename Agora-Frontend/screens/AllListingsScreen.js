@@ -30,7 +30,6 @@ const AllListingsScreen = ({navigation}) => {
     const [refreshing, setRefreshing] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
 
-    // Pagination state
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -44,12 +43,19 @@ const AllListingsScreen = ({navigation}) => {
     const PAGE_SIZE = 20;
 
     const categories = [
-        {id: 'all', name: 'All Categories', icon: 'apps-outline'},
-        {id: 'textbooks', name: 'Textbooks & Study Materials', icon: 'book-outline'},
-        {id: 'electronics', name: 'Electronics & Gadgets', icon: 'laptop-outline'},
-        {id: 'clothing', name: 'Clothing & Accessories', icon: 'shirt-outline'},
-        {id: 'furniture', name: 'Furniture & Dorm Supplies', icon: 'bed-outline'},
-        {id: 'stationery', name: 'Stationery & Office Supplies', icon: 'pencil-outline'},
+        { id: 'all', name: 'All Categories', icon: 'apps-outline' },
+        { id: 'textbooks', name: 'Textbooks & Study Materials', icon: 'book-outline' },
+        { id: 'electronics', name: 'Electronics & Gadgets', icon: 'laptop-outline' },
+        { id: 'clothing', name: 'Clothing & Accessories', icon: 'shirt-outline' },
+        { id: 'furniture', name: 'Furniture & Dorm Supplies', icon: 'bed-outline' },
+        { id: 'stationery', name: 'Stationery & Office Supplies', icon: 'pencil-outline' },
+        { id: 'sports', name: 'Sports & Fitness Equipment', icon: 'basketball-outline' },
+        { id: 'bicycles', name: 'Bicycles & Transportation', icon: 'bicycle-outline' },
+        { id: 'food', name: 'Food & Snacks', icon: 'fast-food-outline' },
+        { id: 'housing', name: 'Housing & Roommates', icon: 'home-outline' },
+        { id: 'tutoring', name: 'Tutoring & Academic Services', icon: 'school-outline' },
+        { id: 'events', name: 'Events & Tickets', icon: 'ticket-outline' },
+        { id: 'miscellaneous', name: 'Miscellaneous', icon: 'grid-outline' },
     ];
 
     const conditions = [
@@ -727,7 +733,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: THEME.spacing.screenPadding,
         paddingVertical: THEME.spacing.md,
-        paddingBottom: THEME.spacing.lg,
         borderTopWidth: THEME.borderWidth.hairline,
         borderTopColor: COLORS.dark.border,
         gap: THEME.spacing.itemGap,

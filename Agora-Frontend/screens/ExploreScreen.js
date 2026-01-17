@@ -1,13 +1,18 @@
-import React, {useEffect, useState, useRef, useMemo} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
 import {
-    Animated, Text, View, TouchableOpacity, StatusBar, FlatList, Dimensions, StyleSheet, RefreshControl
+    Animated,
+    Dimensions,
+    FlatList,
+    RefreshControl,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import * as Location from "expo-location";
-
-import {useAutoSlide} from '../hooks/useAutoSlide';
 import {useListings} from '../hooks/useListings';
 import {useNotificationCount} from '../hooks/useNotificationCount';
 import {useUserStore} from '../stores/userStore';
@@ -17,11 +22,9 @@ import FeaturedCard from '../components/FeaturedCard';
 import NearestCard from '../components/NearestCard';
 import Button from '../components/Button';
 import Tag from '../components/Tag';
-import Banner from '../components/Banner';
-import ReferralBanner from '../components/ReferralBanner';
 import DynamicHeader from '../components/DynamicHeader';
 import AnimatedSearchBar from '../components/AnimatedSearchBar';
-
+import SafetyBanner from "../components/SafetyBanner";
 
 import NotFoundSVG from '../assets/svg/ErrorState.svg';
 
@@ -69,6 +72,7 @@ const EmptyState = ({icon, title, subtitle, actionText, onAction}) => (<View sty
         size="medium"
     />)}
 </View>);
+
 const ExploreScreen = ({navigation, scrollY}) => {
     const {items, loading, error, refetch} = useListings();
     //console.log("items", items);
@@ -76,7 +80,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
     const [userLocation, setUserLocation] = useState(null);
 
     const {currentUser, loading: userLoading, isGuest, fetchUser} = useUserStore();
-
+    //console.log("CURRENT USER - >> ", currentUser);
     const userId = currentUser?.id ?? null;
     const {unreadCount, refresh} = useNotificationCount(userId, userLoading, isGuest, 60000);
 
@@ -97,49 +101,49 @@ const ExploreScreen = ({navigation, scrollY}) => {
         return items.filter(item => item.seller?.collegeId === currentUser.collegeId);
     }, [currentUser, items]);
 
-    useEffect(() => {
-        (async () => {
-            let {status} = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                console.log("Permission denied");
-                return;
-            }
-
-            let loc = await Location.getCurrentPositionAsync({});
-            setUserLocation({
-                latitude: loc.coords.latitude, longitude: loc.coords.longitude,
-            });
-        })();
-    }, []);
-
-    const getDistance = (lat1, lon1, lat2, lon2) => {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * (Math.PI / 180);
-        const dLon = (lon2 - lon1) * (Math.PI / 180);
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) ** 2;
-
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    };
-
-    const [nearestItems, setNearestItems] = useState([]);
-
-    useEffect(() => {
-        if (!userLocation || !items || items.length === 0) return;
-
-        const nearby = items
-            .map(listing => {
-                if (!listing.college?.latitude || !listing.college?.longitude) return null;
-
-                const dist = getDistance(userLocation.latitude, userLocation.longitude, Number(listing.college.latitude), Number(listing.college.longitude));
-
-                return {...listing, distance: dist};
-            })
-            .filter(Boolean)
-            .sort((a, b) => a.distance - b.distance)
-            .slice(0, 10);
-
-        setNearestItems(nearby);
-    }, [userLocation, items]);
+    // useEffect(() => {
+    //     (async () => {
+    //         let {status} = await Location.requestForegroundPermissionsAsync();
+    //         if (status !== "granted") {
+    //             console.log("Permission denied");
+    //             return;
+    //         }
+    //
+    //         let loc = await Location.getCurrentPositionAsync({});
+    //         setUserLocation({
+    //             latitude: loc.coords.latitude, longitude: loc.coords.longitude,
+    //         });
+    //     })();
+    // }, []);
+    //
+    // const getDistance = (lat1, lon1, lat2, lon2) => {
+    //     const R = 6371;
+    //     const dLat = (lat2 - lat1) * (Math.PI / 180);
+    //     const dLon = (lon2 - lon1) * (Math.PI / 180);
+    //     const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) ** 2;
+    //
+    //     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    // };
+    //
+    // const [nearestItems, setNearestItems] = useState([]);
+    //
+    // useEffect(() => {
+    //     if (!userLocation || !items || items.length === 0) return;
+    //
+    //     const nearby = items
+    //         .map(listing => {
+    //             if (!listing.college?.latitude || !listing.college?.longitude) return null;
+    //
+    //             const dist = getDistance(userLocation.latitude, userLocation.longitude, Number(listing.college.latitude), Number(listing.college.longitude));
+    //
+    //             return {...listing, distance: dist};
+    //         })
+    //         .filter(Boolean)
+    //         .sort((a, b) => a.distance - b.distance)
+    //         .slice(0, 10);
+    //
+    //     setNearestItems(nearby);
+    // }, [userLocation, items]);
 
 
     const categoryItems = [{
@@ -181,6 +185,15 @@ const ExploreScreen = ({navigation, scrollY}) => {
     const previewCategories = categoryItems.slice(0, previewCount);
     const remainingCount = categoryItems.length - previewCount;
 
+
+    const newlyListedItems = useMemo(() => {
+        if (!items || items.length === 0) return [];
+
+        // Sort by ID or createdAt descending (assuming higher ID = newer)
+        return [...items]
+            .sort((a, b) => b.id - a.id)
+            .slice(0, 10);
+    }, [items]);
 
     const banners = [{
         source: require('../assets/banner.jpg'),
@@ -236,10 +249,10 @@ const ExploreScreen = ({navigation, scrollY}) => {
                 <Text style={styles.subGreeting}>Find your perfect deal today</Text>
             </View>
             <View style={styles.headerActions}>
-                <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Search')}
-                                  activeOpacity={0.7}>
-                    <Icon name="search-outline" size={22} color="#374151"/>
-                </TouchableOpacity>
+                {/*<TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Search')}*/}
+                {/*                  activeOpacity={0.7}>*/}
+                {/*    <Icon name="search-outline" size={22} color="#374151"/>*/}
+                {/*</TouchableOpacity>*/}
                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}
                                   activeOpacity={0.7}>
                     <Icon name="notifications-outline" size={22} color="#374151"/>
@@ -268,7 +281,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
 
         <View style={styles.section}>
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Recommended</Text>
+                <Text style={styles.sectionTitle}>Hot on campus</Text>
             </View>
             <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false}
                                  contentContainerStyle={styles.horizontalList}>
@@ -278,7 +291,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
 
         <View style={styles.section}>
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Nearest to You</Text>
+                <Text style={styles.sectionTitle}>Newly listed</Text>
             </View>
             <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false}
                                  contentContainerStyle={styles.horizontalList}>
@@ -352,6 +365,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
     return (<SafeAreaView style={styles.container}>
         <StatusBar backgroundColor="#fff" barStyle="dark-content"/>
 
+
         <Animated.ScrollView
             contentContainerStyle={{flexGrow: 1}}
             scrollEventThrottle={16}
@@ -390,20 +404,20 @@ const ExploreScreen = ({navigation, scrollY}) => {
 
                 {/* Search Bar*/}
                 <View style={styles.searchSection}>
-                        <AnimatedSearchBar
-                            onPress={() => navigation.navigate('Search')}
-                        />
-                </View>
-
-                {/* Banner */}
-                <View style={styles.section}>
-                    <Banner
-                        source={require('../assets/college-students3-bro.png')}
-                        title="Welcome to Agora"
-                        subtitle="Your campus marketplace"
-                        showBadge={false}
+                    <AnimatedSearchBar
+                        onPress={() => navigation.navigate('Search')}
                     />
                 </View>
+
+                {/*/!* Banner *!/*/}
+                {/*<View style={styles.section}>*/}
+                {/*    <Banner*/}
+                {/*        source={require('../assets/college-students3-bro.png')}*/}
+                {/*        title="Welcome to Agora"*/}
+                {/*        subtitle="Your campus marketplace"*/}
+                {/*        showBadge={false}*/}
+                {/*    />*/}
+                {/*</View>*/}
 
                 {/* Categories */}
                 <View style={styles.section}>
@@ -440,7 +454,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <View style={styles.titleWithIcon}>
-                            <Text style={styles.sectionTitle}>From Your College</Text>
+                            <Text style={styles.sectionTitle}>Hot on Campus</Text>
                             <View style={styles.recommendedBadge}>
                                 <Icon name="flame" size={14} color="#EF4444"/>
                             </View>
@@ -464,12 +478,13 @@ const ExploreScreen = ({navigation, scrollY}) => {
                     </View>)}
                 </View>
 
-                {/* Nearest to You */}
+                {/* Newly listed */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <View style={styles.titleWithIcon}>
-                            <Text style={styles.sectionTitle}>Nearest to You</Text>
-                            <Icon name="location" size={16} color={COLORS.primary} style={{marginLeft: 6}}/>
+                            <Text style={styles.sectionTitle}>Newly Listed</Text>
+                            <Icon name="sparkles" size={16} color={COLORS.primary} style={{marginLeft: 6}}/>
+
                         </View>
                     </View>
 
@@ -477,7 +492,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                         horizontal
                         ref={flatListRef}
                         showsHorizontalScrollIndicator={false}
-                        data={nearestItems}
+                        data={newlyListedItems}
                         contentContainerStyle={styles.horizontalList}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={({item}) => (<NearestCard
@@ -492,7 +507,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
 
                 {/* Referral Banner */}
                 <View style={styles.section}>
-                    <ReferralBanner onPress={() => navigation.navigate('ReferralScreen')}/>
+                    <SafetyBanner onPress={() => navigation.navigate('SafetyCenterScreen')}/>
                 </View>
 
                 {/* Explore */}
@@ -546,8 +561,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: THEME.spacing.screenPadding,
         paddingTop: THEME.spacing.xs,
-        paddingBottom: THEME.spacing.md, // Reduced padding
+        paddingBottom: THEME.spacing.xs,
         backgroundColor: COLORS.dark.bgElevated,
+        borderBottomColor: COLORS.dark.border,
     }, headerActions: {
         flexDirection: 'row', gap: THEME.spacing.sm,
     }, iconButton: {
@@ -564,7 +580,7 @@ const styles = StyleSheet.create({
     searchSection: {
         paddingHorizontal: THEME.spacing.screenPadding,
         paddingTop: THEME.spacing.sm,
-        paddingBottom: THEME.spacing.lg,
+        paddingBottom: THEME.spacing.xs,
         backgroundColor: COLORS.dark.bgElevated,
     }, notificationBadge: {
         position: 'absolute',

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import * as SecureStore from 'expo-secure-store';
 import * as Location from 'expo-location';
-import {Animated, SafeAreaView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {ActivityIndicator, Animated, SafeAreaView, StatusBar, StyleSheet, Text, View} from 'react-native';
 
 import {apiDelete, apiPost} from '../services/api';
 import {useProfileImage} from '../hooks/useProfileImage';
@@ -19,43 +19,21 @@ import SettingsOptionList from '../components/SettingsOptionList';
 import ProfileSection from '../components/ProfileSection';
 
 const SettingsScreen = ({navigation, scrollY}) => {
-    const {currentUser: user, loading, isGuest, fetchUser} = useUserStore();
-
+    const {currentUser: user, loading, isGuest, fetchUser, clearAuthData} = useUserStore();
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const {profileImage} = useProfileImage();
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
-    const [userLocation, setUserLocation] = useState('Fetching...');
+    const [userLocation, setUserLocation] = useState('Fetching...');//Make sure to verify this.
 
-    useEffect(() => {
-        fetchUser();
-    }, []);
-
+    const [isDeleting, setIsDeleting] = useState(false);
     const showToast = ({type, title, message}) => {
         setToast({visible: true, type, title, message});
     };
 
-    const handleLogout = async () => {
-        setLogoutModalVisible(false);
-        try {
-            const refreshToken = await SecureStore.getItemAsync('refreshToken');
-
-            if (refreshToken) {
-                await apiPost('/auth/logout', {refreshToken});
-            }
-
-            await SecureStore.deleteItemAsync('accessToken');
-            await SecureStore.deleteItemAsync('refreshToken');
-            await SecureStore.deleteItemAsync('currentUser');
-            navigation.replace('Login');
-        } catch (err) {
-            console.error('Logout failed:', err);
-            await SecureStore.deleteItemAsync('accessToken');
-            await SecureStore.deleteItemAsync('refreshToken');
-            await SecureStore.deleteItemAsync('currentUser');
-            navigation.replace('Login');
-        }
-    };
+    useEffect(() => {
+        fetchUser();
+    }, []);
 
     useEffect(() => {
         (async () => {
@@ -86,8 +64,32 @@ const SettingsScreen = ({navigation, scrollY}) => {
     }, []);
 
 
+    const handleLogout = async () => {
+        setLogoutModalVisible(false);
+        try {
+            const refreshToken = await SecureStore.getItemAsync('refreshToken');
+
+            if (refreshToken) {
+                await apiPost('/auth/logout', {refreshToken});
+            }
+
+            await SecureStore.deleteItemAsync('accessToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+            await SecureStore.deleteItemAsync('currentUser');
+            navigation.replace('Login');
+        } catch (err) {
+            console.error('Logout failed:', err);
+            await SecureStore.deleteItemAsync('accessToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+            await SecureStore.deleteItemAsync('currentUser');
+            navigation.replace('Login');
+        }
+    };
+
     const handleDeleteAccount = async () => {
         try {
+            setIsDeleting(true);
+
             await apiDelete('/profile/me');
 
             showToast({
@@ -98,16 +100,20 @@ const SettingsScreen = ({navigation, scrollY}) => {
 
             setTimeout(async () => {
                 await clearAuthData();
-                navigation.reset({index: 0, routes: [{name: 'Auth'}]});
+                navigation.reset({
+                    index: 0,
+                    routes: [{name: 'Login'}],
+                });
+
             }, 2000);
+
         } catch (error) {
+            setIsDeleting(false);
             showToast({
                 type: 'error',
                 title: 'Error',
                 message: 'Failed to delete account. Try again later.'
             });
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -153,7 +159,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
                     buttonLabel={isGuest ? 'Login to Continue' : 'View Profile'}
                     onButtonPress={() => {
                         if (isGuest) {
-                            // Button: Toast + Login
                             showToast({
                                 type: 'info',
                                 title: 'Login Required',
@@ -165,7 +170,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
                         }
                     }}
                     onPress={isGuest ? () => {
-                        // Card tap: Toast only
                         showToast({
                             type: 'info',
                             title: 'Profile Locked',
@@ -219,12 +223,12 @@ const SettingsScreen = ({navigation, scrollY}) => {
                             },
                         },
                         {
-                            icon: 'location',
+                            icon: 'school',
                             iconType: 'ion',
-                            label: 'Location',
-                            description: 'Your current city',
+                            label: 'My Campus',
+                            description: '',
                             gradient: ['#10B981', '#059669'],
-                            value: userLocation,
+                            value: isGuest ? 'Guest Access' : (user?.collegeName || 'Not Set'),
                             onPress: () => {
                             },
                         },
@@ -252,41 +256,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
                         },
                     ]}
                 />
-
-                {/*<SettingsOptionList*/}
-                {/*    title="Account Actions"*/}
-                {/*    options={[*/}
-                {/*        {*/}
-                {/*            icon: 'trash-outline',*/}
-                {/*            iconType: 'ion',*/}
-                {/*            label: 'Delete Account',*/}
-                {/*            description: 'Permanently remove your data',*/}
-                {/*            gradient: ['#FF416C', '#FF4B2B'],*/}
-                {/*            onPress: () => {*/}
-                {/*                if (isGuest) {*/}
-                {/*                    showToast({*/}
-                {/*                        type: 'info',*/}
-                {/*                        title: 'Guest Mode',*/}
-                {/*                        message: 'No account found to delete.',*/}
-                {/*                    });*/}
-                {/*                    return;*/}
-                {/*                }*/}
-                {/*                Alert.alert(*/}
-                {/*                    "Delete Account",*/}
-                {/*                    "Are you sure? This action is permanent and all your listings will be removed.",*/}
-                {/*                    [*/}
-                {/*                        {text: "Cancel", style: "cancel"},*/}
-                {/*                        {*/}
-                {/*                            text: "Delete",*/}
-                {/*                            style: "destructive",*/}
-                {/*                            onPress: () => handleDeleteAccount()*/}
-                {/*                        }*/}
-                {/*                    ]*/}
-                {/*                );*/}
-                {/*            },*/}
-                {/*        },*/}
-                {/*    ]}*/}
-                {/*/>*/}
 
                 <SettingsOptionList
                     title="Support & About"
@@ -402,6 +371,16 @@ const SettingsScreen = ({navigation, scrollY}) => {
                     />
                 )
             }
+
+            {/* Deletion Loading Overlay */}
+            {isDeleting && (
+                <View style={styles.globalLoadingOverlay}>
+                    <View style={styles.loadingCard}>
+                        <ActivityIndicator size="large" color="#FF416C"/>
+                        <Text style={styles.loadingText}>Deleting your account...</Text>
+                    </View>
+                </View>
+            )}
         </SafeAreaView>
     );
 };
@@ -439,6 +418,30 @@ const styles = StyleSheet.create({
         fontSize: THEME.fontSize.sm,
         color: COLORS.dark.textTertiary,
         fontWeight: THEME.fontWeight.medium,
+    },
+
+    globalLoadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    loadingCard: {
+        backgroundColor: COLORS.dark.card,
+        padding: 24,
+        borderRadius: 16,
+        alignItems: 'center',
+        gap: 12,
+    },
+    loadingText: {
+        color: COLORS.dark.text,
+        fontSize: 14,
+        fontWeight: '600',
     },
 });
 

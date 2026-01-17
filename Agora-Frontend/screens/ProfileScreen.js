@@ -24,18 +24,19 @@ import ModalComponent from "../components/Modal";
 import {useAverageRating} from '../hooks/useAverageRating';
 import {useSellerProfile} from '../hooks/useSellerProfile';
 import {useModeration} from "../hooks/useModeration";
+import {useSellerStats} from "../hooks/useSellerStats";
 import {apiDelete, apiGet, apiPost} from '../services/api';
 import {useUserStore} from "../stores/userStore";
 
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
 
-
 //subtle animations
 const ProfileScreen = ({navigation, route}) => {
     const {sellerId} = route.params;
     const {currentUser, loading: currentUserLoading, isGuest} = useUserStore();
     const {seller, listings, loading} = useSellerProfile(sellerId);
+    const {stats} = useSellerStats(sellerId);
 
     const [isFollowing, setIsFollowing] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
@@ -47,9 +48,6 @@ const ProfileScreen = ({navigation, route}) => {
     const [isBlockModalVisible, setIsBlockModalVisible] = useState(false);
     const {blockUser} = useModeration();
 
-    const scaleValue = useRef(new Animated.Value(0.95)).current;
-    const opacityValue = useRef(new Animated.Value(0.6)).current;
-
     const scaleValues = useRef({
         all: new Animated.Value(1),
         available: new Animated.Value(1),
@@ -57,7 +55,6 @@ const ProfileScreen = ({navigation, route}) => {
     }).current;
 
     const handlePress = (filterType) => {
-        // Animate the pressed tab
         Animated.sequence([
             Animated.spring(scaleValues[filterType], {
                 toValue: 0.92,
@@ -73,7 +70,6 @@ const ProfileScreen = ({navigation, route}) => {
             }),
         ]).start();
 
-        // Update filter immediately (no delay!)
         setFilter(filterType);
     };
 
@@ -190,6 +186,10 @@ const ProfileScreen = ({navigation, route}) => {
         }
     };
 
+    const ratingValue = rating || 0;
+    const ratingStyle = getRatingStyle(ratingValue);
+    const totalReviews = stats.totalReviews;
+
     const getBannerGradient = (rating) => {
         if (rating >= 4.5) {
             return ['#7C3AED', '#EC4899', '#F59E0B'];
@@ -210,18 +210,15 @@ const ProfileScreen = ({navigation, route}) => {
         sellerAvatar = 'https://i.pravatar.cc/100';
     }
 
-    if (loading) {
-        return <LoadingSpinner/>;
-    }
-
-    const ratingValue = rating || 0;
-    const ratingStyle = getRatingStyle(ratingValue);
-
     const filteredListings = filter === 'all' ? listings : listings.filter(item => {
         if (filter === 'available') return item.itemStatus === 'AVAILABLE';
         if (filter === 'sold') return item.itemStatus === 'SOLD';
         return true;
     });
+
+    if (loading) {
+        return <LoadingSpinner/>;
+    }
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -314,7 +311,9 @@ const ProfileScreen = ({navigation, route}) => {
                                     {loading ? '...' : ratingValue.toFixed(1)}
                                 </Text>
                             </View>
-                            <Text style={styles.statLabel}>Rating</Text>
+                            <Text style={styles.statLabel}>
+                                {loading ? 'Rating' : `${totalReviews} ${totalReviews === 1 ? 'Review' : 'Reviews'}`}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 
@@ -332,24 +331,24 @@ const ProfileScreen = ({navigation, route}) => {
                     )}
                 </View>
 
-                <View style={styles.badgeSection}>
-                    <Text style={styles.badgeTitle}>Campus Achievements</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={styles.badgeScroll}>
-                        {getMilestones(listings, followersCount, ratingValue).map(badge => (
-                            <View
-                                key={badge.id}
-                                style={[
-                                    styles.badgePill,
-                                    {borderColor: badge.color + '40'}
-                                ]}
-                            >
-                                <Ionicons name={badge.icon} size={14} color={badge.color}/>
-                                <Text style={styles.badgeLabel}>{badge.label}</Text>
-                            </View>
-                        ))}
-                    </ScrollView>
-                </View>
+                {/*<View style={styles.badgeSection}>*/}
+                {/*    <Text style={styles.badgeTitle}>Campus Achievements</Text>*/}
+                {/*    <ScrollView horizontal showsHorizontalScrollIndicator={false}*/}
+                {/*                contentContainerStyle={styles.badgeScroll}>*/}
+                {/*        {getMilestones(listings, followersCount, ratingValue).map(badge => (*/}
+                {/*            <View*/}
+                {/*                key={badge.id}*/}
+                {/*                style={[*/}
+                {/*                    styles.badgePill,*/}
+                {/*                    {borderColor: badge.color + '40'}*/}
+                {/*                ]}*/}
+                {/*            >*/}
+                {/*                <Ionicons name={badge.icon} size={14} color={badge.color}/>*/}
+                {/*                <Text style={styles.badgeLabel}>{badge.label}</Text>*/}
+                {/*            </View>*/}
+                {/*        ))}*/}
+                {/*    </ScrollView>*/}
+                {/*</View>*/}
 
                 {/* Listings Section */}
                 <View style={styles.listingsSection}>
@@ -363,7 +362,7 @@ const ProfileScreen = ({navigation, route}) => {
                     {/* Filter Tabs */}
                     <View style={styles.filterContainer}>
                         {/* All Tab */}
-                        <Animated.View style={{ transform: [{ scale: scaleValues.all }] }}>
+                        <Animated.View style={{transform: [{scale: scaleValues.all}]}}>
                             <TouchableOpacity
                                 style={[
                                     styles.filterTab,
@@ -384,7 +383,7 @@ const ProfileScreen = ({navigation, route}) => {
                         </Animated.View>
 
                         {/* Available Tab */}
-                        <Animated.View style={{ transform: [{ scale: scaleValues.available }] }}>
+                        <Animated.View style={{transform: [{scale: scaleValues.available}]}}>
                             <TouchableOpacity
                                 style={[
                                     styles.filterTab,
@@ -405,7 +404,7 @@ const ProfileScreen = ({navigation, route}) => {
                         </Animated.View>
 
                         {/* Sold Tab */}
-                        <Animated.View style={{ transform: [{ scale: scaleValues.sold }] }}>
+                        <Animated.View style={{transform: [{scale: scaleValues.sold}]}}>
                             <TouchableOpacity
                                 style={[
                                     styles.filterTab,
@@ -452,18 +451,28 @@ const ProfileScreen = ({navigation, route}) => {
                 onClose={() => setShowMenu(false)}
                 type="user"
                 title="Profile Options"
+                isGuest={isGuest}
+                onAuthRequired={() => {
+                    setShowMenu(false);
+                    setToast({
+                        visible: true,
+                        type: 'info',
+                        title: 'Members Only',
+                        message: 'Join the Agora community to report or block users!'
+                    });
+                }}
                 onShare={() => {
                     setShowMenu(false);
                     console.log('Share profile');
                 }}
-                onReport={() => {
+                onReport={isOwnProfile ? null : () => {
                     setShowMenu(false);
                     navigation.navigate('ReportUserScreen', {
                         userId: sellerId,
                         userName: seller ? `${seller.firstName} ${seller.lastName}` : 'User',
                     });
                 }}
-                onBlock={handleBlockPress}
+                onBlock={isOwnProfile ? null : handleBlockPress}
             />
 
             <ModalComponent
@@ -482,9 +491,18 @@ const ProfileScreen = ({navigation, route}) => {
                 visible={showRatingModal}
                 onClose={() => setShowRatingModal(false)}
                 rating={ratingValue}
+                isOwnProfile={isOwnProfile}
+                isGuest={isGuest}
+                onAuthPress={() => {
+                    setShowRatingModal(false);
+                    navigation.navigate('Login');
+                }}
                 onRatePress={() => {
                     setShowRatingModal(false);
-                    navigation.navigate('AllReviewsScreen', {sellerId});
+                    navigation.navigate('UserRatingScreen', {
+                        sellerId,
+                        seller
+                    });
                 }}
             />
 
@@ -530,11 +548,14 @@ const styles = StyleSheet.create({
     },
     bannerSection: {
         position: 'relative',
-        height: 200,
+        height: 240,
     },
     banner: {
         width: '100%',
-        height: 160,
+        height: 200,
+        borderBottomLeftRadius: 40,
+        borderBottomRightRadius: 40,
+        overflow: 'hidden',
     },
     patternOverlay: {
         position: 'absolute',
@@ -552,6 +573,11 @@ const styles = StyleSheet.create({
     },
     avatarContainer: {
         position: 'relative',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
     },
     avatar: {
         width: 100,

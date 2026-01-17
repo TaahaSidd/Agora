@@ -1,15 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, Easing, Text, Dimensions } from 'react-native';
+import React, {useEffect, useRef} from 'react';
+import {Animated, Dimensions, Easing, StyleSheet, Text, View} from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { authApiPost } from '../services/api';
-import { COLORS } from '../utils/colors';
-import { jwtDecode } from 'jwt-decode';
-import { useUserStore } from "../stores/userStore";
+import {authApiPost} from '../services/api';
+import {COLORS} from '../utils/colors';
+import {jwtDecode} from 'jwt-decode';
+import {useUserStore} from "../stores/userStore";
 import LogoAppSVG from '../assets/svg/LogoAppSVG.svg';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 
-export default function SplashScreen({ navigation }) {
+export default function SplashScreen({navigation}) {
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
     const taglineAnim = useRef(new Animated.Value(0)).current;
@@ -20,6 +20,7 @@ export default function SplashScreen({ navigation }) {
     const circle3 = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
+        // Animations
         Animated.parallel([
             Animated.spring(scaleAnim, {
                 toValue: 1,
@@ -82,10 +83,6 @@ export default function SplashScreen({ navigation }) {
             ])
         ).start();
 
-        const setOnboardingSeen = async () => {
-            await SecureStore.setItemAsync('hasSeenOnboarding', 'true');
-        };
-
         const getOnboardingSeen = async () => {
             const value = await SecureStore.getItemAsync('hasSeenOnboarding');
             return value === 'true';
@@ -94,40 +91,100 @@ export default function SplashScreen({ navigation }) {
         const timer = setTimeout(async () => {
             try {
                 const hasSeenOnboarding = await getOnboardingSeen();
-                const accessToken = await SecureStore.getItemAsync('accessToken');
+
+                // ✅ Check for authToken (OTP flow) OR accessToken (old flow)
+                let authToken = await SecureStore.getItemAsync('authToken');
+                if (!authToken) {
+                    authToken = await SecureStore.getItemAsync('accessToken'); // Fallback to old key
+                }
+
                 const refreshToken = await SecureStore.getItemAsync('refreshToken');
 
+                // Show onboarding if never seen
                 if (!hasSeenOnboarding) {
-                    navigation.replace('Onboarding', { guest: !accessToken });
+                    navigation.replace('Onboarding', {guest: !authToken});
                     return;
                 }
 
-                if (!accessToken && !refreshToken) {
+                // No tokens - go to login
+                if (!authToken && !refreshToken) {
+                    console.log('🚫 No tokens found');
                     navigation.replace('Login');
                     return;
                 }
 
-                if (accessToken) {
-                    const { exp } = jwtDecode(accessToken);
-                    const jwtExpired = Date.now() >= exp * 1000;
+                // Has authToken - validate and fetch user
+                if (authToken) {
+                    try {
+                        const {exp} = jwtDecode(authToken);
+                        const jwtExpired = Date.now() >= exp * 1000;
 
-                    if (!jwtExpired) {
-                        await useUserStore.getState().fetchUser();
-                        navigation.replace('MainLayout', { guest: false });
-                        return;
+                        if (!jwtExpired) {
+                            console.log('✅ Valid token, fetching user...');
+                            await useUserStore.getState().fetchUser();
+                            const user = useUserStore.getState().currentUser;
+
+                            // Check verification status
+                            if (!user || !user.id) {
+                                console.log('❌ No user found, logging out');
+                                await SecureStore.deleteItemAsync('authToken');
+                                await SecureStore.deleteItemAsync('accessToken');
+                                await SecureStore.deleteItemAsync('refreshToken');
+                                navigation.replace('Login');
+                                return;
+                            }
+
+                            if (user.verificationStatus === 'PENDING') {
+                                console.log('⚠️ User pending, navigating to CompleteProfile');
+                                navigation.replace('CompleteProfileScreen');
+                                return;
+                            }
+
+                            console.log('✅ User verified, navigating to MainLayout');
+                            navigation.replace('MainLayout', {guest: false});
+                            return;
+                        }
+
+                        console.log('⏰ Token expired, will try refresh');
+                    } catch (e) {
+                        console.log("❌ JWT decode failed:", e);
                     }
                 }
 
+                // Try refresh token
                 if (refreshToken) {
                     try {
-                        const res = await authApiPost('/auth/refresh', { refreshToken });
-                        await SecureStore.setItemAsync('accessToken', res.jwt);
-                        if (res.refreshToken) await SecureStore.setItemAsync('refreshToken', res.refreshToken);
+                        console.log('🔄 Refreshing token...');
+                        const res = await authApiPost('/auth/refresh', {refreshToken});
 
+                        // Save new token with new key
+                        await SecureStore.setItemAsync('authToken', res.jwt);
+                        if (res.refreshToken) {
+                            await SecureStore.setItemAsync('refreshToken', res.refreshToken);
+                        }
+
+                        // Fetch user
                         await useUserStore.getState().fetchUser();
-                        navigation.replace('MainLayout', { guest: false });
+                        const user = useUserStore.getState().currentUser;
+
+                        if (!user || !user.id) {
+                            console.log('❌ No user after refresh');
+                            navigation.replace('Login');
+                            return;
+                        }
+
+                        if (user.verificationStatus === 'PENDING') {
+                            console.log('⚠️ User pending after refresh');
+                            navigation.replace('CompleteProfileScreen');
+                            return;
+                        }
+
+                        console.log('✅ Refresh successful');
+                        navigation.replace('MainLayout', {guest: false});
                         return;
-                    } catch {
+                    } catch (err) {
+                        console.log('❌ Refresh failed:', err);
+                        await SecureStore.deleteItemAsync('authToken');
                         await SecureStore.deleteItemAsync('accessToken');
                         await SecureStore.deleteItemAsync('refreshToken');
                         navigation.replace('Login');
@@ -135,11 +192,21 @@ export default function SplashScreen({ navigation }) {
                     }
                 }
 
-                await SecureStore.deleteItemAsync('accessToken');
+                // Fallback - no valid auth
+                console.log('🚫 No valid auth, going to login');
                 navigation.replace('Login');
 
             } catch (error) {
-                console.log('Token validation failed:', error);
+                console.log('❌ Splash error:', error);
+
+                // If 401/403, clear tokens
+                if (error.response?.status === 401 || error.response?.status === 403) {
+                    await SecureStore.deleteItemAsync('authToken');
+                    await SecureStore.deleteItemAsync('accessToken');
+                    await SecureStore.deleteItemAsync('refreshToken');
+                    await SecureStore.deleteItemAsync('currentUser');
+                }
+
                 navigation.replace('Login');
             }
         }, 3000);
@@ -177,8 +244,8 @@ export default function SplashScreen({ navigation }) {
                     styles.circle1,
                     {
                         transform: [
-                            { translateY: circle1Y },
-                            { translateX: circle1X }
+                            {translateY: circle1Y},
+                            {translateX: circle1X}
                         ]
                     },
                 ]}
@@ -189,8 +256,8 @@ export default function SplashScreen({ navigation }) {
                     styles.circle2,
                     {
                         transform: [
-                            { translateY: circle2Y },
-                            { translateX: circle2X }
+                            {translateY: circle2Y},
+                            {translateX: circle2X}
                         ]
                     },
                 ]}
@@ -199,24 +266,22 @@ export default function SplashScreen({ navigation }) {
                 style={[
                     styles.circle,
                     styles.circle3,
-                    { transform: [{ translateY: circle3Y }] },
+                    {transform: [{translateY: circle3Y}]},
                 ]}
             />
 
-            {/* Main Content - SVG Logo */}
             <Animated.View
                 style={[
                     styles.logoContainer,
                     {
-                        transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }],
+                        transform: [{scale: Animated.multiply(scaleAnim, pulseAnim)}],
                         opacity: opacityAnim,
                     },
                 ]}
             >
-                <LogoAppSVG width={280} height={280} />
+                <LogoAppSVG width={280} height={280}/>
             </Animated.View>
 
-            {/* Tagline */}
             <Animated.View
                 style={[
                     styles.taglineContainer,
@@ -288,31 +353,3 @@ const styles = StyleSheet.create({
         letterSpacing: 0.8,
     },
 });
-
-
-/*
-SPLASH SCREEN LOGIC - PRODUCTION PATTERN
-
-1. Purpose:
-- Hide app loading / cold start
-    - Run auth + onboarding checks
-    - Decide initial navigation
-    - Mask startup time with animation
-
-2. What we need:
-    - Minimum display time(e.g., 1 - 1.5s)
-    - Async logic completion tracking:
-        • Onboarding check
-        • Access / refresh token validation
-        • Fetch user if logged in
-    - Animation(logo, pulses, background motion)
-    - Navigation only after BOTH:
-        • Async logic finished
-        • Minimum time elapsed
-
-3. Notes:
-    - Avoid fixed timeouts(do not just wait 3s)
-    - Do not fetch heavy data here(keep splash lightweight)
-    - Hide Expo native splash immediately when JS is ready
-    - Ensure navigation happens once(guard against race conditions)
-*/

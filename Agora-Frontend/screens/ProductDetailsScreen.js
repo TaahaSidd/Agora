@@ -38,6 +38,7 @@ export default function ProductDetailsScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const product = route.params?.item;
+    //console.log("PRODUCT", product);
     const {items: allListings} = useListings();
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
     const showToast = ({type, title, message}) => {
@@ -72,15 +73,6 @@ export default function ProductDetailsScreen() {
     if (sellerAvatar?.includes('localhost')) {
         sellerAvatar = sellerAvatar.replace('localhost', '192.168.8.15');
     }
-
-    const productCoordinates = product?.college?.latitude && product?.college?.longitude ? {
-        latitude: Number(product.college.latitude),
-        longitude: Number(product.college.longitude),
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-    } : {
-        latitude: 0, longitude: 0, latitudeDelta: 0.01, longitudeDelta: 0.01,
-    };
 
     const scrollViewRef = useRef(null);
 
@@ -208,246 +200,254 @@ export default function ProductDetailsScreen() {
     </TouchableOpacity>);
 
     return (<View style={styles.container}>
-        <StatusBar barStyle="light-content" translucent backgroundColor="transparent"/>
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent"/>
 
-        {/* Floating Header */}
-        <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-                <Icon name="arrow-back" size={24} color="#fff"/>
-            </TouchableOpacity>
-
-            <View style={styles.headerActions}>
-                {/*<FavoriteButton listingId={product.id} size={24}/>*/}
-                <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setShowMenu(true)}
-                    style={styles.iconBtn}
-                >
-                    <Ionicons name="ellipsis-vertical" size={20} color="#fff"/>
+            {/* Floating Header */}
+            <View style={styles.headerRow}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+                    <Icon name="arrow-back" size={24} color="#fff"/>
                 </TouchableOpacity>
-            </View>
-        </View>
 
-        <ScrollView ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
-            {/* Image Carousel */}
-            <View style={styles.imageContainer}>
-                <FlatList
-                    ref={flatListRef}
-                    data={images}
-                    renderItem={renderImageItem}
-                    keyExtractor={(item, index) => index.toString()}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onViewableItemsChanged={onViewableItemsChanged}
-                    viewabilityConfig={viewabilityConfig}
-                    getItemLayout={(data, index) => ({
-                        length: width, offset: width * index, index,
-                    })}
-                />
-
-                {/* Navigation Arrows */}
-                {images.length > 1 && (<>
-                    {currentImageIndex > 0 && (<TouchableOpacity
-                        style={[styles.arrowButton, styles.leftArrow]}
-                        onPress={handlePreviousImage}
-                        activeOpacity={0.8}
+                <View style={styles.headerActions}>
+                    {/*<FavoriteButton listingId={product.id} size={24}/>*/}
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => setShowMenu(true)}
+                        style={styles.iconBtn}
                     >
-                        <Icon name="chevron-back" size={24} color="#fff"/>
-                    </TouchableOpacity>)}
-                    {currentImageIndex < images.length - 1 && (<TouchableOpacity
-                        style={[styles.arrowButton, styles.rightArrow]}
-                        onPress={handleNextImage}
-                        activeOpacity={0.8}
-                    >
-                        <Icon name="chevron-forward" size={24} color="#fff"/>
-                    </TouchableOpacity>)}
-                </>)}
-
-                {/* Dot Indicators */}
-                {images.length > 1 && (<View style={styles.dotContainer}>
-                    {images.map((_, index) => (<View
-                        key={index}
-                        style={[styles.dot, currentImageIndex === index && styles.activeDot]}
-                    />))}
-                </View>)}
-
-                <ImageViewing
-                    images={images.map(img => (typeof img === 'string' ? {uri: img} : img))}
-                    imageIndex={currentImageIndex}
-                    visible={isViewerVisible}
-                    onRequestClose={() => setIsViewerVisible(false)}
-                />
+                        <Ionicons name="ellipsis-vertical" size={20} color="#fff"/>
+                    </TouchableOpacity>
+                </View>
             </View>
 
-            {/* Main Content */}
-            <View style={styles.content}>
-                {/* Title  */}
-                <View style={styles.titleSection}>
-                    <Text style={styles.productName}>{productName}</Text>
-                    <FavoriteButton listingId={product.id} size={28}/>
+            <ScrollView ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                {/* Image Carousel */}
+                <View style={styles.imageContainer}>
+                    <FlatList
+                        ref={flatListRef}
+                        data={images}
+                        renderItem={renderImageItem}
+                        keyExtractor={(item, index) => index.toString()}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onViewableItemsChanged={onViewableItemsChanged}
+                        viewabilityConfig={viewabilityConfig}
+                        getItemLayout={(data, index) => ({
+                            length: width, offset: width * index, index,
+                        })}
+                    />
+
+                    {/* Navigation Arrows */}
+                    {images.length > 1 && (<>
+                        {currentImageIndex > 0 && (<TouchableOpacity
+                            style={[styles.arrowButton, styles.leftArrow]}
+                            onPress={handlePreviousImage}
+                            activeOpacity={0.8}
+                        >
+                            <Icon name="chevron-back" size={24} color="#fff"/>
+                        </TouchableOpacity>)}
+                        {currentImageIndex < images.length - 1 && (<TouchableOpacity
+                            style={[styles.arrowButton, styles.rightArrow]}
+                            onPress={handleNextImage}
+                            activeOpacity={0.8}
+                        >
+                            <Icon name="chevron-forward" size={24} color="#fff"/>
+                        </TouchableOpacity>)}
+                    </>)}
+
+                    {/* Dot Indicators */}
+                    {images.length > 1 && (<View style={styles.dotContainer}>
+                        {images.map((_, index) => (<View
+                            key={index}
+                            style={[styles.dot, currentImageIndex === index && styles.activeDot]}
+                        />))}
+                    </View>)}
+
+                    <ImageViewing
+                        images={images.map(img => (typeof img === 'string' ? {uri: img} : img))}
+                        imageIndex={currentImageIndex}
+                        visible={isViewerVisible}
+                        onRequestClose={() => setIsViewerVisible(false)}
+                    />
                 </View>
 
-                {/* Price + Condition Badge */}
-                <Text style={styles.productPrice}>{productPrice}</Text>
+                {/* Main Content */}
+                <View style={styles.content}>
+                    {/* Title  */}
+                    <View style={styles.titleSection}>
+                        <Text style={styles.productName}>{productName}</Text>
+                        <FavoriteButton listingId={product.id} size={28}/>
+                    </View>
 
-                {/* College Row */}
-                <View style={styles.infoRow}>
-                    <View style={styles.infoItem}>
-                        <View style={styles.infoIconCircle}>
-                            <Icon name="school" size={16} color={COLORS.primary}/>
-                        </View>
-                        <View style={styles.infoTextContainer}>
-                            <Text style={styles.infoLabel}>College</Text>
-                            <Text style={styles.infoValue} numberOfLines={1}>{productCollege}</Text>
+                    {/* Price + Condition Badge */}
+                    <Text style={styles.productPrice}>{productPrice}</Text>
+
+                    {/* College Row */}
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoItem}>
+                            <View style={styles.infoIconCircle}>
+                                <Icon name="school" size={16} color={COLORS.primary}/>
+                            </View>
+                            <View style={styles.infoTextContainer}>
+                                <Text style={styles.infoLabel}>College</Text>
+                                <Text style={styles.infoValue} numberOfLines={1}>{productCollege}</Text>
+                            </View>
                         </View>
                     </View>
-                </View>
 
-                <Text style={styles.sectionTitle}>Description</Text>
-                <ExpandableText text={productDescription || "No description available."}/>
+                    <Text style={styles.sectionTitle}>Description</Text>
+                    <ExpandableText text={productDescription || "No description available."}/>
 
-                <View style={styles.sectionDivider}/>
+                    <View style={styles.sectionDivider}/>
 
-                <Text style={styles.sectionTitle}>Seller</Text>
-                <SellerCard
-                    seller={product.seller}
-                    sellerSince={sellerSince}
-                    currentUser={currentUser}
-                    onPress={() => navigation.navigate("ProfileScreen", {
-                        sellerId: product.seller.id, profileImage: product.seller.profileImage
-                    })}
-                />
-
-                <View style={styles.sectionDivider}/>
-
-                {/*<Text style={styles.sectionTitle}>Description</Text>*/}
-                {/*<ExpandableText text={productDescription || "No description available."}/>*/}
-                {/*<View style={styles.sectionDivider}/>*/}
-
-                <Text style={styles.sectionTitle}>Product Details</Text>
-                <View style={styles.detailsGrid}>
-                    <ProductDetailItem label="Condition" value={productCondition}/>
-                    <ProductDetailItem
-                        label="Category"
-                        value={product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : 'N/A'}
+                    <Text style={styles.sectionTitle}>Seller</Text>
+                    <SellerCard
+                        seller={product.seller}
+                        sellerSince={sellerSince}
+                        currentUser={currentUser}
+                        onPress={() => navigation.navigate("ProfileScreen", {
+                            sellerId: product.seller.id, profileImage: product.seller.profileImage
+                        })}
                     />
-                    <ProductDetailItem label="Availability" value={product.itemStatus} type="availability"/>
-                </View>
 
-                <View style={styles.sectionDivider}/>
+                    <View style={styles.sectionDivider}/>
 
-                {/*/!* Enhanced Map Section *!/*/}
-                {/*<View style={styles.mapHeader}>*/}
-                {/*    <Text style={styles.sectionTitle}>Location</Text>*/}
-                {/*    <TouchableOpacity*/}
-                {/*        style={styles.viewMapButton}*/}
-                {/*        onPress={openInMaps}*/}
-                {/*        activeOpacity={0.7}*/}
-                {/*    >*/}
-                {/*        <Icon name="navigate" size={16} color={COLORS.primary}/>*/}
-                {/*        <Text style={styles.viewMapText}>Directions</Text>*/}
-                {/*    </TouchableOpacity>*/}
-                {/*</View>*/}
+                    {/*<Text style={styles.sectionTitle}>Description</Text>*/}
+                    {/*<ExpandableText text={productDescription || "No description available."}/>*/}
+                    {/*<View style={styles.sectionDivider}/>*/}
 
-                {/*<View style={styles.mapCard}>*/}
-                {/*    <MapView*/}
-                {/*        style={styles.map}*/}
-                {/*        initialRegion={productCoordinates}*/}
-                {/*        scrollEnabled={false}*/}
-                {/*        zoomEnabled={false}*/}
-                {/*    >*/}
-                {/*        <Marker coordinate={productCoordinates} title={productName}/>*/}
-                {/*    </MapView>*/}
-                {/*</View>*/}
+                    <Text style={styles.sectionTitle}>Product Details</Text>
+                    <View style={styles.detailsGrid}>
+                        <ProductDetailItem label="Condition" value={productCondition}/>
+                        <ProductDetailItem
+                            label="Category"
+                            value={product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : 'N/A'}
+                        />
+                        <ProductDetailItem label="Availability" value={product.itemStatus} type="availability"/>
+                    </View>
 
-                {/*<View style={styles.sectionDivider}/>*/}
+                    <View style={styles.sectionDivider}/>
 
-                {/* Enhanced Related Listings */}
-                <View style={styles.relatedHeader}>
-                    <Text style={styles.sectionTitle}>Similar Listings</Text>
-                </View>
+                    {/*/!* Enhanced Map Section *!/*/}
+                    {/*<View style={styles.mapHeader}>*/}
+                    {/*    <Text style={styles.sectionTitle}>Location</Text>*/}
+                    {/*    <TouchableOpacity*/}
+                    {/*        style={styles.viewMapButton}*/}
+                    {/*        onPress={openInMaps}*/}
+                    {/*        activeOpacity={0.7}*/}
+                    {/*    >*/}
+                    {/*        <Icon name="navigate" size={16} color={COLORS.primary}/>*/}
+                    {/*        <Text style={styles.viewMapText}>Directions</Text>*/}
+                    {/*    </TouchableOpacity>*/}
+                    {/*</View>*/}
 
-                {relatedListings.length === 0 ? (<View style={styles.emptyRelatedContainer}>
-                    <Ionicons name="cube-outline" size={32} color={COLORS.gray500}/>
-                    <Text style={styles.emptyRelatedText}>
-                        No similar listings found.
-                    </Text>
-                </View>) : (<ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.relatedList}
-                >
-                    {relatedListings.slice(0, 5).map((item) => (<Card
-                        key={item.id}
-                        item={item}
+                    {/*<View style={styles.mapCard}>*/}
+                    {/*    <MapView*/}
+                    {/*        style={styles.map}*/}
+                    {/*        initialRegion={productCoordinates}*/}
+                    {/*        scrollEnabled={false}*/}
+                    {/*        zoomEnabled={false}*/}
+                    {/*    >*/}
+                    {/*        <Marker coordinate={productCoordinates} title={productName}/>*/}
+                    {/*    </MapView>*/}
+                    {/*</View>*/}
+
+                    {/*<View style={styles.sectionDivider}/>*/}
+
+                    {/* Enhanced Related Listings */}
+                    <View style={styles.relatedHeader}>
+                        <Text style={styles.sectionTitle}>Similar Listings</Text>
+                    </View>
+
+                    {relatedListings.length === 0 ? (<View style={styles.emptyRelatedContainer}>
+                        <Ionicons name="cube-outline" size={32} color={COLORS.gray500}/>
+                        <Text style={styles.emptyRelatedText}>
+                            No similar listings found.
+                        </Text>
+                    </View>) : (<ScrollView
                         horizontal
-                        onPress={() => navigation.push('ProductDetailsScreen', {item})}
-                    />))}
-                </ScrollView>)}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.relatedList}
+                    >
+                        {relatedListings.slice(0, 5).map((item) => (<Card
+                            key={item.id}
+                            item={item}
+                            horizontal
+                            onPress={() => navigation.push('ProductDetailsScreen', {item})}
+                        />))}
+                    </ScrollView>)}
 
-                <View style={styles.sectionDivider}/>
+                    <View style={styles.sectionDivider}/>
 
+                    {/* Safety Tips */}
+                    <SafetyTips/>
 
-                {/* Safety Tips */}
-                <SafetyTips/>
+                </View>
+            </ScrollView>
 
-            </View>
-        </ScrollView>
+            {/* Floating Bottom Action Bar */}
+            {!isOwnListing && (
+                <View style={styles.bottomBar}>
+                    {isGuest ? (
+                        <Button
+                            title="Log In to Chat"
+                            variant="primary"
+                            size="large"
+                            icon="log-in-outline"
+                            iconPosition="left"
+                            onPress={() => navigation.navigate('Login')}
+                            fullWidth
+                        />
+                    ) : (
+                        <Button
+                            title={chatLoading ? "Opening..." : "Chat with Seller"}
+                            variant="primary"
+                            size="large"
+                            icon="chatbubble-ellipses"
+                            iconPosition="left"
+                            onPress={openChatRoom}
+                            fullWidth
+                            loading={chatLoading}
+                            disabled={chatLoading}
+                        />
+                    )}
+                </View>
+            )}
 
-        {/* Floating Bottom Action Bar */}
-        {!isOwnListing && (
-            <View style={styles.bottomBar}>
-                {isGuest ? (
-                    // ✅ Guest sees sign-in button
-                    <Button
-                        title="Log In to Chat"
-                        variant="primary"
-                        size="large"
-                        icon="log-in-outline"
-                        iconPosition="left"
-                        onPress={() => navigation.navigate('Login')}
-                        fullWidth
-                    />
-                ) : (
-                    // ✅ Logged-in users see chat button
-                    <Button
-                        title={chatLoading ? "Opening..." : "Chat with Seller"}
-                        variant="primary"
-                        size="large"
-                        icon="chatbubble-ellipses"
-                        iconPosition="left"
-                        onPress={openChatRoom}
-                        fullWidth
-                        loading={chatLoading}
-                        disabled={chatLoading}
-                    />
-                )}
-            </View>
-        )}
+            {/* Bottom Sheet Menu */}
+            <BottomSheetMenu
+                visible={showMenu}
+                onClose={() => setShowMenu(false)}
+                type="listing"
+                title="Listing Options"
+                isGuest={isGuest}
+                onAuthRequired={() => {
+                    setShowMenu(false);
+                    showToast({
+                        type: 'info',
+                        title: 'Join Agora',
+                        message: 'Sign up to report inappropriate listings and help keep campus safe!'
+                    });
+                }}
+                onShare={() => {
+                    setShowMenu(false);
+                    shareItem({type: 'LISTING', title: product.title, id: product.id});
+                }}
+                onReport={() => {
+                    setShowMenu(false);
+                    navigation.navigate('ReportListingScreen', {listingId: product.id});
+                }}
+            />
 
-        {/* Bottom Sheet Menu */}
-        <BottomSheetMenu
-            visible={showMenu}
-            onClose={() => setShowMenu(false)}
-            type="listing"
-            title="Listing Options"
-            onShare={() => {
-                shareItem({type: 'LISTING', title: product.title, id: product.id});
-            }}
-            onReport={() => {
-                console.log('Report Listing');
-                navigation.navigate('ReportListingScreen', {listingId: product.id});
-            }}
-        />
-
-        {toast.visible && (<ToastMessage
-            type={toast.type}
-            title={toast.title}
-            message={toast.message}
-            onHide={() => setToast({...toast, visible: false})}
-        />)}
-    </View>);
+            {toast.visible && (<ToastMessage
+                type={toast.type}
+                title={toast.title}
+                message={toast.message}
+                onHide={() => setToast({...toast, visible: false})}
+            />)}
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     },
     productName: {
         flex: 1,
-        fontSize: THEME.fontSize['3xl'],
+        fontSize: THEME.fontSize['2xl'],
         fontWeight: THEME.fontWeight.bold,
         color: COLORS.dark.text,
         lineHeight: THEME.fontSize['2xl'] * 1.3,

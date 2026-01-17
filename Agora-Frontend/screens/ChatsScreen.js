@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useMemo} from 'react';
 import {
     ActivityIndicator,
     Animated,
@@ -20,6 +20,7 @@ import {useChatRooms} from '../hooks/useChatRooms';
 import {useChatNotifications} from '../hooks/useChatNotifications';
 import {useMarkChatAsRead} from '../hooks/useMarkChatAsRead';
 import {deleteChatForMe} from "../utils/chatService";
+import { useChatBlocking } from '../context/ChatBlockingProvider';
 
 import LoadingSpinner from '../components/LoadingSpinner';
 import ModalComponent from '../components/Modal';
@@ -65,8 +66,10 @@ const ChatItemSkeleton = () => {
 const ChatScreen = ({scrollY}) => {
     const navigation = useNavigation();
     const {currentUser, loading, fetchUser, isGuest} = useUserStore();
+    const { isUserBlocked, blockedUserIds } = useChatBlocking();
+    const markChatAsRead = useMarkChatAsRead();
+    useChatNotifications(currentUser?.email, currentUser?.id);
 
-    // 🔥 Sign into Firebase Auth when user loads
     useEffect(() => {
         if (currentUser && !auth.currentUser) {
             signInAnonymously(auth)
@@ -76,20 +79,14 @@ const ChatScreen = ({scrollY}) => {
     }, [currentUser]);
 
     const {chatRooms, loading: chatsLoading, error} = useChatRooms(currentUser?.email);
-    const markChatAsRead = useMarkChatAsRead();
-
-    useChatNotifications(currentUser?.email, currentUser?.id);
-
-    const isFetchingChats = chatsLoading;
-
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [filter, setFilter] = useState('all');
-
     const [modalVisible, setModalVisible] = useState(false);
     const [chatToDelete, setChatToDelete] = useState(null);
     const [toastVisible, setToastVisible] = useState(false);
     const [openingChat, setOpeningChat] = useState(false);
+    const isFetchingChats = chatsLoading;
 
     if (loading) {
         return (<SafeAreaView style={styles.safeArea}>
@@ -145,21 +142,46 @@ const ChatScreen = ({scrollY}) => {
         return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
     };
 
-    const filteredChats = chatRooms.filter(chat => {
-        const otherUser = chat.participantsInfo?.find(p => p.id !== currentUser.email);
-        const listingTitle = chat.listing?.title || '';
-        const matchesSearch = otherUser?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || listingTitle.toLowerCase().includes(searchQuery.toLowerCase());
+    // const filteredChats = chatRooms.filter(chat => {
+    //     const otherUser = chat.participantsInfo?.find(p => p.id !== currentUser.email);
+    //     const listingTitle = chat.listing?.title || '';
+    //     const matchesSearch = otherUser?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || listingTitle.toLowerCase().includes(searchQuery.toLowerCase());
+    //
+    //     if (filter === 'unread') {
+    //         const sanitizedEmail = sanitizeEmail(currentUser.email);
+    //         const userLastRead = chat.lastRead?.[sanitizedEmail]?.seconds ?? 0;
+    //         const lastMsgTimestamp = chat.lastMessage?.createdAt?.seconds ?? 0;
+    //         const isUnread = lastMsgTimestamp > 0 && lastMsgTimestamp > userLastRead && chat.lastMessage?.senderId !== currentUser.email;
+    //         return matchesSearch && isUnread;
+    //     }
+    //
+    //     return matchesSearch;
+    // });
 
-        if (filter === 'unread') {
-            const sanitizedEmail = sanitizeEmail(currentUser.email);
-            const userLastRead = chat.lastRead?.[sanitizedEmail]?.seconds ?? 0;
-            const lastMsgTimestamp = chat.lastMessage?.createdAt?.seconds ?? 0;
-            const isUnread = lastMsgTimestamp > 0 && lastMsgTimestamp > userLastRead && chat.lastMessage?.senderId !== currentUser.email;
-            return matchesSearch && isUnread;
-        }
+    const filteredChatRooms = useMemo(() => {
+        if (!chatRooms) return [];
 
-        return matchesSearch;
-    });
+        return chatRooms.filter(chat => {
+            const otherUser = chat.participantsInfo?.find(p => p.id !== currentUser.email);
+
+            if (!otherUser) return true;
+
+            const otherUserId = otherUser.userId;
+
+            if (!otherUserId) {
+                console.warn('Missing userId in chat:', chat.id);
+                return true;
+            }
+
+            const isBlocked = isUserBlocked(otherUserId);
+
+            if (isBlocked) {
+                console.log('🚫 Hiding blocked chat with userId:', otherUserId);
+            }
+
+            return !isBlocked;
+        });
+    }, [chatRooms, blockedUserIds, currentUser]);
 
     const unreadCount = chatRooms.filter(chat => {
         const sanitizedEmail = sanitizeEmail(currentUser.email);
@@ -189,6 +211,7 @@ const ChatScreen = ({scrollY}) => {
             sellerAvatar: otherUser?.avatar || null,
             productInfo: item.listing ? {
                 id: item.listingId,
+                sellerId: otherUser?.userId,
                 name: item.listing.title,
                 title: item.listing.title,
                 price: item.listing.price,
@@ -282,7 +305,7 @@ const ChatScreen = ({scrollY}) => {
 
                 {/* User Name */}
                 <Text style={styles.userName} numberOfLines={1}>
-                    with {otherUser?.name || 'Unknown User'}
+                    with {otherUser?.name || 'Unknown Seller'}
                 </Text>
 
                 {/* Last Message */}
@@ -386,21 +409,21 @@ const ChatScreen = ({scrollY}) => {
         </View>)}
 
         {/* Content Area */}
-        {isFetchingChats ? (renderSkeletonLoader()) : filteredChats.length === 0 && chatRooms.length === 0 ? (renderEmptyState()) : filteredChats.length === 0 && searchQuery ? (
+        {isFetchingChats ? (renderSkeletonLoader()) : filteredChatRooms.length === 0 && chatRooms.length === 0 ? (renderEmptyState()) : filteredChatRooms.length === 0 && searchQuery ? (
             <View style={styles.emptyState}>
                 <Ionicons name="search-outline" size={80} color={COLORS.dark.textTertiary}/>
                 <Text style={styles.emptyTitle}>No Results Found</Text>
                 <Text style={styles.emptyText}>
                     Try searching with a different name or item
                 </Text>
-            </View>) : filteredChats.length === 0 && filter === 'unread' ? (<View style={styles.emptyState}>
+            </View>) : filteredChatRooms.length === 0 && filter === 'unread' ? (<View style={styles.emptyState}>
             <Ionicons name="checkmark-done-outline" size={80} color={COLORS.dark.textTertiary}/>
             <Text style={styles.emptyTitle}>All Caught Up!</Text>
             <Text style={styles.emptyText}>
                 You have no unread messages
             </Text>
         </View>) : (<Animated.FlatList
-            data={filteredChats}
+            data={filteredChatRooms}
             keyExtractor={(item) => item.id}
             renderItem={renderChatItem}
             showsVerticalScrollIndicator={false}

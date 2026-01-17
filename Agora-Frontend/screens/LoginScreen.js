@@ -161,12 +161,12 @@ export default function LoginScreen({navigation}) {
                             error={errors.phoneNumber}
                             placeholder="98765 43210"
                         />
-                        <TouchableOpacity
-                            style={styles.forgotTextContainer}
-                            onPress={() => navigation.navigate('ForgotPassword')}
-                        >
-                            <Text style={styles.forgotText}>Forgot Password?</Text>
-                        </TouchableOpacity>
+                        {/*<TouchableOpacity*/}
+                        {/*    style={styles.forgotTextContainer}*/}
+                        {/*    onPress={() => navigation.navigate('ForgotPassword')}*/}
+                        {/*>*/}
+                        {/*    <Text style={styles.forgotText}>Forgot Password?</Text>*/}
+                        {/*</TouchableOpacity>*/}
                     </View>
 
                     {/* Login Button */}

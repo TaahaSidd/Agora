@@ -29,7 +29,7 @@ export default function PrivacyPolicyScreen({navigation}) {
                         <Ionicons name="shield-checkmark" size={32} color="#fff"/>
                     </LinearGradient>
                     <Text style={styles.headerTitle}>Your Privacy Matters</Text>
-                    <Text style={styles.headerSubtitle}>Last updated: January 2025</Text>
+                    <Text style={styles.headerSubtitle}>Last updated: January 2026</Text>
                 </View>
 
                 {/* Content Card */}
@@ -118,10 +118,6 @@ export default function PrivacyPolicyScreen({navigation}) {
                             <View style={styles.listItem}>
                                 <View style={styles.bullet}/>
                                 <Text style={styles.listText}>Withdraw consent at any time</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Export your data in a readable format</Text>
                             </View>
                         </View>
                     </View>
