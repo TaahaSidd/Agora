@@ -45,7 +45,6 @@ export const useUserStore = create((set, get) => ({
 
             const data = await apiGet('/profile/myProfile');
 
-            // ✅ Map ALL user fields
             const mappedUser = {
                 id: data.id,
                 name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
@@ -70,10 +69,10 @@ export const useUserStore = create((set, get) => ({
                 isGuest: false
             });
             await SecureStore.setItemAsync('currentUser', JSON.stringify(mappedUser));
-            console.log("Mapped User", mappedUser);
+            // console.log("Mapped User", mappedUser);
 
         } catch (err) {
-            console.error('Failed to fetch user:', err);
+            console.log('UserStore: Fetch user failed (likely unauthorized or network)');
             set({
                 currentUser: {
                     id: null,
@@ -113,5 +112,23 @@ export const useUserStore = create((set, get) => ({
             SecureStore.setItemAsync('currentUser', JSON.stringify(updated));
             return {currentUser: updated};
         });
+    },
+
+    clearAuthData: async () => {
+        try {
+            await Promise.all([
+                SecureStore.deleteItemAsync('accessToken'),
+                SecureStore.deleteItemAsync('refreshToken'),
+                SecureStore.deleteItemAsync('currentUser')
+            ]);
+
+            set({
+                currentUser: null,
+                isGuest: true,
+                loading: false
+            });
+        } catch (err) {
+            console.log('Error clearing auth data:', err);
+        }
     },
 }));

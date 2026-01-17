@@ -6,17 +6,31 @@ export const SignUpProvider = ({ children }) => {
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
-        username: '',
-        email: '',
-        mobile: '',
-        idCard: '',
-        college: '',
+        userName: '',
+        userEmail: '',
+        mobileNumber: '',
+        idCardNo: '',
+        collegeId: null,
         password: '',
         confirmPassword: '',
     });
 
-    const updateForm = (key, value) => {
-        setForm(prev => ({ ...prev, [key]: value }));
+    const updateForm = (field, value) => {
+        setForm(prev => {
+            let updated = { ...prev, [field]: value };
+
+            if (field === 'firstName' || field === 'lastName') {
+                const fn = updated.firstName?.trim().toLowerCase() || '';
+                const ln = updated.lastName?.trim().toLowerCase() || '';
+                if (fn || ln) {
+                    updated.userName = fn && ln ? fn + '_' + ln : fn + ln;
+                } else {
+                    updated.userName = '';
+                }
+            }
+
+            return updated;
+        });
     };
 
     return (
