@@ -1,5 +1,8 @@
 package com.Agora.Agora.Config;
 
+import com.Agora.Agora.Jwt.JwtAuthFilter;
+import com.Agora.Agora.Service.CustomUserDetailService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,11 +18,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import com.Agora.Agora.Jwt.JwtAuthFilter;
-import com.Agora.Agora.Service.CustomUserDetailService;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -39,6 +37,8 @@ public class SecurityConfig {
                         // Auth endpoints
                         .requestMatchers(HttpMethod.POST, "/Agora/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/Agora/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/Agora/auth/**").permitAll()
+
 
                         .requestMatchers(HttpMethod.POST, "/Agora/Token/validate").permitAll()
 
@@ -58,10 +58,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/Agora/favorites/**").authenticated()
 
                         // Profile.
-                        .requestMatchers(HttpMethod.GET, "/Agora/profile/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/Agora/profile/seller/{userId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/Agora/profile/seller/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/Agora/profile/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/Agora/profile/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/profile/**").authenticated()
+
 
                         // ChatRoom
                         .requestMatchers(HttpMethod.POST, "/Agora/ChatRoom/**").authenticated()
@@ -69,15 +71,17 @@ public class SecurityConfig {
 
                         // Reporting
                         .requestMatchers(HttpMethod.POST, "/Agora/report/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/Agora/report/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/Agora/report/**").authenticated()
 
                         // Reviews
                         .requestMatchers(HttpMethod.POST, "/Agora/Review/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/Agora/Review/**").permitAll()
 
                         // Follow
+                        .requestMatchers(HttpMethod.GET, "/Agora/follow/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/Agora/follow/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/Agora/follow/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/Agora/follow/**").permitAll()
 
                         // Expo-token
                         .requestMatchers(HttpMethod.POST, "/Agora/expo/**").permitAll()
