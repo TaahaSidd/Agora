@@ -1,17 +1,17 @@
 package com.Agora.Agora.Dto.Request;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import com.Agora.Agora.Model.Enums.ItemCondition;
 import com.Agora.Agora.Model.Enums.ItemStatus;
-
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,11 +24,11 @@ public class ListingReqDto {
     @NotBlank(message = "Description cannot be blank")
     private String description;
     @NotNull(message = "Enter a valid price")
+    @DecimalMin(value = "10.0", message = "Minimum price is ₹10")
     private BigDecimal price;
     @NotBlank(message = "Category cannot be null")
     private String category;
 
-    // For image will use cloudinary - will be using that later for now no image
     private List<ImageDto> images;
 
     @NotNull(message = "Item condition is required")

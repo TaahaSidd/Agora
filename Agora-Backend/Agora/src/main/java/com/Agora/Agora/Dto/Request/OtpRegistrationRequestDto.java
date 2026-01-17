@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OtpRegistrationRequestDto {
 
-    @NotBlank(message = "Firebase token is required")
+//    @NotBlank(message = "Firebase token is required")
     private String firebaseToken;
 
     @NotBlank(message = "Phone number is required")
@@ -21,6 +21,9 @@ public class OtpRegistrationRequestDto {
 
     @NotBlank(message = "Last name is required")
     private String lastName;
+
+    @NotBlank(message = "Email is required")
+    private String userEmail;
 
     @NotBlank(message = "College is required")
     private String college;

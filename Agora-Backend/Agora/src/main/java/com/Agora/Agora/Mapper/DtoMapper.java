@@ -43,11 +43,9 @@ public class DtoMapper {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setMobileNumber(user.getMobileNumber());
-        dto.setIdCardNo(user.getIdCardNo());
         dto.setProfileImage(user.getProfileImage());
         dto.setVerificationStatus(user.getVerificationStatus());
 
-        // Set college details
         if (user.getCollege() != null) {
             dto.setCollegeId(user.getCollege().getId());
             dto.setCollegeName(user.getCollege().getCollegeName());
@@ -66,7 +64,6 @@ public class DtoMapper {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setMobileNumber(user.getMobileNumber());
-        dto.setIdCardNo(user.getIdCardNo());
         dto.setProfileImage(user.getProfileImage());
         dto.setVerificationStatus(user.getVerificationStatus());
 
@@ -209,8 +206,18 @@ public class DtoMapper {
         }
         if (report.getReportedUser() != null) {
             dto.setReportedId(report.getReportedUser().getId());
-            dto.setReportedUserName(report.getReportedUser().getUsername());
+
+            String firstName = report.getReportedUser().getFirstName();
+            String lastName = report.getReportedUser().getLastName();
+
+            if (firstName != null && !firstName.isEmpty()) {
+                String fullName = firstName + (lastName != null ? " " + lastName : "");
+                dto.setReportedUserName(fullName);
+            } else {
+                dto.setReportedUserName(report.getReportedUser().getUsername());
+            }
         }
+
         if (report.getListings() != null) {
             dto.setListingId(report.getListings().getId());
             dto.setReportedListingTitle(report.getListings().getTitle());
