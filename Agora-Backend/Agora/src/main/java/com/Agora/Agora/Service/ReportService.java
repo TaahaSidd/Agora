@@ -1,9 +1,5 @@
 package com.Agora.Agora.Service;
 
-import java.time.Instant;
-
-import org.springframework.stereotype.Service;
-
 import com.Agora.Agora.Dto.Request.ReportReqDto;
 import com.Agora.Agora.Dto.Response.ReportResponseDto;
 import com.Agora.Agora.Mapper.DtoMapper;
@@ -14,10 +10,13 @@ import com.Agora.Agora.Model.Report;
 import com.Agora.Agora.Repository.ListingsRepo;
 import com.Agora.Agora.Repository.ReportRepo;
 import com.Agora.Agora.Repository.UserRepo;
-
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -80,5 +79,14 @@ public class ReportService {
         Report response = reportRepo.findById(ReportId).orElseThrow();
 
         return dto.mapToReportResponseDto(response);
+    }
+
+    public List<ReportResponseDto> getMyReportHistory() {
+        AgoraUser currentUser = userService.getCurrentUser();
+
+        return reportRepo.findByReporterOrderByReportedAtDesc(currentUser)
+                .stream()
+                .map(dto::mapToReportResponseDto)
+                .toList();
     }
 }

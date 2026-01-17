@@ -1,18 +1,5 @@
 package com.Agora.Agora.Service;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
-
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-
 import com.Agora.Agora.Dto.Request.ListingFilterReqDto;
 import com.Agora.Agora.Dto.Request.ListingReqDto;
 import com.Agora.Agora.Dto.Response.CategoryCountResponseDto;
@@ -21,14 +8,29 @@ import com.Agora.Agora.Mapper.DtoMapper;
 import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.College;
 import com.Agora.Agora.Model.Enums.ItemStatus;
+import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.ListingImage;
 import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Repository.ListingSearchRepo;
 import com.Agora.Agora.Repository.ListingsRepo;
-
+import com.Agora.Agora.Repository.UserRepo;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +41,10 @@ public class ListingService {
     private final ListingsRepo listingRepo;
     private final DtoMapper dto;
     private final CloudinaryService cloudinaryService;
+    private final UserRepo userRepo;
+    private static final Logger log = LoggerFactory.getLogger(ListingService.class);
+    private final ModerationService moderationService;
+
 
     @Transactional
     public ListingResponseDto createListing(ListingReqDto req) {
@@ -73,6 +79,12 @@ public class ListingService {
         listing.setSeller(currentUser);
         listing.setCollege(college);
 
+        if (UserRole.STUDENT.equals(currentUser.getRole())) {
+            currentUser.setRole(UserRole.SELLER);
+            userRepo.save(currentUser);
+            log.info("User {} promoted to SELLER role after first listing creation", currentUser.getId());
+        }
+
         Listings savedListing = listingRepo.save(listing);
 
         ListingResponseDto responseDto = dto.mapToListingResponseDto(savedListing);
@@ -94,18 +106,15 @@ public class ListingService {
 //                .collect(Collectors.toList());
 //    }
 
-    public Page<ListingResponseDto> getAllListings(int page, int size, String sortBy, String sortDir) {
-        Sort.Direction direction = sortDir.equalsIgnoreCase("ASC")
-                ? Sort.Direction.ASC
-                : Sort.Direction.DESC;
+    public Page<ListingResponseDto> getAllListings(int page, int size, String sortBy, String sortDir, Long currentUserId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+        if (currentUserId == null) {
+            return listingRepo.findByItemStatus(ItemStatus.AVAILABLE, pageable)
+                    .map(dto::mapToListingResponseDto);
+        }
 
-        Sort sort = Sort.by(direction, sortBy);
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<Listings> listings = listingRepo.findAll(pageable);
-
-        return listings.map(dto::mapToListingResponseDto);
+        return listingRepo.findAllAvailableFiltered(currentUserId, pageable)
+                .map(dto::mapToListingResponseDto);
     }
 
     @Transactional
@@ -162,8 +171,18 @@ public class ListingService {
     }
 
     @SuppressWarnings("removal")
-    public List<ListingResponseDto> searchListings(ListingFilterReqDto req) {
-        Specification<Listings> spec = Specification.where(null);
+    public List<ListingResponseDto> searchListings(ListingFilterReqDto req, Long currentUserId) {
+        Specification<Listings> spec = Specification.where((root, query, cb) ->
+                cb.equal(root.get("itemStatus"), ItemStatus.AVAILABLE));
+
+        if (currentUserId != null) {
+            Set<Long> excludedIds = moderationService.getAllRelatedBlockedIds(currentUserId);
+
+            if (excludedIds != null && !excludedIds.isEmpty()) {
+                spec = spec.and((root, query, cb) ->
+                        cb.not(root.get("seller").get("id").in(excludedIds)));
+            }
+        }
 
         if (req.getKeyword() != null && !req.getKeyword().isEmpty()) {
             spec = spec.and(ListingSearchRepo.searchByKeyword(req.getKeyword()));
@@ -189,17 +208,15 @@ public class ListingService {
             spec = spec.and(ListingSearchRepo.searchByCollegeId(req.getCollegeId()));
         }
 
-        if (req.getCollegeName() != null && req.getCollegeName().isEmpty()) {
+        if (req.getCollegeName() != null && !req.getCollegeName().isEmpty()) {
             spec = spec.and(ListingSearchRepo.searchByCollegeName(req.getCollegeName()));
         }
 
         List<Listings> searchListings = listingRepo.findAll(spec);
 
-        List<ListingResponseDto> responseDtos = searchListings.stream()
+        return searchListings.stream()
                 .map(dto::mapToListingResponseDto)
                 .collect(Collectors.toList());
-
-        return responseDtos;
     }
 
     @Transactional

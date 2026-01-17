@@ -5,10 +5,13 @@ import com.Agora.Agora.Dto.Response.UserResponseDto;
 import com.Agora.Agora.Mapper.DtoMapper;
 import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.College;
+import com.Agora.Agora.Model.Enums.ItemStatus;
 import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.UserStatus;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
+import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Repository.CollegeRepo;
+import com.Agora.Agora.Repository.ListingsRepo;
 import com.Agora.Agora.Repository.UserRepo;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -20,6 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,6 +34,7 @@ public class UserService {
     private final CollegeRepo collegeRepo;
     private final PasswordEncoder passwordEncoder;
     private final DtoMapper dto;
+    private final ListingsRepo listingsRepo;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     @Transactional
@@ -57,8 +62,7 @@ public class UserService {
         user.setCollege(college);
         user.setRole(UserRole.STUDENT);
         user.setVerificationStatus(VerificationStatus.PENDING);
-        //user.setVerificationToken(UUID.randomUUID().toString());
-        //user.setTokenExpiryDate(LocalDateTime.now().plusHours(24));
+
 
         AgoraUser savedUser = userRepo.save(user);
 
@@ -84,6 +88,11 @@ public class UserService {
     public AgoraUser findByEmail(String email) {
         return userRepo.findByUserEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Email not found " + email));
+    }
+
+    public AgoraUser findByMobileNumber(String mobileNumber) {
+        return userRepo.findByMobileNumber(mobileNumber)
+                .orElseThrow(() -> new UsernameNotFoundException("Mobile number not found " + mobileNumber));
     }
 
     @Transactional
@@ -135,14 +144,6 @@ public class UserService {
     }
 
     @Transactional
-    public void banUser(Long userId) {
-        AgoraUser user = userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        user.setUserStatus(UserStatus.BANNED);
-        userRepo.save(user);
-    }
-
-    @Transactional
     public String updateProfilePicture(String imageUrl) {
         AgoraUser currentUser = getCurrentUser();
 
@@ -162,5 +163,42 @@ public class UserService {
         log.info("✅ Profile picture updated for userId={}: {}", currentUser.getId(), imageUrl);
 
         return imageUrl;
+    }
+
+    //Soft del
+//    @Transactional
+//    public void deleteUserAccountSD() {
+//        AgoraUser user = getCurrentUser();
+//
+//        listingsRepo.deactivateAllBySellerId(user.getId(), ItemStatus.DEACTIVATED);
+//
+//        user.setFirstName("Deleted");
+//        user.setLastName("User");
+//        user.setUserStatus(UserStatus.DELETED);
+//        user.setMobileNumber("DEL_" + user.getId() + "_" + System.currentTimeMillis());
+//
+//        if (user.getUserEmail() != null) {
+//            user.setUserEmail("del_" + user.getId() + "@deleted.com");
+//        }
+//
+//        userRepo.save(user);
+//    }
+
+    @Transactional
+    public void deleteUserAccount() {
+        AgoraUser user = getCurrentUser();
+
+        listingsRepo.deleteBySeller(user);
+
+        user.setFirstName("Deleted");
+        user.setLastName("User");
+        user.setUserStatus(UserStatus.DELETED);
+        user.setMobileNumber("DEL_" + user.getId() + "_" + System.currentTimeMillis());
+
+        if (user.getUserEmail() != null) {
+            user.setUserEmail("del_" + user.getId() + "@deleted.com");
+        }
+
+        userRepo.save(user);
     }
 }

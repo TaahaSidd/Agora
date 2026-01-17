@@ -44,9 +44,10 @@ public class AuthService {
     private final DtoMapper dto;
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
+    // ✅ LOGIN ONLY - User must exist
     @Transactional
-    public LoginResponseDto loginOrSignupWithOtp(OtpLoginRequestDto req) {
-        log.info("🔥 /auth/otp HIT! Payload: {}", req);
+    public LoginResponseDto loginWithOtp(OtpLoginRequestDto req) {
+        log.info("🔑 Login with OTP");
         try {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(req.getFirebaseToken());
             String phoneNumber = (String) decodedToken.getClaims().get("phone_number");
@@ -55,19 +56,16 @@ public class AuthService {
                 throw new RuntimeException("Invalid Firebase Token: no phone number found");
             }
 
-            AgoraUser user = userRepo.findByMobileNumber(phoneNumber).orElse(null);
+            // ✅ User MUST exist for login
+            AgoraUser user = userRepo.findByMobileNumber(phoneNumber)
+                    .orElseThrow(() -> new RuntimeException("Account not found. Please sign up first."));
 
-            if (user == null) {
-                // NEW USER - Create with college & expo token
-                log.info("New user signing up with phone: {}", phoneNumber);
-                user = createNewUser(phoneNumber, req.getCollegeId(), req.getExpoPushToken());
-            } else {
-                // EXISTING USER - Update expo token if provided
-                log.info("Existing user logging in: {}", phoneNumber);
-                if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
-                    user.setExpoPushToken(req.getExpoPushToken());
-                    user = userRepo.save(user);
-                }
+            log.info("Existing user logging in: {}", phoneNumber);
+
+            // Update push token if provided
+            if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
+                user.setExpoPushToken(req.getExpoPushToken());
+                user = userRepo.save(user);
             }
 
             String jwt = jwtTokenProvider.generateToken(user);
@@ -85,75 +83,117 @@ public class AuthService {
                     .verificationStatus(user.getVerificationStatus())
                     .message(user.getVerificationStatus() == VerificationStatus.PENDING
                             ? "Please complete your profile to get verified"
-                            : "Login successful!")
+                            : "Welcome back!")
                     .build();
 
         } catch (Exception e) {
-            log.error("OTP authentication failed", e);
-            throw new RuntimeException("Authentication failed: " + e.getMessage());
+            log.error("Login failed", e);
+            throw new RuntimeException("Login failed: " + e.getMessage());
         }
-    }
-
-    private AgoraUser createNewUser(String phoneNumber, Long collegeId, String expoPushToken) {
-        AgoraUser user = new AgoraUser();
-
-        user.setMobileNumber(phoneNumber);
-
-        String cleanPhone = phoneNumber.replaceAll("[+\\s-]", "");
-        String last8Digits = cleanPhone.length() >= 8
-                ? cleanPhone.substring(cleanPhone.length() - 8)
-                : cleanPhone;
-        user.setUserName("phone_" + last8Digits);
-
-        user.setUserEmail(cleanPhone + "@agora.student");
-        user.setFirstName("Student");
-        user.setLastName("User");
-
-        user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-        user.setProfileImage("http://localhost:9000/images/placeholder.jpg");
-        user.setRole(UserRole.STUDENT);
-        user.setUserStatus(UserStatus.ACTIVE);
-        user.setVerificationStatus(VerificationStatus.PENDING);
-        user.setCreatedAt(LocalDateTime.now());
-
-        if (collegeId != null) {
-            College college = collegeRepo.findById(collegeId)
-                    .orElseThrow(() -> new RuntimeException("Invalid college selected"));
-            user.setCollege(college);
-            log.info("College set for new user: collegeId={}", collegeId);
-        }
-
-        if (expoPushToken != null && !expoPushToken.isEmpty()) {
-            user.setExpoPushToken(expoPushToken);
-            log.info("Expo push token set for new user");
-        }
-
-        return userRepo.save(user);
     }
 
     @Transactional
-    public LoginResponseDto completeProfile(Long userId, OtpRegistrationRequestDto req) {
-        AgoraUser user = userRepo.findById(userId)
+    public LoginResponseDto signupWithOtp(OtpLoginRequestDto req) {
+        log.info("📝 Signup with OTP");
+        try {
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(req.getFirebaseToken());
+            String phoneNumber = (String) decodedToken.getClaims().get("phone_number");
+
+            if (phoneNumber == null) {
+                throw new RuntimeException("Invalid Firebase Token: no phone number found");
+            }
+
+            if (userRepo.findByMobileNumber(phoneNumber).isPresent()) {
+                throw new RuntimeException("Account already exists. Please login instead.");
+            }
+
+            if (req.getCollegeId() == null) {
+                throw new RuntimeException("College selection is required for signup");
+            }
+
+            College college = collegeRepo.findById(req.getCollegeId())
+                    .orElseThrow(() -> new RuntimeException("Invalid college selected"));
+
+            log.info("New user signing up with phone: {} and college: {}", phoneNumber, college.getCollegeName());
+
+            AgoraUser user = new AgoraUser();
+            user.setMobileNumber(phoneNumber);
+            user.setCollege(college);
+
+            String cleanPhone = phoneNumber.replaceAll("[+\\s-]", "");
+            String last8Digits = cleanPhone.length() >= 8
+                    ? cleanPhone.substring(cleanPhone.length() - 8)
+                    : cleanPhone;
+            user.setUserName("phone_" + last8Digits);
+
+            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            user.setProfileImage("http://localhost:9000/images/placeholder.jpg");
+            user.setRole(UserRole.STUDENT);
+            user.setUserStatus(UserStatus.ACTIVE);
+            user.setVerificationStatus(VerificationStatus.PENDING);
+            user.setCreatedAt(LocalDateTime.now());
+
+            if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
+                user.setExpoPushToken(req.getExpoPushToken());
+            }
+
+            user = userRepo.save(user);
+
+            String jwt = jwtTokenProvider.generateToken(user);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+            return LoginResponseDto.builder()
+                    .jwt(jwt)
+                    .refreshToken(refreshToken.getToken())
+                    .id(user.getId())
+                    .userName(user.getUserName())
+                    .mobileNumber(user.getMobileNumber())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .collegeId(user.getCollege().getId().toString())
+                    .verificationStatus(user.getVerificationStatus())
+                    .message("Please complete your profile to get verified")
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Signup failed", e);
+            throw new RuntimeException("Signup failed: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public LoginResponseDto completeProfile(String phoneNumber, OtpRegistrationRequestDto req) {
+        AgoraUser user = userRepo.findByMobileNumber(phoneNumber)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.getVerificationStatus() == VerificationStatus.VERIFIED) {
             throw new RuntimeException("Profile already completed");
         }
 
-        user.setFirstName(req.getFirstName());
-        user.setLastName(req.getLastName());
+        user.setFirstName(req.getFirstName().trim());
+        user.setLastName(req.getLastName().trim());
+
+        if (req.getUserEmail() != null && !req.getUserEmail().isEmpty()) {
+            user.setUserEmail(req.getUserEmail().trim());
+        }
+
         user.setUserName(generateUsername(req.getFirstName(), req.getLastName()));
 
-        if (user.getCollege() == null && req.getCollege() != null && !req.getCollege().isEmpty()) {
-            College college = collegeRepo.findByCollegeNameIgnoreCase(req.getCollege())
-                    .orElseThrow(() -> new RuntimeException("Invalid college selected"));
-            user.setCollege(college);
+//        // Update college if not set or changed
+//        if (req.getCollege() != null && !req.getCollege().isEmpty()) {
+//            College college = collegeRepo.findByCollegeNameIgnoreCase(req.getCollege())
+//                    .orElseThrow(() -> new RuntimeException("Invalid college selected"));
+//            user.setCollege(college);
+//        }
+
+        if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
+            user.setExpoPushToken(req.getExpoPushToken());
         }
 
         user.setVerificationStatus(VerificationStatus.VERIFIED);
 
         AgoraUser savedUser = userRepo.save(user);
-        log.info("User profile completed and verified: userId={}", userId);
+        log.info("User profile completed and verified: userId={}", phoneNumber);
 
         String jwt = jwtTokenProvider.generateToken(savedUser);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser);
@@ -166,6 +206,7 @@ public class AuthService {
                 .mobileNumber(savedUser.getMobileNumber())
                 .firstName(savedUser.getFirstName())
                 .lastName(savedUser.getLastName())
+                .userEmail(savedUser.getUserEmail())
                 .collegeId(savedUser.getCollege() != null ? savedUser.getCollege().getId().toString() : null)
                 .verificationStatus(savedUser.getVerificationStatus())
                 .message("Profile completed! You can now create listings.")

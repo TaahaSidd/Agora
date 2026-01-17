@@ -266,6 +266,16 @@ public class NotificationService {
     }
 
     @Transactional
+    public void markAllAsReadForUser(Long userId) {
+        List<Notification> unreadNotifications = notificationRepo.findByUserIdAndReadFalse(userId);
+
+        if (!unreadNotifications.isEmpty()) {
+            unreadNotifications.forEach(noti -> noti.setRead(true));
+            notificationRepo.saveAll(unreadNotifications);
+        }
+    }
+
+    @Transactional
     public void clearAll(Long userId) {
         notificationRepo.deleteAllByUserId(userId);
     }
