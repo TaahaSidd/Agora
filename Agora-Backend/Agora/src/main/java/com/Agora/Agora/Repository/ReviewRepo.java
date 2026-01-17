@@ -13,9 +13,12 @@ public interface ReviewRepo extends JpaRepository<Review, Long> {
 
     List<Review> findByReviewer_Id(Long reviewerId);
 
+    Long countBySellerId(Long sellerId);
+
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.seller.id = :sellerId")
     Double findAverageRatingForSeller(@Param("sellerId") Long sellerId);
 
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.reviewer.id = :userId")
     Double findAverageRatingByUser(@Param("userId") Long userId);
+
 }

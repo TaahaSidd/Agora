@@ -15,8 +15,12 @@ import com.Agora.Agora.Model.Notification;
 public interface NotificationRepo extends JpaRepository<Notification, Long> {
     List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
 
+    List<Notification> findByUserIdAndReadFalse(Long userId);
+
     @Transactional
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+
 }

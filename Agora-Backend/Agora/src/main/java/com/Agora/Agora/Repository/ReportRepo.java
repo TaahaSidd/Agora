@@ -2,12 +2,15 @@ package com.Agora.Agora.Repository;
 
 import java.util.List;
 
+import com.Agora.Agora.Model.AgoraUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.Agora.Agora.Model.Enums.ReportStatus;
 import com.Agora.Agora.Model.Report;
 
 public interface ReportRepo extends JpaRepository<Report, Long> {
+
+    List<Report> findByReporterOrderByReportedAtDesc(AgoraUser reporter);
 
     List<Report> findByStatus(ReportStatus status);
 
