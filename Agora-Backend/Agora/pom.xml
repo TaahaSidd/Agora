@@ -31,7 +31,6 @@
 		<java.version>17</java.version>
 	</properties>
 
-	<!-- Use Google Cloud Libraries BOM for version management -->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
