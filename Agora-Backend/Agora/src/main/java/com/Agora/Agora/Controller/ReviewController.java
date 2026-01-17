@@ -1,23 +1,17 @@
 package com.Agora.Agora.Controller;
 
-import java.util.List;
-
+import com.Agora.Agora.Dto.Request.ReviewReqDto;
+import com.Agora.Agora.Dto.Response.ReviewResponse;
+import com.Agora.Agora.Dto.Response.ReviewStatsDto;
+import com.Agora.Agora.Service.ReviewService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.Agora.Agora.Dto.Request.ReviewReqDto;
-import com.Agora.Agora.Dto.Response.ReviewResponse;
-import com.Agora.Agora.Service.ReviewService;
-
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -62,6 +56,11 @@ public class ReviewController {
     public ResponseEntity<Double> getSellerAverageRating(@PathVariable Long sellerId) {
         Double avg = reviewService.getAverageRatingForSeller(sellerId);
         return ResponseEntity.ok(avg != null ? avg : 0.0);
+    }
+
+    @GetMapping("/seller/{sellerId}/stats")
+    public ResponseEntity<ReviewStatsDto> getSellerStats(@PathVariable Long sellerId) {
+        return ResponseEntity.ok(reviewService.getSellerStats(sellerId));
     }
 
     @GetMapping("/user/{userId}/avg")

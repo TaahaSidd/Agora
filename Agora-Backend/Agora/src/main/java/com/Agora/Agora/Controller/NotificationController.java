@@ -1,23 +1,14 @@
 package com.Agora.Agora.Controller;
 
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.Agora.Agora.Dto.Request.MessageNotificationReqDto;
 import com.Agora.Agora.Dto.Response.NotificationResponseDto;
 import com.Agora.Agora.Service.NotificationService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("Agora/notifications")
@@ -49,6 +40,12 @@ public class NotificationController {
     public ResponseEntity<String> markAsRead(@PathVariable Long id) {
         notificationService.markAsRead(id);
         return ResponseEntity.ok("Marked as read");
+    }
+
+    @PatchMapping("/mark-all-read/{userId}")
+    public ResponseEntity<String> markAllRead(@PathVariable Long userId) {
+        notificationService.markAllAsReadForUser(userId);
+        return ResponseEntity.ok("All notifications marked as read");
     }
 
     @DeleteMapping("/clear/{id}")

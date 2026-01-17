@@ -30,7 +30,6 @@ public class ModerationController {
 
     private final ModerationService moderationService;
     private final NotificationService notifcationService;
-    private final UserService userService;
     private final ListingService listingService;
 
     // 2. Resolve a report
@@ -47,7 +46,7 @@ public class ModerationController {
     @PostMapping("/users/{userId}/ban")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> banUser(@Valid @PathVariable Long userId) {
-        userService.banUser(userId);
+        moderationService.banUser(userId);
         return ResponseEntity.ok().build();
     }
 

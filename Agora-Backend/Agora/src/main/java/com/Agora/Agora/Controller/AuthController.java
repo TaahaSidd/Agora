@@ -4,7 +4,6 @@ import com.Agora.Agora.Dto.Request.LoginRequestDto;
 import com.Agora.Agora.Dto.Request.OtpLoginRequestDto;
 import com.Agora.Agora.Dto.Request.OtpRegistrationRequestDto;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
-import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Repository.UserRepo;
 import com.Agora.Agora.Service.AuthService;
 import com.Agora.Agora.Service.PasswordResetService;
@@ -13,9 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,17 +28,21 @@ public class AuthController {
     private final UserRepo userRepo;
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    @PostMapping("/otp")
-    public ResponseEntity<LoginResponseDto> loginOrSignupWithOtp(@RequestBody OtpLoginRequestDto req) {
-        log.info("🔥 /auth/otp HIT! Payload: {}", req);
-        return ResponseEntity.ok(authService.loginOrSignupWithOtp(req));
+    @PostMapping("/login/otp")
+    public ResponseEntity<LoginResponseDto> loginWithOtp(@Valid @RequestBody OtpLoginRequestDto req) {
+        return ResponseEntity.ok(authService.loginWithOtp(req));
+    }
+
+    @PostMapping("/signup/otp")
+    public ResponseEntity<LoginResponseDto> signupWithOtp(@Valid @RequestBody OtpLoginRequestDto req) {
+        return ResponseEntity.ok(authService.signupWithOtp(req));
     }
 
     @PutMapping("/complete-profile")
     public ResponseEntity<LoginResponseDto> completeProfile(
-            @AuthenticationPrincipal AgoraUser user,
+            Principal principal,
             @Valid @RequestBody OtpRegistrationRequestDto req) {
-        return ResponseEntity.ok(authService.completeProfile(user.getId(), req));
+        return ResponseEntity.ok(authService.completeProfile(principal.getName(), req));
     }
 
     @PostMapping("/login")

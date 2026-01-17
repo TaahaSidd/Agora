@@ -1,18 +1,13 @@
 package com.Agora.Agora.Controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Service.FollowService;
 import com.Agora.Agora.Service.UserService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("Agora/follow")
@@ -60,12 +55,18 @@ public class FollowController {
     }
 
     @GetMapping("/{userId}/count")
-    public ResponseEntity<?> getCounts(@PathVariable Long userId) {
+    public ResponseEntity<?> getCounts(@PathVariable Long userId, Authentication authentication) {
 
         long followers = followService.getFollowersCount(userId);
         long following = followService.getFollowingCount(userId);
-        boolean isFollowing = followService.isFollowing(
-                userService.getCurrentUser().getId(), userId);
+
+        boolean isFollowing = false;
+        if (authentication != null && authentication.isAuthenticated()
+                && !(authentication.getPrincipal() instanceof String)) {
+
+            AgoraUser currentUser = (AgoraUser) authentication.getPrincipal();
+            isFollowing = followService.isFollowing(currentUser.getId(), userId);
+        }
 
         return ResponseEntity.ok(
                 new FollowCountResponse(followers, following, isFollowing));

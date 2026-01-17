@@ -1,25 +1,23 @@
 package com.Agora.Agora.Controller;
 
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
 import com.Agora.Agora.Dto.Request.ListingFilterReqDto;
 import com.Agora.Agora.Dto.Request.ListingReqDto;
+import com.Agora.Agora.Dto.Response.CategoryCountResponseDto;
 import com.Agora.Agora.Dto.Response.ListingResponseDto;
 import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Service.ListingService;
 import com.Agora.Agora.Service.UserService;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
-import com.Agora.Agora.Dto.Response.CategoryCountResponseDto;
+import java.util.List;
 
 @RestController
 @RequestMapping("Agora/listing")
@@ -52,12 +50,18 @@ public class ListingController {
     @GetMapping("/all")
     public ResponseEntity<Page<ListingResponseDto>> getAllListings(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "postDate") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDir
-    ) {
-        Page<ListingResponseDto> listings = listingService.getAllListings(page, size, sortBy, sortDir);
-        return ResponseEntity.ok(listings);
+            @RequestParam(defaultValue = "DESC") String sortDir,
+            Authentication auth) {
+
+        Long currentUserId = null;
+        if (auth != null && auth.isAuthenticated()) {
+            AgoraUser user = (AgoraUser) auth.getPrincipal();
+            currentUserId = user.getId();
+        }
+
+        return ResponseEntity.ok(listingService.getAllListings(page, size, sortBy, sortDir, currentUserId));
     }
 
     // Updating
@@ -75,10 +79,21 @@ public class ListingController {
         return ResponseEntity.noContent().build();
     }
 
-    // Searching.
     @PostMapping("/search")
-    public ResponseEntity<List<ListingResponseDto>> searchListings(@Valid @RequestBody ListingFilterReqDto req) {
-        List<ListingResponseDto> results = listingService.searchListings(req);
+    public ResponseEntity<List<ListingResponseDto>> searchListings(
+            @Valid @RequestBody ListingFilterReqDto req,
+            Authentication authentication
+    ) {
+        Long currentUserId = null;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken)) {
+
+            AgoraUser user = userService.findByMobileNumber(authentication.getName());
+            currentUserId = user.getId();
+        }
+
+        List<ListingResponseDto> results = listingService.searchListings(req, currentUserId);
         return ResponseEntity.ok(results);
     }
 
