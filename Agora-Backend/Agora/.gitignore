@@ -36,7 +36,7 @@ build/
 src/main/resources/gcp/*.json
 gcp/*.json
 **/*.google.json
-agora-477216-26c3809cf1cb.json
+agora-e84de-48f429f78e.json
 
 # Spring Boot configs with secrets
 application-local.properties
