@@ -4,7 +4,9 @@ import {jwtDecode} from 'jwt-decode';
 import {Alert} from 'react-native';
 
 //const BASE_URL = "http://192.168.8.15:9000/Agora";
-const BASE_URL = "https://francisca-overjocular-cheryle.ngrok-free.dev/Agora";
+// const BASE_URL = "https://francisca-overjocular-cheryle.ngrok-free.dev/Agora";
+
+const BASE_URL = "https://agora-backend-cw64.onrender.com/Agora";
 
 const authApi = axios.create({
     baseURL: BASE_URL,
