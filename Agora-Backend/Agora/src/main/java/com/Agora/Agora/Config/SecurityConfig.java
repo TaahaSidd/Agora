@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/Agora/auth/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/Agora/auth/**").permitAll()
 
+                        .requestMatchers("/Agora/health").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/Agora/Token/validate").permitAll()
 
