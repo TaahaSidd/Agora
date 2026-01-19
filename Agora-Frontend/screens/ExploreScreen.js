@@ -26,7 +26,8 @@ import DynamicHeader from '../components/DynamicHeader';
 import AnimatedSearchBar from '../components/AnimatedSearchBar';
 import SafetyBanner from "../components/SafetyBanner";
 
-import NotFoundSVG from '../assets/svg/ErrorState.svg';
+import ErrorStateSVG from '../assets/svg/ErrorState.svg';
+import EmptySVG from '../assets/svg/EmptyState.svg';
 
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
@@ -57,9 +58,9 @@ const SkeletonNearestCard = () => (<View style={styles.skeletonNearest}>
 </View>);
 
 // Empty State Component
-const EmptyState = ({icon, title, subtitle, actionText, onAction}) => (<View style={styles.emptyState}>
+const EmptyState = ({SvgComponent, title, subtitle, actionText, onAction}) => (<View style={styles.emptyState}>
     <View style={styles.emptyIconContainer}>
-        <NotFoundSVG width={200} height={200}/>
+        {SvgComponent ? <SvgComponent width={200} height={200}/> : null}
     </View>
     <Text style={styles.emptyTitle}>{title}</Text>
     <Text style={styles.emptySubtitle}>{subtitle}</Text>
@@ -189,30 +190,29 @@ const ExploreScreen = ({navigation, scrollY}) => {
     const newlyListedItems = useMemo(() => {
         if (!items || items.length === 0) return [];
 
-        // Sort by ID or createdAt descending (assuming higher ID = newer)
         return [...items]
             .sort((a, b) => b.id - a.id)
             .slice(0, 10);
     }, [items]);
 
-    const banners = [{
-        source: require('../assets/banner.jpg'),
-        title: 'Welcome to Agora',
-        subtitle: 'Buy & Sell with fellow students',
-        showBadge: true,
-        badgeText: 'NEW',
-    }, {
-        source: require('../assets/banner2.jpg'),
-        title: 'Flash Deals!',
-        subtitle: 'Check out today\'s hot offers',
-        showBadge: true,
-        badgeText: 'HOT',
-    }, {
-        source: require('../assets/banner3.jpg'),
-        title: 'Campus Favorites',
-        subtitle: 'Popular items picked by students',
-        showBadge: false,
-    },];
+    // const banners = [{
+    //     source: require('../assets/banner.jpg'),
+    //     title: 'Welcome to Agora',
+    //     subtitle: 'Buy & Sell with fellow students',
+    //     showBadge: true,
+    //     badgeText: 'NEW',
+    // }, {
+    //     source: require('../assets/banner2.jpg'),
+    //     title: 'Flash Deals!',
+    //     subtitle: 'Check out today\'s hot offers',
+    //     showBadge: true,
+    //     badgeText: 'HOT',
+    // }, {
+    //     source: require('../assets/banner3.jpg'),
+    //     title: 'Campus Favorites',
+    //     subtitle: 'Popular items picked by students',
+    //     showBadge: false,
+    // },];
 
     // const [currentBanner, setCurrentBanner] = useState(banners[0]);
 
@@ -232,8 +232,6 @@ const ExploreScreen = ({navigation, scrollY}) => {
         setRefreshing(true);
         try {
             await refetch();
-            const randomIndex = Math.floor(Math.random() * banners.length);
-//            setCurrentBanner(banners[randomIndex]);
         } catch (error) {
             console.error('Refresh failed:', error);
         } finally {
@@ -328,9 +326,9 @@ const ExploreScreen = ({navigation, scrollY}) => {
             </View>
         </View>
         <EmptyState
-            icon="alert-circle-outline"
+            SvgComponent={ErrorStateSVG} // Keep the old one for errors
             title="Something went wrong"
-            subtitle="We couldn't load the listings. Please check your connection and try again."
+            subtitle="We couldn't load the listings. Please check your connection."
             actionText="Try Again"
             onAction={refetch}
         />
@@ -354,17 +352,16 @@ const ExploreScreen = ({navigation, scrollY}) => {
             </View>
         </View>
         <EmptyState
-            icon="cube-outline"
+            SvgComponent={EmptySVG} // Use your NEW SVG here
             title="No listings yet"
-            subtitle="Be the first to list an item on Agora! Start selling to your fellow students today."
+            subtitle="Be the first to list an item on Agora!"
             actionText="Create Listing"
-            onAction={() => navigation.navigate('AddListing')}
+            onAction={() => navigation.navigate('AddListingScreen')}
         />
     </>);
 
     return (<SafeAreaView style={styles.container}>
         <StatusBar backgroundColor="#fff" barStyle="dark-content"/>
-
 
         <Animated.ScrollView
             contentContainerStyle={{flexGrow: 1}}
@@ -722,9 +719,9 @@ const styles = StyleSheet.create({
 
     // Empty State Styles
     emptyState: {
-        alignItems: 'center', justifyContent: 'center', paddingHorizontal: THEME.spacing['3xl'], paddingVertical: 100,
+        alignItems: 'center', justifyContent: 'center', paddingHorizontal: THEME.spacing['3xl'], paddingVertical: 100
     }, emptyIconContainer: {
-        width: 120, height: 120, alignItems: 'center', justifyContent: 'center', marginBottom: THEME.spacing.sectionGap,
+        width: 120, height: 120, alignItems: 'center', justifyContent: 'center', marginBottom: THEME.spacing['3xl'],
     }, emptyTitle: {
         fontSize: THEME.fontSize['2xl'],
         fontWeight: THEME.fontWeight.extrabold,

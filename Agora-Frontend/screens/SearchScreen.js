@@ -1,30 +1,29 @@
-import React, { useState, useCallback } from "react";
+import React, {useCallback, useState} from "react";
 import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    FlatList,
     ActivityIndicator,
-    StyleSheet,
+    FlatList,
     SafeAreaView,
     StatusBar,
-    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
 import axios from "axios";
 import debounce from "lodash.debounce";
 
-import { COLORS } from '../utils/colors';
-import { THEME } from "../utils/theme";
+import {COLORS} from '../utils/colors';
+import {THEME} from "../utils/theme";
 
 import SearchInput from "../components/SearchInput";
+import Card from "../components/Cards"; // ✅ Import your Card component
 
 import RoadSVG from '../assets/svg/RoadSVG.svg';
 
-const BACKEND_URL = "http://192.168.8.15:9000/Agora";
+const BACKEND_URL = "https://francisca-overjocular-cheryle.ngrok-free.dev/Agora";
 
-const SearchScreen = ({ navigation }) => {
+const SearchScreen = ({navigation}) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [recentSearches, setRecentSearches] = useState([]);
     const [searchResults, setSearchResults] = useState([]);
@@ -44,8 +43,8 @@ const SearchScreen = ({ navigation }) => {
             const formatted = response.data.map(item => ({
                 ...item,
                 images: item.imageUrl && item.imageUrl.length > 0
-                    ? item.imageUrl.map(url => ({ uri: url }))
-                    : [require('../assets/LW.jpg')],
+                    ? item.imageUrl.map(url => ({uri: url}))
+                    : [require('../assets/no-image.jpg')],
                 name: item.title || 'Untitled',
                 price: item.price ? `₹ ${item.price}` : 'N/A',
             }));
@@ -84,52 +83,14 @@ const SearchScreen = ({ navigation }) => {
         if (!recentSearches.includes(item.title || item)) {
             setRecentSearches([item.title || item, ...recentSearches].slice(0, 10));
         }
-        navigation.navigate("ProductDetailsScreen", { item });
     };
 
-    const renderSearchResult = ({ item }) => (
-        <TouchableOpacity
-            style={styles.resultCard}
-            onPress={() => handleSearchItemPress(item)}
-            activeOpacity={0.7}
-        >
-            <Image
-                source={item.images[0]}
-                style={styles.resultImage}
-                resizeMode="cover"
-            />
-            <View style={styles.resultContent}>
-                <Text style={styles.resultTitle} numberOfLines={2}>
-                    {item.title || item.name}
-                </Text>
-
-                {item.description && (
-                    <Text style={styles.resultDescription} numberOfLines={2}>
-                        {item.description}
-                    </Text>
-                )}
-
-                <View style={styles.resultFooter}>
-                    <Text style={styles.resultPrice}>{item.price}</Text>
-
-                    {item.condition && (
-                        <View style={styles.conditionBadge}>
-                            <Text style={styles.conditionText}>{item.condition}</Text>
-                        </View>
-                    )}
-                </View>
-
-                {item.category && (
-                    <View style={styles.categoryContainer}>
-                        <Ionicons name="pricetag-outline" size={12} color="#6B7280" />
-                        <Text style={styles.categoryText}>{item.category}</Text>
-                    </View>
-                )}
-            </View>
-        </TouchableOpacity>
+    // ✅ USE YOUR CARD COMPONENT
+    const renderSearchResult = ({item}) => (
+        <Card item={item} horizontal={false} />
     );
 
-    const renderRecentSearch = ({ item }) => (
+    const renderRecentSearch = ({item}) => (
         <TouchableOpacity
             style={styles.item}
             onPress={() => {
@@ -164,7 +125,7 @@ const SearchScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
+            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content"/>
 
             <View style={styles.container}>
                 {/* Search Header */}
@@ -174,7 +135,7 @@ const SearchScreen = ({ navigation }) => {
                         style={styles.backButton}
                         activeOpacity={0.7}
                     >
-                        <Ionicons name="arrow-back" size={24} color="#ffffffff" />
+                        <Ionicons name="arrow-back" size={24} color="#ffffffff"/>
                     </TouchableOpacity>
                     <SearchInput
                         value={searchQuery}
@@ -203,7 +164,7 @@ const SearchScreen = ({ navigation }) => {
                 {/* Results/List */}
                 {loading ? (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={COLORS.primary} />
+                        <ActivityIndicator size="large" color={COLORS.primary}/>
                         <Text style={styles.loadingText}>Searching...</Text>
                     </View>
                 ) : (
@@ -211,14 +172,17 @@ const SearchScreen = ({ navigation }) => {
                         data={searchQuery ? searchResults : recentSearches}
                         keyExtractor={(item, index) => `${item.id || item}-${index}`}
                         renderItem={searchQuery ? renderSearchResult : renderRecentSearch}
+                        // ✅ GRID LAYOUT FOR SEARCH RESULTS
+                        numColumns={searchQuery ? 2 : 1}
+                        key={searchQuery ? 'grid' : 'list'} // Force re-render on layout change
+                        columnWrapperStyle={searchQuery ? styles.columnWrapper : null}
                         contentContainerStyle={styles.listContainer}
                         showsVerticalScrollIndicator={false}
                         ListEmptyComponent={
                             <View style={styles.emptyContainer}>
                                 {searchQuery ? (
-                                    // No results found - with SVG illustration
                                     <>
-                                        <RoadSVG width={180} height={180} />
+                                        <RoadSVG width={180} height={180}/>
                                         <Text style={styles.emptyTitle}>No results found</Text>
                                         <Text style={styles.emptySubtitle}>
                                             Try searching with different keywords
@@ -248,6 +212,7 @@ const SearchScreen = ({ navigation }) => {
         </SafeAreaView>
     );
 };
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -257,8 +222,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.dark.bg,
     },
-
-    /* Header with back button + search bar */
     searchHeader: {
         flexDirection: "row",
         alignItems: "center",
@@ -276,8 +239,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginRight: 8,
     },
-
-    /* Recent Search Header */
     headerContainer: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -297,13 +258,14 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: COLORS.primary,
     },
-
     listContainer: {
         paddingHorizontal: 20,
         paddingBottom: 20,
     },
-
-    /* Recent Search Item */
+    // ✅ ADD COLUMN WRAPPER FOR GRID
+    columnWrapper: {
+        justifyContent: 'space-between',
+    },
     item: {
         flexDirection: "row",
         alignItems: "center",
@@ -313,7 +275,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         marginBottom: 8,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.08,
         shadowRadius: 8,
         elevation: 2,
@@ -337,80 +299,6 @@ const styles = StyleSheet.create({
         padding: 4,
         marginLeft: 8,
     },
-
-    /* Result Cards */
-    resultCard: {
-        flexDirection: "row",
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 16,
-        marginBottom: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 2,
-        overflow: "hidden",
-    },
-    resultImage: {
-        width: 120,
-        height: 120,
-        backgroundColor: COLORS.dark.cardElevated,
-    },
-    resultContent: {
-        flex: 1,
-        padding: 12,
-        justifyContent: "space-between",
-    },
-    resultTitle: {
-        fontSize: 15,
-        fontWeight: "700",
-        color: COLORS.dark.text,
-        marginBottom: 4,
-        lineHeight: 20,
-    },
-    resultDescription: {
-        fontSize: 13,
-        color: COLORS.dark.textTertiary,
-        lineHeight: 18,
-        marginBottom: 8,
-    },
-    resultFooter: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 6,
-    },
-    resultPrice: {
-        fontSize: 16,
-        fontWeight: "800",
-        color: COLORS.primary,
-    },
-    conditionBadge: {
-        backgroundColor: COLORS.dark.cardElevated,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 6,
-    },
-    conditionText: {
-        fontSize: 11,
-        fontWeight: "600",
-        color: COLORS.dark.textTertiary,
-        textTransform: "capitalize",
-    },
-
-    /* Category text under result */
-    categoryContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-    },
-    categoryText: {
-        fontSize: 12,
-        color: COLORS.dark.textTertiary,
-        fontWeight: "500",
-    },
-
-    /* Loading state */
     loadingContainer: {
         flex: 1,
         justifyContent: "center",
@@ -423,8 +311,6 @@ const styles = StyleSheet.create({
         color: COLORS.dark.textSecondary,
         fontWeight: "500",
     },
-
-    /* Empty state */
     emptyContainer: {
         alignItems: 'center',
         paddingTop: 80,
@@ -445,7 +331,7 @@ const styles = StyleSheet.create({
         fontSize: THEME.fontSize.xl,
         fontWeight: THEME.fontWeight.bold,
         color: COLORS.dark.text,
-        marginTop: THEME.spacing.lg, // Add margin for SVG
+        marginTop: THEME.spacing.lg,
         marginBottom: THEME.spacing[2],
         textAlign: 'center',
     },

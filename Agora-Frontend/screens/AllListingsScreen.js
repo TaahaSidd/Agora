@@ -43,19 +43,19 @@ const AllListingsScreen = ({navigation}) => {
     const PAGE_SIZE = 20;
 
     const categories = [
-        { id: 'all', name: 'All Categories', icon: 'apps-outline' },
-        { id: 'textbooks', name: 'Textbooks & Study Materials', icon: 'book-outline' },
-        { id: 'electronics', name: 'Electronics & Gadgets', icon: 'laptop-outline' },
-        { id: 'clothing', name: 'Clothing & Accessories', icon: 'shirt-outline' },
-        { id: 'furniture', name: 'Furniture & Dorm Supplies', icon: 'bed-outline' },
-        { id: 'stationery', name: 'Stationery & Office Supplies', icon: 'pencil-outline' },
-        { id: 'sports', name: 'Sports & Fitness Equipment', icon: 'basketball-outline' },
-        { id: 'bicycles', name: 'Bicycles & Transportation', icon: 'bicycle-outline' },
-        { id: 'food', name: 'Food & Snacks', icon: 'fast-food-outline' },
-        { id: 'housing', name: 'Housing & Roommates', icon: 'home-outline' },
-        { id: 'tutoring', name: 'Tutoring & Academic Services', icon: 'school-outline' },
-        { id: 'events', name: 'Events & Tickets', icon: 'ticket-outline' },
-        { id: 'miscellaneous', name: 'Miscellaneous', icon: 'grid-outline' },
+        {id: 'all', name: 'All Categories', icon: 'apps-outline'},
+        {id: 'textbooks', name: 'Textbooks & Study Materials', icon: 'book-outline'},
+        {id: 'electronics', name: 'Electronics & Gadgets', icon: 'laptop-outline'},
+        {id: 'clothing', name: 'Clothing & Accessories', icon: 'shirt-outline'},
+        {id: 'furniture', name: 'Furniture & Dorm Supplies', icon: 'bed-outline'},
+        {id: 'stationery', name: 'Stationery & Office Supplies', icon: 'pencil-outline'},
+        {id: 'sports', name: 'Sports & Fitness Equipment', icon: 'basketball-outline'},
+        {id: 'bicycles', name: 'Bicycles & Transportation', icon: 'bicycle-outline'},
+        {id: 'food', name: 'Food & Snacks', icon: 'fast-food-outline'},
+        {id: 'housing', name: 'Housing & Roommates', icon: 'home-outline'},
+        {id: 'tutoring', name: 'Tutoring & Academic Services', icon: 'school-outline'},
+        {id: 'events', name: 'Events & Tickets', icon: 'ticket-outline'},
+        {id: 'miscellaneous', name: 'Miscellaneous', icon: 'grid-outline'},
     ];
 
     const conditions = [
@@ -70,11 +70,12 @@ const AllListingsScreen = ({navigation}) => {
 
     const priceRanges = [
         {id: 'all', name: 'All Prices'},
-        {id: '0-100', name: 'Under ₹100'},
-        {id: '100-500', name: '₹100 - ₹500'},
+        {id: '0-500', name: 'Under ₹500'},
         {id: '500-1000', name: '₹500 - ₹1,000'},
-        {id: '1000-5000', name: '₹1,000 - ₹5,000'},
-        {id: '5000+', name: 'Above ₹5,000'},
+        {id: '1000-2500', name: '₹1,000 - ₹2,500'},
+        {id: '2500-5000', name: '₹2,500 - ₹5,000'},
+        {id: '5000-10000', name: '₹5,000 - ₹10,000'},
+        {id: '10000+', name: 'Above ₹10,000'},
     ];
 
     const sortOptions = [

@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     },
     container: {
         padding: 20,
-        paddingBottom: 40,
+        paddingBottom: 50,
     },
     listingPreview: {
         flexDirection: 'row',

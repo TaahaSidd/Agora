@@ -90,7 +90,7 @@ const FavoritesScreen = ({navigation}) => {
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <FavoriteSvg width={160} height={160}/>
+            <FavoriteSvg width={200} height={200}/>
             <Text style={styles.emptyTitle}>No Favorites Yet</Text>
             <Text style={styles.emptyText}>
                 Start adding items to your favorites to see them here

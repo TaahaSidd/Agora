@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {COLORS} from '../utils/colors';
 
@@ -26,6 +27,7 @@ import {useChatBlocking} from '../context/ChatBlockingProvider';
 const isAndroid = Platform.OS === 'android';
 
 const ChatRoomScreen = ({route, navigation}) => {
+    const insets = useSafeAreaInsets();
     const {roomId, sellerId} = route.params;
     const messages = useChatMessages(roomId);
     const {sellerName, productInfo} = route.params || {};
@@ -36,9 +38,9 @@ const ChatRoomScreen = ({route, navigation}) => {
     const flatListRef = useRef(null);
     const {sellerAvatar} = route.params;
     const markChatAsRead = useMarkChatAsRead();
+    const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
     const isOtherUserBlocked = isUserBlocked(sellerId);
-
 
     let avatarUri = sellerAvatar;
 
@@ -72,6 +74,16 @@ const ChatRoomScreen = ({route, navigation}) => {
         return () => {
             keyboardDidShowListener.remove();
             keyboardDidHideListener.remove();
+        };
+    }, []);
+
+    useEffect(() => {
+        const showSubscription = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
+        const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
         };
     }, []);
 
@@ -255,7 +267,6 @@ const ChatRoomScreen = ({route, navigation}) => {
                 <TouchableOpacity
                     style={styles.headerCenter}
                     onPress={() => {
-                        console.log('View seller profile');
                     }}
                     activeOpacity={0.8}
                 >
@@ -270,18 +281,18 @@ const ChatRoomScreen = ({route, navigation}) => {
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.moreButton}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                        console.log('Show menu');
-                    }}
-                >
-                    <Ionicons name="ellipsis-vertical" size={20} color={COLORS.dark.textSecondary}/>
-                </TouchableOpacity>
+                {/*<TouchableOpacity*/}
+                {/*    style={styles.moreButton}*/}
+                {/*    activeOpacity={0.7}*/}
+                {/*    onPress={() => {*/}
+                {/*        console.log('Show menu');*/}
+                {/*    }}*/}
+                {/*>*/}
+                {/*    <Ionicons name="ellipsis-vertical" size={20} color={COLORS.dark.textSecondary}/>*/}
+                {/*</TouchableOpacity>*/}
             </View>
 
-            {/* ✅ BLOCKED USER BANNER */}
+            {/* BLOCKED USER BANNER */}
             {isOtherUserBlocked && (
                 <View style={styles.blockedBanner}>
                     <Ionicons name="ban" size={16} color="#EF4444"/>
@@ -327,8 +338,8 @@ const ChatRoomScreen = ({route, navigation}) => {
 
             <KeyboardAvoidingView
                 style={styles.keyboardAvoiding}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                behavior={Platform.OS === 'android' ? 'padding' : null}
+                keyboardVerticalOffset={Platform.OS === 'android' ? 0 : 0}
             >
                 {/* Messages */}
                 <FlatList
@@ -374,7 +385,13 @@ const ChatRoomScreen = ({route, navigation}) => {
                 {/* Input Bar */}
                 <View style={[
                     styles.inputBar,
-                    isOtherUserBlocked && styles.inputBarDisabled
+                    isOtherUserBlocked && styles.inputBarDisabled,
+                    {
+                        paddingBottom: isKeyboardVisible
+                            ? 12
+                            : (insets.bottom > 0 ? insets.bottom : 20),
+                        paddingTop: 12
+                    }
                 ]}>
                     <View style={styles.inputWrapper}>
                         <TextInput
@@ -385,7 +402,7 @@ const ChatRoomScreen = ({route, navigation}) => {
                             onChangeText={setInput}
                             multiline
                             maxLength={1000}
-                            editable={!isOtherUserBlocked} // ← DISABLE INPUT IF BLOCKED
+                            editable={!isOtherUserBlocked}
                         />
                     </View>
 
@@ -662,6 +679,7 @@ const styles = StyleSheet.create({
         minHeight: 44,
         maxHeight: 120,
         justifyContent: 'center',
+        // marginBottom: 10,
     },
     input: {
         flex: 1,

@@ -103,7 +103,6 @@ const ReportHistoryScreen = ({navigation}) => {
             <TouchableOpacity
                 style={styles.reportCard}
                 activeOpacity={0.8}
-                onPress={() => navigation.navigate('ReportDetailsScreen', {reportId: item.id})}
             >
                 <View style={styles.statusBadgeContainer}>
                     <LinearGradient
@@ -129,7 +128,6 @@ const ReportHistoryScreen = ({navigation}) => {
                     <Text style={styles.reportDate}>{formatDate(item.reportedAt)}</Text>
                 </View>
 
-                <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
             </TouchableOpacity>
         );
     };

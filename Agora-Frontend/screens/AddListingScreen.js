@@ -461,11 +461,9 @@ const styles = StyleSheet.create({
         COLORS.dark.bg,
     }
     ,
-
     container: {
         padding: 20,
-        paddingBottom:
-            40,
+        paddingBottom: 60,
     }
     ,
 

@@ -100,7 +100,6 @@ const MyListingsScreen = ({navigation, scrollY}) => {
             setListings(prev => prev.filter(l => l.id !== itemToDelete.id));
             setToast({visible: true, type: 'success', title: 'Deleted!', message: 'Listing deleted successfully'});
         } catch (error) {
-            console.error('Delete error:', error.response?.data || error.message);
             setToast({
                 visible: true,
                 type: 'error',

@@ -1,7 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import * as SecureStore from 'expo-secure-store';
-import * as Location from 'expo-location';
-import {ActivityIndicator, Animated, SafeAreaView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {
+    ActivityIndicator,
+    Animated,
+    Modal,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
 import {apiDelete, apiPost} from '../services/api';
 import {useProfileImage} from '../hooks/useProfileImage';
@@ -17,16 +26,21 @@ import ToastMessage from '../components/ToastMessage';
 import QuickActions from '../components/QuickActions';
 import SettingsOptionList from '../components/SettingsOptionList';
 import ProfileSection from '../components/ProfileSection';
+import Icon from "react-native-vector-icons/Ionicons";
 
 const SettingsScreen = ({navigation, scrollY}) => {
     const {currentUser: user, loading, isGuest, fetchUser, clearAuthData} = useUserStore();
+    //console.log("CUrrent user - > ", user);
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const {profileImage} = useProfileImage();
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
-    const [userLocation, setUserLocation] = useState('Fetching...');//Make sure to verify this.
+    const [collegeModalVisible, setCollegeModalVisible] = useState(false);
 
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const showSkeleton = loading || !user;
+
     const showToast = ({type, title, message}) => {
         setToast({visible: true, type, title, message});
     };
@@ -34,35 +48,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
     useEffect(() => {
         fetchUser();
     }, []);
-
-    useEffect(() => {
-        (async () => {
-            try {
-                const {status} = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    setUserLocation('Permission denied');
-                    return;
-                }
-
-                const loc = await Location.getCurrentPositionAsync({});
-                const geo = await Location.reverseGeocodeAsync({
-                    latitude: loc.coords.latitude,
-                    longitude: loc.coords.longitude,
-                });
-
-                if (geo.length > 0) {
-                    const {city, region, country} = geo[0];
-                    setUserLocation(city || region || country || 'Unknown');
-                } else {
-                    setUserLocation('Unavailable');
-                }
-            } catch (err) {
-                console.log('Location fetch error:', err);
-                setUserLocation('Error');
-            }
-        })();
-    }, []);
-
 
     const handleLogout = async () => {
         setLogoutModalVisible(false);
@@ -117,6 +102,44 @@ const SettingsScreen = ({navigation, scrollY}) => {
         }
     };
 
+    const CampusInfoModal = () => (
+        <Modal
+            animationType="fade"
+            transparent={true}
+            visible={collegeModalVisible}
+            onRequestClose={() => setCollegeModalVisible(false)}
+        >
+            <View style={styles.modalOverlay}>
+                <Animated.View style={styles.campusCard}>
+                    {/* Top Decoration */}
+                    <View style={styles.iconCircle}>
+                        <Icon name="school" size={40} color="#fff"/>
+                    </View>
+
+                    <Text style={styles.campusTitle}>Welcome to the Club</Text>
+
+                    <Text style={styles.campusName}>
+                        {user?.collegeName || "Our Favorite Campus"}
+                    </Text>
+
+                    <Text style={styles.campusMessage}>
+                        Hey {user?.firstName || 'Legend'}! You’re officially part of the Agora community.
+                        Whether you're buying textbooks or selling gear, you're connecting with
+                        verified students from your campus and colleges everywhere.
+                        Safe, student-driven, and built for you!
+                    </Text>
+
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => setCollegeModalVisible(false)}
+                    >
+                        <Text style={styles.closeButtonText}>Awesome!</Text>
+                    </TouchableOpacity>
+                </Animated.View>
+            </View>
+        </Modal>
+    );
+
     if (loading || !user) {
         return (
             <SafeAreaView style={styles.safeArea}>
@@ -129,210 +152,224 @@ const SettingsScreen = ({navigation, scrollY}) => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
-            <Animated.ScrollView
-                contentContainerStyle={styles.container}
-                showsVerticalScrollIndicator={false}
-                onScroll={Animated.event(
-                    [{nativeEvent: {contentOffset: {y: scrollY}}}],
-                    {useNativeDriver: true})}
-                scrollEventThrottle={16}
-            >
-                {/* Header */}
-                <View style={styles.headerSection}>
-                    <Text style={styles.header}>Settings</Text>
-                    <Text style={styles.subHeader}>Manage your account and preferences</Text>
-                </View>
 
-                {/* Profile Card */}
-                <ProfileSection
-                    user={
-                        isGuest
-                            ? {name: 'Guest User', email: 'guest@studex.app'}
-                            : user
-                    }
-                    profileImage={
-                        isGuest
-                            ? 'https://i.pravatar.cc/100?img=1'
-                            : profileImage || user?.avatar
-                    }
-                    verified={!isGuest}
-                    buttonLabel={isGuest ? 'Login to Continue' : 'View Profile'}
-                    onButtonPress={() => {
-                        if (isGuest) {
+            {showSkeleton ? (
+                <SettingsScreenSkeleton/>
+            ) : (
+                <Animated.ScrollView
+                    contentContainerStyle={styles.container}
+                    showsVerticalScrollIndicator={false}
+                    onScroll={Animated.event(
+                        [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                        {useNativeDriver: true})}
+                    scrollEventThrottle={16}
+                >
+                    {/* Header */}
+                    <View style={styles.headerSection}>
+                        <Text style={styles.header}>Settings</Text>
+                        <Text style={styles.subHeader}>Manage your account and preferences</Text>
+                    </View>
+
+                    {/* Profile Card */}
+                    <ProfileSection
+                        user={
+                            isGuest
+                                ? {name: 'Guest User', email: 'guest@studex.app'}
+                                : user
+                        }
+                        profileImage={
+                            isGuest
+                                ? 'https://i.pravatar.cc/100?img=1'
+                                : profileImage || user?.avatar
+                        }
+                        verified={!isGuest}
+                        buttonLabel={isGuest ? 'Login to Continue' : 'View Profile'}
+                        onButtonPress={() => {
+                            if (isGuest) {
+                                showToast({
+                                    type: 'info',
+                                    title: 'Login Required',
+                                    message: 'Sign in to view your full profile'
+                                });
+                                navigation.replace('Login');
+                            } else {
+                                navigation.navigate('UserProfileScreen');
+                            }
+                        }}
+                        onPress={isGuest ? () => {
                             showToast({
                                 type: 'info',
-                                title: 'Login Required',
-                                message: 'Sign in to view your full profile'
+                                title: 'Profile Locked',
+                                message: 'Login to unlock your profile features'
                             });
-                            navigation.replace('Login');
-                        } else {
-                            navigation.navigate('UserProfileScreen');
-                        }
-                    }}
-                    onPress={isGuest ? () => {
-                        showToast({
-                            type: 'info',
-                            title: 'Profile Locked',
-                            message: 'Login to unlock your profile features'
-                        });
-                    } : () => navigation.navigate('UserProfileScreen')}
-                />
-
-
-                {/* Quick Actions */}
-                <QuickActions
-                    title="Quick Actions"
-                    actions={[
-                        {
-                            icon: 'heart',
-                            label: 'Favorites',
-                            gradient: ['#EC4899', '#DB2777'],
-                            onPress: () => {
-                                if (isGuest) {
-                                    showToast({
-                                        type: 'info',
-                                        title: 'Sign in required',
-                                        message: 'Please log in to view your favorites.',
-                                    });
-                                    return;
-                                }
-                                navigation.navigate('FavoritesScreen');
-                            },
-                        },
-                        {
-                            icon: 'shield-checkmark',
-                            label: 'Safety Center',
-                            gradient: ['#6366F1', '#4F46E5'],
-                            onPress: () => {
-                                navigation.navigate('SafetyCenterScreen');
-                            },
-                        },
-                    ]}
-                />
-
-                <SettingsOptionList
-                    title="Preferences"
-                    options={[
-                        {
-                            icon: 'language',
-                            iconType: 'ion',
-                            label: 'Language',
-                            gradient: ['#6366F1', '#4F46E5'],
-                            value: 'English',
-                            onPress: () => {
-                            },
-                        },
-                        {
-                            icon: 'school',
-                            iconType: 'ion',
-                            label: 'My Campus',
-                            description: '',
-                            gradient: ['#10B981', '#059669'],
-                            value: isGuest ? 'Guest Access' : (user?.collegeName || 'Not Set'),
-                            onPress: () => {
-                            },
-                        },
-                    ]}
-                />
-
-                <SettingsOptionList
-                    title="Privacy & Security"
-                    options={[
-                        {
-                            icon: 'ban',
-                            iconType: 'ion',
-                            label: 'Blocked Users',
-                            description: 'Manage users you have blocked',
-                            gradient: ['#EF4444', '#B91C1C'],
-                            onPress: () => navigation.navigate('BlockedUsersScreen'),
-                        },
-                        {
-                            icon: 'flag',
-                            iconType: 'ion',
-                            label: 'Report History',
-                            description: 'Track the status of your reports',
-                            gradient: ['#F59E0B', '#D97706'],
-                            onPress: () => navigation.navigate('ReportHistoryScreen'),
-                        },
-                    ]}
-                />
-
-                <SettingsOptionList
-                    title="Support & About"
-                    options={[
-                        {
-                            icon: 'help-outline',
-                            iconType: 'material',
-                            label: 'FAQ',
-                            gradient: ['#F59E0B', '#D97706'],
-                            onPress: () => navigation.navigate('FAQScreen'),
-                        },
-                        {
-                            icon: 'headset',
-                            iconType: 'ion',
-                            label: 'Support',
-                            gradient: ['#3B82F6', '#2563EB'],
-                            onPress: () => navigation.navigate('SupportScreen'),
-                        },
-                        {
-                            icon: 'shield-checkmark',
-                            iconType: 'ion',
-                            label: 'Privacy Policy',
-                            gradient: ['#8B5CF6', '#7C3AED'],
-                            onPress: () => navigation.navigate('PrivacyPolicyScreen'),
-                        },
-                        {
-                            icon: 'information-circle',
-                            iconType: 'ion',
-                            label: 'About',
-                            gradient: ['#6B7280', '#4B5563'],
-                            onPress: () => navigation.navigate('AboutScreen'),
-                        },
-                    ]}
-                />
-
-                <SettingsOptionList
-                    title="Account Actions"
-                    options={[
-                        {
-                            icon: 'trash-outline',
-                            iconType: 'ion',
-                            label: 'Delete Account',
-                            description: 'Permanently remove your data',
-                            gradient: ['#FF416C', '#FF4B2B'],
-                            onPress: () => {
-                                if (isGuest) {
-                                    showToast({
-                                        type: 'info',
-                                        title: 'Guest Mode',
-                                        message: 'No account found to delete.',
-                                    });
-                                    return;
-                                }
-                                setDeleteModalVisible(true);
-                            },
-                        },
-                    ]}
-                />
-
-                {/* App Version */}
-                <View style={styles.versionContainer}>
-                    <Text style={styles.versionText}>Agora v1.0.0</Text>
-                </View>
-
-                {/* Logout Button */}
-                {!isGuest && (
-                    <Button
-                        title="Logout"
-                        variant="danger"
-                        size="large"
-                        icon="log-out-outline"
-                        iconPosition='left'
-                        fullWidth={true}
-                        onPress={() => setLogoutModalVisible(true)}
+                        } : () => navigation.navigate('UserProfileScreen')}
                     />
-                )}
-            </Animated.ScrollView>
+
+
+                    {/* Quick Actions */}
+                    <QuickActions
+                        title="Quick Actions"
+                        actions={[
+                            {
+                                icon: 'heart',
+                                label: 'Favorites',
+                                gradient: ['#EC4899', '#DB2777'],
+                                onPress: () => {
+                                    if (isGuest) {
+                                        showToast({
+                                            type: 'info',
+                                            title: 'Sign in required',
+                                            message: 'Please log in to view your favorites.',
+                                        });
+                                        return;
+                                    }
+                                    navigation.navigate('FavoritesScreen');
+                                },
+                            },
+                            {
+                                icon: 'shield-checkmark',
+                                label: 'Safety Center',
+                                gradient: ['#6366F1', '#4F46E5'],
+                                onPress: () => {
+                                    navigation.navigate('SafetyCenterScreen');
+                                },
+                            },
+                        ]}
+                    />
+
+                    <SettingsOptionList
+                        title="Preferences"
+                        options={[
+                            {
+                                icon: 'language',
+                                iconType: 'ion',
+                                label: 'Language',
+                                gradient: ['#6366F1', '#4F46E5'],
+                                value: 'English',
+                                onPress: () => {
+                                },
+                            },
+                            {
+                                icon: 'school',
+                                iconType: 'ion',
+                                label: 'My Campus',
+                                description: '',
+                                gradient: ['#10B981', '#059669'],
+                                value: isGuest ? 'Guest Access' : (user?.collegeName || 'Not Set'),
+                                onPress: () => {
+                                    if (isGuest) {
+                                        showToast({
+                                            type: 'info',
+                                            title: 'Login Required',
+                                            message: 'Sign in to join your college community!'
+                                        });
+                                    } else {
+                                        setCollegeModalVisible(true);
+                                    }
+                                },
+                            },
+                        ]}
+                    />
+
+                    <SettingsOptionList
+                        title="Privacy & Security"
+                        options={[
+                            {
+                                icon: 'ban',
+                                iconType: 'ion',
+                                label: 'Blocked Users',
+                                description: 'Manage users you have blocked',
+                                gradient: ['#EF4444', '#B91C1C'],
+                                onPress: () => navigation.navigate('BlockedUsersScreen'),
+                            },
+                            {
+                                icon: 'flag',
+                                iconType: 'ion',
+                                label: 'Report History',
+                                description: 'Track the status of your reports',
+                                gradient: ['#F59E0B', '#D97706'],
+                                onPress: () => navigation.navigate('ReportHistoryScreen'),
+                            },
+                        ]}
+                    />
+
+                    <SettingsOptionList
+                        title="Support & About"
+                        options={[
+                            {
+                                icon: 'help-outline',
+                                iconType: 'material',
+                                label: 'FAQ',
+                                gradient: ['#F59E0B', '#D97706'],
+                                onPress: () => navigation.navigate('FAQScreen'),
+                            },
+                            {
+                                icon: 'headset',
+                                iconType: 'ion',
+                                label: 'Support',
+                                gradient: ['#3B82F6', '#2563EB'],
+                                onPress: () => navigation.navigate('SupportScreen'),
+                            },
+                            {
+                                icon: 'shield-checkmark',
+                                iconType: 'ion',
+                                label: 'Privacy Policy',
+                                gradient: ['#8B5CF6', '#7C3AED'],
+                                onPress: () => navigation.navigate('PrivacyPolicyScreen'),
+                            },
+                            {
+                                icon: 'information-circle',
+                                iconType: 'ion',
+                                label: 'About',
+                                gradient: ['#6B7280', '#4B5563'],
+                                onPress: () => navigation.navigate('AboutScreen'),
+                            },
+                        ]}
+                    />
+
+                    <SettingsOptionList
+                        title="Account Actions"
+                        options={[
+                            {
+                                icon: 'trash-outline',
+                                iconType: 'ion',
+                                label: 'Delete Account',
+                                description: 'Permanently remove your data',
+                                gradient: ['#FF416C', '#FF4B2B'],
+                                onPress: () => {
+                                    if (isGuest) {
+                                        showToast({
+                                            type: 'info',
+                                            title: 'Guest Mode',
+                                            message: 'No account found to delete.',
+                                        });
+                                        return;
+                                    }
+                                    setDeleteModalVisible(true);
+                                },
+                            },
+                        ]}
+                    />
+
+                    {/* App Version */}
+                    <View style={styles.versionContainer}>
+                        <Text style={styles.versionText}>Agora v1.0.0</Text>
+                    </View>
+
+                    {/* Logout Button */}
+                    {!isGuest && (
+                        <Button
+                            title="Logout"
+                            variant="danger"
+                            size="large"
+                            icon="log-out-outline"
+                            iconPosition='left'
+                            fullWidth={true}
+                            onPress={() => setLogoutModalVisible(true)}
+                        />
+                    )}
+                </Animated.ScrollView>
+            )}
 
             {/* Logout Modal */}
             <ModalComponent
@@ -345,6 +382,8 @@ const SettingsScreen = ({navigation, scrollY}) => {
                 onPrimaryPress={handleLogout}
                 onSecondaryPress={() => setLogoutModalVisible(false)}
             />
+
+            <CampusInfoModal/>
 
             {/* Delete Account Modal */}
             <ModalComponent
@@ -371,7 +410,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
                     />
                 )
             }
-
             {/* Deletion Loading Overlay */}
             {isDeleting && (
                 <View style={styles.globalLoadingOverlay}>
@@ -442,6 +480,74 @@ const styles = StyleSheet.create({
         color: COLORS.dark.text,
         fontSize: 14,
         fontWeight: '600',
+    },
+
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    campusCard: {
+        backgroundColor: COLORS.dark.card,
+        borderRadius: 24,
+        padding: 24,
+        width: '100%',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 10},
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+    },
+    iconCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#10B981',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        marginTop: -60,
+        borderWidth: 5,
+        borderColor: COLORS.dark.bg,
+    },
+    campusTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: COLORS.dark.textSecondary,
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    campusName: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#10B981',
+        textAlign: 'center',
+        marginBottom: 16,
+        width: '100%',
+    },
+    campusMessage: {
+        fontSize: 15,
+        lineHeight: 22,
+        color: COLORS.dark.textTertiary,
+        textAlign: 'center',
+        marginBottom: 24,
+        width: '100%',
+    },
+    closeButton: {
+        backgroundColor: '#10B981',
+        paddingVertical: 14,
+        paddingHorizontal: 40,
+        borderRadius: THEME.borderRadius.full,
+        width: '100%',
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 16,
     },
 });
 

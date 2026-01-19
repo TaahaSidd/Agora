@@ -20,7 +20,7 @@ const CategoryScreen = ({route, navigation}) => {
         ...i,
         images: i.imageUrl && i.imageUrl.length > 0
             ? i.imageUrl.map(url => ({uri: url}))
-            : [require('../assets/LW.jpg')],
+            : [require('../assets/no-image.jpg')],
         name: i.title || 'Untitled',
     }));
 

@@ -249,6 +249,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 24,
         marginTop: 20,
+        marginBottom:20,
         alignItems: 'center',
         borderWidth: 1,
         borderColor: COLORS.dark.border,

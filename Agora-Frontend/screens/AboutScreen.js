@@ -1,22 +1,34 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
     Image,
     Linking,
+    Modal,
     SafeAreaView,
     ScrollView,
     StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader';
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
 
 export default function AboutScreen({navigation}) {
+    const insets = useSafeAreaInsets();
+
+    const [selectedFeature, setSelectedFeature] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    const openFeature = (feature) => {
+        setSelectedFeature(feature);
+        setIsModalVisible(true);
+    };
+
     const handleEmail = () => {
         Linking.openURL('mailto:hello.spicalabs@gmail.com');
     };
@@ -39,11 +51,30 @@ export default function AboutScreen({navigation}) {
             icon: 'shield-checkmark',
             label: 'Safe & Secure',
             desc: 'Campus-verified users',
+            detail: 'Every user on Agora must sign up with a valid college email. We also use a reputation system where you can see a seller’s trade history before meeting up.',
             gradient: ['#3B82F6', '#2563EB']
         },
-        {icon: 'flash', label: 'Fast & Easy', desc: 'List items in seconds', gradient: ['#10B981', '#059669']},
-        {icon: 'people', label: 'Community', desc: 'Connect with peers', gradient: ['#F59E0B', '#D97706']},
-        {icon: 'leaf', label: 'Sustainable', desc: 'Give items a second life', gradient: ['#EC4899', '#DB2777']},
+        {
+            icon: 'flash',
+            label: 'Fast & Easy',
+            desc: 'List items in seconds',
+            detail: 'Snap a photo, add a price, and your item is live! No complicated forms—just simple, student-to-student trading.',
+            gradient: ['#10B981', '#059669']
+        },
+        {
+            icon: 'people',
+            label: 'Community',
+            desc: 'Connect with peers',
+            detail: 'Agora is built exclusively for your campus. Meet up at familiar spots like the Library or Canteen for safe, face-to-face transactions.',
+            gradient: ['#F59E0B', '#D97706']
+        },
+        {
+            icon: 'leaf',
+            label: 'Sustainable',
+            desc: 'Give items a second life',
+            detail: 'Reduce waste by recycling textbooks, electronics, and furniture within the campus ecosystem. Better for the planet, better for your wallet.',
+            gradient: ['#EC4899', '#DB2777']
+        },
     ];
 
     const socialButtons = [
@@ -105,7 +136,12 @@ export default function AboutScreen({navigation}) {
                     <Text style={styles.sectionTitle}>Why Choose Agora?</Text>
                     <View style={styles.featuresGrid}>
                         {features.map((feature, index) => (
-                            <View key={index} style={styles.featureCard}>
+                            <TouchableOpacity
+                                key={index}
+                                style={styles.featureCard}
+                                onPress={() => openFeature(feature)} // 👈 Click to open modal
+                                activeOpacity={0.7}
+                            >
                                 <LinearGradient
                                     colors={feature.gradient}
                                     style={styles.featureIcon}
@@ -116,7 +152,15 @@ export default function AboutScreen({navigation}) {
                                 </LinearGradient>
                                 <Text style={styles.featureTitle}>{feature.label}</Text>
                                 <Text style={styles.featureText}>{feature.desc}</Text>
-                            </View>
+
+                                {/* Visual cue that it's clickable */}
+                                <Ionicons
+                                    name="information-circle-outline"
+                                    size={14}
+                                    color={COLORS.dark.textTertiary}
+                                    style={{marginTop: 8}}
+                                />
+                            </TouchableOpacity>
                         ))}
                     </View>
                 </View>
@@ -169,30 +213,31 @@ export default function AboutScreen({navigation}) {
                     </View>
                 </View>
 
-                {/* Social Media */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Follow Us</Text>
-                    <View style={styles.socialCard}>
-                        {socialButtons.map((social, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.socialButton}
-                                onPress={() => handleSocial(social.platform)}
-                                activeOpacity={0.85}
-                            >
-                                <LinearGradient
-                                    colors={social.gradient}
-                                    style={styles.socialIcon}
-                                    start={{x: 0, y: 0}}
-                                    end={{x: 1, y: 1}}
-                                >
-                                    <Ionicons name={social.icon} size={24} color="#fff"/>
-                                </LinearGradient>
-                                <Text style={styles.socialText}>{social.label}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+                {/*/!* Social Media *!/*/}
+                {/*<View style={styles.section}>*/}
+                {/*    <Text style={styles.sectionTitle}>Follow Us</Text>*/}
+                {/*    <View style={styles.socialCard}>*/}
+                {/*        {socialButtons.map((social, index) => (*/}
+                {/*            <TouchableOpacity*/}
+                {/*                key={index}*/}
+                {/*                style={styles.socialButton}*/}
+                {/*                onPress={() => handleSocial(social.platform)}*/}
+                {/*                activeOpacity={0.85}*/}
+                {/*            >*/}
+                {/*                <LinearGradient*/}
+                {/*                    colors={social.gradient}*/}
+                {/*                    style={styles.socialIcon}*/}
+                {/*                    start={{x: 0, y: 0}}*/}
+                {/*                    end={{x: 1, y: 1}}*/}
+                {/*                >*/}
+                {/*                    <Ionicons name={social.icon} size={24} color="#fff"/>*/}
+                {/*                </LinearGradient>*/}
+                {/*                <Text style={styles.socialText}>{social.label}</Text>*/}
+                {/*            </TouchableOpacity>*/}
+                {/*        ))}*/}
+                {/*    </View>*/}
+                {/*</View>*/}
+
 
                 {/* Legal Links */}
                 <View style={styles.section}>
@@ -228,6 +273,48 @@ export default function AboutScreen({navigation}) {
 
                 <Text style={styles.copyright}>© 2026 Agora. All rights reserved.</Text>
             </ScrollView>
+
+            {/* Feature Detail Modal */}
+            <Modal
+                visible={isModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setIsModalVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setIsModalVisible(false)}
+                >
+                    <View style={[
+                        styles.modalContent,
+                        {paddingBottom: Math.max(insets.bottom, 30)}
+                    ]}>
+                        <View style={styles.modalHandle}/>
+
+                        {selectedFeature && (
+                            <>
+                                <LinearGradient
+                                    colors={selectedFeature.gradient}
+                                    style={styles.modalIcon}
+                                >
+                                    <Ionicons name={selectedFeature.icon} size={32} color="#fff"/>
+                                </LinearGradient>
+
+                                <Text style={styles.modalTitle}>{selectedFeature.label}</Text>
+                                <Text style={styles.modalDescription}>{selectedFeature.detail}</Text>
+
+                                <TouchableOpacity
+                                    style={styles.modalCloseButton}
+                                    onPress={() => setIsModalVisible(false)}
+                                >
+                                    <Text style={styles.modalCloseText}>Got it</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -524,5 +611,65 @@ const styles = StyleSheet.create({
         color: COLORS.dark.textTertiary,
         textAlign: 'center',
         fontWeight: '500',
+        marginBottom: 20,
+    },
+
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: COLORS.dark.overlayHeavy,
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: COLORS.dark.card,
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        padding: 24,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+    },
+    modalHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: COLORS.dark.divider,
+        borderRadius: 2,
+        marginBottom: 24,
+    },
+    modalIcon: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: COLORS.dark.text,
+        marginBottom: 12,
+    },
+    modalDescription: {
+        fontSize: 16,
+        color: COLORS.dark.textSecondary,
+        textAlign: 'center',
+        lineHeight: 24,
+        marginBottom: 24,
+        paddingHorizontal: 10,
+    },
+    modalCloseButton: {
+        backgroundColor: COLORS.dark.cardElevated,
+        paddingHorizontal: 40,
+        paddingVertical: 14,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: COLORS.dark.border,
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalCloseText: {
+        color: COLORS.primary,
+        fontWeight: '800',
+        fontSize: 16,
     },
 });

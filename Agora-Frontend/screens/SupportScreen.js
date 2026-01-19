@@ -10,20 +10,6 @@ import {COLORS} from '../utils/colors';
 
 const SupportScreen = ({navigation}) => {
     const contactOptions = [
-        // {
-        //     title: 'Live Chat',
-        //     description: 'Chat with our support team',
-        //     icon: 'chatbubble-ellipses',
-        //     gradient: ['#3B82F6', '#2563EB'],
-        //     iconType: 'ion',
-        // },
-        // {
-        //     title: 'Submit a Ticket',
-        //     description: "We'll respond within 24hrs",
-        //     icon: 'support-agent',
-        //     gradient: ['#EF4444', '#DC2626'],
-        //     iconType: 'material',
-        // },
         {
             title: 'Email Us',
             description: 'hello.spicalabs@gmail.com',
@@ -107,29 +93,29 @@ const SupportScreen = ({navigation}) => {
                 </View>
 
                 {/* Quick Links */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Quick Links</Text>
+                {/*<View style={styles.section}>*/}
+                {/*    <Text style={styles.sectionTitle}>Quick Links</Text>*/}
 
-                    <View style={styles.quickLinksGrid}>
-                        {quickLinks.map((link, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.quickLinkCard}
-                                activeOpacity={0.85}
-                            >
-                                <LinearGradient
-                                    colors={link.gradient}
-                                    style={styles.quickLinkIcon}
-                                    start={{x: 0, y: 0}}
-                                    end={{x: 1, y: 1}}
-                                >
-                                    <Ionicons name={link.icon} size={24} color="#fff"/>
-                                </LinearGradient>
-                                <Text style={styles.quickLinkText}>{link.label}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+                {/*    <View style={styles.quickLinksGrid}>*/}
+                {/*        {quickLinks.map((link, index) => (*/}
+                {/*            <TouchableOpacity*/}
+                {/*                key={index}*/}
+                {/*                style={styles.quickLinkCard}*/}
+                {/*                activeOpacity={0.85}*/}
+                {/*            >*/}
+                {/*                <LinearGradient*/}
+                {/*                    colors={link.gradient}*/}
+                {/*                    style={styles.quickLinkIcon}*/}
+                {/*                    start={{x: 0, y: 0}}*/}
+                {/*                    end={{x: 1, y: 1}}*/}
+                {/*                >*/}
+                {/*                    <Ionicons name={link.icon} size={24} color="#fff"/>*/}
+                {/*                </LinearGradient>*/}
+                {/*                <Text style={styles.quickLinkText}>{link.label}</Text>*/}
+                {/*            </TouchableOpacity>*/}
+                {/*        ))}*/}
+                {/*    </View>*/}
+                {/*</View>*/}
 
                 {/* Info Card */}
                 <InfoBox
@@ -137,21 +123,21 @@ const SupportScreen = ({navigation}) => {
                     text="Our support team typically responds within 24 hours. For urgent issues, please use the live chat option."
                 />
 
-                {/* Social Media */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Follow Us</Text>
-                    <View style={styles.socialContainer}>
-                        {socialLinks.map((social, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.socialButton}
-                                activeOpacity={0.85}
-                            >
-                                <Ionicons name={social.icon} size={24} color={social.color}/>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+                {/*/!* Social Media *!/*/}
+                {/*<View style={styles.section}>*/}
+                {/*    <Text style={styles.sectionTitle}>Follow Us</Text>*/}
+                {/*    <View style={styles.socialContainer}>*/}
+                {/*        {socialLinks.map((social, index) => (*/}
+                {/*            <TouchableOpacity*/}
+                {/*                key={index}*/}
+                {/*                style={styles.socialButton}*/}
+                {/*                activeOpacity={0.85}*/}
+                {/*            >*/}
+                {/*                <Ionicons name={social.icon} size={24} color={social.color}/>*/}
+                {/*            </TouchableOpacity>*/}
+                {/*        ))}*/}
+                {/*    </View>*/}
+                {/*</View>*/}
             </ScrollView>
         </SafeAreaView>
     );
@@ -304,6 +290,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         gap: 16,
+        marginBottom:20,
     },
     socialButton: {
         width: 52,

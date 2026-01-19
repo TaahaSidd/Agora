@@ -658,6 +658,7 @@ const styles = StyleSheet.create({
         fontSize: THEME.fontSize.xs,
         color: COLORS.dark.textTertiary,
         marginTop: THEME.spacing[2],
+        marginBottom: 20,
         marginHorizontal: THEME.spacing.md,
         fontWeight: THEME.fontWeight.medium,
     },

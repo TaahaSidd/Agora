@@ -15,11 +15,11 @@ import {LinearGradient} from 'expo-linear-gradient';
 
 import Button from '../components/Button';
 import Card from '../components/Cards';
-import LoadingSpinner from '../components/LoadingSpinner';
 import BottomSheetMenu from '../components/BottomSheetMenu';
 import ReputationModal from '../components/ReputationModal';
 import ToastMessage from "../components/ToastMessage";
 import ModalComponent from "../components/Modal";
+import ProfileSkeleton from "../components/skeletons/ProfileSkeleton";
 
 import {useAverageRating} from '../hooks/useAverageRating';
 import {useSellerProfile} from '../hooks/useSellerProfile';
@@ -217,7 +217,7 @@ const ProfileScreen = ({navigation, route}) => {
     });
 
     if (loading) {
-        return <LoadingSpinner/>;
+        return <ProfileSkeleton/>;
     }
 
     return (
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     avatarContainer: {
         position: 'relative',
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 8,

@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     ActivityIndicator,
     Animated,
@@ -20,7 +20,6 @@ import {useChatRooms} from '../hooks/useChatRooms';
 import {useChatNotifications} from '../hooks/useChatNotifications';
 import {useMarkChatAsRead} from '../hooks/useMarkChatAsRead';
 import {deleteChatForMe} from "../utils/chatService";
-import { useChatBlocking } from '../context/ChatBlockingProvider';
 
 import LoadingSpinner from '../components/LoadingSpinner';
 import ModalComponent from '../components/Modal';
@@ -66,7 +65,6 @@ const ChatItemSkeleton = () => {
 const ChatScreen = ({scrollY}) => {
     const navigation = useNavigation();
     const {currentUser, loading, fetchUser, isGuest} = useUserStore();
-    const { isUserBlocked, blockedUserIds } = useChatBlocking();
     const markChatAsRead = useMarkChatAsRead();
     useChatNotifications(currentUser?.email, currentUser?.id);
 
@@ -142,46 +140,21 @@ const ChatScreen = ({scrollY}) => {
         return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
     };
 
-    // const filteredChats = chatRooms.filter(chat => {
-    //     const otherUser = chat.participantsInfo?.find(p => p.id !== currentUser.email);
-    //     const listingTitle = chat.listing?.title || '';
-    //     const matchesSearch = otherUser?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || listingTitle.toLowerCase().includes(searchQuery.toLowerCase());
-    //
-    //     if (filter === 'unread') {
-    //         const sanitizedEmail = sanitizeEmail(currentUser.email);
-    //         const userLastRead = chat.lastRead?.[sanitizedEmail]?.seconds ?? 0;
-    //         const lastMsgTimestamp = chat.lastMessage?.createdAt?.seconds ?? 0;
-    //         const isUnread = lastMsgTimestamp > 0 && lastMsgTimestamp > userLastRead && chat.lastMessage?.senderId !== currentUser.email;
-    //         return matchesSearch && isUnread;
-    //     }
-    //
-    //     return matchesSearch;
-    // });
+    const filteredChats = chatRooms.filter(chat => {
+        const otherUser = chat.participantsInfo?.find(p => p.id !== currentUser.email);
+        const listingTitle = chat.listing?.title || '';
+        const matchesSearch = otherUser?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || listingTitle.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const filteredChatRooms = useMemo(() => {
-        if (!chatRooms) return [];
+        if (filter === 'unread') {
+            const sanitizedEmail = sanitizeEmail(currentUser.email);
+            const userLastRead = chat.lastRead?.[sanitizedEmail]?.seconds ?? 0;
+            const lastMsgTimestamp = chat.lastMessage?.createdAt?.seconds ?? 0;
+            const isUnread = lastMsgTimestamp > 0 && lastMsgTimestamp > userLastRead && chat.lastMessage?.senderId !== currentUser.email;
+            return matchesSearch && isUnread;
+        }
 
-        return chatRooms.filter(chat => {
-            const otherUser = chat.participantsInfo?.find(p => p.id !== currentUser.email);
-
-            if (!otherUser) return true;
-
-            const otherUserId = otherUser.userId;
-
-            if (!otherUserId) {
-                console.warn('Missing userId in chat:', chat.id);
-                return true;
-            }
-
-            const isBlocked = isUserBlocked(otherUserId);
-
-            if (isBlocked) {
-                console.log('🚫 Hiding blocked chat with userId:', otherUserId);
-            }
-
-            return !isBlocked;
-        });
-    }, [chatRooms, blockedUserIds, currentUser]);
+        return matchesSearch;
+    });
 
     const unreadCount = chatRooms.filter(chat => {
         const sanitizedEmail = sanitizeEmail(currentUser.email);
@@ -281,7 +254,7 @@ const ChatScreen = ({scrollY}) => {
             <View style={styles.imageContainer}>
                 {/* Product Image */}
                 <Image
-                    source={imageUri ? {uri: imageUri} : require('../assets/LW.jpg')}
+                    source={imageUri ? {uri: imageUri} : require('../assets/no-image.jpg')}
                     style={styles.productImage}
                 />
                 {/* User Avatar Badge */}
@@ -337,7 +310,7 @@ const ChatScreen = ({scrollY}) => {
 
     const renderEmptyState = () => (<View style={styles.emptyState}>
         <View style={styles.emptyIcon}>
-            <CloudsSvg width={180} height={180}/>
+            <CloudsSvg width={240} height={200}/>
         </View>
         <Text style={styles.emptyTitle}>No active chats... yet!</Text>
         <Text style={styles.emptyText}>
@@ -409,21 +382,21 @@ const ChatScreen = ({scrollY}) => {
         </View>)}
 
         {/* Content Area */}
-        {isFetchingChats ? (renderSkeletonLoader()) : filteredChatRooms.length === 0 && chatRooms.length === 0 ? (renderEmptyState()) : filteredChatRooms.length === 0 && searchQuery ? (
+        {isFetchingChats ? (renderSkeletonLoader()) : filteredChats.length === 0 && chatRooms.length === 0 ? (renderEmptyState()) : filteredChats.length === 0 && searchQuery ? (
             <View style={styles.emptyState}>
                 <Ionicons name="search-outline" size={80} color={COLORS.dark.textTertiary}/>
                 <Text style={styles.emptyTitle}>No Results Found</Text>
                 <Text style={styles.emptyText}>
                     Try searching with a different name or item
                 </Text>
-            </View>) : filteredChatRooms.length === 0 && filter === 'unread' ? (<View style={styles.emptyState}>
+            </View>) : filteredChats.length === 0 && filter === 'unread' ? (<View style={styles.emptyState}>
             <Ionicons name="checkmark-done-outline" size={80} color={COLORS.dark.textTertiary}/>
             <Text style={styles.emptyTitle}>All Caught Up!</Text>
             <Text style={styles.emptyText}>
                 You have no unread messages
             </Text>
         </View>) : (<Animated.FlatList
-            data={filteredChatRooms}
+            data={filteredChats}
             keyExtractor={(item) => item.id}
             renderItem={renderChatItem}
             showsVerticalScrollIndicator={false}

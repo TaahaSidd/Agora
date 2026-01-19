@@ -2,14 +2,15 @@ import React from 'react';
 import {Linking, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {COLORS} from '../utils/colors';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import Button from '../components/Button';
 import AppHeader from '../components/AppHeader';
 
 export default function SafetyCenterScreen({navigation}) {
+    const insets = useSafeAreaInsets();
 
     const contactSupport = () => {
-        // You can link to your support email or a WhatsApp number
         Linking.openURL('mailto:support@agora-app.com');
     };
 
@@ -105,7 +106,10 @@ export default function SafetyCenterScreen({navigation}) {
 
 
         {/* Bottom Button */}
-        <View style={styles.bottomButton}>
+        <View style={[
+            styles.bottomButton,
+            {paddingBottom: Math.max(insets.bottom, 16)}
+        ]}>
             <Button
                 title="Report a Problem"
                 onPress={contactSupport}
