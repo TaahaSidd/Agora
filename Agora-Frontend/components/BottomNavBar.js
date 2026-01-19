@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Feather, FontAwesome5, Ionicons, MaterialIcons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {COLORS} from '../utils/colors';
@@ -11,12 +12,11 @@ import ModalComponent from './Modal';
 const BottomNavBar = ({active, onNavigate, isGuest, isPending}) => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
+    const insets = useSafeAreaInsets();
 
-    // ✅ GET UNREAD CHATS COUNT FROM FIREBASE
     const {currentUser} = useUserStore();
     const {chatRooms} = useChatRooms(currentUser?.email);
 
-    // Count unread messages from Firebase
     const hasUnreadChats = React.useMemo(() => {
         if (!chatRooms || !currentUser?.email) return false;
 
@@ -26,17 +26,14 @@ const BottomNavBar = ({active, onNavigate, isGuest, isPending}) => {
             const lastRead = chat.lastRead?.[sanitizedEmail];
             const lastMessage = chat.lastMessage;
 
-            // No last message = no unread
             if (!lastMessage) return false;
 
-            // Check if this message is from someone else (not me)
-            const isMyMessage = lastMessage.senderId === currentUser.email;
-            if (isMyMessage) return false; // Don't count my own messages as unread
 
-            // If no lastRead timestamp, it's unread
+            const isMyMessage = lastMessage.senderId === currentUser.email;
+            if (isMyMessage) return false;
+
             if (!lastRead) return true;
 
-            // If lastMessage is newer than lastRead, it's unread
             if (lastMessage.createdAt && lastRead) {
                 const lastMessageTime = lastMessage.createdAt.seconds || 0;
                 const lastReadTime = lastRead.seconds || 0;
@@ -89,9 +86,8 @@ const BottomNavBar = ({active, onNavigate, isGuest, isPending}) => {
             >
                 <View style={[styles.iconContainer, isActive && styles.iconContainerActive]}>
                     {renderIcon()}
-                    {/* ✅ UNREAD INDICATOR DOT */}
                     {showBadge && (
-                        <View style={styles.badge} />
+                        <View style={styles.badge}/>
                     )}
                 </View>
                 <Text style={[styles.label, isActive && styles.activeLabel]}>
@@ -102,7 +98,7 @@ const BottomNavBar = ({active, onNavigate, isGuest, isPending}) => {
     };
 
     return (
-        <View style={styles.wrapper}>
+        <View style={[styles.wrapper, {paddingBottom: Math.max(insets.bottom, 20)}]}>
             <View style={styles.container}>
                 <View style={styles.innerContainer}>
                     <NavItem
@@ -127,7 +123,7 @@ const BottomNavBar = ({active, onNavigate, isGuest, isPending}) => {
                         icon="message-square"
                         iconType="Feather"
                         label="Chats"
-                        showBadge={hasUnreadChats} // ✅ SHOW DOT IF UNREAD
+                        showBadge={hasUnreadChats}
                     />
 
                     <NavItem
@@ -183,7 +179,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         paddingHorizontal: 16,
-        paddingBottom: 20,
+       // paddingBottom: 20,
         backgroundColor: COLORS.transparent,
         pointerEvents: 'box-none',
     },

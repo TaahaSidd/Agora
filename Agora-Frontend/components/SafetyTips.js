@@ -41,6 +41,7 @@ const styles = StyleSheet.create({
         marginVertical: 16,
         borderWidth: 1,
         borderColor: COLORS.dark.border,
+        marginBottom:50,
     },
     header: {
         flexDirection: 'row',

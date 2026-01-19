@@ -1,9 +1,11 @@
 import React from 'react';
 import {Modal, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {COLORS} from '../utils/colors';
 
 const ReputationModal = ({visible, onClose, rating, onRatePress, isOwnProfile, isGuest, onAuthPress}) => {
+    const insets = useSafeAreaInsets();
     const getVibe = (score, reviewCount = 0) => {
 
         if (reviewCount === 0 || score === 0) return {
@@ -54,9 +56,11 @@ const ReputationModal = ({visible, onClose, rating, onRatePress, isOwnProfile, i
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
             <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-                <View style={styles.content}>
+                <View style={[
+                    styles.content,
+                    {paddingBottom: Math.max(insets.bottom, 30)}
+                ]}>
                     <View style={styles.handle}/>
-
                     <View style={[styles.iconCircle, {backgroundColor: vibe.color + '20'}]}>
                         <Ionicons name={vibe.icon} size={40} color={vibe.color}/>
                     </View>

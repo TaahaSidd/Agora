@@ -1,5 +1,6 @@
 import React from 'react';
 import {Modal, Platform, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {COLORS} from '../utils/colors';
 
@@ -14,6 +15,8 @@ const BottomSheetMenu = ({
                              isGuest,
                              onAuthRequired,
                          }) => {
+    const insets = useSafeAreaInsets();
+
     const handleAction = (item) => {
         if (item.label.includes('Share')) {
             onClose();
@@ -91,9 +94,11 @@ const BottomSheetMenu = ({
                 activeOpacity={1}
                 onPress={onClose}
             >
-                <View style={styles.bottomSheet}>
+                <View style={[
+                    styles.bottomSheet,
+                    {paddingBottom: Math.max(insets.bottom, 24)}
+                ]}>
                     <View style={styles.sheetHandle}/>
-
                     <View style={styles.sheetHeader}>
                         <Text style={styles.sheetTitle}>{title}</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -133,9 +138,9 @@ const BottomSheetMenu = ({
                                         <Text style={styles.menuDescription}>{item.description}</Text>
                                     </View>
                                     {isGuest && !item.label.includes('Share') ? (
-                                        <Ionicons name="lock-closed" size={18} color="#9CA3AF" />
+                                        <Ionicons name="lock-closed" size={18} color="#9CA3AF"/>
                                     ) : (
-                                        <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+                                        <Ionicons name="chevron-forward" size={20} color="#D1D5DB"/>
                                     )}
                                 </TouchableOpacity>
                                 {index !== options.length - 1 && <View style={styles.menuDivider}/>}

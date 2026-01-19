@@ -217,6 +217,8 @@ export const ListItemSkeleton = () => {
     );
 };
 
+
+
 const styles = StyleSheet.create({
     skeleton: {
         backgroundColor: COLORS.dark.card,
