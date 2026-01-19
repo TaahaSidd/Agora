@@ -11,10 +11,13 @@ import {
     View,
 } from "react-native";
 import {useNavigation, useRoute} from "@react-navigation/native";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {Image} from "expo-image";
 import ImageViewing from 'react-native-image-viewing';
+
 import Icon from "react-native-vector-icons/Ionicons";
 import Ionicons from "react-native-vector-icons/Ionicons";
+
 import SellerCard from "../components/SellerCard";
 import Button from "../components/Button";
 import Card from "../components/Cards";
@@ -31,10 +34,13 @@ import {useListings} from "../hooks/useListings";
 
 import {COLORS} from "../utils/colors";
 import {THEME} from "../utils/theme";
+import { formatPrice } from '../utils/formatters';
+
 
 const {height, width} = Dimensions.get("window");
 
 export default function ProductDetailsScreen() {
+    const insets = useSafeAreaInsets();
     const navigation = useNavigation();
     const route = useRoute();
     const product = route.params?.item;
@@ -281,7 +287,7 @@ export default function ProductDetailsScreen() {
                     </View>
 
                     {/* Price + Condition Badge */}
-                    <Text style={styles.productPrice}>{productPrice}</Text>
+                    <Text style={styles.productPrice}>{formatPrice(productPrice)}</Text>
 
                     {/* College Row */}
                     <View style={styles.infoRow}>
@@ -388,7 +394,13 @@ export default function ProductDetailsScreen() {
 
             {/* Floating Bottom Action Bar */}
             {!isOwnListing && (
-                <View style={styles.bottomBar}>
+                <View style={[
+                    styles.bottomBar,
+                    {
+                        paddingBottom: insets.bottom > 0 ? insets.bottom + 10 : 20,
+                        paddingTop: 12,
+                    }
+                ]}>
                     {isGuest ? (
                         <Button
                             title="Log In to Chat"
@@ -422,6 +434,7 @@ export default function ProductDetailsScreen() {
                 type="listing"
                 title="Listing Options"
                 isGuest={isGuest}
+
                 onAuthRequired={() => {
                     setShowMenu(false);
                     showToast({
@@ -434,9 +447,11 @@ export default function ProductDetailsScreen() {
                     setShowMenu(false);
                     shareItem({type: 'LISTING', title: product.title, id: product.id});
                 }}
-                onReport={() => {
+                onReport={isOwnListing ? null : () => {
                     setShowMenu(false);
-                    navigation.navigate('ReportListingScreen', {listingId: product.id});
+                    navigation.navigate('ReportListingScreen', {
+                        listingId: product.id,
+                    });
                 }}
             />
 
@@ -528,7 +543,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: THEME.fontSize['2xl'],
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.dark.textSecondary,
         lineHeight: THEME.fontSize['2xl'] * 1.3,
         letterSpacing: -0.5,
         paddingRight: THEME.spacing.md,
@@ -536,7 +551,7 @@ const styles = StyleSheet.create({
     productPrice: {
         fontSize: THEME.fontSize['3xl'],
         fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.primaryLight,
+        color: COLORS.gray400,
         letterSpacing: -0.8,
         marginBottom: THEME.spacing.lg,
     }, infoRow: {

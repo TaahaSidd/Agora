@@ -2,7 +2,10 @@ import React from 'react';
 import {View, Text, Image, StyleSheet, TouchableOpacity, Dimensions} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
+
 import {COLORS} from '../utils/colors';
+import { formatPrice } from '../utils/formatters';
+
 
 const {width} = Dimensions.get('window');
 
@@ -19,7 +22,7 @@ export default function NearestCard({item, onPress}) {
                     source={
                         item.images && item.images.length
                             ? item.images[0]
-                            : require('../assets/LW.jpg')
+                            : require('../assets/no-image.jpg')
                     }
                     style={styles.image}
                     resizeMode="cover"
@@ -55,7 +58,7 @@ export default function NearestCard({item, onPress}) {
                 {/* Price Row */}
                 <View style={styles.bottomRow}>
                     <View style={styles.priceContainer}>
-                        <Text style={styles.price}>{item.price}</Text>
+                        <Text style={styles.price}>{formatPrice(item.price)}</Text>
                     </View>
                     <View style={styles.arrowCircle}>
                         <Ionicons name="arrow-forward" size={14} color="#fff"/>

@@ -142,7 +142,7 @@ const MyListingRowCard = ({item, onEdit, onDelete}) => {
                     {/* Image */}
                     <View style={styles.imageWrapper}>
                         <Image
-                            source={item.images?.length ? item.images[0] : require('../assets/LW.jpg')}
+                            source={item.images?.length ? item.images[0] : require('../assets/no-image.jpg')}
                             style={styles.image}
                             resizeMode="cover"
                         />

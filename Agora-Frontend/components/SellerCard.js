@@ -9,7 +9,7 @@ import {LinearGradient} from "expo-linear-gradient";
 const SellerCard = ({seller, sellerSince, onPress}) => {
     const {rating, loading} = useAverageRating('seller', seller.id);
 
-    let sellerAvatar = seller?.profileImage || require("../assets/804948.png");
+    let sellerAvatar = seller?.profileImage || require("../assets/defaultProfile.png");
     if (typeof sellerAvatar === "string" && sellerAvatar.includes("localhost")) {
         sellerAvatar = sellerAvatar.replace("localhost", "192.168.8.15");
     }

@@ -1,10 +1,14 @@
 import React, {useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
+
 import {THEME} from '../utils/theme';
 import {COLORS} from '../utils/colors';
+import { formatPrice } from '../utils/formatters';
+
 import FavoriteButton from './FavoriteButton';
 
 const Card = ({item, horizontal = false, showToast}) => {
@@ -76,7 +80,7 @@ const Card = ({item, horizontal = false, showToast}) => {
 
                 {/* Price & Arrow */}
                 <View style={styles.priceRow}>
-                    <Text style={styles.price}>{item.price}</Text>
+                    <Text style={styles.price}>{formatPrice(item.price)}</Text>
                     <View style={styles.arrowCircle}>
                         <Ionicons name="arrow-forward" size={12} color="#fff"/>
                     </View>
