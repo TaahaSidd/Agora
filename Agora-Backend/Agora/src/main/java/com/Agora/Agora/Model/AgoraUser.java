@@ -4,6 +4,7 @@ import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.UserStatus;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,10 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Getter
@@ -46,6 +44,7 @@ public class AgoraUser implements UserDetails {
     private String mobileNumber;
 
     @Column(length = 255)
+    @JsonIgnore
     private String password;
 
     @Column(length = 255)
@@ -60,7 +59,7 @@ public class AgoraUser implements UserDetails {
     @Column(nullable = false)
     private UserStatus userStatus;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "user_blocks",
             joinColumns = @JoinColumn(name = "blocker_id"),
@@ -90,6 +89,27 @@ public class AgoraUser implements UserDetails {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // 1. Auto-delete their Listings
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @Builder.Default
+    private List<Listings> myListings = new ArrayList<>();
+
+    // 2. Auto-delete their Favorites (Likes)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Favorite> myFavorites = new ArrayList<>();
+
+    // 3. Auto-delete Reports they made
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Report> reportsSubmitted = new ArrayList<>();
+
+    // 4. Auto-delete Reports made against them
+    @OneToMany(mappedBy = "reportedUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Report> reportsAgainstMe = new ArrayList<>();
+
     // Helper Methods
     public boolean isAdmin() {
         return UserRole.ADMIN.equals(this.role);
@@ -97,7 +117,7 @@ public class AgoraUser implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override

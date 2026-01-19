@@ -2,6 +2,7 @@ package com.Agora.Agora.Model;
 
 import com.Agora.Agora.Model.Enums.ItemCondition;
 import com.Agora.Agora.Model.Enums.ItemStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -61,6 +62,7 @@ public class Listings {
 
     // Relations.
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
     @JoinColumn(name = "seller_id")
     private AgoraUser seller;
 
@@ -68,4 +70,11 @@ public class Listings {
     @JoinColumn(name = "college_id")
     private College college;
 
+    @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Favorite> likedByUsers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Report> reports = new ArrayList<>();
 }
