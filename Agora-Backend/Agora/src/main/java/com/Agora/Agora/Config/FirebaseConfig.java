@@ -3,66 +3,43 @@ package com.Agora.Agora.Config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.firebase.auth.FirebaseAuth;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PostConstruct;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class FirebaseConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(FirebaseConfig.class);
+    @Bean
+    public FirebaseAuth firebaseAuth() throws IOException {
+        if (FirebaseApp.getApps().isEmpty()) {
+            String base64Config = System.getenv("FIREBASE_JSON_BASE64");
+            InputStream serviceAccount;
 
-    public FirebaseConfig() {
-        log.info("🔧 FirebaseConfig constructor called");
-        System.out.println("🔧 FirebaseConfig constructor called");
-    }
-
-    @PostConstruct
-    public void init() {
-        log.info("🔥 @PostConstruct init() method called");
-        System.out.println("🔥 @PostConstruct init() method called");
-
-        try {
-            if (FirebaseApp.getApps().isEmpty()) {
-                log.info("🔥 Initializing Firebase Admin SDK...");
-                System.out.println("🔥 Initializing Firebase Admin SDK...");
-
-                String firebaseCredentials = System.getenv("FIREBASE_CREDENTIALS");
-
-                if (firebaseCredentials == null || firebaseCredentials.isEmpty()) {
-                    log.error("❌ FIREBASE_CREDENTIALS not found!");
-                    System.err.println("❌ FIREBASE_CREDENTIALS not found!");
-                    throw new IllegalStateException("FIREBASE_CREDENTIALS environment variable is not set");
-                }
-
-                log.info("✅ FIREBASE_CREDENTIALS found, length: {}", firebaseCredentials.length());
-                System.out.println("✅ FIREBASE_CREDENTIALS found, length: " + firebaseCredentials.length());
-
-                InputStream serviceAccount = new ByteArrayInputStream(
-                        firebaseCredentials.getBytes(StandardCharsets.UTF_8)
-                );
-
-                FirebaseOptions options = FirebaseOptions.builder()
-                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .build();
-
-                FirebaseApp.initializeApp(options);
-
-                log.info("✅ Firebase Admin SDK initialized successfully!");
-                System.out.println("✅ Firebase Admin SDK initialized successfully!");
+            if (base64Config != null && !base64Config.isEmpty()) {
+                // 🚀 PRODUCTION: Use the Base64 variable from Render
+                System.out.println("✅ Firebase: Initializing from Render Env Var");
+                byte[] decodedBytes = java.util.Base64.getDecoder().decode(base64Config);
+                serviceAccount = new ByteArrayInputStream(decodedBytes);
             } else {
-                log.info("ℹ️ Firebase already initialized");
-                System.out.println("ℹ️ Firebase already initialized");
+                // 💻 LOCAL: Fallback to your PC's local file
+                System.out.println("💻 Firebase: Env Var not found, checking local path...");
+                serviceAccount = getClass().getClassLoader()
+                        .getResourceAsStream("agoraapp-e84de-firebase-adminsdk-fbsvc-48f429f78e.json");
             }
-        } catch (Exception e) {
-            log.error("❌ Firebase initialization failed: {}", e.getMessage(), e);
-            System.err.println("❌ Firebase initialization failed: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Failed to initialize Firebase", e);
+
+            if (serviceAccount == null) {
+                throw new RuntimeException("❌ ERROR: Firebase credentials NOT FOUND!");
+            }
+
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .build();
+
+            FirebaseApp.initializeApp(options);
+            System.out.println("🚀 Firebase [DEFAULT] initialized successfully!");
         }
+        return FirebaseAuth.getInstance();
     }
 }
