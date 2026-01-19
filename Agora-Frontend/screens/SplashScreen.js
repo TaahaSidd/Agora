@@ -92,41 +92,36 @@ export default function SplashScreen({navigation}) {
             try {
                 const hasSeenOnboarding = await getOnboardingSeen();
 
-                // ✅ Check for authToken (OTP flow) OR accessToken (old flow)
                 let authToken = await SecureStore.getItemAsync('authToken');
                 if (!authToken) {
-                    authToken = await SecureStore.getItemAsync('accessToken'); // Fallback to old key
+                    authToken = await SecureStore.getItemAsync('accessToken');
                 }
 
                 const refreshToken = await SecureStore.getItemAsync('refreshToken');
 
-                // Show onboarding if never seen
                 if (!hasSeenOnboarding) {
                     navigation.replace('Onboarding', {guest: !authToken});
                     return;
                 }
 
-                // No tokens - go to login
                 if (!authToken && !refreshToken) {
                     console.log('🚫 No tokens found');
                     navigation.replace('Login');
                     return;
                 }
 
-                // Has authToken - validate and fetch user
                 if (authToken) {
                     try {
                         const {exp} = jwtDecode(authToken);
                         const jwtExpired = Date.now() >= exp * 1000;
 
                         if (!jwtExpired) {
-                            console.log('✅ Valid token, fetching user...');
+                            console.log('Valid token, fetching user...');
                             await useUserStore.getState().fetchUser();
                             const user = useUserStore.getState().currentUser;
 
-                            // Check verification status
                             if (!user || !user.id) {
-                                console.log('❌ No user found, logging out');
+                                console.log('No user found, logging out');
                                 await SecureStore.deleteItemAsync('authToken');
                                 await SecureStore.deleteItemAsync('accessToken');
                                 await SecureStore.deleteItemAsync('refreshToken');
@@ -135,51 +130,48 @@ export default function SplashScreen({navigation}) {
                             }
 
                             if (user.verificationStatus === 'PENDING') {
-                                console.log('⚠️ User pending, navigating to CompleteProfile');
+                                console.log('User pending, navigating to CompleteProfile');
                                 navigation.replace('CompleteProfileScreen');
                                 return;
                             }
 
-                            console.log('✅ User verified, navigating to MainLayout');
+                            console.log('User verified, navigating to MainLayout');
                             navigation.replace('MainLayout', {guest: false});
                             return;
                         }
 
-                        console.log('⏰ Token expired, will try refresh');
+                        console.log(' Token expired, will try refresh');
                     } catch (e) {
-                        console.log("❌ JWT decode failed:", e);
+                        console.log(" JWT decode failed:", e);
                     }
                 }
 
-                // Try refresh token
                 if (refreshToken) {
                     try {
-                        console.log('🔄 Refreshing token...');
+                        console.log(' Refreshing token...');
                         const res = await authApiPost('/auth/refresh', {refreshToken});
 
-                        // Save new token with new key
                         await SecureStore.setItemAsync('authToken', res.jwt);
                         if (res.refreshToken) {
                             await SecureStore.setItemAsync('refreshToken', res.refreshToken);
                         }
 
-                        // Fetch user
                         await useUserStore.getState().fetchUser();
                         const user = useUserStore.getState().currentUser;
 
                         if (!user || !user.id) {
-                            console.log('❌ No user after refresh');
+                            console.log(' No user after refresh');
                             navigation.replace('Login');
                             return;
                         }
 
                         if (user.verificationStatus === 'PENDING') {
-                            console.log('⚠️ User pending after refresh');
+                            console.log('️ User pending after refresh');
                             navigation.replace('CompleteProfileScreen');
                             return;
                         }
 
-                        console.log('✅ Refresh successful');
+                        console.log('Refresh successful');
                         navigation.replace('MainLayout', {guest: false});
                         return;
                     } catch (err) {
@@ -192,14 +184,12 @@ export default function SplashScreen({navigation}) {
                     }
                 }
 
-                // Fallback - no valid auth
-                console.log('🚫 No valid auth, going to login');
+                console.log(' No valid auth, going to login');
                 navigation.replace('Login');
 
             } catch (error) {
-                console.log('❌ Splash error:', error);
+                console.log(' Splash error:', error);
 
-                // If 401/403, clear tokens
                 if (error.response?.status === 401 || error.response?.status === 403) {
                     await SecureStore.deleteItemAsync('authToken');
                     await SecureStore.deleteItemAsync('accessToken');

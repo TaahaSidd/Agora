@@ -77,11 +77,6 @@ export default function SignUpScreen({navigation}) {
             setColleges(data);
         } catch (error) {
             console.error('Failed to fetch colleges:', error);
-            showToast({
-                type: 'error',
-                title: 'Error',
-                message: 'Failed to load colleges',
-            });
         }
     };
 
