@@ -218,9 +218,9 @@ public class DtoMapper {
             }
         }
 
-        if (report.getListings() != null) {
-            dto.setListingId(report.getListings().getId());
-            dto.setReportedListingTitle(report.getListings().getTitle());
+        if (report.getListing() != null) {
+            dto.setListingId(report.getListing().getId());
+            dto.setReportedListingTitle(report.getListing().getTitle());
         }
 
         dto.setReportType(report.getReportType());
