@@ -1,10 +1,10 @@
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import { apiGet } from '../services/api';
-import { useCurrentUser } from './useCurrentUser';
+import {useUserStore} from "../stores/userStore";
 
 export const useProfileImage = () => {
-    const { user } = useCurrentUser();
+    const { user } = useUserStore();
     const [profileImage, setProfileImage] = useState(null);
     const [loading, setLoading] = useState(true);
 

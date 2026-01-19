@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { apiPost } from '../services/api';
 
 export const useCategoryItems = (category) => {
     const [items, setItems] = useState([]);
@@ -10,18 +11,17 @@ export const useCategoryItems = (category) => {
         const fetchCategoryItems = async () => {
             setLoading(true);
             try {
-                const response = await axios.post(
-                    "http://192.168.8.15:9000/Agora/listing/search",
-                    { category }
-                );
+                const response = await apiPost('/listing/search', { category });
 
-                const formattedItems = response.data.map(item => ({
+                const data = Array.isArray(response) ? response : response.data || [];
+
+                const formattedItems = data.map(item => ({
                     ...item,
                     name: item.title || item.name || 'Untitled',
                     price: item.price ? `₹ ${item.price}` : 'N/A',
                     images: item.imageUrl && item.imageUrl.length > 0
                         ? item.imageUrl.map(url => ({ uri: url }))
-                        : [require('../assets/LW.jpg')],
+                        : [require('../assets/no-image.jpg')],
                     seller: item.seller || {},
                     college: item.college || {},
                     itemCondition: item.itemCondition || 'Used',

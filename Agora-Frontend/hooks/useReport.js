@@ -1,9 +1,9 @@
 import {useState} from "react";
 import {makeReport} from "../services/reportApi";
-import {useCurrentUser} from "./useCurrentUser";
+import {useUserStore} from "../stores/userStore";
 
 export const useReport = () => {
-    const {user} = useCurrentUser();
+    const {user} = useUserStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 

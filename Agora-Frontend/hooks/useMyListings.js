@@ -17,7 +17,7 @@ export const useMyListings = () => {
                     price: item.price ? `₹ ${item.price}` : 'N/A',
                     images: item.imageUrl && item.imageUrl.length > 0
                         ? item.imageUrl.map(url => ({ uri: url }))
-                        : [require('../assets/LW.jpg')],
+                        : [require('../assets/no-image.jpg')],
                 }));
 
                 setListings(formatted);

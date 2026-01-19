@@ -19,7 +19,7 @@ export const useFavorites = () => {
                     images:
                         item.imageUrl && item.imageUrl.length > 0
                             ? item.imageUrl.map(url => ({ uri: url }))
-                            : [require('../assets/LW.jpg')],
+                            : [require('../assets/no-image.jpg')],
                 }));
 
                 setFavorites(formatted);
