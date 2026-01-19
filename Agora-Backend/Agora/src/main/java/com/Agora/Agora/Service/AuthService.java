@@ -44,7 +44,6 @@ public class AuthService {
     private final DtoMapper dto;
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
-    // ✅ LOGIN ONLY - User must exist
     @Transactional
     public LoginResponseDto loginWithOtp(OtpLoginRequestDto req) {
         log.info("🔑 Login with OTP");
@@ -56,13 +55,11 @@ public class AuthService {
                 throw new RuntimeException("Invalid Firebase Token: no phone number found");
             }
 
-            // ✅ User MUST exist for login
             AgoraUser user = userRepo.findByMobileNumber(phoneNumber)
                     .orElseThrow(() -> new RuntimeException("Account not found. Please sign up first."));
 
             log.info("Existing user logging in: {}", phoneNumber);
 
-            // Update push token if provided
             if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
                 user.setExpoPushToken(req.getExpoPushToken());
                 user = userRepo.save(user);
@@ -213,22 +210,51 @@ public class AuthService {
                 .build();
     }
 
+//    public LoginResponseDto login(LoginRequestDto req) {
+//        Authentication authentication = authenticationManager
+//                .authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
+//
+//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//        AgoraUser user = userRepo.findByUserEmail(userDetails.getUsername())
+//                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+//
+//        String jwt = jwtTokenProvider.generateToken(user);
+//        RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user);
+//
+//        return LoginResponseDto.builder()
+//                .jwt(jwt)
+//                .refreshToken(refreshTokenEntity.getToken())
+//                .id(user.getId())
+//                .userName(user.getUsername())
+//                .userEmail(user.getUserEmail())
+//                .firstName(user.getFirstName())
+//                .lastName(user.getLastName())
+//                .mobileNumber(user.getMobileNumber())
+//                .verificationStatus(user.getVerificationStatus())
+//                .message("Login successful!")
+//                .build();
+//    }
+
+
     public LoginResponseDto login(LoginRequestDto req) {
+        // 1. Authenticate the user
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        AgoraUser user = userRepo.findByUserEmail(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        // 2. The principal is your AgoraUser object.
+        // Cast it directly so you don't need to call userRepo again.
+        AgoraUser user = (AgoraUser) authentication.getPrincipal();
 
+        // 3. Generate tokens
         String jwt = jwtTokenProvider.generateToken(user);
         RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user);
 
+        // 4. Build response using the 'user' object we already have
         return LoginResponseDto.builder()
                 .jwt(jwt)
                 .refreshToken(refreshTokenEntity.getToken())
                 .id(user.getId())
-                .userName(user.getUsername())
+                .userName(user.getUserName()) // Use your custom getter or variable
                 .userEmail(user.getUserEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())

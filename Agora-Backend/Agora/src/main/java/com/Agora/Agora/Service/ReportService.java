@@ -59,7 +59,7 @@ public class ReportService {
                 case LISTING -> {
                     Listings listing = listingsRepo.findById(req.getReportedListingId())
                             .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
-                    report.setListings(listing);
+                    report.setListing(listing);
                     report.setTargetId(listing.getId());
                 }
                 case MESSAGE, CHAT_ROOM -> {

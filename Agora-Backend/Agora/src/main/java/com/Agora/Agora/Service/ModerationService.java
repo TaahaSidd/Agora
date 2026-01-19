@@ -71,8 +71,8 @@ public class ModerationService {
 
         report.setStatus(req.getStatus());
         report.setModerationNotes(req.getModerationNotes());
-        if (Boolean.TRUE.equals(req.getActionOnListing()) && report.getListings() != null) {
-            listingService.deleteListingCloudinary(report.getListings().getId());
+        if (Boolean.TRUE.equals(req.getActionOnListing()) && report.getListing() != null) {
+            listingService.deleteListingCloudinary(report.getListing().getId());
         }
         if (Boolean.TRUE.equals(req.getActionOnUser() && report.getReportedUser() != null)) {
             AgoraUser reportedUser = report.getReportedUser();

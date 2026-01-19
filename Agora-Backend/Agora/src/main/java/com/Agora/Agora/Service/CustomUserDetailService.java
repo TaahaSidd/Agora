@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
@@ -28,32 +30,73 @@ public class CustomUserDetailService implements UserDetailsService {
 //                        "User not found with phone: " + formattedPhone));
 //    }
 
+//    @Override
+//    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+//        log.info("🔍 JWT identifier received: {}", username);
+//        String formattedPhone = extractPhoneNumber(username);
+//
+//        AgoraUser user = userRepo.findByMobileNumber(formattedPhone)
+//                .orElseThrow(() -> new UsernameNotFoundException(
+//                        "User not found with phone: " + formattedPhone));
+//
+//        if (user.getUserStatus() == UserStatus.DELETED) {
+//            log.warn("🚫 Access denied: User {} has been deleted.", formattedPhone);
+//            throw new UsernameNotFoundException("This account has been deactivated.");
+//        }
+//
+//        return user;
+//    }
+
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.info("🔍 JWT identifier received: {}", username);
-        String formattedPhone = extractPhoneNumber(username);
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        log.info("🔍 Login identifier received: {}", identifier);
 
-        AgoraUser user = userRepo.findByMobileNumber(formattedPhone)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with phone: " + formattedPhone));
+        // 1. Try to find by Email first (Perfect for Admin)
+        Optional<AgoraUser> user = userRepo.findByUserEmail(identifier);
 
-        if (user.getUserStatus() == UserStatus.DELETED) {
-            log.warn("🚫 Access denied: User {} has been deleted.", formattedPhone);
+        // 2. If not found by email, format as phone and try mobile column
+        if (user.isEmpty()) {
+            String formattedPhone = formatIfPhoneNumber(identifier);
+            user = userRepo.findByMobileNumber(formattedPhone);
+        }
+
+        // 3. Final Check
+        AgoraUser foundUser = user.orElseThrow(() ->
+                new UsernameNotFoundException("User not found with: " + identifier));
+
+        // 4. Status Check
+        if (foundUser.getUserStatus() == UserStatus.DELETED) {
+            log.warn("🚫 Access denied: User {} is deleted.", identifier);
             throw new UsernameNotFoundException("This account has been deactivated.");
         }
 
-        return user;
+        return foundUser;
     }
 
-    private String extractPhoneNumber(String username) {
-        String basePhone = username.contains("@") ? username.split("@")[0] : username;
+//    private String extractPhoneNumber(String username) {
+//        String basePhone = username.contains("@") ? username.split("@")[0] : username;
+//
+//        if (!basePhone.startsWith("+91")) {
+//            basePhone = "+91" + basePhone;
+//        }
+//
+//        log.info("🔧 Extracted: {} → {}", username, basePhone);
+//        return basePhone;
+//    }
 
-        if (!basePhone.startsWith("+91")) {
-            basePhone = "+91" + basePhone;
+    private String formatIfPhoneNumber(String input) {
+        // If it's an email, don't touch it
+        if (input.contains("@")) {
+            return input;
         }
 
-        log.info("🔧 Extracted: {} → {}", username, basePhone);
-        return basePhone;
+        // If it's a raw phone number, ensure +91 prefix
+        String phone = input;
+        if (!phone.startsWith("+91")) {
+            phone = "+91" + phone;
+        }
+        log.info("🔧 Formatted Phone: {} → {}", input, phone);
+        return phone;
     }
 
 }
