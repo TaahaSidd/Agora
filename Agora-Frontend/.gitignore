@@ -81,6 +81,6 @@ yarn-error.*
 #firebase
 *-firebase-adminsdk*.json
 
-# IntelliJ / IDEA
+# IntelliJ / IDEAw
 .idea/
 *.iml
