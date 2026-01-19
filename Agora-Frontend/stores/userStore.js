@@ -44,6 +44,7 @@ export const useUserStore = create((set, get) => ({
             }
 
             const data = await apiGet('/profile/myProfile');
+            // console.log("DATA =", data);
 
             const mappedUser = {
                 id: data.id,
@@ -69,7 +70,7 @@ export const useUserStore = create((set, get) => ({
                 isGuest: false
             });
             await SecureStore.setItemAsync('currentUser', JSON.stringify(mappedUser));
-            // console.log("Mapped User", mappedUser);
+            //console.log("Mapped User", mappedUser);
 
         } catch (err) {
             console.log('UserStore: Fetch user failed (likely unauthorized or network)');
