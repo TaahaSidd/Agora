@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-//This file is responsible for sending accessToken and refreshToken to the user.
 @Getter
 @Setter
 @Builder
@@ -18,13 +17,13 @@ public class LoginResponseDto {
 
     private String jwt;
     private String refreshToken;
+
     private Long id;
     private String userName;
     private String userEmail;
     private String firstName;
     private String lastName;
     private String mobileNumber;
-    private String idCardNo;
 
     private String collegeId;
 

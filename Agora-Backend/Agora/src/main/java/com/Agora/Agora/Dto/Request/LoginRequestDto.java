@@ -22,6 +22,4 @@ public class LoginRequestDto {
     @Size(min = 6, max = 20)
     private String password;
 
-    // private String mobileNumber; // will be using different dto for mobile login.
-    // now we move on with email login.
 }
