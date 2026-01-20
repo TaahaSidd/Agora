@@ -2,18 +2,13 @@ package com.Agora.Agora.Model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.Agora.Agora.Model.Enums.MessageType;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,14 +37,17 @@ public class Message {
     private BigDecimal offerPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     private ChatRoom chatRoom;
+
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     private AgoraUser sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     private AgoraUser recipient;
 
     @Enumerated(EnumType.STRING)
     private MessageType messageType;
-
 }

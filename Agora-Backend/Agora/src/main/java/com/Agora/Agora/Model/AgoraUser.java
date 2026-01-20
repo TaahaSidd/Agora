@@ -31,7 +31,7 @@ public class AgoraUser implements UserDetails {
     @Column(unique = true, length = 50)
     private String userName;
 
-    @Column(unique = true, length = 100)
+    @Column(unique = true, nullable = false, length = 100)
     private String userEmail;
 
     @Column
@@ -40,7 +40,7 @@ public class AgoraUser implements UserDetails {
     @Column
     private String lastName;
 
-    @Column(unique = true, nullable = false, length = 20)
+    @Column(unique = true, length = 20, nullable = true)
     private String mobileNumber;
 
     @Column(length = 255)
@@ -97,18 +97,56 @@ public class AgoraUser implements UserDetails {
 
     // 2. Auto-delete their Favorites (Likes)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
     private List<Favorite> myFavorites = new ArrayList<>();
 
     // 3. Auto-delete Reports they made
     @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
     private List<Report> reportsSubmitted = new ArrayList<>();
 
     // 4. Auto-delete Reports made against them
     @OneToMany(mappedBy = "reportedUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
     private List<Report> reportsAgainstMe = new ArrayList<>();
+
+    // 5. Auto-delete Notifications
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
+    private List<Notification> myNotifications = new ArrayList<>();
+
+    // 6. Auto-delete RefreshToken
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private RefreshToken refreshToken;
+
+    // 7. Auto-delete Reviews I wrote
+    @OneToMany(mappedBy = "reviewer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
+    private List<Review> reviewsIWrote = new ArrayList<>();
+
+    // 8. Auto-delete Reviews on my items
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
+    private List<Review> reviewsOnMyItems = new ArrayList<>();
+
+    // 9. Auto-delete my Follow records (people I follow)
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
+    private List<Follow> following = new ArrayList<>();
+
+    // 10. Auto-delete my Follower records (people following me)
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
+    private List<Follow> followers = new ArrayList<>();
 
     // Helper Methods
     public boolean isAdmin() {
@@ -127,7 +165,7 @@ public class AgoraUser implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.mobileNumber;
+        return this.userEmail;
     }
 
     public String getUserName() {

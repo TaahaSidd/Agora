@@ -3,6 +3,7 @@ package com.Agora.Agora.Model;
 import com.Agora.Agora.Model.Enums.ItemCondition;
 import com.Agora.Agora.Model.Enums.ItemStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -71,10 +72,23 @@ public class Listings {
     private College college;
 
     @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
     private List<Favorite> likedByUsers = new ArrayList<>();
 
     @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
     private List<Report> reports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "listings", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
+    private List<Notification> notifications = new ArrayList<>();
+
+    // Auto-delete reviews about this listing
+    @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 }
