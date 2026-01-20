@@ -48,29 +48,20 @@ public class CustomUserDetailService implements UserDetailsService {
 //    }
 
     @Override
-    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
-        log.info("🔍 Login identifier received: {}", identifier);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        log.info("🔍 Login identifier received: {}", email);
 
-        // 1. Try to find by Email first (Perfect for Admin)
-        Optional<AgoraUser> user = userRepo.findByUserEmail(identifier);
+        // Find by email (primary method now)
+        AgoraUser user = userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // 2. If not found by email, format as phone and try mobile column
-        if (user.isEmpty()) {
-            String formattedPhone = formatIfPhoneNumber(identifier);
-            user = userRepo.findByMobileNumber(formattedPhone);
-        }
-
-        // 3. Final Check
-        AgoraUser foundUser = user.orElseThrow(() ->
-                new UsernameNotFoundException("User not found with: " + identifier));
-
-        // 4. Status Check
-        if (foundUser.getUserStatus() == UserStatus.DELETED) {
-            log.warn("🚫 Access denied: User {} is deleted.", identifier);
+        // Status Check
+        if (user.getUserStatus() == UserStatus.DELETED) {
+            log.warn("🚫 Access denied: User {} is deleted.", email);
             throw new UsernameNotFoundException("This account has been deactivated.");
         }
 
-        return foundUser;
+        return user;
     }
 
 //    private String extractPhoneNumber(String username) {

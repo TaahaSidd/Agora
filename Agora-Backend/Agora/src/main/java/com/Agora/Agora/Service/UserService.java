@@ -5,11 +5,9 @@ import com.Agora.Agora.Dto.Response.UserResponseDto;
 import com.Agora.Agora.Mapper.DtoMapper;
 import com.Agora.Agora.Model.AgoraUser;
 import com.Agora.Agora.Model.College;
-import com.Agora.Agora.Model.Enums.ItemStatus;
 import com.Agora.Agora.Model.Enums.UserRole;
 import com.Agora.Agora.Model.Enums.UserStatus;
 import com.Agora.Agora.Model.Enums.VerificationStatus;
-import com.Agora.Agora.Model.Listings;
 import com.Agora.Agora.Repository.CollegeRepo;
 import com.Agora.Agora.Repository.ListingsRepo;
 import com.Agora.Agora.Repository.UserRepo;
@@ -23,7 +21,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -72,9 +69,9 @@ public class UserService {
 
     // Getting current User.
     public AgoraUser getCurrentUser() {
-        String phoneNumber = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepo.findByMobileNumber(phoneNumber)
-                .orElseThrow(() -> new UsernameNotFoundException("Phone user not found: " + phoneNumber));
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepo.findByUserEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("user email not found: " + userEmail));
     }
 
 

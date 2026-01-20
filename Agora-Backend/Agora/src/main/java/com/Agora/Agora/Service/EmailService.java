@@ -1,7 +1,9 @@
 package com.Agora.Agora.Service;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -258,128 +260,62 @@ public class EmailService {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 
-        String htmlContent = "</html>"
-                + "<!DOCTYPE html>"
+        String htmlContent = "<!DOCTYPE html>"
                 + "<html lang='en'>"
                 + "<head>"
                 + "<meta charset='UTF-8'>"
-                + "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-                + "<title>Password Reset OTP</title>"
                 + "</head>"
-                + "<body style='margin:0; padding:0; background-color:#F9FAFB; font-family:-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;'>"
-
-                // Main Container
+                + "<body style='margin:0; padding:0; background-color:#F9FAFB; font-family:sans-serif;'>"
                 + "<table width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color:#F9FAFB; padding:40px 20px;'>"
                 + "<tr><td align='center'>"
+                + "<table width='600' cellpadding='0' cellspacing='0' border='0' style='background-color:#ffffff; border-radius:24px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.05);'>"
 
-                // Email Card
-                + "<table width='600' cellpadding='0' cellspacing='0' border='0' style='background-color:#ffffff; border-radius:24px; box-shadow:0 4px 6px rgba(0,0,0,0.05); overflow:hidden;'>"
-
-                // Header with Logo
-                + "<tr>"
-                + "<td style='background:linear-gradient(135deg, "
-                + " 0%, #0066CC 100%); padding:40px 30px; text-align:center;'>"
-                + "<img src='http://localhost:9000/images/Logo-app.jpg' alt='Agora Logo' style='width:80px; height:80px; border-radius:20px; margin-bottom:16px; border:4px solid rgba(255,255,255,0.2);' />"
-                + "<h1 style='color:#ffffff; margin:0; font-size:28px; font-weight:800; letter-spacing:-0.5px;'>Password Reset</h1>"
-                + "</td>"
-                + "</tr>"
+                // Text-Based Header (Agora Branding)
+                + "<tr><td style='background:linear-gradient(135deg, #0066CC 0%, #004499 100%); padding:50px 30px; text-align:center;'>"
+                + "<div style='color:#ffffff; font-size:38px; font-weight:900; letter-spacing:-1px; margin-bottom:10px;'>Agora</div>"
+                + "<div style='height:2px; width:40px; background-color:rgba(255,255,255,0.4); margin:0 auto 20px auto;'></div>"
+                + "<h1 style='color:#ffffff; margin:0; font-size:24px; font-weight:700; opacity:0.9;'>Verify Your Account</h1>"
+                + "</td></tr>"
 
                 // Content Section
-                + "<tr>"
-                + "<td style='padding:40px 30px;'>"
+                + "<tr><td style='padding:40px 30px;'>"
+                + "<p style='color:#111827; font-size:16px; font-weight:600; margin-bottom:10px;'>Hello,</p>"
+                + "<p style='color:#6B7280; font-size:15px; margin-bottom:40px; line-height:1.6;'>Use the verification code below to securely sign in to your Agora account.</p>"
 
-                // Greeting
-                + "<p style='color:#111827; font-size:16px; font-weight:600; margin:0 0 24px 0; line-height:1.5;'>"
-                + "Hello,</p>"
-
-                + "<p style='color:#6B7280; font-size:15px; margin:0 0 32px 0; line-height:1.6;'>"
-                + "We received a request to reset your password. Use the verification code below to complete the process:</p>"
-
-                // OTP Box
-                + "<table width='100%' cellpadding='0' cellspacing='0' border='0' style='margin-bottom:32px;'>"
+                // MASSIVE OTP BOX
+                + "<table width='100%' border='0' cellpadding='0' cellspacing='0'>"
                 + "<tr><td align='center'>"
-                + "<div style='background-color:#F9FAFB; border:2px dashed #E5E7EB; border-radius:16px; padding:24px; display:inline-block;'>"
-                + "<p style='color:#6B7280; font-size:13px; font-weight:700; margin:0 0 8px 0; text-transform:uppercase; letter-spacing:0.5px;'>Your Verification Code</p>"
-                + "<div style='font-size:36px; font-weight:800; color:"
-                + "; letter-spacing:8px; font-family:\"Courier New\", monospace;'>"
+                + "<div style='background-color:#F9FAFB; border:2px solid #E5E7EB; border-radius:20px; padding:35px 20px; display:inline-block; min-width:280px;'>"
+                + "<p style='color:#9CA3AF; font-size:12px; font-weight:700; margin:0 0 15px 0; text-transform:uppercase; letter-spacing:2px;'>Your Verification Code</p>"
+                + "<div style='font-size:60px; font-weight:900; color:#0066CC; letter-spacing:14px; font-family:monospace; line-height:1;'>"
                 + otp
                 + "</div>"
                 + "</div>"
                 + "</td></tr>"
                 + "</table>"
 
-                // Time validity info
-                + "<table width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color:#FEF3C7; border-radius:12px; padding:16px; margin-bottom:32px;'>"
-                + "<tr>"
-                + "<td style='width:40px; vertical-align:top; padding-right:12px;'>"
-                + "<div style='width:32px; height:32px; background-color:#F59E0B; border-radius:16px; display:flex; align-items:center; justify-content:center;'>"
-                + "⏱️"
-                + "</div>"
-                + "</td>"
-                + "<td>"
-                + "<p style='color:#92400E; font-size:14px; font-weight:600; margin:0 0 4px 0;'>Time Sensitive</p>"
-                + "<p style='color:#78350F; font-size:13px; margin:0; line-height:1.5;'>This code will expire in <strong>10 minutes</strong>.</p>"
-                + "</td>"
-                + "</tr>"
-                + "</table>"
-
-                // Security notice
-                + "<table width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color:#DBEAFE; border-radius:12px; padding:16px; margin-bottom:32px;'>"
-                + "<tr>"
-                + "<td style='width:40px; vertical-align:top; padding-right:12px;'>"
-                + "<div style='width:32px; height:32px; background-color:#3B82F6; border-radius:16px; display:flex; align-items:center; justify-content:center;'>"
-                + "</div>"
-                + "</td>"
-                + "<td>"
-                + "<p style='color:#1E40AF; font-size:14px; font-weight:600; margin:0 0 4px 0;'>Security Tip</p>"
-                + "<p style='color:#1E3A8A; font-size:13px; margin:0; line-height:1.5;'>Never share this code with anyone.</p>"
-                + "</td>"
-                + "</tr>"
-                + "</table>"
-
-                // Divider
-                + "<div style='height:1px; background-color:#E5E7EB; margin:32px 0;'></div>"
-
-                // Didn't request section
-                + "<p style='color:#6B7280; font-size:14px; margin:0 0 8px 0; line-height:1.6;'>"
-                + "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>"
-
-                + "<p style='color:#9CA3AF; font-size:13px; margin:0; line-height:1.6;'>"
-                + "This is an automated message, please do not reply to this email.</p>"
-
-                + "</td>"
-                + "</tr>"
-
-                // Footer
-                + "<tr>"
-                + "<td style='background-color:#F9FAFB; padding:30px; text-align:center; border-top:1px solid #E5E7EB;'>"
-                + "<p style='color:#111827; font-size:15px; font-weight:700; margin:0 0 8px 0;'>The Agora Team</p>"
-                + "<p style='color:#9CA3AF; font-size:13px; margin:0 0 16px 0;'>Your Campus Marketplace</p>"
-                + "<div style='margin-top:20px;'>"
-                + "<a href='#' style='color:#6B7280; text-decoration:none; font-size:12px; margin:0 8px;'>Help Center</a>"
-                + "<span style='color:#D1D5DB;'>|</span>"
-                + "<a href='#' style='color:#6B7280; text-decoration:none; font-size:12px; margin:0 8px;'>Privacy Policy</a>"
-                + "<span style='color:#D1D5DB;'>|</span>"
-                + "<a href='#' style='color:#6B7280; text-decoration:none; font-size:12px; margin:0 8px;'>Contact Us</a>"
-                + "</div>"
-                + "<p style='color:#D1D5DB; font-size:11px; margin:20px 0 0 0;'>"
-                + "© 2025 Agora. All rights reserved."
-                + "</p>"
-                + "</td>"
-                + "</tr>"
-
-                + "</table>"
+                // Footer info
+                + "<p style='color:#9CA3AF; font-size:13px; margin-top:40px; text-align:center; line-height:1.5;'>"
+                + "This code is valid for <strong>10 minutes</strong>.<br/>"
+                + "If you didn't request this code, you can safely ignore this email.</p>"
                 + "</td></tr>"
-                + "</table>"
 
-                + "</body>";
+                // Simple Footer
+                + "<tr><td style='padding:0 30px 40px 30px; text-align:center;'>"
+                + "<p style='color:#111827; font-size:14px; font-weight:700; margin:0;'>The Agora Team</p>"
+                + "</td></tr>"
+
+                + "</table>"
+                + "</td></tr></table>"
+                + "</body></html>";
 
         helper.setTo(email);
-        helper.setSubject("Your Agora Password Reset Code");
+        helper.setSubject("Your Agora Verification Code");
         helper.setText(htmlContent, true);
+
         try {
             helper.setFrom("noreply@agora.com", "Agora");
-        } catch (UnsupportedEncodingException | MessagingException e) {
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
 
