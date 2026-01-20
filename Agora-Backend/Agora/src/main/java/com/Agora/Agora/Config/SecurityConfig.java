@@ -37,7 +37,7 @@ public class SecurityConfig {
                         // Auth endpoints
                         .requestMatchers(HttpMethod.POST, "/Agora/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/Agora/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/Agora/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/Agora/auth/complete-profile").permitAll()
 
                         .requestMatchers("/Agora/health").permitAll()
 
