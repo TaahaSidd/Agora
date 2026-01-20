@@ -6,6 +6,7 @@ import com.Agora.Agora.Dto.Request.OtpRegistrationRequestDto;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Repository.UserRepo;
 import com.Agora.Agora.Service.AuthService;
+import com.Agora.Agora.Service.OtpService;
 import com.Agora.Agora.Service.PasswordResetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final OtpService otpService;
     private final PasswordResetService resetService;
     private final UserRepo userRepo;
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -38,11 +40,17 @@ public class AuthController {
         return ResponseEntity.ok(authService.signupWithOtp(req));
     }
 
+//    @PutMapping("/complete-profile")
+//    public ResponseEntity<LoginResponseDto> completeProfile(
+//            Principal principal,
+//            @Valid @RequestBody OtpRegistrationRequestDto req) {
+//        return ResponseEntity.ok(authService.completeProfile(principal.getName(), req));
+//    }
+
     @PutMapping("/complete-profile")
     public ResponseEntity<LoginResponseDto> completeProfile(
-            Principal principal,
             @Valid @RequestBody OtpRegistrationRequestDto req) {
-        return ResponseEntity.ok(authService.completeProfile(principal.getName(), req));
+        return ResponseEntity.ok(authService.completeProfile(req.getUserEmail(), req));
     }
 
     @PostMapping("/login")
@@ -82,5 +90,38 @@ public class AuthController {
         Map<String, Boolean> response = new HashMap<>();
         response.put("exists", exists);
         return ResponseEntity.ok(response);
+    }
+
+
+    @PostMapping("/send-otp/login")
+    public ResponseEntity<Map<String, String>> sendOtpForLogin(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            otpService.sendOtpForLogin(email);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "OTP sent to " + email);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/send-otp/signup")
+    public ResponseEntity<Map<String, String>> sendOtpForSignup(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            otpService.sendOtpForSignup(email);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "OTP sent to " + email);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }
