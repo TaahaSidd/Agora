@@ -11,7 +11,7 @@ import com.Agora.Agora.Model.PasswordResetToken;
 import com.Agora.Agora.Repository.PasswordResetTokenRepo;
 import com.Agora.Agora.Repository.UserRepo;
 
-import jakarta.mail.MessagingException;
+// REMOVED: import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,7 +24,6 @@ public class PasswordResetService {
     private final PasswordEncoder passwordEncoder;
 
     public String sendResetOtp(String email) {
-        @SuppressWarnings("unused")
         AgoraUser user = userRepo.findByUserEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -37,10 +36,11 @@ public class PasswordResetService {
         token.setOtp(otp);
         token.setExpiryTime(expiry);
         resetRepo.save(token);
+
         try {
             emailService.sendOtpEmail(email, otp);
-        } catch (MessagingException e) {
-            System.out.println("Failed to send OTP email: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Failed to send OTP email: " + e.getMessage());
         }
         return "OTP sent to email";
     }
@@ -65,6 +65,5 @@ public class PasswordResetService {
         resetRepo.delete(token);
 
         return "Password reset successful";
-
     }
 }
