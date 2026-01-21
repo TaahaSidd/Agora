@@ -9,14 +9,14 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OtpLoginRequestDto {
+public class AuthRequestDto {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
 
-    @NotBlank(message = "OTP is required")
-    private String otp;
+    @NotBlank(message = "Password is required")
+    private String password;
 
     private Long collegeId;
 

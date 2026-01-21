@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// this class is used for login request.
 @Getter
 @Setter
 @NoArgsConstructor

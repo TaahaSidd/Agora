@@ -26,7 +26,9 @@ public class RegistrationReqDto {
     @NotBlank(message = "Last name cannot be blank")
     private String lastName;
 
-    // private String mobileNumber;
+    private String mobileNumber;
+
+    private String password;
 
     // @NotNull(message = "College id cannot be blank")
     // private Long collegeId;

@@ -1,7 +1,7 @@
 package com.Agora.Agora.Service;
 
+import com.Agora.Agora.Dto.Request.AuthRequestDto;
 import com.Agora.Agora.Dto.Request.LoginRequestDto;
-import com.Agora.Agora.Dto.Request.OtpLoginRequestDto;
 import com.Agora.Agora.Dto.Request.OtpRegistrationRequestDto;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Jwt.JwtTokenProvider;
@@ -86,22 +86,58 @@ public class AuthService {
 //            throw new RuntimeException("Login failed: " + e.getMessage());
 //        }
 //    }
+//
+//    @Transactional
+//    public LoginResponseDto loginWithOtp(OtpLoginRequestDto req) {
+//        log.info("🔑 Login attempt for: {}", req.getEmail());
+//
+//        // 1. Verify the OTP using your OtpService
+//        boolean isValid = otpService.verifyOtp(req.getEmail(), req.getOtp());
+//        if (!isValid) {
+//            throw new RuntimeException("Invalid or expired OTP");
+//        }
+//
+//        // 2. Find the existing user
+//        AgoraUser user = userRepo.findByUserEmail(req.getEmail())
+//                .orElseThrow(() -> new RuntimeException("Account not found. Please sign up first."));
+//
+//        // 3. Generate new tokens
+//        String jwt = jwtTokenProvider.generateToken(user);
+//        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+//
+//        return LoginResponseDto.builder()
+//                .jwt(jwt)
+//                .refreshToken(refreshToken.getToken())
+//                .id(user.getId())
+//                .userName(user.getUserName())
+//                .userEmail(user.getUserEmail())
+//                .mobileNumber(user.getMobileNumber())
+//                .firstName(user.getFirstName())
+//                .lastName(user.getLastName())
+//                .collegeId(user.getCollege() != null ? user.getCollege().getId().toString() : null)
+//                .verificationStatus(user.getVerificationStatus())
+//                .message("Welcome back!")
+//                .build();
+//    }
 
     @Transactional
-    public LoginResponseDto loginWithOtp(OtpLoginRequestDto req) {
-        log.info("🔑 Login attempt for: {}", req.getEmail());
+    public LoginResponseDto login(AuthRequestDto req) {
+        log.info("🔑 Password Login attempt for: {}", req.getEmail());
 
-        // 1. Verify the OTP using your OtpService
-        boolean isValid = otpService.verifyOtp(req.getEmail(), req.getOtp());
-        if (!isValid) {
-            throw new RuntimeException("Invalid or expired OTP");
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
+        );
+
+        // 2. Get the User object from the authentication result
+        AgoraUser user = (AgoraUser) authentication.getPrincipal();
+
+        // 3. Update Expo Token if provided
+        if (req.getExpoPushToken() != null) {
+            user.setExpoPushToken(req.getExpoPushToken());
+            userRepo.save(user);
         }
 
-        // 2. Find the existing user
-        AgoraUser user = userRepo.findByUserEmail(req.getEmail())
-                .orElseThrow(() -> new RuntimeException("Account not found. Please sign up first."));
-
-        // 3. Generate new tokens
+        // 4. Generate tokens
         String jwt = jwtTokenProvider.generateToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
@@ -111,29 +147,21 @@ public class AuthService {
                 .id(user.getId())
                 .userName(user.getUserName())
                 .userEmail(user.getUserEmail())
-                .mobileNumber(user.getMobileNumber())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .collegeId(user.getCollege() != null ? user.getCollege().getId().toString() : null)
                 .verificationStatus(user.getVerificationStatus())
-                .message("Welcome back!")
+                .message("Login successful!")
                 .build();
     }
 
     @Transactional
-    public LoginResponseDto signupWithOtp(OtpLoginRequestDto req) {
-        log.info("📝 Signup with Email OTP: {}", req.getEmail());
+    public LoginResponseDto signup(AuthRequestDto req) {
+        log.info("📝 Registering new user: {}", req.getEmail());
         try {
-            boolean isValid = otpService.verifyOtp(req.getEmail(), req.getOtp());
-
-            if (!isValid) {
-                throw new RuntimeException("Invalid or expired OTP");
-            }
-
+            // 1. Check if user already exists
             if (userRepo.findByUserEmail(req.getEmail()).isPresent()) {
                 throw new RuntimeException("Account already exists with this email. Please login instead.");
             }
 
+            // 2. Validate College
             if (req.getCollegeId() == null) {
                 throw new RuntimeException("College selection is required for signup");
             }
@@ -141,48 +169,53 @@ public class AuthService {
             College college = collegeRepo.findById(req.getCollegeId())
                     .orElseThrow(() -> new RuntimeException("Invalid college selected"));
 
+            // 3. Create User Entity
             AgoraUser user = new AgoraUser();
             user.setUserEmail(req.getEmail());
             user.setCollege(college);
 
+            // Use the actual password from the Request DTO instead of a random UUID
+            user.setPassword(passwordEncoder.encode(req.getPassword()));
+
+            // Generate a temporary username from email
             String emailPrefix = req.getEmail().split("@")[0];
             user.setUserName(emailPrefix + "_" + new Random().nextInt(1000));
 
-            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            user.setProfileImage("http://localhost:9000/images/placeHolder.png");
+            // Set placeholders and defaults
+            user.setProfileImage("https://your-production-url.com/images/placeHolder.png");
             user.setRole(UserRole.STUDENT);
             user.setUserStatus(UserStatus.ACTIVE);
-            user.setVerificationStatus(VerificationStatus.PENDING);
+            user.setVerificationStatus(VerificationStatus.PENDING); // Crucial for redirection in FD
             user.setCreatedAt(LocalDateTime.now());
 
             if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
                 user.setExpoPushToken(req.getExpoPushToken());
             }
 
+            // 4. Save to Database
             user = userRepo.save(user);
 
             String jwt = jwtTokenProvider.generateToken(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+            log.info("✅ Signup successful for: {}", req.getEmail());
 
             return LoginResponseDto.builder()
                     .jwt(jwt)
                     .refreshToken(refreshToken.getToken())
                     .id(user.getId())
                     .userName(user.getUserName())
-                    .mobileNumber(user.getMobileNumber())
-                    .firstName(user.getFirstName())
-                    .lastName(user.getLastName())
+                    .userEmail(user.getUserEmail())
                     .collegeId(user.getCollege().getId().toString())
                     .verificationStatus(user.getVerificationStatus())
-                    .message("Please complete your profile to get verified")
+                    .message("Account created! Please complete your profile.")
                     .build();
 
         } catch (Exception e) {
-            log.error("Signup failed", e);
+            log.error("❌ Signup failed", e);
             throw new RuntimeException("Signup failed: " + e.getMessage());
         }
     }
-
 
     @Transactional
     public LoginResponseDto completeProfile(String email, OtpRegistrationRequestDto req) {
@@ -235,6 +268,7 @@ public class AuthService {
                 .message("Profile completed! You can now create listings.")
                 .build();
     }
+
 //
 //    @Transactional
 //    public LoginResponseDto completeProfile(String phoneNumber, OtpRegistrationRequestDto req) {
