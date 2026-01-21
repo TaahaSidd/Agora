@@ -2,8 +2,16 @@ package com.Agora.Agora.Service;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,11 +21,15 @@ import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
     private final JavaMailSender javaMailSender;
+
+    @Value("${BREVO_API_KEY}")
+    private String brevoApiKey;
 
     public void sendEmail(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -255,70 +267,46 @@ public class EmailService {
         javaMailSender.send(mimeMessage);
     }
 
-    @SuppressWarnings("CallToPrintStackTrace")
-    public void sendOtpEmail(String email, String otp) throws MessagingException {
-        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+    public void sendOtpEmail(String email, String otp) {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "https://api.brevo.com/v3/smtp/email";
 
-        String htmlContent = "<!DOCTYPE html>"
-                + "<html lang='en'>"
-                + "<head>"
-                + "<meta charset='UTF-8'>"
-                + "</head>"
-                + "<body style='margin:0; padding:0; background-color:#F9FAFB; font-family:sans-serif;'>"
-                + "<table width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color:#F9FAFB; padding:40px 20px;'>"
-                + "<tr><td align='center'>"
-                + "<table width='600' cellpadding='0' cellspacing='0' border='0' style='background-color:#ffffff; border-radius:24px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.05);'>"
-
-                // Text-Based Header (Agora Branding)
+        // 1. Your HTML Template (Using the nice design you sent)
+        String htmlContent = "<!DOCTYPE html><html lang='en'><body style='margin:0; padding:0; background-color:#F9FAFB; font-family:sans-serif;'>"
+                + "<table width='100%' style='background-color:#F9FAFB; padding:40px 20px;'><tr><td align='center'>"
+                + "<table width='600' style='background-color:#ffffff; border-radius:24px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.05);'>"
                 + "<tr><td style='background:linear-gradient(135deg, #0066CC 0%, #004499 100%); padding:50px 30px; text-align:center;'>"
                 + "<div style='color:#ffffff; font-size:38px; font-weight:900; letter-spacing:-1px; margin-bottom:10px;'>Agora</div>"
-                + "<div style='height:2px; width:40px; background-color:rgba(255,255,255,0.4); margin:0 auto 20px auto;'></div>"
-                + "<h1 style='color:#ffffff; margin:0; font-size:24px; font-weight:700; opacity:0.9;'>Verify Your Account</h1>"
-                + "</td></tr>"
+                + "<h1 style='color:#ffffff; margin:0; font-size:24px; font-weight:700; opacity:0.9;'>Verify Your Account</h1></td></tr>"
+                + "<tr><td style='padding:40px 30px;'><p style='color:#111827; font-size:16px; font-weight:600;'>Hello,</p>"
+                + "<p style='color:#6B7280; font-size:15px; margin-bottom:40px;'>Use the verification code below to securely sign in.</p>"
+                + "<div style='background-color:#F9FAFB; border:2px solid #E5E7EB; border-radius:20px; padding:35px 20px; text-align:center;'>"
+                + "<div style='font-size:60px; font-weight:900; color:#0066CC; letter-spacing:14px; font-family:monospace;'>" + otp + "</div></div>"
+                + "<p style='color:#9CA3AF; font-size:13px; margin-top:40px; text-align:center;'>Code valid for 10 mins.</p></td></tr>"
+                + "</table></td></tr></table></body></html>";
 
-                // Content Section
-                + "<tr><td style='padding:40px 30px;'>"
-                + "<p style='color:#111827; font-size:16px; font-weight:600; margin-bottom:10px;'>Hello,</p>"
-                + "<p style='color:#6B7280; font-size:15px; margin-bottom:40px; line-height:1.6;'>Use the verification code below to securely sign in to your Agora account.</p>"
+        // 2. Build the JSON request body
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("sender", Map.of("name", "Agora Support", "email", "spicalabs@gmail.com"));
+        requestBody.put("to", List.of(Map.of("email", email)));
+        requestBody.put("subject", "Your Agora Verification Code");
+        requestBody.put("htmlContent", htmlContent);
 
-                // MASSIVE OTP BOX
-                + "<table width='100%' border='0' cellpadding='0' cellspacing='0'>"
-                + "<tr><td align='center'>"
-                + "<div style='background-color:#F9FAFB; border:2px solid #E5E7EB; border-radius:20px; padding:35px 20px; display:inline-block; min-width:280px;'>"
-                + "<p style='color:#9CA3AF; font-size:12px; font-weight:700; margin:0 0 15px 0; text-transform:uppercase; letter-spacing:2px;'>Your Verification Code</p>"
-                + "<div style='font-size:60px; font-weight:900; color:#0066CC; letter-spacing:14px; font-family:monospace; line-height:1;'>"
-                + otp
-                + "</div>"
-                + "</div>"
-                + "</td></tr>"
-                + "</table>"
+        // 3. Set Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", brevoApiKey);
 
-                // Footer info
-                + "<p style='color:#9CA3AF; font-size:13px; margin-top:40px; text-align:center; line-height:1.5;'>"
-                + "This code is valid for <strong>10 minutes</strong>.<br/>"
-                + "If you didn't request this code, you can safely ignore this email.</p>"
-                + "</td></tr>"
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-                // Simple Footer
-                + "<tr><td style='padding:0 30px 40px 30px; text-align:center;'>"
-                + "<p style='color:#111827; font-size:14px; font-weight:700; margin:0;'>The Agora Team</p>"
-                + "</td></tr>"
-
-                + "</table>"
-                + "</td></tr></table>"
-                + "</body></html>";
-
-        helper.setTo(email);
-        helper.setSubject("Your Agora Verification Code");
-        helper.setText(htmlContent, true);
-
+        // 4. Send the Request
         try {
-            helper.setFrom("noreply@agora.com", "Agora");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("✅ Email sent successfully via Brevo API!");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send email: " + e.getMessage());
         }
-
-        javaMailSender.send(mimeMessage);
     }
 }
