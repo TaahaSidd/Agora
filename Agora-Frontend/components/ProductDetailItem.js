@@ -50,12 +50,13 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textTertiary,
+        // Changed to light mode tertiary (soft gray)
+        color: COLORS.light.textTertiary,
         fontWeight: THEME.fontWeight.medium,
     },
     detailValue: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         fontWeight: THEME.fontWeight.semibold,
     },
     availabilityBadge: {

@@ -152,67 +152,70 @@ const BottomSheetMenu = ({
         </Modal>
     );
 };
-
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        backgroundColor: COLORS.dark.overlayHeavy,
+        // Using a softer semi-transparent black for light mode
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
         justifyContent: 'flex-end',
     },
     bottomSheet: {
-        backgroundColor: COLORS.dark.card,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        // Pure white background for the sheet
+        backgroundColor: COLORS.white,
+        borderTopLeftRadius: 28, // Slightly more rounded for premium feel
+        borderTopRightRadius: 28,
         paddingBottom: Platform.OS === 'ios' ? 34 : 20,
     },
     sheetHandle: {
-        width: 40,
-        height: 4,
-        backgroundColor: COLORS.dark.divider,
-        borderRadius: 2,
+        width: 36,
+        height: 5,
+        // Using light border color for the drag handle
+        backgroundColor: COLORS.light.border,
+        borderRadius: 3,
         alignSelf: 'center',
-        marginTop: 12,
-        marginBottom: 16,
+        marginTop: 10,
+        marginBottom: 10,
     },
     sheetHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingBottom: 16,
+        paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.divider,
+        borderBottomColor: COLORS.light.border,
     },
     sheetTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
+        letterSpacing: -0.5,
     },
     closeButton: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.bg, // Soft gray background
         alignItems: 'center',
         justifyContent: 'center',
     },
     menuOptions: {
-        paddingTop: 8,
+        paddingTop: 4,
     },
     menuOption: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 16,
+        paddingVertical: 14,
         paddingHorizontal: 20,
     },
     menuIconCircle: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 14,
-        backgroundColor: COLORS.dark.cardElevated,
+        // Background colors are provided in the options array (e.g., #DBEAFE)
     },
     menuTextContainer: {
         flex: 1,
@@ -220,18 +223,19 @@ const styles = StyleSheet.create({
     menuTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: COLORS.dark.text,
-        marginBottom: 2,
+        color: COLORS.light.text,
+        marginBottom: 1,
     },
     menuDescription: {
         fontSize: 13,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: '500',
     },
     menuDivider: {
         height: 1,
-        backgroundColor: COLORS.dark.divider,
+        backgroundColor: COLORS.light.border,
         marginHorizontal: 20,
+        opacity: 0.6,
     },
 });
 

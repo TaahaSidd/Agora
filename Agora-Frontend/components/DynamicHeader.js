@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, View} from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
+import {COLORS} from "../utils/colors";
 
 const DynamicHeader = ({userName = 'there'}) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -190,6 +191,8 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         marginBottom: 4,
         minHeight: 60,
+        // Background color for the container area
+        backgroundColor: COLORS.light.bg,
     },
     gradientWrapper: {
         position: 'absolute',
@@ -211,7 +214,8 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        // Changed from 0.3 to 0.4 for better visibility on light pastel gradients
+        backgroundColor: 'rgba(255, 255, 255, 0.4)',
         width: 100,
     },
     textContainer: {
@@ -223,11 +227,13 @@ const styles = StyleSheet.create({
         letterSpacing: -0.5,
         textAlign: 'center',
         paddingVertical: 4,
+        // Color is handled dynamically by currentMessage.textColor
     },
     subGreeting: {
         fontSize: 12,
         fontWeight: '600',
         opacity: 0.8,
+        color: COLORS.light.textSecondary, // Changed
     },
 });
 

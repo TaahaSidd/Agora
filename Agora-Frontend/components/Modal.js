@@ -156,22 +156,23 @@ const ModalComponent = ({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        // Using a slightly softer overlay for light mode
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     container: {
         width: 300,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed from dark.card
         borderRadius: 16,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border, // Changed from dark.border
     },
     title: {
         fontSize: 17,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text, // Changed from dark.text
         textAlign: 'center',
         paddingHorizontal: 24,
         paddingTop: 24,
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     },
     message: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
         textAlign: 'center',
         paddingHorizontal: 24,
         paddingBottom: 20,
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
     },
     divider: {
         height: 1,
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border,
     },
     buttonsContainer: {
         flexDirection: 'column',
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
     },
     buttonDivider: {
         height: 1,
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border,
     },
     primaryButtonText: {
         fontSize: 16,
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     secondaryButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         letterSpacing: -0.2,
     },
     deleteButtonText: {

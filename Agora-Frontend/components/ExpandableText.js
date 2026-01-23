@@ -46,14 +46,12 @@ const ExpandableText = ({ text, numberOfLines = 3, style }) => {
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
-        // No background, no border - minimal!
     },
     text: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
         fontWeight: THEME.fontWeight.medium,
     },

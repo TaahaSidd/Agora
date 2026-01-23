@@ -155,14 +155,13 @@ const CustomPicker = ({
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     container: {},
 
     label: {
         fontSize: 15,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text, // Changed
         marginBottom: 10,
     },
 
@@ -170,13 +169,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed
         borderRadius: 14,
         borderWidth: 1.5,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border, // Changed
         paddingHorizontal: 16,
         height: 52,
-        shadowColor: COLORS.shadow.medium,
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
@@ -201,12 +200,12 @@ const styles = StyleSheet.create({
     pickerText: {
         fontSize: 15,
         fontWeight: '500',
-        color: COLORS.dark.text,
+        color: COLORS.light.text, // Changed
         flex: 1,
     },
 
     placeholderText: {
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary, // Changed
         fontWeight: '500',
     },
 
@@ -220,16 +219,16 @@ const styles = StyleSheet.create({
 
     modalOverlay: {
         flex: 1,
-        backgroundColor: COLORS.dark.overlay,
+        backgroundColor: 'rgba(0,0,0,0.5)', // Changed to standard light overlay
         justifyContent: 'flex-end',
     },
 
     modalContent: {
-        backgroundColor: COLORS.dark.bgElevated,
+        backgroundColor: COLORS.white, // Changed
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         maxHeight: '80%',
-        shadowColor: COLORS.shadow.heavy,
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.15,
         shadowRadius: 12,
@@ -244,13 +243,13 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.divider,
+        borderBottomColor: COLORS.light.border, // Changed
     },
 
     modalTitle: {
         fontSize: 20,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text, // Changed
         letterSpacing: -0.3,
     },
 
@@ -258,7 +257,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.bg, // Changed
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -277,11 +276,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderRadius: 12,
         marginBottom: 8,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.bg, // Changed
     },
 
     optionItemSelected: {
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.white, // Changed
         borderWidth: 1.5,
         borderColor: COLORS.primary,
     },
@@ -300,7 +299,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.white, // Changed
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -309,7 +308,7 @@ const styles = StyleSheet.create({
     optionText: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary, // Changed
         flex: 1,
     },
 
@@ -319,7 +318,7 @@ const styles = StyleSheet.create({
     },
 
     optionTextDisabled: {
-        color: COLORS.dark.textDisabled,
+        color: COLORS.light.textTertiary, // Changed
     },
 
     checkmarkContainer: {

@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Animated} from 'react-native';
+import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
@@ -39,7 +39,7 @@ const AnimatedSearchBar = ({onPress}) => {
             <Ionicons
                 name="search"
                 size={20}
-                color={COLORS.dark.textTertiary}
+                color={COLORS.light.textTertiary}
                 style={styles.icon}
             />
 
@@ -59,22 +59,27 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: '#0A0A0A',
+        // Switched from #0A0A0A to your white/elevated color
+        backgroundColor: COLORS.white,
         borderRadius: THEME.borderRadius.full,
         paddingHorizontal: 18,
-        paddingVertical: 16,
-        minHeight: 56,
+        paddingVertical: 14, // Slightly tighter to match modern light UI
+        minHeight: 52,
+        // Using your light border color
         borderWidth: 1.5,
-        borderColor: '#1A1A1A',
+        borderColor: COLORS.light.border,
+        // Softened the shadow for white mode
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        elevation: 2,
     },
 
     icon: {
-        marginRight: 14,
+        marginRight: 12,
+        // Changed to light mode text color
+        color: COLORS.light.textTertiary,
     },
 
     placeholderContainer: {
@@ -84,15 +89,16 @@ const styles = StyleSheet.create({
     },
 
     searchPrefix: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '500',
-        color: COLORS.dark.textTertiary,
+        // Changed to light mode text secondary
+        color: COLORS.light.textSecondary,
         letterSpacing: -0.2,
     },
 
     searchTerm: {
-        fontSize: 16,
-        fontWeight: '800',
+        fontSize: 15,
+        fontWeight: '700', // Matches your AddListing label weight
         color: COLORS.primary,
         letterSpacing: -0.3,
     },

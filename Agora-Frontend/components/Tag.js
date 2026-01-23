@@ -6,83 +6,76 @@ import {COLORS} from "../utils/colors";
 import {THEME} from "../utils/theme";
 
 const TAG_STYLES = {
-    // Condition tags - for product listing
     condition: {
         New: {
-            bg: COLORS.successBgDark,
+            bg: COLORS.success + '15', // Light Green Tint
             text: COLORS.success,
             border: COLORS.success + '30',
         },
         'Like New': {
-            bg: COLORS.successBgDark,
-            text: COLORS.successLight,
-            border: COLORS.successLight + '30',
+            bg: COLORS.success + '15',
+            text: COLORS.success,
+            border: COLORS.success + '30',
         },
         Used: {
-            bg: COLORS.infoBgDark,
+            bg: COLORS.info + '15', // Light Blue Tint
             text: COLORS.info,
             border: COLORS.info + '30',
         },
         'Well Used': {
-            bg: COLORS.warningBgDark,
+            bg: COLORS.warning + '15', // Light Orange Tint
             text: COLORS.warning,
             border: COLORS.warning + '30',
         },
         Bad: {
-            bg: COLORS.errorBgDark,
+            bg: COLORS.error + '15', // Light Red Tint
             text: COLORS.error,
             border: COLORS.error + '30',
         },
         Default: {
-            bg: COLORS.dark.card,
-            text: COLORS.dark.textSecondary,
-            border: COLORS.dark.border,
+            bg: COLORS.light.bg,
+            text: COLORS.light.textSecondary,
+            border: COLORS.light.border,
         },
     },
 
-    // Category tags - for browse/explore
     category: {
-        bg: COLORS.dark.card,
-        text: COLORS.dark.text,
-        border: COLORS.dark.border,
-        activeBg: COLORS.primary + '20',
+        bg: COLORS.white,
+        text: COLORS.light.text,
+        border: COLORS.light.border,
+        activeBg: COLORS.primary + '15',
         activeText: COLORS.primary,
-        activeBorder: COLORS.primary + '50',
+        activeBorder: COLORS.primary + '40',
     },
 
-    // Info tags - posted time, location, etc
     info: {
-        bg: COLORS.dark.card,
-        text: COLORS.dark.textTertiary,
-        border: COLORS.dark.border,
+        bg: COLORS.light.bg,
+        text: COLORS.light.textTertiary,
+        border: COLORS.light.border,
     },
 
-    // Verified badge
     verified: {
-        bg: COLORS.successBgDark,
+        bg: COLORS.success + '15',
         text: COLORS.success,
         border: COLORS.success + '30',
     },
 
-    // Location tag
     location: {
-        bg: COLORS.dark.card,
-        text: COLORS.dark.textSecondary,
-        border: COLORS.dark.border,
+        bg: COLORS.light.bg,
+        text: COLORS.light.textSecondary,
+        border: COLORS.light.border,
     },
 
-    // College tag
     college: {
-        bg: COLORS.primary + '15',
-        text: COLORS.primaryLight,
-        border: COLORS.primary + '30',
+        bg: COLORS.primary + '10',
+        text: COLORS.primary,
+        border: COLORS.primary + '25',
     },
 
-    // Time/posted tag
     time: {
-        bg: COLORS.dark.card,
-        text: COLORS.dark.textTertiary,
-        border: COLORS.dark.border,
+        bg: COLORS.light.bg,
+        text: COLORS.light.textTertiary,
+        border: COLORS.light.border,
     },
 };
 
@@ -177,55 +170,45 @@ const styles = StyleSheet.create({
         marginBottom: THEME.spacing[2],
         alignSelf: "flex-start",
         maxWidth: 200,
+        // Ensure outlined variant looks good on light
+        borderWidth: 1,
     },
-
-    // Category tags (larger, more prominent)
     categoryTag: {
         paddingHorizontal: THEME.spacing[4],
         paddingVertical: THEME.spacing[2] + 2,
         borderRadius: THEME.borderRadius.lg,
     },
-
-    // Condition tags (medium size, badge-like)
     conditionTag: {
         paddingHorizontal: THEME.spacing[3],
         paddingVertical: THEME.spacing[1] + 2,
     },
-
-    // Interactive tags have subtle hover effect
     interactiveTag: {
-        shadowColor: COLORS.black,
+        shadowColor: "#000",
         shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 1,
     },
-
-    // Active state for category tags
     activeTag: {
         shadowColor: COLORS.primary,
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.15,
         shadowRadius: 4,
         elevation: 3,
     },
-
     icon: {
         marginRight: THEME.spacing[1] + 2,
     },
-
     text: {
         fontSize: THEME.fontSize.xs,
         fontWeight: THEME.fontWeight.semibold,
         flexShrink: 1,
         letterSpacing: THEME.letterSpacing.tight,
     },
-
     categoryText: {
         fontSize: THEME.fontSize.sm,
         fontWeight: THEME.fontWeight.semibold,
     },
-
     conditionText: {
         fontSize: THEME.fontSize.xs,
         fontWeight: THEME.fontWeight.bold,

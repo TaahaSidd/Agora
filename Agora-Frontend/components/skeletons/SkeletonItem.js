@@ -221,7 +221,7 @@ export const ListItemSkeleton = () => {
 
 const styles = StyleSheet.create({
     skeleton: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: '#E1E9EE', // Light gray base
         overflow: 'hidden',
     },
     shimmer: {
@@ -235,97 +235,58 @@ const styles = StyleSheet.create({
     container: {
         padding: 20,
         paddingBottom: 40,
-        backgroundColor: COLORS.dark.bg,
-    },
-    headerSection: {
-        marginBottom: 24,
-        marginTop: 24,
+        backgroundColor: COLORS.light.bg, // Changed
     },
     profileCard: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed
         borderRadius: 20,
         marginBottom: 24,
-    },
-    profileInfo: {
-        marginLeft: 16,
-        flex: 1,
-    },
-    section: {
-        marginBottom: 24,
-    },
-    quickActionsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     optionsCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed
         borderRadius: 20,
         padding: 4,
-    },
-    optionItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 16,
-        paddingHorizontal: 16,
-    },
-    optionLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     divider: {
         height: 1,
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border, // Changed
         marginHorizontal: 16,
     },
     statsContainer: {
         flexDirection: 'row',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed
         borderRadius: 20,
         padding: 20,
         marginBottom: 24,
         justifyContent: 'space-around',
-    },
-    statItem: {
-        alignItems: 'center',
-    },
-    infoCard: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 20,
-        padding: 20,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     productCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed
         borderRadius: 16,
         padding: 12,
-        shadowColor: COLORS.black,
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05, // Softer shadow for light mode
         shadowRadius: 8,
-        elevation: 8,
-    },
-    gridContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        padding: 16,
-    },
-    gridItem: {
-        width: '50%',
-        padding: 6,
+        elevation: 3,
     },
     listItem: {
         flexDirection: 'row',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
 });
 

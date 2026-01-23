@@ -5,36 +5,38 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../utils/colors';
 
 export default function AppHeader({
-    title,
-    centerComponent,
-    onBack,
-    rightIcon,
-    rightComponent,
-    onRightPress,
-}) {
-    const backgroundColor = COLORS.dark.bg;
-    const textColor = COLORS.dark.text;
-    const borderColor = COLORS.dark.border;
+                                      title,
+                                      centerComponent,
+                                      onBack,
+                                      rightIcon,
+                                      rightComponent,
+                                      onRightPress,
+                                  }) {
+    // UPDATED: Now using Light Theme constants
+    const backgroundColor = COLORS.light.bgElevated; // Pure White
+    const textColor = COLORS.light.text;            // Dark Charcoal
+    const borderColor = COLORS.light.border;        // Soft Gray
 
     return (
-        <SafeAreaView>
+        // edges={['top']} prevents extra padding at the bottom of the header
+        <SafeAreaView edges={['top']} style={{ backgroundColor }}>
             <View style={[styles.header, { backgroundColor, borderBottomColor: borderColor }]}>
 
                 {/* Back Button */}
                 {onBack ? (
-                    <TouchableOpacity onPress={onBack}>
+                    <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.iconArea}>
                         <Ionicons name="arrow-back" size={24} color={textColor} />
                     </TouchableOpacity>
                 ) : (
-                    <View style={{ width: 24 }} />
+                    <View style={styles.placeholder} />
                 )}
 
                 {/* Center Area */}
-                <View style={{ flex: 1, alignItems: 'center' }}>
+                <View style={styles.centerArea}>
                     {centerComponent ? (
                         centerComponent
                     ) : (
-                        <Text style={[styles.headerTitle, { color: textColor }]}>
+                        <Text style={[styles.headerTitle, { color: textColor }]} numberOfLines={1}>
                             {title}
                         </Text>
                     )}
@@ -44,11 +46,11 @@ export default function AppHeader({
                 {rightComponent ? (
                     rightComponent
                 ) : rightIcon ? (
-                    <TouchableOpacity onPress={onRightPress} style={styles.iconArea}>
+                    <TouchableOpacity onPress={onRightPress} style={styles.iconArea} activeOpacity={0.7}>
                         <Ionicons name={rightIcon} size={24} color={textColor} />
                     </TouchableOpacity>
                 ) : (
-                    <View style={{ width: 24 }} />
+                    <View style={styles.placeholder} />
                 )}
             </View>
         </SafeAreaView>
@@ -62,16 +64,25 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        borderBottomWidth: 1,
+        borderBottomWidth: 1, // Subtle separation from the gray body
+    },
+    centerArea: {
+        flex: 1,
+        alignItems: 'center',
+        marginHorizontal: 8,
     },
     headerTitle: {
-        fontSize: 20,
+        fontSize: 18, // Slightly more compact for a modern look
         fontWeight: '700',
+        letterSpacing: -0.5,
     },
     iconArea: {
-        width: 32,
-        height: 32,
+        width: 40,
+        height: 40,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    placeholder: {
+        width: 40, // Match iconArea to keep title perfectly centered
     },
 });

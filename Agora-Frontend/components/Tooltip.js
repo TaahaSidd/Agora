@@ -99,17 +99,18 @@ const styles = StyleSheet.create({
     tooltip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.primary,
+        backgroundColor: COLORS.primary, // Branding remains for visibility
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 12,
+        // Refined shadow for light mode
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
-            height: 4,
+            height: 6,
         },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowOpacity: 0.2, // Reduced from 0.3 for a cleaner look
+        shadowRadius: 10,
         elevation: 8,
         maxWidth: 250,
     },
@@ -126,6 +127,8 @@ const styles = StyleSheet.create({
     closeButton: {
         marginLeft: 8,
         padding: 4,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)', // Added subtle contrast
+        borderRadius: 8,
     },
     arrow: {
         width: 0,

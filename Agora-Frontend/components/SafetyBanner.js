@@ -2,6 +2,7 @@ import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
 import {Ionicons} from '@expo/vector-icons';
+import {COLORS} from "../utils/colors";
 
 const SafetyBanner = ({onPress}) => {
     return (
@@ -45,6 +46,9 @@ const SafetyBanner = ({onPress}) => {
 
 const styles = StyleSheet.create({
     container: {
+        // Ensuring container doesn't clash with white backgrounds
+        backgroundColor: 'transparent',
+        marginBottom: 16,
     },
     banner: {
         width: '100%',
@@ -53,11 +57,7 @@ const styles = StyleSheet.create({
         padding: 14,
         position: 'relative',
         overflow: 'hidden',
-        elevation: 4,
-        shadowColor: '#4F46E5',
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
+        elevation: 2,
     },
     decorCircle: {
         position: 'absolute',
@@ -82,8 +82,8 @@ const styles = StyleSheet.create({
     iconCircle: {
         width: 44,
         height: 44,
-        borderRadius: 12, // Switched to slightly rounded square for a modern look
-        backgroundColor: '#fff',
+        borderRadius: 12,
+        backgroundColor: COLORS.white, // Changed to white variable
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 14,

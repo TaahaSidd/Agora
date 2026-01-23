@@ -120,25 +120,26 @@ const ToastMessage = ({
         </Animated.View>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
         left: 16,
         right: 16,
         borderRadius: THEME.borderRadius.lg,
-        shadowColor: COLORS.black,
-        shadowOpacity: 0.25,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 12,
-        elevation: 6,
+        // Refined shadow for Light Mode to prevent it from looking "muddy"
+        shadowColor: "#000",
+        shadowOpacity: 0.15,
+        shadowOffset: { width: 0, height: 8 },
+        shadowRadius: 16,
+        elevation: 8,
         zIndex: 9999,
     },
     topPosition: {
-        top: Platform.OS === 'ios' ? 60 : 50,
+        // Slightly adjusted for modern Notch/Dynamic Island spacing
+        top: Platform.OS === 'ios' ? 64 : 50,
     },
     bottomPosition: {
-        bottom: Platform.OS === 'ios' ? 50 : 30,
+        bottom: Platform.OS === 'ios' ? 60 : 40,
     },
     content: {
         flexDirection: 'row',
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: THEME.spacing[2],
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
 });
 

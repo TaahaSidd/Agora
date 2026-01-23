@@ -45,7 +45,6 @@ export default function InfoBox({text, icon = "information-circle", type = "info
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     infoBox: {
         flexDirection: 'row',
@@ -59,7 +58,7 @@ const styles = StyleSheet.create({
     infoText: {
         flex: 1,
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         lineHeight: THEME.fontSize.sm * 1.4,
         fontWeight: THEME.fontWeight.medium,
     },

@@ -1,22 +1,22 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
+import {ActivityIndicator, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {COLORS} from '../utils/colors';
+import {THEME} from '../utils/theme';
 
 const Button = ({
-    title,
-    onPress,
-    variant = 'primary',
-    size = 'medium',
-    icon,
-    iconPosition = 'left',
-    loading = false,
-    disabled = false,
-    fullWidth = false,
-    style,
-    textStyle
-}) => {
+                    title,
+                    onPress,
+                    variant = 'primary',
+                    size = 'medium',
+                    icon,
+                    iconPosition = 'left',
+                    loading = false,
+                    disabled = false,
+                    fullWidth = false,
+                    style,
+                    textStyle
+                }) => {
     const buttonStyles = [
         styles.button,
         styles[variant],
@@ -39,9 +39,15 @@ const Button = ({
 
     const renderIcon = () => {
         if (!icon) return null;
-        const iconColor = variant === 'primary' || variant === 'danger'
-            ? COLORS.white
-            : COLORS.primary;
+
+        // Dynamic Icon Color
+        let iconColor = COLORS.white;
+        if (variant === 'secondary' || variant === 'outline' || variant === 'ghost') {
+            iconColor = COLORS.primary;
+        } else if (variant === 'danger') {
+            iconColor = '#EF4444';
+        }
+
         const iconSize = size === 'small' ? 16 : size === 'large' ? 22 : 18;
 
         return (
@@ -59,12 +65,12 @@ const Button = ({
             style={buttonStyles}
             onPress={onPress}
             disabled={disabled || loading}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
         >
             {loading ? (
                 <ActivityIndicator
                     color={variant === 'primary' ? COLORS.white : COLORS.primary}
-                    size={size === 'small' ? 'small' : 'small'}
+                    size="small"
                 />
             ) : (
                 <View style={styles.content}>
@@ -83,7 +89,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: THEME.borderRadius.full,
-        elevation: 1,
     },
     content: {
         flexDirection: 'row',
@@ -91,87 +96,60 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
 
-    // Variants
+    // --- VARIANTS ---
     primary: {
         backgroundColor: COLORS.primary,
-        borderWidth: 2,
-        borderColor: 'transparent',
+        shadowColor: COLORS.primary,
+        shadowOffset: {width: 0, height: 0},
+        shadowOpacity: 0,
+        shadowRadius: 8,
+        elevation: 0,
     },
     secondary: {
-        backgroundColor: '#EFF6FF',
-        borderWidth: 2,
-        borderColor: 'transparent',
+        // FIXED: Using a more visible "Primary Tint" (approx 12-15% opacity of blue)
+        backgroundColor: '#EBF2FF',
+        borderWidth: 1,
+        borderColor: '#D1E1FF', // Adding a subtle border makes it pop on white
+        elevation: 0,
     },
     outline: {
         backgroundColor: 'transparent',
-        borderWidth: 2,
+        borderWidth: 1.5,
         borderColor: COLORS.primary,
-        shadowOpacity: 0,
         elevation: 0,
     },
     ghost: {
         backgroundColor: 'transparent',
-        borderWidth: 2,
-        borderColor: 'transparent',
-        shadowOpacity: 0,
         elevation: 0,
     },
     danger: {
-        backgroundColor: '#EF4444',
-        borderWidth: 2,
-        borderColor: 'transparent',
-    },
-
-    // Sizes
-    small: {
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-        borderRadius: THEME.borderRadius.full,
-    },
-    medium: {
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: THEME.borderRadius.full,
-    },
-    large: {
-        paddingVertical: 16,
-        paddingHorizontal: 28,
-        borderRadius: THEME.borderRadius.full,
-    },
-
-    // States
-    // disabled: {
-    //     backgroundColor: COLORS.dark.cardElevated,
-    //     borderColor: COLORS.dark.border,
-    //     opacity: THEME.opacity.disabled,
-    //     shadowOpacity: 0,
-    //     elevation: 0,
-    // },
-    disabled: {
-        backgroundColor: COLORS.transparentWhite10, // Very subtle
-        borderColor: COLORS.dark.border,
-        borderWidth: THEME.borderWidth.hairline,
-        shadowOpacity: 0,
+        backgroundColor: '#FEE2E2',
         elevation: 0,
     },
-    fullWidth: {
-        width: '100%',
-    },
 
-    // Text Styles
+    // --- SIZES ---
+    small: {paddingVertical: 8, paddingHorizontal: 16},
+    medium: {paddingVertical: 14, paddingHorizontal: 24},
+    large: {paddingVertical: 18, paddingHorizontal: 32},
+
+    disabled: {
+        backgroundColor: '#F3F4F6',
+        borderColor: '#E5E7EB',
+        borderWidth: 1,
+        elevation: 0,
+    },
+    fullWidth: {width: '100%'},
+
+    // --- TEXT STYLES ---
     title: {
         color: COLORS.white,
         fontWeight: '700',
+        letterSpacing: -0.2,
     },
-    smallText: {
-        fontSize: 13,
-    },
-    mediumText: {
-        fontSize: 15,
-    },
-    largeText: {
-        fontSize: 17,
-    },
+    smallText: {fontSize: 13},
+    mediumText: {fontSize: 16},
+    largeText: {fontSize: 18},
+
     secondaryText: {
         color: COLORS.primary,
     },
@@ -182,19 +160,14 @@ const styles = StyleSheet.create({
         color: COLORS.primary,
     },
     dangerText: {
-        color: COLORS.white,
+        color: '#EF4444',
     },
     disabledText: {
-        color: COLORS.gray400,
+        color: '#9CA3AF',
     },
 
-    // Icon Styles
-    iconLeft: {
-        marginRight: 8,
-    },
-    iconRight: {
-        marginLeft: 8,
-    },
+    iconLeft: {marginRight: 8},
+    iconRight: {marginLeft: 8},
 });
 
 export default Button;

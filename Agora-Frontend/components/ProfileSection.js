@@ -48,11 +48,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: THEME.spacing.md,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed from dark.card
         borderRadius: THEME.borderRadius.lg,
         marginBottom: THEME.spacing.lg,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border, // Changed from dark.border
     },
     avatarContainer: {
         position: 'relative',
@@ -62,15 +62,15 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.bg, // Changed from dark.cardElevated
         borderWidth: 2,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border, // Changed from dark.border
     },
     verifiedBadge: {
         position: 'absolute',
         bottom: -2,
         right: -2,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed from dark.card
         borderRadius: 12,
     },
     profileInfo: {
@@ -80,13 +80,13 @@ const styles = StyleSheet.create({
     profileName: {
         fontSize: THEME.fontSize.lg,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text, // Changed from dark.text
         marginBottom: THEME.spacing[1],
         letterSpacing: THEME.letterSpacing.tight,
     },
     profileEmail: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
         fontWeight: THEME.fontWeight.medium,
     },
 });

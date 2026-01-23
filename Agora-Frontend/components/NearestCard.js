@@ -1,10 +1,10 @@
 import React from 'react';
-import {View, Text, Image, StyleSheet, TouchableOpacity, Dimensions} from 'react-native';
+import {Dimensions, Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 
 import {COLORS} from '../utils/colors';
-import { formatPrice } from '../utils/formatters';
+import {formatPrice} from '../utils/formatters';
 
 
 const {width} = Dimensions.get('window');
@@ -74,25 +74,21 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         width: width * 0.90,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed from dark.card
         borderRadius: 20,
         marginBottom: 12,
         marginRight: 20,
         padding: 10,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 3},
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 3,
+        borderColor: COLORS.light.border,
+        elevation: 2,
     },
     imageContainer: {
         position: 'relative',
         width: 110,
         height: 110,
         borderRadius: 16,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.bg, // Changed from dark.cardElevated
         overflow: 'hidden',
     },
     image: {
@@ -130,14 +126,14 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 16,
         fontWeight: '700',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.text, // Changed from dark.textSecondary
         lineHeight: 21,
         marginBottom: 4,
         letterSpacing: -0.3,
     },
     location: {
         fontSize: 13,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
         fontWeight: '500',
         marginBottom: 10,
         letterSpacing: -0.1,
@@ -155,17 +151,12 @@ const styles = StyleSheet.create({
     price: {
         fontSize: 20,
         fontWeight: '800',
-        color: COLORS.gray400,
+        color: COLORS.primary, // Changed from gray400
         letterSpacing: -0.5,
-    },
-    viewContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
     },
     viewCount: {
         fontSize: 13,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
         fontWeight: '600',
     },
     arrowCircle: {

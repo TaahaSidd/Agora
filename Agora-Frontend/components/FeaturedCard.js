@@ -1,11 +1,9 @@
 import React from 'react';
-import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
-
-import {THEME} from '../utils/theme';
 import {COLORS} from '../utils/colors';
-import { formatPrice } from '../utils/formatters';
+import {formatPrice} from '../utils/formatters';
 
 
 const FeaturedCard = ({item, onPress}) => {
@@ -76,16 +74,12 @@ const styles = StyleSheet.create({
     card: {
         width: 240,
         borderRadius: 24,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         marginRight: 16,
         padding: 12,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-        elevation: 5,
+        borderColor: COLORS.light.border,
+        elevation: 2,
     },
     imageContainer: {
         width: '100%',
@@ -171,14 +165,14 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.text, // Changed from dark.textSecondary
         marginBottom: 4,
         lineHeight: 24,
         letterSpacing: -0.3,
     },
     locationText: {
         fontSize: 13,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: '500',
         marginBottom: 12,
         letterSpacing: -0.1,
@@ -196,7 +190,7 @@ const styles = StyleSheet.create({
     price: {
         fontSize: 22,
         fontWeight: '800',
-        color: COLORS.gray400,
+        color: COLORS.primary,
         letterSpacing: -0.5,
     },
     viewContainer: {
@@ -206,7 +200,7 @@ const styles = StyleSheet.create({
     },
     viewCount: {
         fontSize: 13,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: '600',
     },
     arrowCircle: {

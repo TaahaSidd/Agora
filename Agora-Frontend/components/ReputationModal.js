@@ -104,14 +104,26 @@ const ReputationModal = ({visible, onClose, rating, onRatePress, isOwnProfile, i
 };
 
 const styles = StyleSheet.create({
-    overlay: {flex: 1, backgroundColor: COLORS.dark.overlayHeavy, justifyContent: 'flex-end'},
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)', // Standard light-theme overlay
+        justifyContent: 'flex-end'
+    },
     content: {
-        backgroundColor: COLORS.dark.card,
-        borderTopLeftRadius: 24, borderTopRightRadius: 24,
-        padding: 24, alignItems: 'center',
+        backgroundColor: COLORS.white, // Changed from dark.card
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        alignItems: 'center',
         paddingBottom: Platform.OS === 'ios' ? 34 : 24
     },
-    handle: {width: 40, height: 4, backgroundColor: COLORS.dark.divider, borderRadius: 2, marginBottom: 20},
+    handle: {
+        width: 40,
+        height: 4,
+        backgroundColor: COLORS.light.border, // Changed from dark.divider
+        borderRadius: 2,
+        marginBottom: 20
+    },
     iconCircle: {
         width: 80,
         height: 80,
@@ -119,23 +131,42 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16
+        // Background color handled dynamically via vibe.color + '20'
     },
-    title: {fontSize: 22, fontWeight: '900', marginBottom: 8},
-    message: {fontSize: 14, color: COLORS.dark.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: 24},
+    title: {
+        fontSize: 22,
+        fontWeight: '900',
+        marginBottom: 8
+    },
+    message: {
+        fontSize: 14,
+        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24
+    },
     cta: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.bg, // Changed from dark.cardElevated
         paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border, // Changed from dark.border
         gap: 8
     },
-    ctaText: {color: COLORS.primary, fontWeight: '800'},
-    closeBtn: {marginTop: 20},
-    closeBtnText: {color: COLORS.dark.textTertiary, fontWeight: '600'},
+    ctaText: {
+        color: COLORS.primary,
+        fontWeight: '800'
+    },
+    closeBtn: {
+        marginTop: 20
+    },
+    closeBtnText: {
+        color: COLORS.light.textTertiary, // Changed from dark.textTertiary
+        fontWeight: '600'
+    },
     guestCta: {
         backgroundColor: COLORS.primary,
         borderColor: COLORS.primary,

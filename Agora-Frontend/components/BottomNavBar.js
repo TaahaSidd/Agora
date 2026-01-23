@@ -171,7 +171,6 @@ const BottomNavBar = ({active, onNavigate, isGuest, isPending}) => {
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     wrapper: {
         position: 'absolute',
@@ -179,7 +178,6 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         paddingHorizontal: 16,
-       // paddingBottom: 20,
         backgroundColor: COLORS.transparent,
         pointerEvents: 'box-none',
     },
@@ -190,21 +188,20 @@ const styles = StyleSheet.create({
     innerContainer: {
         flexDirection: 'row',
         height: 68,
-        backgroundColor: COLORS.dark.card,
+        // UPDATED: Now pure white to pop against the gray background
+        backgroundColor: COLORS.white,
         justifyContent: 'space-around',
         alignItems: 'center',
         paddingHorizontal: 8,
         borderRadius: 24,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
+        // UPDATED: Softer shadows for light mode
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 8,
-        },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 16,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 8,
     },
     navItem: {
         flex: 1,
@@ -220,26 +217,27 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: COLORS.transparent,
         marginBottom: 2,
-        position: 'relative', // ✅ For badge positioning
+        position: 'relative',
     },
     iconContainerActive: {
-        backgroundColor: COLORS.primary + '15',
+        // Subtle blue tint for the active background
+        backgroundColor: COLORS.primary + '10',
     },
-    // ✅ UNREAD BADGE STYLES
     badge: {
         position: 'absolute',
         top: 8,
         right: 8,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         backgroundColor: '#EF4444',
-        borderWidth: 1.5,
-        borderColor: COLORS.dark.card,
+        borderWidth: 2,
+        // Match the container background
+        borderColor: COLORS.white,
     },
     label: {
-        fontSize: 11,
-        color: COLORS.gray400,
+        fontSize: 10,
+        color: COLORS.light.textTertiary,
         marginTop: 2,
         fontWeight: '600',
         letterSpacing: -0.2,
@@ -262,36 +260,24 @@ const styles = StyleSheet.create({
         width: 68,
         height: 68,
         borderRadius: 34,
-        backgroundColor: COLORS.dark.card,
+        // UPDATED: Matches the floating bar
+        backgroundColor: COLORS.white,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 4,
-        borderColor: COLORS.dark.bg,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 6,
-        },
-        shadowOpacity: 0.35,
-        shadowRadius: 10,
-        elevation: 12,
+        // Match the Screen background (off-white) to look seamless
+        borderColor: COLORS.light.bg,
+        elevation: 2,
     },
     centerButtonInner: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+        width: 52,
+        height: 52,
+        borderRadius: 26,
         backgroundColor: COLORS.primary,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: COLORS.primary,
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 8,
+        elevation: 2,
     },
-});
+});;
 
 export default BottomNavBar;

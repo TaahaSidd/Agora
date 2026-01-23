@@ -35,13 +35,12 @@ const SafetyTips = ({style}) => {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: COLORS.dark.bgElevated,
+        backgroundColor: COLORS.white,
         borderRadius: THEME.borderRadius.lg,
         padding: 20,
         marginVertical: 16,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
-        marginBottom:50,
+        borderColor: COLORS.light.border,
     },
     header: {
         flexDirection: 'row',
@@ -51,7 +50,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '600',
-        color: COLORS.white,
+        color: COLORS.light.text,
         marginLeft: 12,
     },
     tips: {
@@ -72,7 +71,7 @@ const styles = StyleSheet.create({
     tipText: {
         flex: 1,
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         lineHeight: 20,
         fontWeight: '500',
     },

@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
-import {ActivityIndicator, StyleSheet, TouchableOpacity} from 'react-native';
+import {ActivityIndicator, StyleSheet, TouchableOpacity, View} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {THEME} from '../utils/theme';
+import {COLORS} from '../utils/colors'; // Added COLORS import
 import {useFavorites} from '../context/FavoritesContext';
 import {useUserStore} from '../stores/userStore';
 
@@ -38,12 +39,13 @@ const FavoriteButton = ({listingId, size = 22, style, onGuestPress}) => {
             activeOpacity={0.7}
         >
             {loading ? (
-                <ActivityIndicator size="small" color="#fff"/>
+                <ActivityIndicator size="small" color={COLORS.primary}/>
             ) : (
                 <Icon
                     name={isFavorite ? 'heart' : 'heart-outline'}
                     size={size}
-                    color={isFavorite ? 'red' : '#fff'}
+                    // In light mode, outline is better as a dark gray/black for contrast
+                    color={isFavorite ? '#EF4444' : COLORS.light.text}
                 />
             )}
         </TouchableOpacity>
@@ -55,9 +57,12 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: THEME.spacing.sm,
         right: THEME.spacing.sm,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        padding: THEME.spacing.sm - 4,
+        backgroundColor: '#FFFFFF',
+        padding: THEME.spacing.sm - 2,
         borderRadius: THEME.borderRadius.full,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
     },
 });
 

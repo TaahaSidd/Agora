@@ -88,172 +88,66 @@ const ProfileSkeleton = () => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
-    },
-    container: {
-        flex: 1,
-    },
-
-    // Banner Section
-    bannerSection: {
-        position: 'relative',
-        height: 240,
-        marginBottom: THEME.spacing.md,
+        backgroundColor: COLORS.white, // Changed to white
     },
     bannerSkeleton: {
         width: '100%',
         height: 200,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: '#E1E9EE', // Light gray skeleton base
         borderBottomLeftRadius: 40,
         borderBottomRightRadius: 40,
-    },
-    avatarWrapper: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
     },
     avatarSkeleton: {
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: '#F2F8FC',
         borderWidth: 4,
-        borderColor: COLORS.dark.bg,
-    },
-
-    // Profile Info
-    profileInfo: {
-        paddingHorizontal: THEME.spacing.lg,
-        paddingTop: THEME.spacing.md,
-        alignItems: 'center',
+        borderColor: COLORS.white, // Border matches white background
     },
     nameSkeleton: {
         width: 180,
         height: 28,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: '#E1E9EE',
         borderRadius: THEME.borderRadius.md,
         marginBottom: THEME.spacing[2],
-    },
-    collegeSkeleton: {
-        width: 140,
-        height: 16,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.sm,
-        marginBottom: THEME.spacing.lg,
     },
     statsContainer: {
         flexDirection: 'row',
         width: '100%',
         borderRadius: THEME.borderRadius.lg,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed
         padding: THEME.spacing.lg,
         marginBottom: THEME.spacing.lg,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
-    },
-    statItem: {
-        flex: 1,
-        alignItems: 'center',
+        borderColor: COLORS.light.border, // Light border
     },
     statNumberSkeleton: {
         width: 40,
         height: 24,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: '#E1E9EE',
         borderRadius: THEME.borderRadius.sm,
-        marginBottom: THEME.spacing[1],
-    },
-    statLabelSkeleton: {
-        width: 60,
-        height: 12,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.xs,
     },
     statDivider: {
         width: 1,
         height: '100%',
-        backgroundColor: COLORS.dark.border,
-    },
-    followButtonSkeleton: {
-        width: '100%',
-        height: 48,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.lg,
-    },
-
-    // Listings Section
-    listingsSection: {
-        paddingHorizontal: THEME.spacing.md,
-        paddingTop: THEME.spacing.md,
-    },
-    listingsHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: THEME.spacing.md,
-    },
-    sectionTitleSkeleton: {
-        width: 100,
-        height: 24,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.sm,
-    },
-    countBadgeSkeleton: {
-        width: 40,
-        height: 24,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.pill,
-    },
-    filterContainer: {
-        flexDirection: 'row',
-        gap: THEME.spacing[2],
-        marginBottom: THEME.spacing.lg,
-    },
-    filterTabSkeleton: {
-        width: 80,
-        height: 36,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.pill,
-    },
-
-    // Listings Grid
-    listingsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        backgroundColor: COLORS.light.border,
     },
     cardSkeleton: {
         width: '48%',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 20,
         marginBottom: 12,
         padding: 8,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     cardImageSkeleton: {
         width: '100%',
         height: 150,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: '#E1E9EE',
         borderRadius: 14,
         marginBottom: 8,
-    },
-    cardContentSkeleton: {
-        padding: 10,
-    },
-    cardTitleSkeleton: {
-        width: '80%',
-        height: 14,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.xs,
-        marginBottom: 6,
-    },
-    cardPriceSkeleton: {
-        width: '50%',
-        height: 18,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.xs,
     },
 });
 

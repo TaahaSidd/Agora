@@ -5,20 +5,20 @@ import { THEME } from '../utils/theme';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const InputField = ({
-    label,
-    value,
-    onChangeText,
-    placeholder,
-    secureTextEntry = false,
-    keyboardType = 'default',
-    style,
-    inputStyle,
-    error,
-    leftIcon,
-    maxLength,
-    showCharCount = false,
-    disabled = false,
-}) => {
+                        label,
+                        value,
+                        onChangeText,
+                        placeholder,
+                        secureTextEntry = false,
+                        keyboardType = 'default',
+                        style,
+                        inputStyle,
+                        error,
+                        leftIcon,
+                        maxLength,
+                        showCharCount = false,
+                        disabled = false,
+                    }) => {
     const [isFocused, setIsFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -35,17 +35,14 @@ const InputField = ({
         }
     }, [error]);
 
-    const borderColor = error ? COLORS.error : isFocused ? COLORS.primary : COLORS.dark.border;
+    // Fixed: Using Light theme border color variable
+    const borderColor = error ? COLORS.error : isFocused ? COLORS.primary : COLORS.light.border;
     const shadowOpacity = isFocused ? 0.2 : 0.08;
-    const showFloatingLabel = isFocused || value;
+    const showFloatingLabel = isFocused || (value && value.length > 0);
 
     return (
         <View style={[styles.container, style]}>
-            <Animated.View
-                style={{
-                    transform: [{ translateX: shakeAnim }],
-                }}
-            >
+            <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
                 <View
                     style={[
                         styles.inputWrapper,
@@ -55,13 +52,14 @@ const InputField = ({
                         },
                     ]}
                 >
+                    {/* Fixed: Label background must match screen background to be readable */}
                     {label && showFloatingLabel && (
                         <View style={styles.floatingLabelContainer}>
                             <Text
                                 style={[
                                     styles.floatingLabel,
                                     {
-                                        color: error ? COLORS.error : isFocused ? COLORS.primary : COLORS.dark.text,
+                                        color: error ? COLORS.error : isFocused ? COLORS.primary : COLORS.light.text,
                                     },
                                 ]}
                             >
@@ -76,7 +74,7 @@ const InputField = ({
                                 <MaterialCommunityIcons
                                     name={leftIcon}
                                     size={22}
-                                    color={isFocused ? COLORS.primary : COLORS.dark.textTertiary}
+                                    color={isFocused ? COLORS.primary : COLORS.light.textTertiary}
                                 />
                             </View>
                         )}
@@ -91,7 +89,7 @@ const InputField = ({
                             value={value}
                             onChangeText={onChangeText}
                             placeholder={showFloatingLabel ? '' : (label || placeholder)}
-                            placeholderTextColor={COLORS.dark.textTertiary}
+                            placeholderTextColor={COLORS.light.textTertiary}
                             secureTextEntry={secureTextEntry && !showPassword}
                             keyboardType={keyboardType}
                             onFocus={() => setIsFocused(true)}
@@ -136,8 +134,8 @@ const styles = StyleSheet.create({
         marginBottom: THEME.spacing.md,
     },
     inputWrapper: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: THEME.borderRadius.full,
+        backgroundColor: COLORS.white,
+        borderRadius: THEME.borderRadius.full, // Reverted to your original
         borderWidth: 1,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -149,10 +147,11 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -10,
         left: 16,
-        backgroundColor: COLORS.dark.card,
+        // Changed to match your light background color so it doesn't overlap the text
+        backgroundColor: COLORS.light.bg,
         paddingHorizontal: 4,
         zIndex: 2,
-        borderRadius: THEME.borderRadius.full,
+        borderRadius: THEME.borderRadius.full, // Reverted to your original
     },
     floatingLabel: {
         fontSize: 12,
@@ -161,16 +160,16 @@ const styles = StyleSheet.create({
     innerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 16,
+        paddingHorizontal: 16, // Reverted to your original
+        paddingVertical: 16,  // Reverted to your original
     },
     leftIconContainer: {
-        marginRight: 12,
+        marginRight: 12, // Reverted to your original
     },
     input: {
         flex: 1,
         fontSize: 16,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         paddingVertical: 0,
     },
     eyeIcon: {
@@ -190,7 +189,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     charCount: {
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         fontSize: 12,
         fontWeight: '500',
     },

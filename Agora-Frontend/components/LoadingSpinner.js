@@ -34,6 +34,23 @@ const LoadingSpinner = ({
 
     return (
         <View style={styles.container}>
+            {/* BACKGROUND TRACK (The circle the spinner follows) */}
+            <View
+                style={[
+                    styles.spinner,
+                    {
+                        width: spinnerSize,
+                        height: spinnerSize,
+                        borderRadius: spinnerSize / 2,
+                        borderWidth: spinnerSize / 10,
+                        // This makes the path visible but very faint on white
+                        borderColor: COLORS.light.border,
+                        position: 'absolute',
+                    },
+                ]}
+            />
+
+            {/* ACTIVE SPINNER */}
             <Animated.View
                 style={[
                     styles.spinner,

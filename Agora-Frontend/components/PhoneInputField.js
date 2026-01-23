@@ -4,13 +4,13 @@ import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
 
 const PhoneInputField = ({
-    label = 'Phone Number',
-    value,
-    onChangeText,
-    placeholder = '98765 43210',
-    style,
-    error,
-}) => {
+                             label = 'Phone Number',
+                             value,
+                             onChangeText,
+                             placeholder = '98765 43210',
+                             style,
+                             error,
+                         }) => {
     const [isFocused, setIsFocused] = useState(false);
     const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -27,14 +27,15 @@ const PhoneInputField = ({
     }, [error]);
 
     const handleChangeText = (text) => {
-        // Only allow numbers, max 10 digits
+        // FIXED: Only allows numbers and limits to 10 digits
         const cleaned = text.replace(/[^0-9]/g, '').slice(0, 10);
         onChangeText(cleaned);
     };
 
-    const borderColor = error ? COLORS.error : isFocused ? COLORS.primary : COLORS.dark.border;
+    // FIXED: Using Light theme border colors
+    const borderColor = error ? COLORS.error : isFocused ? COLORS.primary : COLORS.light.border;
     const shadowOpacity = isFocused ? 0.2 : 0.08;
-    const showFloatingLabel = isFocused || value;
+    const showFloatingLabel = isFocused || (value && value.length > 0);
 
     return (
         <View style={[styles.container, style]}>
@@ -44,7 +45,7 @@ const PhoneInputField = ({
                         style={[
                             styles.floatingLabel,
                             {
-                                color: error ? COLORS.error : isFocused ? COLORS.primary : COLORS.dark.text,
+                                color: error ? COLORS.error : isFocused ? COLORS.primary : COLORS.light.text,
                             },
                         ]}
                     >
@@ -87,11 +88,11 @@ const PhoneInputField = ({
                             value={value}
                             onChangeText={handleChangeText}
                             placeholder={showFloatingLabel ? placeholder : (label || placeholder)}
-                            placeholderTextColor={COLORS.dark.textTertiary}
-                            keyboardType="phone-pad"
+                            placeholderTextColor={COLORS.light.textTertiary}
+                            keyboardType="number-pad" // Better for just digits
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
-                            maxLength={10}
+                            maxLength={10} // Strictly 10 digits
                         />
                     </View>
                 </View>
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -10,
         left: 16,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg, // Matches screen background
         paddingHorizontal: 4,
         zIndex: 3,
         borderRadius: THEME.borderRadius.full,
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     countryCodeBox: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: THEME.borderRadius.full,
         borderWidth: 1,
         paddingHorizontal: 16,
@@ -145,11 +146,11 @@ const styles = StyleSheet.create({
     countryCodeText: {
         fontSize: 16,
         fontWeight: '600',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
     },
     inputWrapper: {
         flex: 1,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: THEME.borderRadius.full,
         borderWidth: 1,
         paddingHorizontal: 16,
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         paddingVertical: 0,
     },
     footerContainer: {

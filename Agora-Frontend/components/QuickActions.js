@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text, // Changed from dark.text
         marginBottom: 16,
         letterSpacing: -0.3,
     },
@@ -58,12 +58,12 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white, // Changed from dark.card
         paddingVertical: 14,
         paddingHorizontal: 12,
         borderRadius: 14,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border, // Changed from dark.border
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
@@ -90,13 +90,13 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 12,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         letterSpacing: -0.1,
     },
     statNumber: {
         fontSize: 20,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         letterSpacing: -0.5,
         marginBottom: 2,
     },

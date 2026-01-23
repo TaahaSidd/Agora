@@ -40,10 +40,12 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.bg,
         borderRadius: THEME.borderRadius.full,
         paddingHorizontal: 14,
         height: 44,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     icon: {
         marginRight: 10,
@@ -51,7 +53,7 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 15,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         fontWeight: "500",
     },
     clearButton: {

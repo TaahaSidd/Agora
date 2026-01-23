@@ -5,6 +5,7 @@ import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 import {getTimeAgo} from '../utils/dateUtils';
 import {COLORS} from '../utils/colors';
+import {formatPrice} from "../utils/formatters";
 
 const MyListingRowCard = ({item, onEdit, onDelete}) => {
     const navigation = useNavigation();
@@ -149,7 +150,7 @@ const MyListingRowCard = ({item, onEdit, onDelete}) => {
 
                         {/* Gradient Overlay */}
                         <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.5)']}
+                            colors={['transparent', 'rgba(0,0,0,0.3)']}
                             style={styles.imageGradient}
                         />
 
@@ -169,46 +170,26 @@ const MyListingRowCard = ({item, onEdit, onDelete}) => {
 
                     {/* Content */}
                     <View style={styles.contentSection}>
+                        {/* Title */}
                         <Text style={styles.title} numberOfLines={2}>
                             {item.name || item.title || 'Untitled'}
                         </Text>
 
-                        {/* College/Location */}
-                        {item.college && (
-                            <Text style={styles.locationText} numberOfLines={1}>
-                                {typeof item.college === 'string'
-                                    ? item.college
-                                    : item.college?.city || item.college?.collegeName || 'College'}
-                            </Text>
-                        )}
+                        {/* Price */}
+                        <Text style={styles.price}>
+                            {formatPrice(item.price)}
+                        </Text>
 
-                        <View style={styles.bottomRow}>
-                            <Text style={styles.price}>
-                                {typeof item.price === 'number' ? `₹${item.price}` : item.price}
+                        {/* Time */}
+                        <View style={styles.timeRow}>
+                            <Ionicons name="time-outline" size={13} color={COLORS.light.textTertiary}/>
+                            <Text style={styles.timeText}>
+                                {item.postDate ? getTimeAgo(item.postDate) : 'Recent'}
                             </Text>
-
-                            {/* Stats Row */}
-                            <View style={styles.statsRow}>
-                                <View style={styles.statItem}>
-                                    <Ionicons name="time-outline" size={12} color={COLORS.dark.textTertiary}/>
-                                    <Text style={styles.statText}>
-                                        {item.postDate ? getTimeAgo(item.postDate) : 'Recent'}
-                                    </Text>
-                                </View>
-                                {item.views !== undefined && item.views > 0 && (
-                                    <>
-                                        <View style={styles.statDot}/>
-                                        <View style={styles.statItem}>
-                                            <Ionicons name="eye-outline" size={12} color={COLORS.dark.textTertiary}/>
-                                            <Text style={styles.statText}>{item.views}</Text>
-                                        </View>
-                                    </>
-                                )}
-                            </View>
                         </View>
                     </View>
 
-                    <Ionicons name="chevron-forward" size={18} color={COLORS.dark.textTertiary}/>
+                    <Ionicons name="chevron-forward" size={18} color={COLORS.light.textTertiary}/>
                 </TouchableOpacity>
             </Animated.View>
         </View>
@@ -233,7 +214,7 @@ const styles = StyleSheet.create({
     },
     actionButton: {
         width: 75,
-        borderRadius: 20,
+        borderRadius: 16,
         height: '100%',
         overflow: 'hidden',
     },
@@ -250,30 +231,30 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
     card: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 20,
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 2,
+        borderColor: COLORS.light.border,
         overflow: 'hidden',
         zIndex: 2,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
     },
     cardContent: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
+        gap: 12,
     },
     imageWrapper: {
-        width: 110,
-        height: 110,
-        borderRadius: 16,
+        width: 100,
+        height: 100,
+        borderRadius: 12,
         overflow: 'hidden',
-        marginRight: 14,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.bg,
         position: 'relative',
     },
     image: {
@@ -285,25 +266,25 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 40,
+        height: 30,
     },
     statusBadgeContainer: {
         position: 'absolute',
-        top: 8,
-        left: 8,
+        top: 6,
+        left: 6,
     },
     statusBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 5,
-        borderRadius: 8,
+        paddingHorizontal: 7,
+        paddingVertical: 4,
+        borderRadius: 6,
         gap: 3,
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.3,
-        shadowRadius: 3,
-        elevation: 3,
+        shadowRadius: 2,
+        elevation: 2,
     },
     statusText: {
         color: '#fff',
@@ -319,49 +300,27 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 15,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         lineHeight: 20,
         marginBottom: 4,
         letterSpacing: -0.3,
     },
-    locationText: {
-        fontSize: 12,
-        color: COLORS.dark.textSecondary,
-        fontWeight: '500',
-        marginBottom: 8,
-        letterSpacing: -0.1,
-    },
-    bottomRow: {
-        flexDirection: 'column',
-        gap: 6,
-    },
     price: {
         fontSize: 18,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.primary,
         letterSpacing: -0.4,
     },
-    statsRow: {
+    timeRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 4,
     },
-    statItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 3,
-    },
-    statText: {
-        fontSize: 11,
-        color: COLORS.dark.textTertiary,
-        fontWeight: '600',
+    timeText: {
+        fontSize: 12,
+        color: COLORS.light.textTertiary,
+        fontWeight: '500',
         letterSpacing: -0.1,
-    },
-    statDot: {
-        width: 3,
-        height: 3,
-        borderRadius: 1.5,
-        backgroundColor: COLORS.dark.textTertiary,
-        marginHorizontal: 6,
     },
 });
 
