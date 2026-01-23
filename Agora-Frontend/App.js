@@ -5,6 +5,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import {SignUpProvider} from './context/SignUpContext';
 import {FavoritesProvider} from './context/FavoritesContext';
@@ -51,6 +52,11 @@ import AboutScreen from './screens/AboutScreen';
 import {COLORS} from './utils/colors';
 
 const Stack = createNativeStackNavigator();
+
+GoogleSignin.configure({
+    webClientId: '1077670058033-kdtcln0ahal41eh3hoenbfns8535mt49.apps.googleusercontent.com',
+    offlineAccess: true,
+});
 
 function SignUpFlowWrapper() {
     return (
