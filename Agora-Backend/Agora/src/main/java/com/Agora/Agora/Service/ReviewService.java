@@ -62,19 +62,45 @@ public class ReviewService {
 //        return dto.mapToReviewResponseDto(savedReview);
 //    }
 
-    public ReviewResponse addSellerReview(Long sellerId, String principalName, ReviewReqDto req) {
+//    public ReviewResponse addSellerReview(Long sellerId, String principalName, ReviewReqDto req) {
+//        AgoraUser seller = userRepo.findById(sellerId)
+//                .orElseThrow(() -> new RuntimeException("Seller not Found!"));
+//
+//        String formattedPhone = extractPhoneNumber(principalName);
+//
+//        AgoraUser reviewer = userRepo.findByMobileNumber(formattedPhone)
+//                .orElseThrow(() -> new RuntimeException("Reviewer not Found with phone: " + formattedPhone));
+//
+//        if (reviewer.getId().equals(sellerId)) {
+//            throw new RuntimeException("You cannot rate your own profile!");
+//        }
+//
+//        Review review = new Review();
+//        review.setSeller(seller);
+//        review.setReviewer(reviewer);
+//        review.setRating(req.getRating());
+//        review.setComment(req.getComment());
+//
+//        Review savedReview = reviewRepo.save(review);
+//        return dto.mapToReviewResponseDto(savedReview);
+//    }
+
+    public ReviewResponse addSellerReview(Long sellerId, String email, ReviewReqDto req) {
+        // 1. Find the Seller
         AgoraUser seller = userRepo.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException("Seller not Found!"));
 
-        String formattedPhone = extractPhoneNumber(principalName);
+        // 2. Find the Reviewer using EMAIL (Directly from the Principal)
+        // ✅ No more extractPhoneNumber logic needed!
+        AgoraUser reviewer = userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("Reviewer not Found with email: " + email));
 
-        AgoraUser reviewer = userRepo.findByMobileNumber(formattedPhone)
-                .orElseThrow(() -> new RuntimeException("Reviewer not Found with phone: " + formattedPhone));
-
+        // 3. Prevent self-rating
         if (reviewer.getId().equals(sellerId)) {
             throw new RuntimeException("You cannot rate your own profile!");
         }
 
+        // 4. Create and Save Review
         Review review = new Review();
         review.setSeller(seller);
         review.setReviewer(reviewer);
@@ -84,6 +110,8 @@ public class ReviewService {
         Review savedReview = reviewRepo.save(review);
         return dto.mapToReviewResponseDto(savedReview);
     }
+
+// 🗑️ You can safely delete the extractPhoneNumber method now
 
     private String extractPhoneNumber(String username) {
         String basePhone = username.contains("@") ? username.split("@")[0] : username;

@@ -1,11 +1,13 @@
 package com.Agora.Agora.Controller;
 
 import com.Agora.Agora.Dto.Request.AuthRequestDto;
+import com.Agora.Agora.Dto.Request.GoogleSignInRequest;
 import com.Agora.Agora.Dto.Request.LoginRequestDto;
 import com.Agora.Agora.Dto.Request.OtpRegistrationRequestDto;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Repository.UserRepo;
 import com.Agora.Agora.Service.AuthService;
+import com.Agora.Agora.Service.GoogleAuthService;
 import com.Agora.Agora.Service.OtpService;
 import com.Agora.Agora.Service.PasswordResetService;
 import jakarta.validation.Valid;
@@ -25,27 +27,16 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-    private final OtpService otpService;
+    private final GoogleAuthService  googleAuthService;
     private final PasswordResetService resetService;
     private final UserRepo userRepo;
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-//    @PostMapping("/login/otp")
-//    public ResponseEntity<LoginResponseDto> loginWithOtp(@Valid @RequestBody OtpLoginRequestDto req) {
-//        return ResponseEntity.ok(authService.loginWithOtp(req));
-//    }
-//
-//    @PostMapping("/signup/otp")
-//    public ResponseEntity<LoginResponseDto> signupWithOtp(@Valid @RequestBody OtpLoginRequestDto req) {
-//        return ResponseEntity.ok(authService.signupWithOtp(req));
-//    }
-
-//    @PutMapping("/complete-profile")
-//    public ResponseEntity<LoginResponseDto> completeProfile(
-//            Principal principal,
-//            @Valid @RequestBody OtpRegistrationRequestDto req) {
-//        return ResponseEntity.ok(authService.completeProfile(principal.getName(), req));
-//    }
+    @PostMapping("/google-signin")
+    public ResponseEntity<LoginResponseDto> googleSignIn(@Valid @RequestBody GoogleSignInRequest request) throws Exception {
+        log.info("🔐 Google Sign-In request");
+        return ResponseEntity.ok(googleAuthService.processGoogleSignIn(request));
+    }
 
     @PutMapping("/complete-profile")
     public ResponseEntity<LoginResponseDto> completeProfile(
@@ -62,7 +53,7 @@ public class AuthController {
 
     // --- STEP 2: LOGIN (Standard Email/Pass) ---
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto req) {
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody AuthRequestDto req) {
         log.info("🔑 Login request for: {}", req.getEmail());
         return ResponseEntity.ok(authService.login(req));
     }
@@ -102,35 +93,4 @@ public class AuthController {
     }
 
 
-//    @PostMapping("/send-otp/login")
-//    public ResponseEntity<Map<String, String>> sendOtpForLogin(@RequestBody Map<String, String> request) {
-//        try {
-//            String email = request.get("email");
-//            otpService.sendOtpForLogin(email);
-//
-//            Map<String, String> response = new HashMap<>();
-//            response.put("message", "OTP sent to " + email);
-//            return ResponseEntity.ok(response);
-//        } catch (Exception e) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", e.getMessage());
-//            return ResponseEntity.badRequest().body(response);
-//        }
-//    }
-//
-//    @PostMapping("/send-otp/signup")
-//    public ResponseEntity<Map<String, String>> sendOtpForSignup(@RequestBody Map<String, String> request) {
-//        try {
-//            String email = request.get("email");
-//            otpService.sendOtpForSignup(email);
-//
-//            Map<String, String> response = new HashMap<>();
-//            response.put("message", "OTP sent to " + email);
-//            return ResponseEntity.ok(response);
-//        } catch (Exception e) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", e.getMessage());
-//            return ResponseEntity.badRequest().body(response);
-//        }
-//    }
 }

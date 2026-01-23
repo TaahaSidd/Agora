@@ -57,7 +57,7 @@ public class OtpService {
         otpStore.put(email.toLowerCase(), new OtpData(otp));
 
         // Send email
-        emailService.sendOtpEmail(email, otp);
+       // emailService.sendOtpEmail(email, otp);
     }
 
     public boolean verifyOtp(String email, String otp) {

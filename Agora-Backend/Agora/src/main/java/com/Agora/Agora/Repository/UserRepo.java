@@ -17,6 +17,8 @@ public interface UserRepo extends JpaRepository<AgoraUser, Long> {
 
     Optional<AgoraUser> findByUserName(String userName);
 
+    boolean existsByUserName(String userName);
+
     @Query("SELECT CASE WHEN COUNT(ub) > 0 THEN true ELSE false END " +
             "FROM AgoraUser u JOIN u.blockedUsers ub " +
             "WHERE u.id = :blockerId AND ub.id = :blockedId")

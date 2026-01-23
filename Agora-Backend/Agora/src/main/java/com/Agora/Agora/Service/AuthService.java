@@ -1,7 +1,6 @@
 package com.Agora.Agora.Service;
 
 import com.Agora.Agora.Dto.Request.AuthRequestDto;
-import com.Agora.Agora.Dto.Request.LoginRequestDto;
 import com.Agora.Agora.Dto.Request.OtpRegistrationRequestDto;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Jwt.JwtTokenProvider;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Random;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -128,16 +126,13 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
         );
 
-        // 2. Get the User object from the authentication result
         AgoraUser user = (AgoraUser) authentication.getPrincipal();
 
-        // 3. Update Expo Token if provided
-        if (req.getExpoPushToken() != null) {
+        if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
             user.setExpoPushToken(req.getExpoPushToken());
             userRepo.save(user);
         }
 
-        // 4. Generate tokens
         String jwt = jwtTokenProvider.generateToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
@@ -147,6 +142,10 @@ public class AuthService {
                 .id(user.getId())
                 .userName(user.getUserName())
                 .userEmail(user.getUserEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .mobileNumber(user.getMobileNumber())
+                .collegeId(user.getCollege() != null ? user.getCollege().getId().toString() : null)
                 .verificationStatus(user.getVerificationStatus())
                 .message("Login successful!")
                 .build();
@@ -156,43 +155,28 @@ public class AuthService {
     public LoginResponseDto signup(AuthRequestDto req) {
         log.info("📝 Registering new user: {}", req.getEmail());
         try {
-            // 1. Check if user already exists
             if (userRepo.findByUserEmail(req.getEmail()).isPresent()) {
                 throw new RuntimeException("Account already exists with this email. Please login instead.");
             }
 
-            // 2. Validate College
-            if (req.getCollegeId() == null) {
-                throw new RuntimeException("College selection is required for signup");
-            }
-
-            College college = collegeRepo.findById(req.getCollegeId())
-                    .orElseThrow(() -> new RuntimeException("Invalid college selected"));
-
-            // 3. Create User Entity
             AgoraUser user = new AgoraUser();
             user.setUserEmail(req.getEmail());
-            user.setCollege(college);
 
-            // Use the actual password from the Request DTO instead of a random UUID
             user.setPassword(passwordEncoder.encode(req.getPassword()));
 
-            // Generate a temporary username from email
             String emailPrefix = req.getEmail().split("@")[0];
             user.setUserName(emailPrefix + "_" + new Random().nextInt(1000));
 
-            // Set placeholders and defaults
-            user.setProfileImage("https://your-production-url.com/images/placeHolder.png");
+            user.setProfileImage("http://localhost:9000/images/placeHolder.png");
             user.setRole(UserRole.STUDENT);
             user.setUserStatus(UserStatus.ACTIVE);
-            user.setVerificationStatus(VerificationStatus.PENDING); // Crucial for redirection in FD
+            user.setVerificationStatus(VerificationStatus.PENDING);
             user.setCreatedAt(LocalDateTime.now());
 
             if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
                 user.setExpoPushToken(req.getExpoPushToken());
             }
 
-            // 4. Save to Database
             user = userRepo.save(user);
 
             String jwt = jwtTokenProvider.generateToken(user);
@@ -206,7 +190,7 @@ public class AuthService {
                     .id(user.getId())
                     .userName(user.getUserName())
                     .userEmail(user.getUserEmail())
-                    .collegeId(user.getCollege().getId().toString())
+                    .collegeId(null)
                     .verificationStatus(user.getVerificationStatus())
                     .message("Account created! Please complete your profile.")
                     .build();
@@ -219,6 +203,65 @@ public class AuthService {
 
     @Transactional
     public LoginResponseDto completeProfile(String email, OtpRegistrationRequestDto req) {
+        // 1. Find user by email
+        AgoraUser user = userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        if (user.getVerificationStatus() == VerificationStatus.VERIFIED) {
+            throw new RuntimeException("Profile already completed");
+        }
+
+        // 2. Set the names
+        user.setFirstName(req.getFirstName().trim());
+        user.setLastName(req.getLastName().trim());
+
+        // 3. Set the phone number
+        if (req.getPhoneNumber() != null && !req.getPhoneNumber().isEmpty()) {
+            user.setMobileNumber(req.getPhoneNumber().trim());
+        }
+
+        // 4. ⭐ FIND COLLEGE BY NAME (Changed from ID)
+        if (req.getCollege() != null && !req.getCollege().isEmpty()) {
+            College college = collegeRepo.findByCollegeNameIgnoreCase(req.getCollege())
+                    .orElseThrow(() -> new RuntimeException("College not found: " + req.getCollege()));
+            user.setCollege(college);
+        }
+
+        // 5. Update username
+        user.setUserName(generateUsername(req.getFirstName(), req.getLastName()));
+
+        // 6. Update push token
+        if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
+            user.setExpoPushToken(req.getExpoPushToken());
+        }
+
+        // 7. Mark as verified
+        user.setVerificationStatus(VerificationStatus.VERIFIED);
+
+        AgoraUser savedUser = userRepo.save(user);
+        log.info("User profile completed and verified: email={}", email);
+
+        // 8. Generate new tokens
+        String jwt = jwtTokenProvider.generateToken(savedUser);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser);
+
+        return LoginResponseDto.builder()
+                .jwt(jwt)
+                .refreshToken(refreshToken.getToken())
+                .id(savedUser.getId())
+                .userName(savedUser.getUserName())
+                .mobileNumber(savedUser.getMobileNumber())
+                .firstName(savedUser.getFirstName())
+                .lastName(savedUser.getLastName())
+                .userEmail(savedUser.getUserEmail())
+                .collegeId(savedUser.getCollege() != null ? savedUser.getCollege().getId().toString() : null)
+                .verificationStatus(savedUser.getVerificationStatus())
+                .message("Profile completed! You can now create listings.")
+                .build();
+    }
+
+    @Transactional
+    public LoginResponseDto completeProfilev1(String email, OtpRegistrationRequestDto req) {
         // 1. SEARCH BY EMAIL (Not mobile number anymore)
         AgoraUser user = userRepo.findByUserEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
@@ -269,6 +312,7 @@ public class AuthService {
                 .build();
     }
 
+
 //
 //    @Transactional
 //    public LoginResponseDto completeProfile(String phoneNumber, OtpRegistrationRequestDto req) {
@@ -288,12 +332,13 @@ public class AuthService {
 //
 //        user.setUserName(generateUsername(req.getFirstName(), req.getLastName()));
 //
-////        // Update college if not set or changed
-////        if (req.getCollege() != null && !req.getCollege().isEmpty()) {
-////            College college = collegeRepo.findByCollegeNameIgnoreCase(req.getCollege())
-////                    .orElseThrow(() -> new RuntimeException("Invalid college selected"));
-////            user.setCollege(college);
-////        }
+
+    /// /        // Update college if not set or changed
+    /// /        if (req.getCollege() != null && !req.getCollege().isEmpty()) {
+    /// /            College college = collegeRepo.findByCollegeNameIgnoreCase(req.getCollege())
+    /// /                    .orElseThrow(() -> new RuntimeException("Invalid college selected"));
+    /// /            user.setCollege(college);
+    /// /        }
 //
 //        if (req.getExpoPushToken() != null && !req.getExpoPushToken().isEmpty()) {
 //            user.setExpoPushToken(req.getExpoPushToken());
@@ -348,43 +393,47 @@ public class AuthService {
 //    }
 
 
-    public LoginResponseDto login(LoginRequestDto req) {
-        // 1. Authenticate the user
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
-
-        // 2. The principal is your AgoraUser object.
-        // Cast it directly so you don't need to call userRepo again.
-        AgoraUser user = (AgoraUser) authentication.getPrincipal();
-
-        // 3. Generate tokens
-        String jwt = jwtTokenProvider.generateToken(user);
-        RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user);
-
-        // 4. Build response using the 'user' object we already have
-        return LoginResponseDto.builder()
-                .jwt(jwt)
-                .refreshToken(refreshTokenEntity.getToken())
-                .id(user.getId())
-                .userName(user.getUserName()) // Use your custom getter or variable
-                .userEmail(user.getUserEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .mobileNumber(user.getMobileNumber())
-                .verificationStatus(user.getVerificationStatus())
-                .message("Login successful!")
-                .build();
-    }
-
+//    public LoginResponseDto login(LoginRequestDto req) {
+//        // 1. Authenticate the user
+//        Authentication authentication = authenticationManager
+//                .authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
+//
+//        // 2. The principal is your AgoraUser object.
+//        // Cast it directly so you don't need to call userRepo again.
+//        AgoraUser user = (AgoraUser) authentication.getPrincipal();
+//
+//        // 3. Generate tokens
+//        String jwt = jwtTokenProvider.generateToken(user);
+//        RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user);
+//
+//        // 4. Build response using the 'user' object we already have
+//        return LoginResponseDto.builder()
+//                .jwt(jwt)
+//                .refreshToken(refreshTokenEntity.getToken())
+//                .id(user.getId())
+//                .userName(user.getUserName()) // Use your custom getter or variable
+//                .userEmail(user.getUserEmail())
+//                .firstName(user.getFirstName())
+//                .lastName(user.getLastName())
+//                .mobileNumber(user.getMobileNumber())
+//                .verificationStatus(user.getVerificationStatus())
+//                .message("Login successful!")
+//                .build();
+//    }
     private String generateUsername(String firstName, String lastName) {
-        String baseUsername = (firstName + lastName).toLowerCase().replaceAll("\\s+", "");
+        String safeLastName = (lastName != null && !lastName.isEmpty()) ? lastName : "";
+        String baseUsername = (firstName + safeLastName).toLowerCase().replaceAll("\\s+", "");
+
+        if (baseUsername.isEmpty()) {
+            baseUsername = "user";
+        }
+
         String username = baseUsername;
         int counter = 1;
 
-        while (userRepo.findByUserName(username).isPresent()) {
+        while (userRepo.existsByUserName(username)) {
             username = baseUsername + counter++;
         }
-
         return username;
     }
 }

@@ -18,7 +18,6 @@ public class OtpRegistrationRequestDto {
     private String lastName;
 
     @Email(message = "Invalid email format")
-    @NotBlank(message = "Email is required")
     private String userEmail;
 
     @NotBlank(message = "College is required")

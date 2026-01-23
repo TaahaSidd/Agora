@@ -133,6 +133,12 @@
 			<artifactId>google-cloud-vision</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+
 		<!-- All auth dependencies automatically included by BOM -->
 		<!-- No need to add google-auth-library-* manually -->
 

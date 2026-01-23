@@ -60,7 +60,6 @@ public class UserService {
         user.setRole(UserRole.STUDENT);
         user.setVerificationStatus(VerificationStatus.PENDING);
 
-
         AgoraUser savedUser = userRepo.save(user);
 
         UserResponseDto responseDto = dto.mapToUserResponseDto(savedUser);

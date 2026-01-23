@@ -38,7 +38,7 @@ public class PasswordResetService {
         resetRepo.save(token);
 
         try {
-            emailService.sendOtpEmail(email, otp);
+           // emailService.sendOtpEmail(email, otp);
         } catch (Exception e) {
             System.err.println("Failed to send OTP email: " + e.getMessage());
         }

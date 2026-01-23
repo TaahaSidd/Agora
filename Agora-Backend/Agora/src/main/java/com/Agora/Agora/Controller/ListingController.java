@@ -13,8 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -79,23 +79,35 @@ public class ListingController {
         return ResponseEntity.noContent().build();
     }
 
+//    @PostMapping("/search")
+//    public ResponseEntity<List<ListingResponseDto>> searchListings(
+//            @Valid @RequestBody ListingFilterReqDto req,
+//            Authentication authentication
+//    ) {
+//        Long currentUserId = null;
+//
+//        if (authentication != null && authentication.isAuthenticated()
+//                && !(authentication instanceof AnonymousAuthenticationToken)) {
+//
+//            AgoraUser user = userService.findByMobileNumber(authentication.getName());
+//            currentUserId = user.getId();
+//        }
+//
+//        List<ListingResponseDto> results = listingService.searchListings(req, currentUserId);
+//        return ResponseEntity.ok(results);
+//    }
+
     @PostMapping("/search")
     public ResponseEntity<List<ListingResponseDto>> searchListings(
             @Valid @RequestBody ListingFilterReqDto req,
-            Authentication authentication
-    ) {
-        Long currentUserId = null;
+            @AuthenticationPrincipal AgoraUser user) {
 
-        if (authentication != null && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken)) {
-
-            AgoraUser user = userService.findByMobileNumber(authentication.getName());
-            currentUserId = user.getId();
-        }
+        Long currentUserId = (user != null) ? user.getId() : null;
 
         List<ListingResponseDto> results = listingService.searchListings(req, currentUserId);
         return ResponseEntity.ok(results);
     }
+
 
     @GetMapping("/my-listings")
     @PreAuthorize("isAuthenticated()")

@@ -33,7 +33,7 @@ public class JwtTokenProvider {
             extraClaims.put("phone", user.getMobileNumber());
             extraClaims.put("username", user.getUserName());
 
-            return generateToken(extraClaims, user.getMobileNumber());
+            return generateToken(extraClaims, user.getUserEmail());
         }
         return generateToken(extraClaims, userDetails.getUsername());
     }

@@ -15,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EmailService {
 
-    @Value("${BREVO_API_KEY}")
-    private String brevoApiKey;
+//    @Value("${BREVO_API_KEY}")
+//    private String brevoApiKey;
 
     private final String BREVO_URL = "https://api.brevo.com/v3/smtp/email";
     private final RestTemplate restTemplate = new RestTemplate();
@@ -61,7 +61,7 @@ public class EmailService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("api-key", brevoApiKey);
+       // headers.set("api-key", brevoApiKey);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
