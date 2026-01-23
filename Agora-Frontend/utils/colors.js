@@ -74,7 +74,7 @@ export const COLORS = {
         // Dark mode text colors
         text: '#FFFFFF',
         textSecondary: '#EBEBF5',
-        textTertiary: '#EBEBF599', // 60% opacity
+        textTertiary: 'rgb(195,195,195)', // 60% opacity
         textQuaternary: '#EBEBF54D', // 30% opacity
         textDisabled: '#EBEBF533', // 20% opacity
 
@@ -86,7 +86,7 @@ export const COLORS = {
 
     // Light Mode Backgrounds
     light: {
-        bg: '#F9FAFB',           // Main background
+        bg: '#F1F5F9',           // Main background
         bgElevated: '#FFFFFF',   // Elevated surfaces
         card: '#FFFFFF',         // Card backgrounds
         cardElevated: '#F9FAFB', // Elevated cards
@@ -202,13 +202,3 @@ export const getThemedColors = (isDarkMode) => {
         info: COLORS.info,
     };
 };
-
-// Usage example:
-// import { COLORS, getThemedColors } from './colors';
-// 
-// In your component:
-// const isDarkMode = useColorScheme() === 'dark';
-// const theme = getThemedColors(isDarkMode);
-// 
-// Then use: theme.background, theme.text, etc.
-// Or use directly: COLORS.primary, COLORS.success, etc.
