@@ -1,39 +1,15 @@
 import axios from "axios";
 import * as SecureStore from 'expo-secure-store';
 import {jwtDecode} from 'jwt-decode';
-import {Alert} from 'react-native';
 
 //const BASE_URL = "http://192.168.8.15:9000/Agora";
 // const BASE_URL = "https://francisca-overjocular-cheryle.ngrok-free.dev/Agora";
-
 const BASE_URL = "https://agora-backend-cw64.onrender.com/Agora";
 
 const authApi = axios.create({
     baseURL: BASE_URL,
     timeout: 10000,
 });
-
-// async function refreshJwt() {
-//     const refreshToken = await SecureStore.getItemAsync('refreshToken');
-//     if (!refreshToken) throw new Error('No refresh token');
-//
-//     try {
-//         const res = await authApi.post('/auth/refresh', {refreshToken});
-//         const {jwt: newJwt, refreshToken: newRefresh} = res.data;
-//
-//         await SecureStore.setItemAsync('accessToken', newJwt);
-//         if (newRefresh) await SecureStore.setItemAsync('refreshToken', newRefresh);
-//         return newJwt;
-//     } catch (err) {
-//         await SecureStore.deleteItemAsync('accessToken');
-//         await SecureStore.deleteItemAsync('refreshToken');
-//         // Only alert if it's not a network error
-//         if (err.response) {
-//             Alert.alert("Session expired", "Please login again");
-//         }
-//         throw err;
-//     }
-// }
 
 async function refreshJwt() {
     const refreshToken = await SecureStore.getItemAsync('refreshToken');
@@ -43,51 +19,75 @@ async function refreshJwt() {
         const res = await authApi.post('/auth/refresh', {refreshToken});
         const {jwt: newJwt, refreshToken: newRefresh} = res.data;
 
+        // ⭐ Only save to accessToken (single token key)
         await SecureStore.setItemAsync('accessToken', newJwt);
         if (newRefresh) await SecureStore.setItemAsync('refreshToken', newRefresh);
         return newJwt;
     } catch (err) {
+        // ⭐ Clear ALL tokens on refresh failure
         await SecureStore.deleteItemAsync('accessToken');
+        await SecureStore.deleteItemAsync('authToken'); // Clean up legacy token
         await SecureStore.deleteItemAsync('refreshToken');
+        await SecureStore.deleteItemAsync('currentUser');
 
         console.log('🔄 Token refresh failed - Session cleared');
-
         throw err;
     }
 }
 
-const api = axios.create({
+export const api = axios.create({
     baseURL: BASE_URL,
-    // headers: { "Content-Type": "application/json" },
     timeout: 30000,
 });
 
 async function isJwtExpired(token) {
     if (!token) return true;
-    const {exp} = jwtDecode(token);
-    return Date.now() >= exp * 1000;
+    try {
+        const {exp} = jwtDecode(token);
+        return Date.now() >= exp * 1000;
+    } catch (e) {
+        return true;
+    }
 }
 
 api.interceptors.request.use(
     async (config) => {
+        // Skip auth for refresh endpoint
         if (config.url.includes("/auth/refresh")) {
             return config;
         }
 
         const publicEndpoints = [
-            "/college/colleges", "/auth/login/otp", "/auth/signup/otp",
-            "/auth/check", "/auth/refresh", "/auth/forgot-password",
-            "/auth/reset-password", "/listing/all", "/follow",
-            "/profile/seller/", "/Review/seller/", "/listing/popular-categories",
+            "/college/colleges",
+            "/auth/login",
+            "/auth/signup",
+            "/auth/google-signin",
+            "/auth/check",
+            "/auth/refresh",
+            "/auth/forgot-password",
+            "/auth/reset-password",
+            "/listing/all",
+            "/listing/popular-categories",
         ];
 
         const isPublic = publicEndpoints.some((url) => config.url.includes(url));
+
+        // ⭐ Only check accessToken (single source of truth)
         let token = await SecureStore.getItemAsync("accessToken");
 
-        if (token && await isJwtExpired(token)) {
+        if (!token) {
+            console.log('⚠️ INTERCEPTOR - No token found');
+            return config;
+        }
+
+        // Check if token is expired
+        if (await isJwtExpired(token)) {
+            console.log('⏰ INTERCEPTOR - Token expired, refreshing...');
             try {
                 token = await refreshJwt();
+                console.log('✅ INTERCEPTOR - Token refreshed successfully');
             } catch (error) {
+                console.log('❌ INTERCEPTOR - Refresh failed:', error.message);
                 if (!isPublic) throw error;
                 token = null;
             }
@@ -95,8 +95,12 @@ api.interceptors.request.use(
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log('✅ INTERCEPTOR - Auth header set');
+        } else {
+            console.log('⚠️ INTERCEPTOR - No token, making public request');
         }
 
+        // Handle FormData
         if (config.data instanceof FormData) {
             config.headers['Content-Type'] = 'multipart/form-data';
         }
@@ -106,30 +110,24 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// api.interceptors.response.use(
-//     (response) => response,
-//     async (error) => {
-//         const status = error.response?.status;
-//         const serverMessage = error.response?.data?.message;
-//
-//         const token = await SecureStore.getItemAsync('accessToken');
-//         const isActuallyGuest = !token;
-//
-//         if (status === 403) {
-//             if (isActuallyGuest) {
-//                 console.log("🔒 Silent 403: Guest hit protected route.");
-//             } else {
-//                 Alert.alert("Access Denied", "You don't have permission to do this.");
-//             }
-//         } else if (status === 500) {
-//             Alert.alert("Server Error", "Something went wrong on our end.");
-//         } else if (serverMessage && status !== 401) {
-//             Alert.alert("Agora", serverMessage);
-//         }
-//
-//         return Promise.reject(error);
-//     }
-// );
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const status = error.response?.status;
+
+        if (status === 401) {
+            console.log('🚫 401 Unauthorized - Clearing session');
+            await SecureStore.deleteItemAsync('accessToken');
+            await SecureStore.deleteItemAsync('authToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+            await SecureStore.deleteItemAsync('currentUser');
+        }
+
+        return Promise.reject(error);
+    }
+);
+
+// ===== API HELPER FUNCTIONS =====
 
 export const getColleges = async () => {
     const res = await api.get('/college/colleges');
@@ -166,20 +164,48 @@ export const apiPatch = async (endpoint, body) => {
     return res.data;
 };
 
-export const loginWithOtp = async (firebaseToken, expoPushToken) => {
-    const payload = {firebaseToken, expoPushToken};
+// ===== AUTH FUNCTIONS =====
+
+export const sendOtpForLogin = async (email) => {
+    return await apiPost('/auth/send-otp/login', {email});
+};
+
+export const sendOtpForSignup = async (email) => {
+    return await apiPost('/auth/send-otp/signup', {email});
+};
+
+export const loginWithOtp = async (email, otp, expoPushToken) => {
+    const payload = {email, otp, expoPushToken};
     return await apiPost('/auth/login/otp', payload);
 };
 
-export const signupWithOtp = async (firebaseToken, collegeId, expoPushToken) => {
-    const payload = {firebaseToken, collegeId, expoPushToken};
+export const signupWithOtp = async (email, otp, collegeId, expoPushToken) => {
+    const payload = {email, otp, collegeId, expoPushToken};
     return await apiPost('/auth/signup/otp', payload);
 };
 
-export const completeProfile = async (jwt, profileData) => {
+export const signup = async (payload) => {
+    return await apiPost('/auth/signup', payload);
+};
 
+export const login = async (payload) => {
+    return await apiPost('/auth/login', payload);
+};
+
+export const completeProfile = async (token, profileData) => {
     const res = await api.put('/auth/complete-profile', profileData, {
-        headers: {'Authorization': `Bearer ${jwt}`}
+        headers: {'Authorization': `Bearer ${token}`}
     });
     return res.data;
+};
+
+// ===== UTILITY FUNCTIONS =====
+
+
+export const clearAuthData = async () => {
+    await SecureStore.deleteItemAsync('accessToken');
+    await SecureStore.deleteItemAsync('authToken');
+    await SecureStore.deleteItemAsync('refreshToken');
+    await SecureStore.deleteItemAsync('currentUser');
+    console.log('✅ All auth data cleared');
 };
