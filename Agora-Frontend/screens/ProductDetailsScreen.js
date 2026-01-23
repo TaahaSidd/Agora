@@ -34,7 +34,7 @@ import {useListings} from "../hooks/useListings";
 
 import {COLORS} from "../utils/colors";
 import {THEME} from "../utils/theme";
-import { formatPrice } from '../utils/formatters';
+import {formatPrice} from '../utils/formatters';
 
 
 const {height, width} = Dimensions.get("window");
@@ -44,7 +44,6 @@ export default function ProductDetailsScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const product = route.params?.item;
-    //console.log("PRODUCT", product);
     const {items: allListings} = useListings();
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
     const showToast = ({type, title, message}) => {
@@ -61,9 +60,10 @@ export default function ProductDetailsScreen() {
     const relatedListings = allListings.filter((listing) => listing.id !== product.id && listing.category === product.category);
 
     if (!product) {
-        return (<View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-            <Text>Product not found!</Text>
-        </View>);
+        return (
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.light.bg}}>
+                <Text style={{color: COLORS.light.text}}>Product not found!</Text>
+            </View>);
     }
 
     const images = product?.images?.length ? product.images : product?.image ? [{uri: product.image}] : [require("../assets/no-image.jpg")];
@@ -75,37 +75,11 @@ export default function ProductDetailsScreen() {
     const productDescription = product?.description || "No description provided for this product.";
     const sellerSince = "2025";
 
-    let sellerAvatar = product.seller?.avatar;
-    if (sellerAvatar?.includes('localhost')) {
-        sellerAvatar = sellerAvatar.replace('localhost', '192.168.8.15');
-    }
-
     const scrollViewRef = useRef(null);
 
-    //Scroll to top
     useEffect(() => {
         scrollViewRef.current?.scrollTo({y: 0, animated: false});
     }, [product?.id]);
-
-    // const openInMaps = () => {
-    //     if (!product?.college?.latitude || !product?.college?.longitude) return;
-    //
-    //     const lat = Number(product.college.latitude);
-    //     const lng = Number(product.college.longitude);
-    //     const label = product.college.collegeName || "College";
-    //
-    //     const scheme = Platform.select({
-    //         ios: 'maps://0,0?q=', android: 'geo:0,0?q='
-    //     });
-    //
-    //     const latLng = `${lat},${lng}`;
-    //
-    //     const url = Platform.select({
-    //         ios: `${scheme}${label}@${latLng}`, android: `${scheme}${latLng}(${label})`
-    //     });
-    //
-    //     Linking.openURL(url);
-    // };
 
     const openChatRoom = async () => {
         if (loading || chatLoading) return;
@@ -116,14 +90,8 @@ export default function ProductDetailsScreen() {
             return;
         }
 
-        if (!product?.seller || !product.seller.id) {
-            console.warn("Seller data not loaded yet");
-            return;
-        }
-
         try {
             setChatLoading(true);
-
             const buyer = {
                 id: currentUser.id,
                 email: currentUser.email,
@@ -206,22 +174,21 @@ export default function ProductDetailsScreen() {
     </TouchableOpacity>);
 
     return (<View style={styles.container}>
-            <StatusBar barStyle="light-content" translucent backgroundColor="transparent"/>
+            <StatusBar barStyle="dark-content" translucent backgroundColor="transparent"/>
 
             {/* Floating Header */}
             <View style={styles.headerRow}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-                    <Icon name="arrow-back" size={24} color="#fff"/>
+                    <Icon name="arrow-back" size={24} color="#000"/>
                 </TouchableOpacity>
 
                 <View style={styles.headerActions}>
-                    {/*<FavoriteButton listingId={product.id} size={24}/>*/}
                     <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={() => setShowMenu(true)}
                         style={styles.iconBtn}
                     >
-                        <Ionicons name="ellipsis-vertical" size={20} color="#fff"/>
+                        <Ionicons name="ellipsis-vertical" size={20} color="#000"/>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -280,13 +247,11 @@ export default function ProductDetailsScreen() {
 
                 {/* Main Content */}
                 <View style={styles.content}>
-                    {/* Title  */}
                     <View style={styles.titleSection}>
                         <Text style={styles.productName}>{productName}</Text>
                         <FavoriteButton listingId={product.id} size={28}/>
                     </View>
 
-                    {/* Price + Condition Badge */}
                     <Text style={styles.productPrice}>{formatPrice(productPrice)}</Text>
 
                     {/* College Row */}
@@ -319,10 +284,6 @@ export default function ProductDetailsScreen() {
 
                     <View style={styles.sectionDivider}/>
 
-                    {/*<Text style={styles.sectionTitle}>Description</Text>*/}
-                    {/*<ExpandableText text={productDescription || "No description available."}/>*/}
-                    {/*<View style={styles.sectionDivider}/>*/}
-
                     <Text style={styles.sectionTitle}>Product Details</Text>
                     <View style={styles.detailsGrid}>
                         <ProductDetailItem label="Condition" value={productCondition}/>
@@ -335,39 +296,12 @@ export default function ProductDetailsScreen() {
 
                     <View style={styles.sectionDivider}/>
 
-                    {/*/!* Enhanced Map Section *!/*/}
-                    {/*<View style={styles.mapHeader}>*/}
-                    {/*    <Text style={styles.sectionTitle}>Location</Text>*/}
-                    {/*    <TouchableOpacity*/}
-                    {/*        style={styles.viewMapButton}*/}
-                    {/*        onPress={openInMaps}*/}
-                    {/*        activeOpacity={0.7}*/}
-                    {/*    >*/}
-                    {/*        <Icon name="navigate" size={16} color={COLORS.primary}/>*/}
-                    {/*        <Text style={styles.viewMapText}>Directions</Text>*/}
-                    {/*    </TouchableOpacity>*/}
-                    {/*</View>*/}
-
-                    {/*<View style={styles.mapCard}>*/}
-                    {/*    <MapView*/}
-                    {/*        style={styles.map}*/}
-                    {/*        initialRegion={productCoordinates}*/}
-                    {/*        scrollEnabled={false}*/}
-                    {/*        zoomEnabled={false}*/}
-                    {/*    >*/}
-                    {/*        <Marker coordinate={productCoordinates} title={productName}/>*/}
-                    {/*    </MapView>*/}
-                    {/*</View>*/}
-
-                    {/*<View style={styles.sectionDivider}/>*/}
-
-                    {/* Enhanced Related Listings */}
                     <View style={styles.relatedHeader}>
                         <Text style={styles.sectionTitle}>Similar Listings</Text>
                     </View>
 
                     {relatedListings.length === 0 ? (<View style={styles.emptyRelatedContainer}>
-                        <Ionicons name="cube-outline" size={32} color={COLORS.gray500}/>
+                        <Ionicons name="cube-outline" size={32} color={COLORS.gray400}/>
                         <Text style={styles.emptyRelatedText}>
                             No similar listings found.
                         </Text>
@@ -386,7 +320,6 @@ export default function ProductDetailsScreen() {
 
                     <View style={styles.sectionDivider}/>
 
-                    {/* Safety Tips */}
                     <SafetyTips/>
 
                 </View>
@@ -427,7 +360,6 @@ export default function ProductDetailsScreen() {
                 </View>
             )}
 
-            {/* Bottom Sheet Menu */}
             <BottomSheetMenu
                 visible={showMenu}
                 onClose={() => setShowMenu(false)}
@@ -467,7 +399,7 @@ export default function ProductDetailsScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, backgroundColor: COLORS.dark.bg,
+        flex: 1, backgroundColor: COLORS.light.bg,
     }, headerRow: {
         position: "absolute",
         top: 0,
@@ -487,12 +419,17 @@ const styles = StyleSheet.create({
         height: 40,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: COLORS.transparentBlack50,
+        backgroundColor: "rgba(255, 255, 255, 0.8)",
         borderRadius: THEME.borderRadius.full,
+        shadowColor: "#000",
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     }, scrollView: {
         flex: 1,
     }, imageContainer: {
-        height: 380, backgroundColor: COLORS.black, position: "relative",
+        height: 380, backgroundColor: COLORS.gray100, position: "relative",
     }, imageSlide: {
         width: width, height: 380,
     }, productImage: {
@@ -504,7 +441,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: THEME.borderRadius.full,
-        backgroundColor: COLORS.transparentBlack70,
+        backgroundColor: "rgba(0, 0, 0, 0.4)",
         alignItems: "center",
         justifyContent: "center",
         zIndex: THEME.zIndex.dropdown,
@@ -521,11 +458,11 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     }, dot: {
-        width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.transparentWhite30, marginHorizontal: 3,
+        width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(0, 0, 0, 0.2)", marginHorizontal: 3,
     }, activeDot: {
-        backgroundColor: COLORS.white, width: 24,
+        backgroundColor: COLORS.primary, width: 24,
     }, content: {
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
         borderTopLeftRadius: THEME.borderRadius['2xl'],
         borderTopRightRadius: THEME.borderRadius['2xl'],
         marginTop: -THEME.spacing.lg,
@@ -543,7 +480,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: THEME.fontSize['2xl'],
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.text,
         lineHeight: THEME.fontSize['2xl'] * 1.3,
         letterSpacing: -0.5,
         paddingRight: THEME.spacing.md,
@@ -551,17 +488,17 @@ const styles = StyleSheet.create({
     productPrice: {
         fontSize: THEME.fontSize['3xl'],
         fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.gray400,
+        color: COLORS.primary,
         letterSpacing: -0.8,
         marginBottom: THEME.spacing.lg,
     }, infoRow: {
         flexDirection: "row",
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: THEME.borderRadius.lg,
         padding: THEME.spacing.md,
         marginBottom: THEME.spacing.md,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     }, infoItem: {
         flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
     }, infoIconCircle: {
@@ -576,129 +513,28 @@ const styles = StyleSheet.create({
         flex: 1,
     }, infoLabel: {
         fontSize: THEME.fontSize.xs,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         fontWeight: THEME.fontWeight.medium,
         marginBottom: 2,
     }, infoValue: {
-        fontSize: THEME.fontSize.sm, color: COLORS.dark.text, fontWeight: THEME.fontWeight.semibold,
-    }, infoSeparator: {
-        width: 1, backgroundColor: COLORS.dark.border, marginHorizontal: THEME.spacing.md,
+        fontSize: THEME.fontSize.sm, color: COLORS.light.text, fontWeight: THEME.fontWeight.semibold,
     }, sectionDivider: {
-        height: 1, backgroundColor: COLORS.dark.border, marginVertical: THEME.spacing.lg,
+        height: 1, backgroundColor: COLORS.light.border, marginVertical: THEME.spacing.lg,
     }, sectionTitle: {
         fontSize: THEME.fontSize.lg,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: THEME.spacing.md,
     }, detailsGrid: {
         gap: THEME.spacing[2],
-    }, mapHeader: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: THEME.spacing.md,
-    }, viewMapButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: THEME.spacing[1],
-        backgroundColor: COLORS.primary + '15',
-        paddingHorizontal: THEME.spacing[3],
-        paddingVertical: THEME.spacing[2],
-        borderRadius: THEME.borderRadius.lg,
-    }, viewMapText: {
-        fontSize: THEME.fontSize.sm, fontWeight: THEME.fontWeight.bold, color: COLORS.primary,
-    }, mapCard: {
-        width: '100%',
-        height: 180,
-        borderRadius: THEME.borderRadius.lg,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-    }, map: {
-        flex: 1,
-    }, reviewsHeader: {
-        marginBottom: THEME.spacing.md,
-    }, ratingSummaryCard: {
-        flexDirection: 'row',
-        backgroundColor: COLORS.dark.card,
-        borderRadius: THEME.borderRadius.lg,
-        padding: THEME.spacing.lg,
-        marginBottom: THEME.spacing.lg,
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-    }, ratingLeft: {
-        alignItems: 'center',
-        paddingRight: THEME.spacing.lg,
-        borderRightWidth: 1,
-        borderRightColor: COLORS.dark.border,
-        marginRight: THEME.spacing.lg,
-    }, avgRatingNumber: {
-        fontSize: 48, fontWeight: THEME.fontWeight.extrabold, color: COLORS.dark.text, lineHeight: 52,
-    }, ratingStarsRow: {
-        flexDirection: 'row', marginBottom: THEME.spacing[2],
-    }, totalReviews: {
-        fontSize: THEME.fontSize.sm, color: COLORS.dark.textSecondary, fontWeight: THEME.fontWeight.semibold,
-    }, ratingRight: {
-        flex: 1, justifyContent: 'center',
-    }, ratingBarRow: {
-        flexDirection: 'row', alignItems: 'center', marginBottom: THEME.spacing[2],
-    }, ratingBarLabel: {
-        fontSize: THEME.fontSize.xs, fontWeight: THEME.fontWeight.bold, color: COLORS.dark.textSecondary, width: 30,
-    }, ratingBarTrack: {
-        flex: 1,
-        height: 6,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.xs,
-        marginHorizontal: THEME.spacing[2],
-        overflow: 'hidden',
-    }, ratingBarFill: {
-        height: '100%', backgroundColor: COLORS.warning, borderRadius: THEME.borderRadius.xs,
-    }, ratingBarCount: {
-        fontSize: THEME.fontSize.xs,
-        fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.textTertiary,
-        width: 24,
-        textAlign: 'right',
-    }, reviewsListContainer: {
-        marginBottom: THEME.spacing.md,
-    }, reviewCard: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: THEME.borderRadius.lg,
-        padding: THEME.spacing.md,
-        marginBottom: THEME.spacing[2],
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-    }, reviewHeader: {
-        marginBottom: THEME.spacing[2],
-    }, reviewUserInfo: {
-        flexDirection: 'row', alignItems: 'center',
-    }, reviewAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: COLORS.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: THEME.spacing[3],
-    }, reviewAvatarText: {
-        fontSize: THEME.fontSize.lg, fontWeight: THEME.fontWeight.extrabold, color: COLORS.white,
-    }, reviewUserDetails: {
-        flex: 1,
-    }, reviewNameRow: {
-        flexDirection: 'row', alignItems: 'center', marginBottom: 2,
-    }, reviewUser: {
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
-        marginRight: THEME.spacing[1],
-    }, verifiedBadge: {
-        flexDirection: 'row', alignItems: 'center',
-    }, // Related Listings Styles
-    relatedHeader: {
+    }, relatedHeader: {
         marginBottom: THEME.spacing.md,
     }, relatedList: {
         gap: THEME.spacing[3],
     }, emptyRelatedContainer: {
         paddingVertical: THEME.spacing['2xl'], alignItems: 'center', gap: THEME.spacing[2],
     }, emptyRelatedText: {
-        fontSize: THEME.fontSize.sm, color: COLORS.dark.textSecondary, textAlign: 'center',
+        fontSize: THEME.fontSize.sm, color: COLORS.light.textSecondary, textAlign: 'center',
     }, bottomBar: {
         position: "absolute",
         bottom: 0,
@@ -707,5 +543,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: THEME.spacing.md,
         paddingTop: THEME.spacing[3],
         paddingBottom: Platform.OS === 'ios' ? THEME.spacing['2xl'] : THEME.spacing[3],
+        backgroundColor: COLORS.light.bg,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.light.border,
     },
 });

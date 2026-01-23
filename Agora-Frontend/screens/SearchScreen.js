@@ -10,18 +10,16 @@ import {
     View,
 } from "react-native";
 import {Ionicons} from "@expo/vector-icons";
-import axios from "axios";
 import debounce from "lodash.debounce";
 
 import {COLORS} from '../utils/colors';
 import {THEME} from "../utils/theme";
+import {apiPost} from '../services/api';
 
 import SearchInput from "../components/SearchInput";
-import Card from "../components/Cards"; // ✅ Import your Card component
+import Card from "../components/Cards";
 
 import RoadSVG from '../assets/svg/RoadSVG.svg';
-
-const BACKEND_URL = "https://francisca-overjocular-cheryle.ngrok-free.dev/Agora";
 
 const SearchScreen = ({navigation}) => {
     const [searchQuery, setSearchQuery] = useState("");
@@ -36,22 +34,26 @@ const SearchScreen = ({navigation}) => {
         }
         setLoading(true);
         try {
-            const response = await axios.post(`${BACKEND_URL}/listing/search`, {
+            const res = await apiPost('/listing/search', {
                 keyword: query,
             });
 
-            const formatted = response.data.map(item => ({
-                ...item,
-                images: item.imageUrl && item.imageUrl.length > 0
-                    ? item.imageUrl.map(url => ({uri: url}))
-                    : [require('../assets/no-image.jpg')],
-                name: item.title || 'Untitled',
-                price: item.price ? `₹ ${item.price}` : 'N/A',
-            }));
+            if (res && Array.isArray(res)) {
+                const formatted = res.map(item => ({
+                    ...item,
+                    images: item.imageUrl && item.imageUrl.length > 0
+                        ? item.imageUrl.map(url => ({ uri: url }))
+                        : [require('../assets/no-image.jpg')],
+                    name: item.title || 'Untitled',
+                    price: item.price ? `₹ ${item.price}` : 'N/A',
+                }));
 
-            setSearchResults(formatted);
+                setSearchResults(formatted);
+            } else {
+                setSearchResults([]);
+            }
         } catch (err) {
-            console.log("Search error:", err);
+            console.log("Search error:", err.response?.status, err.response?.data);
         } finally {
             setLoading(false);
         }
@@ -76,18 +78,10 @@ const SearchScreen = ({navigation}) => {
     };
 
     const handleClearAll = () => setRecentSearches([]);
-
     const handleBackPress = () => navigation.goBack();
 
-    const handleSearchItemPress = (item) => {
-        if (!recentSearches.includes(item.title || item)) {
-            setRecentSearches([item.title || item, ...recentSearches].slice(0, 10));
-        }
-    };
-
-    // ✅ USE YOUR CARD COMPONENT
     const renderSearchResult = ({item}) => (
-        <Card item={item} horizontal={false} />
+        <Card item={item} horizontal={false}/>
     );
 
     const renderRecentSearch = ({item}) => (
@@ -103,7 +97,7 @@ const SearchScreen = ({navigation}) => {
                 <Ionicons
                     name="time-outline"
                     size={20}
-                    color="#6B7280"
+                    color={COLORS.light.textTertiary}
                 />
             </View>
             <Text style={styles.itemText}>{item}</Text>
@@ -117,7 +111,7 @@ const SearchScreen = ({navigation}) => {
                 <Ionicons
                     name="close-circle"
                     size={20}
-                    color="#67707fff"
+                    color={COLORS.light.textTertiary}
                 />
             </TouchableOpacity>
         </TouchableOpacity>
@@ -125,7 +119,7 @@ const SearchScreen = ({navigation}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content"/>
+            <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content"/>
 
             <View style={styles.container}>
                 {/* Search Header */}
@@ -135,7 +129,8 @@ const SearchScreen = ({navigation}) => {
                         style={styles.backButton}
                         activeOpacity={0.7}
                     >
-                        <Ionicons name="arrow-back" size={24} color="#ffffffff"/>
+                        {/* Changed from white to text color */}
+                        <Ionicons name="arrow-back" size={24} color={COLORS.light.text}/>
                     </TouchableOpacity>
                     <SearchInput
                         value={searchQuery}
@@ -161,7 +156,6 @@ const SearchScreen = ({navigation}) => {
                     )}
                 </View>
 
-                {/* Results/List */}
                 {loading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={COLORS.primary}/>
@@ -172,9 +166,8 @@ const SearchScreen = ({navigation}) => {
                         data={searchQuery ? searchResults : recentSearches}
                         keyExtractor={(item, index) => `${item.id || item}-${index}`}
                         renderItem={searchQuery ? renderSearchResult : renderRecentSearch}
-                        // ✅ GRID LAYOUT FOR SEARCH RESULTS
                         numColumns={searchQuery ? 2 : 1}
-                        key={searchQuery ? 'grid' : 'list'} // Force re-render on layout change
+                        key={searchQuery ? 'grid' : 'list'}
                         columnWrapperStyle={searchQuery ? styles.columnWrapper : null}
                         contentContainerStyle={styles.listContainer}
                         showsVerticalScrollIndicator={false}
@@ -194,7 +187,7 @@ const SearchScreen = ({navigation}) => {
                                             <Ionicons
                                                 name="time-outline"
                                                 size={48}
-                                                color={COLORS.gray500}
+                                                color={COLORS.light.textTertiary}
                                             />
                                         </View>
                                         <Text style={styles.emptyTitle}>No recent searches</Text>
@@ -216,20 +209,20 @@ const SearchScreen = ({navigation}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     searchHeader: {
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 20,
         paddingVertical: 12,
-        backgroundColor: COLORS.dark.bgElevated,
+        backgroundColor: COLORS.light.card,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
+        borderBottomColor: COLORS.light.border,
         marginTop: 30,
     },
     backButton: {
@@ -250,7 +243,7 @@ const styles = StyleSheet.create({
     headerText: {
         fontSize: 18,
         fontWeight: "800",
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         letterSpacing: -0.3,
     },
     clearText: {
@@ -262,21 +255,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 20,
     },
-    // ✅ ADD COLUMN WRAPPER FOR GRID
     columnWrapper: {
         justifyContent: 'space-between',
     },
     item: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         paddingVertical: 16,
         paddingHorizontal: 16,
         borderRadius: 16,
         marginBottom: 8,
         shadowColor: "#000",
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.05, // Lowered opacity for cleaner light mode
         shadowRadius: 8,
         elevation: 2,
     },
@@ -284,7 +276,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.bgTertiary,
         alignItems: "center",
         justifyContent: "center",
         marginRight: 12,
@@ -292,7 +284,7 @@ const styles = StyleSheet.create({
     itemText: {
         flex: 1,
         fontSize: 15,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: "600",
     },
     removeButton: {
@@ -308,7 +300,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: "500",
     },
     emptyContainer: {
@@ -320,24 +312,24 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: THEME.borderRadius.full,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.bgTertiary,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: THEME.spacing.lg,
         borderWidth: THEME.borderWidth.thick,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     emptyTitle: {
         fontSize: THEME.fontSize.xl,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginTop: THEME.spacing.lg,
         marginBottom: THEME.spacing[2],
         textAlign: 'center',
     },
     emptySubtitle: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
     },

@@ -78,36 +78,7 @@ const AddListingScreen = ({navigation}) => {
     const MAX_IMAGES = 5;
     const MAX_FILE_SIZE_MB = 5;
 
-    // const pickImages = async () => {
-    //     const result = await ImagePicker.launchImageLibraryAsync({
-    //         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    //         allowsEditing: true,
-    //         quality: 0.7,
-    //     });
-    //     if (!result.canceled) {
-    //         const pickedImage = result.assets[0];
-    //         try {
-    //             const file = new FileSystem.File(pickedImage.uri);
-    //             const info = await file.info();
-    //             if (info.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-    //                 setToast({
-    //                     visible: true,
-    //                     type: 'error',
-    //                     message: `Image too large! Please select one under ${MAX_FILE_SIZE_MB}MB.`,
-    //                 });
-    //                 return;
-    //             }
-    //         } catch (e) {
-    //             console.warn('FileSystem info failed:', e);
-    //         }
-    //         const newImages = [...listing.images, pickedImage.uri];
-    //         handleChange('images', newImages);
-    //     }
-    // };
-
-
     const pickImages = async () => {
-        // Request permissions first
         console.log('🔍 pickImages called!');
 
         const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -175,6 +146,7 @@ const AddListingScreen = ({navigation}) => {
         setErrors(validationErrors);
         return Object.keys(validationErrors).length === 0;
     };
+
     const handleCreate = async () => {
         if (!validateFields()) return;
 
@@ -221,7 +193,7 @@ const AddListingScreen = ({navigation}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content"/>
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content"/>
             <AppHeader title="Add Your Listing" onBack={() => navigation.goBack()}/>
 
             {toast.visible && (
@@ -294,7 +266,7 @@ const AddListingScreen = ({navigation}) => {
 
                         {listing.images.length === 0 && (
                             <Text style={styles.helperText}>
-                                <Ionicons name="information-circle" size={14} color="#6B7280"/>
+                                <Ionicons name="information-circle" size={14} color={COLORS.light.textSecondary}/>
                                 {' '}First image is your cover photo. Make it your best one!
                             </Text>
                         )}
@@ -305,11 +277,11 @@ const AddListingScreen = ({navigation}) => {
                     <View style={styles.section}>
                         <Text style={styles.sectionLabel}>Title *</Text>
                         <View style={[styles.inputContainer, errors.title && styles.inputError]}>
-                            <Ionicons name="pricetag-outline" size={20} color="#9CA3AF" style={styles.inputIcon}/>
+                            <Ionicons name="pricetag-outline" size={20} color={COLORS.light.textTertiary} style={styles.inputIcon}/>
                             <TextInput
                                 style={styles.input}
                                 placeholder="e.g. iPhone 13 Pro"
-                                placeholderTextColor="#9CA3AF"
+                                placeholderTextColor={COLORS.light.textTertiary}
                                 value={listing.title}
                                 onChangeText={(text) => handleChange('title', text)}
                                 maxLength={50}
@@ -318,7 +290,7 @@ const AddListingScreen = ({navigation}) => {
                             <Text
                                 style={[
                                     styles.counterText,
-                                    {color: listing.title.length > 45 ? '#EF4444' : '#6B7280'}
+                                    {color: listing.title.length > 45 ? '#EF4444' : COLORS.light.textSecondary}
                                 ]}
                             >{listing.title.length}/50</Text>
                         </View>
@@ -329,12 +301,12 @@ const AddListingScreen = ({navigation}) => {
                         <Text style={styles.sectionLabel}>Description *</Text>
                         <View
                             style={[styles.inputContainer, styles.textAreaContainer, errors.description && styles.inputError]}>
-                            <Ionicons name="document-text-outline" size={20} color="#9CA3AF"
+                            <Ionicons name="document-text-outline" size={20} color={COLORS.light.textTertiary}
                                       style={[styles.inputIcon, {alignSelf: 'flex-start', marginTop: 12}]}/>
                             <TextInput
                                 style={[styles.input, styles.textArea]}
                                 placeholder="Describe your item (e.g. any scratches, original packaging)..."
-                                placeholderTextColor="#9CA3AF"
+                                placeholderTextColor={COLORS.light.textTertiary}
                                 multiline
                                 numberOfLines={5}
                                 value={listing.description}
@@ -344,7 +316,7 @@ const AddListingScreen = ({navigation}) => {
                             />
                             <Text style={{
                                 textAlign: 'right',
-                                color: listing.description.length > 750 ? '#EF4444' : '#6B7280',
+                                color: listing.description.length > 750 ? '#EF4444' : COLORS.light.textSecondary,
                                 marginTop: 12
                             }}>
                                 {listing.description.length}/800
@@ -356,11 +328,11 @@ const AddListingScreen = ({navigation}) => {
                     <View style={styles.section}>
                         <Text style={styles.sectionLabel}>Price (₹) *</Text>
                         <View style={[styles.inputContainer, errors.price && styles.inputError]}>
-                            <Ionicons name="cash-outline" size={20} color="#9CA3AF" style={styles.inputIcon}/>
+                            <Ionicons name="cash-outline" size={20} color={COLORS.light.textTertiary} style={styles.inputIcon}/>
                             <TextInput
                                 style={styles.input}
                                 placeholder="0.00"
-                                placeholderTextColor="#9CA3AF"
+                                placeholderTextColor={COLORS.light.textTertiary}
                                 keyboardType="numeric"
                                 value={listing.price}
                                 onChangeText={(text) => {
@@ -457,292 +429,193 @@ const AddListingScreen = ({navigation}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor:
-        COLORS.dark.bg,
-    }
-    ,
+        backgroundColor: COLORS.light.bg,
+    },
     container: {
         padding: 20,
         paddingBottom: 60,
-    }
-    ,
+    },
 
     headerInfo: {
         marginBottom: 24,
-    }
-    ,
+    },
 
     headerTitle: {
         fontSize: 28,
-        fontWeight:
-            '800',
-        color:
-        COLORS.dark.text,
-        marginBottom:
-            4,
-        letterSpacing:
-            -0.5,
-    }
-    ,
+        fontWeight: '800',
+        color: COLORS.light.text,
+        marginBottom: 4,
+        letterSpacing: -0.5,
+    },
 
     headerSubtitle: {
         fontSize: 14,
-        color:
-        COLORS.dark.textSecondary,
-        fontWeight:
-            '500',
-    }
-    ,
+        color: COLORS.light.textSecondary,
+        fontWeight: '500',
+    },
 
     section: {
         marginBottom: 20,
-    }
-    ,
+    },
 
     labelRow: {
         flexDirection: 'row',
-        justifyContent:
-            'space-between',
-        alignItems:
-            'center',
-        marginBottom:
-            10,
-    }
-    ,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
 
     sectionLabel: {
         fontSize: 15,
-        fontWeight:
-            '700',
-        color:
-        COLORS.dark.text,
-        marginBottom:
-            6,
-    }
-    ,
+        fontWeight: '700',
+        color: COLORS.light.text,
+        marginBottom: 6,
+    },
 
     imageCount: {
         fontSize: 13,
-        fontWeight:
-            '700',
-        color:
-        COLORS.primary,
-        backgroundColor:
-        COLORS.transparentWhite10,
-        paddingHorizontal:
-            10,
-        paddingVertical:
-            4,
-        borderRadius:
-            8,
-    }
-    ,
+        fontWeight: '700',
+        color: COLORS.primary,
+        backgroundColor: COLORS.primaryLightest,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+
     imagesGrid: {
         flexDirection: 'row',
-        flexWrap:
-            'wrap',
-        gap:
-            10,
-    }
-    ,
+        flexWrap: 'wrap',
+        gap: 10,
+    },
+
     imageCard: {
         width: '31%',
-        aspectRatio:
-            1,
+        aspectRatio: 1,
         borderRadius: 12,
-        overflow:
-            'hidden',
+        overflow: 'hidden',
         position: 'relative',
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
-    }
-    ,
+        borderColor: COLORS.light.border,
+    },
 
     uploadedImage: {
-        width: 100,
-        height:
-            100,
-    }
-    ,
+        width: '100%',
+        height: '100%',
+    },
+
     primaryBadge: {
         position: 'absolute',
-        top:
-            6,
-        left:
-            6,
-        backgroundColor:
-        COLORS.primary,
-        paddingHorizontal:
-            8,
-        paddingVertical:
-            3,
-        borderRadius:
-            6,
-    }
-    ,
+        top: 6,
+        left: 6,
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+    },
 
     primaryText: {
         color: COLORS.white,
-        fontSize:
-            9,
-        fontWeight:
-            '800',
-        textTransform:
-            'uppercase',
-    }
-    ,
+        fontSize: 9,
+        fontWeight: '800',
+        textTransform: 'uppercase',
+    },
 
     removeButton: {
         position: 'absolute',
-        top:
-            6,
-        right:
-            6,
-        backgroundColor:
-        COLORS.transparentWhite20,
-        borderRadius:
-            12,
-    }
-    ,
+        top: 6,
+        right: 6,
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+    },
 
     addImageCard: {
         width: '31%',
-        aspectRatio:
-            1,
-        borderRadius:
-            12,
-        borderWidth:
-            2,
-        borderColor:
-        COLORS.dark.border,
-        borderStyle:
-            'dashed',
-        backgroundColor:
-        COLORS.dark.card,
-        justifyContent:
-            'center',
-        alignItems:
-            'center',
-    }
-    ,
+        aspectRatio: 1,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: COLORS.light.border,
+        borderStyle: 'dashed',
+        backgroundColor: COLORS.white,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 
     uploadIcon: {
         width: 50,
-        height:
-            50,
-        borderRadius:
-            24,
-        backgroundColor:
-        COLORS.transparentWhite10,
-        alignItems:
-            'center',
-        justifyContent:
-            'center',
-        marginBottom:
-            8,
-    }
-    ,
+        height: 50,
+        borderRadius: 24,
+        backgroundColor: COLORS.primaryLightest,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 8,
+    },
 
     addImageText: {
         fontSize: 12,
-        fontWeight:
-            '600',
-        color:
-        COLORS.dark.textSecondary,
-    }
-    ,
+        fontWeight: '600',
+        color: COLORS.light.textSecondary,
+    },
 
     helperText: {
         fontSize: 12,
-        color:
-        COLORS.dark.textSecondary,
-        marginTop:
-            8,
-        fontWeight:
-            '500',
-    }
-    ,
+        color: COLORS.light.textSecondary,
+        marginTop: 8,
+        fontWeight: '500',
+    },
 
     inputContainer: {
         flexDirection: 'row',
-        alignItems:
-            'center',
-        backgroundColor:
-        COLORS.dark.card,
-        borderRadius:
-            14,
-        borderWidth:
-            1.5,
-        borderColor:
-        COLORS.dark.border,
-        paddingHorizontal:
-            16,
-    }
-    ,
+        alignItems: 'center',
+        backgroundColor: COLORS.white,
+        borderRadius: 14,
+        borderWidth: 1.5,
+        borderColor: COLORS.light.border,
+        paddingHorizontal: 16,
+    },
 
     textAreaContainer: {
         alignItems: 'flex-start',
-    }
-    ,
+    },
 
     inputIcon: {
         marginRight: 12,
-    }
-    ,
+    },
 
     input: {
         flex: 1,
-        fontSize:
-            15,
-        color:
-        COLORS.dark.text,
-        paddingVertical:
-            14,
-        fontWeight:
-            '500',
-    }
-    ,
+        fontSize: 15,
+        color: COLORS.light.text,
+        paddingVertical: 14,
+        fontWeight: '500',
+    },
 
     textArea: {
         minHeight: 120,
-        paddingTop:
-            14,
-        paddingBottom:
-            14,
-    }
-    ,
+        paddingTop: 14,
+        paddingBottom: 14,
+    },
 
     counterText: {
         textAlign: 'right',
-        fontSize:
-            13,
-        fontWeight:
-            '500',
-        color:
-        COLORS.dark.textSecondary,
-    }
-    ,
+        fontSize: 13,
+        fontWeight: '500',
+        color: COLORS.light.textSecondary,
+    },
 
     inputError: {
         borderColor: COLORS.error,
-        borderWidth:
-            2,
-    }
-    ,
+        borderWidth: 2,
+    },
 
     errorText: {
         color: COLORS.error,
-        fontSize:
-            12,
-        marginTop:
-            2,
-        marginLeft:
-            4,
-        fontWeight:
-            '500',
-    }
-    ,
+        fontSize: 12,
+        marginTop: 2,
+        marginLeft: 4,
+        fontWeight: '500',
+    },
+
     formattedPrice: {
         fontSize: 14,
         color: '#10B981',
@@ -751,6 +624,5 @@ const styles = StyleSheet.create({
         paddingLeft: 4
     },
 });
-
 
 export default AddListingScreen;

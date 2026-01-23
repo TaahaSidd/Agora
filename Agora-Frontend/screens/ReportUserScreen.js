@@ -9,6 +9,8 @@ import AppHeader from '../components/AppHeader';
 import Button from '../components/Button';
 import ToastMessage from '../components/ToastMessage';
 import ModalComponent from '../components/Modal';
+import InfoBox from "../components/InfoBox";
+import {THEME} from '../utils/theme';
 
 const ReportUserScreen = ({navigation, route}) => {
     const {userId, userName} = route.params;
@@ -19,48 +21,12 @@ const ReportUserScreen = ({navigation, route}) => {
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
 
     const reportReasons = [
-        {
-            id: 'spam',
-            title: 'Spam',
-            description: 'Posting spam or unwanted content',
-            icon: 'megaphone-outline',
-            color: '#F59E0B',
-        },
-        {
-            id: 'harassment',
-            title: 'Harassment',
-            description: 'Bullying or abusive behavior',
-            icon: 'alert-circle-outline',
-            color: '#EF4444',
-        },
-        {
-            id: 'fake',
-            title: 'Fake Account',
-            description: 'Pretending to be someone else',
-            icon: 'person-remove-outline',
-            color: '#8B5CF6',
-        },
-        {
-            id: 'scam',
-            title: 'Scam or Fraud',
-            description: 'Suspicious or fraudulent activity',
-            icon: 'warning-outline',
-            color: '#DC2626',
-        },
-        {
-            id: 'inappropriate',
-            title: 'Inappropriate Content',
-            description: 'Offensive or adult content',
-            icon: 'eye-off-outline',
-            color: '#EF4444',
-        },
-        {
-            id: 'other',
-            title: 'Other',
-            description: 'Something else',
-            icon: 'ellipsis-horizontal-outline',
-            color: '#6B7280',
-        },
+        { id: 'spam', title: 'Spam', description: 'Posting spam or unwanted content', icon: 'megaphone-outline', color: '#F59E0B' },
+        { id: 'harassment', title: 'Harassment', description: 'Bullying or abusive behavior', icon: 'alert-circle-outline', color: '#EF4444' },
+        { id: 'fake', title: 'Fake Account', description: 'Pretending to be someone else', icon: 'person-remove-outline', color: '#8B5CF6' },
+        { id: 'scam', title: 'Scam or Fraud', description: 'Suspicious or fraudulent activity', icon: 'warning-outline', color: '#DC2626' },
+        { id: 'inappropriate', title: 'Inappropriate Content', description: 'Offensive or adult content', icon: 'eye-off-outline', color: '#EF4444' },
+        { id: 'other', title: 'Other', description: 'Something else', icon: 'ellipsis-horizontal-outline', color: '#6B7280' },
     ];
 
     const handleSubmit = async () => {
@@ -90,7 +56,7 @@ const ReportUserScreen = ({navigation, route}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content"/>
+            <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content"/>
             <AppHeader title="Report User" onBack={() => navigation.goBack()}/>
 
             <ScrollView
@@ -104,7 +70,7 @@ const ReportUserScreen = ({navigation, route}) => {
                     </View>
                     <Text style={styles.headerTitle}>Report {userName}</Text>
                     <Text style={styles.headerSubtitle}>
-                        Help us understand what's happening. Your report is anonymous.
+                        Help us understand what's happening. Your report is anonymous and helps keep the campus safe.
                     </Text>
                 </View>
 
@@ -125,7 +91,7 @@ const ReportUserScreen = ({navigation, route}) => {
                             <View
                                 style={[
                                     styles.reasonIconCircle,
-                                    {backgroundColor: `${reason.color}15`},
+                                    {backgroundColor: `${reason.color}10`},
                                 ]}
                             >
                                 <Ionicons name={reason.icon} size={24} color={reason.color}/>
@@ -134,7 +100,7 @@ const ReportUserScreen = ({navigation, route}) => {
                                 <Text style={styles.reasonTitle}>{reason.title}</Text>
                                 <Text style={styles.reasonDescription}>{reason.description}</Text>
                             </View>
-                            <View style={styles.radioButton}>
+                            <View style={[styles.radioButton, selectedReason === reason.id && styles.radioButtonActive]}>
                                 {selectedReason === reason.id && (
                                     <View style={styles.radioButtonInner}/>
                                 )}
@@ -150,13 +116,13 @@ const ReportUserScreen = ({navigation, route}) => {
                         <Ionicons
                             name="document-text-outline"
                             size={20}
-                            color="#9CA3AF"
+                            color={COLORS.light.textTertiary}
                             style={styles.textAreaIcon}
                         />
                         <TextInput
                             style={styles.textArea}
                             placeholder="Provide more context about this report..."
-                            placeholderTextColor="#9CA3AF"
+                            placeholderTextColor={COLORS.light.textTertiary}
                             multiline
                             numberOfLines={5}
                             value={additionalDetails}
@@ -169,12 +135,9 @@ const ReportUserScreen = ({navigation, route}) => {
                 </View>
 
                 {/* Info Box */}
-                <View style={styles.infoBox}>
-                    <Ionicons name="shield-checkmark" size={20} color="#3B82F6"/>
-                    <Text style={styles.infoText}>
-                        We take reports seriously. False reports may result in action against your account.
-                    </Text>
-                </View>
+                <InfoBox
+                    text="We take reports seriously. False reports may result in action against your account."
+                />
 
                 {/* Submit Button */}
                 <Button
@@ -183,8 +146,8 @@ const ReportUserScreen = ({navigation, route}) => {
                     variant="danger"
                     size="large"
                     icon="send"
-                    iconPosition="left"
-                    disabled={!selectedReason}
+                    loading={loading}
+                    disabled={!selectedReason || loading}
                 />
             </ScrollView>
 
@@ -200,16 +163,14 @@ const ReportUserScreen = ({navigation, route}) => {
                 }}
             />
 
-            {
-                toast.visible && (
-                    <ToastMessage
-                        type={toast.type}
-                        title={toast.title}
-                        message={toast.message}
-                        onHide={() => setToast({...toast, visible: false})}
-                    />
-                )
-            }
+            {toast.visible && (
+                <ToastMessage
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                    onHide={() => setToast({...toast, visible: false})}
+                />
+            )}
         </SafeAreaView>
     );
 };
@@ -217,46 +178,49 @@ const ReportUserScreen = ({navigation, route}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         padding: 20,
         paddingBottom: 40,
     },
     headerCard: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 20,
+        backgroundColor: COLORS.light.card,
+        borderRadius: 24,
         padding: 24,
         alignItems: 'center',
         marginBottom: 24,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        shadowRadius: 10,
+        elevation: 3,
     },
     warningIconCircle: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: COLORS.errorBgDark,
+        backgroundColor: '#FEF2F2', // Soft red
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 8,
-        letterSpacing: -0.3,
+        letterSpacing: -0.5,
     },
     headerSubtitle: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
         fontWeight: '500',
+        paddingHorizontal: 10,
     },
     section: {
         marginBottom: 24,
@@ -264,27 +228,22 @@ const styles = StyleSheet.create({
     sectionLabel: {
         fontSize: 15,
         fontWeight: '700',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         marginBottom: 12,
     },
     reasonCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
-        borderWidth: 2,
-        borderColor: COLORS.dark.divider,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.03,
-        shadowRadius: 4,
-        elevation: 1,
+        borderWidth: 1.5,
+        borderColor: COLORS.light.border,
     },
     reasonCardSelected: {
         borderColor: COLORS.primary,
-        backgroundColor: COLORS.primaryLightest,
+        backgroundColor: '#EFF6FF', // Light primary tint
     },
     reasonIconCircle: {
         width: 48,
@@ -300,41 +259,39 @@ const styles = StyleSheet.create({
     reasonTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 2,
     },
     reasonDescription: {
         fontSize: 13,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: '500',
     },
     radioButton: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
         borderWidth: 2,
-        borderColor: COLORS.dark.textTertiary,
+        borderColor: COLORS.light.border,
         alignItems: 'center',
         justifyContent: 'center',
     },
+    radioButtonActive: {
+        borderColor: COLORS.primary,
+    },
     radioButtonInner: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         backgroundColor: COLORS.primary,
     },
     textAreaContainer: {
         flexDirection: 'row',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: 14,
         borderWidth: 1.5,
-        borderColor: COLORS.dark.divider,
+        borderColor: COLORS.light.border,
         padding: 16,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.03,
-        shadowRadius: 3,
-        elevation: 1,
     },
     textAreaIcon: {
         marginRight: 12,
@@ -343,39 +300,17 @@ const styles = StyleSheet.create({
     textArea: {
         flex: 1,
         fontSize: 15,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         minHeight: 100,
         fontWeight: '500',
     },
     characterCount: {
         fontSize: 12,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         textAlign: 'right',
         marginTop: 6,
         fontWeight: '500',
     },
-    infoBox: {
-        flexDirection: 'row',
-        backgroundColor: COLORS.infoBgDark,
-        padding: 14,
-        borderRadius: 12,
-        marginBottom: 24,
-        borderWidth: 1,
-        borderColor: COLORS.infoDark,
-    },
-    infoText: {
-        flex: 1,
-        fontSize: 13,
-        color: COLORS.infoDark,
-        marginLeft: 10,
-        lineHeight: 18,
-        fontWeight: '500',
-    },
-    submitButtonDisabled: {
-        backgroundColor: COLORS.dark.textTertiary,
-        opacity: 0.6,
-    },
 });
-
 
 export default ReportUserScreen;

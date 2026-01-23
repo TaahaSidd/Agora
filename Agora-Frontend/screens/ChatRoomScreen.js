@@ -12,6 +12,7 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Alert,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -31,9 +32,8 @@ const ChatRoomScreen = ({route, navigation}) => {
     const {roomId, sellerId} = route.params;
     const messages = useChatMessages(roomId);
     const {sellerName, productInfo} = route.params || {};
-    //console.log('productInfo:', productInfo);
     const [input, setInput] = useState('');
-    const {currentUser, loading, fetchUser} = useUserStore();
+    const {currentUser, loading} = useUserStore();
     const {isUserBlocked} = useChatBlocking();
     const flatListRef = useRef(null);
     const {sellerAvatar} = route.params;
@@ -96,7 +96,6 @@ const ChatRoomScreen = ({route, navigation}) => {
                 try {
                     const sanitizedEmail = currentUser.email.replace(/\./g, '_');
                     await markChatAsRead(roomId, sanitizedEmail);
-                    //console.log('✅ ChatRoom marked as read');
                 } catch (err) {
                     console.error('❌ ChatRoom mark failed:', err);
                 }
@@ -110,7 +109,6 @@ const ChatRoomScreen = ({route, navigation}) => {
     if (loading) return null;
 
     const handleSend = async () => {
-
         if (isOtherUserBlocked) {
             Alert.alert(
                 'Cannot Send Message',
@@ -137,10 +135,6 @@ const ChatRoomScreen = ({route, navigation}) => {
             requestAnimationFrame(() => {
                 flatListRef.current?.scrollToEnd({animated: true});
             });
-
-            setTimeout(() => {
-                flatListRef.current?.scrollToEnd({animated: false});
-            }, 50);
 
         } catch (e) {
             console.error('Error sending message:', e);
@@ -252,7 +246,7 @@ const ChatRoomScreen = ({route, navigation}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
 
             {/* Header */}
             <View style={styles.header}>
@@ -261,13 +255,12 @@ const ChatRoomScreen = ({route, navigation}) => {
                     onPress={() => navigation.goBack()}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="arrow-back" size={24} color={COLORS.dark.text}/>
+                    <Ionicons name="arrow-back" size={24} color={COLORS.light.text}/>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.headerCenter}
-                    onPress={() => {
-                    }}
+                    onPress={() => {}}
                     activeOpacity={0.8}
                 >
                     <View style={styles.avatarContainer}>
@@ -280,16 +273,6 @@ const ChatRoomScreen = ({route, navigation}) => {
                         <Text style={styles.headerName}>{sellerName || 'Chat'}</Text>
                     </View>
                 </TouchableOpacity>
-
-                {/*<TouchableOpacity*/}
-                {/*    style={styles.moreButton}*/}
-                {/*    activeOpacity={0.7}*/}
-                {/*    onPress={() => {*/}
-                {/*        console.log('Show menu');*/}
-                {/*    }}*/}
-                {/*>*/}
-                {/*    <Ionicons name="ellipsis-vertical" size={20} color={COLORS.dark.textSecondary}/>*/}
-                {/*</TouchableOpacity>*/}
             </View>
 
             {/* BLOCKED USER BANNER */}
@@ -302,46 +285,11 @@ const ChatRoomScreen = ({route, navigation}) => {
                 </View>
             )}
 
-            {/*Product Context Card (if available)*/}
-            {/*{productInfo && (*/}
-            {/*    <View style={styles.productCard}>*/}
-            {/*        <Image*/}
-            {/*            source={*/}
-            {/*                productInfo?.imageUrl?.[0]*/}
-            {/*                    ? {uri: productInfo.imageUrl[0]}*/}
-            {/*                    : require('../assets/no-image.jpg')*/}
-            {/*            }*/}
-            {/*            style={styles.productImage}*/}
-            {/*        />*/}
-            {/*        <View style={styles.productInfo}>*/}
-            {/*            <Text style={styles.productName} numberOfLines={1}>*/}
-            {/*                {productInfo.name}*/}
-            {/*            </Text>*/}
-            {/*            <Text style={styles.productPrice}>{productInfo.price}</Text>*/}
-            {/*        </View>*/}
-            {/*        /!*<TouchableOpacity*!/*/}
-            {/*        /!*    style={styles.productViewButton}*!/*/}
-            {/*        /!*    onPress={() => navigation.navigate('ProductDetailsScreen', {item: productInfo})}*!/*/}
-            {/*        /!*>*!/*/}
-            {/*        <TouchableOpacity*/}
-            {/*            style={styles.productViewButton}*/}
-            {/*            onPress={() => {*/}
-            {/*                navigation.navigate('ProductDetailsScreen', {*/}
-            {/*                    listingId: productInfo.id*/}
-            {/*                });*/}
-            {/*            }}*/}
-            {/*        >*/}
-            {/*            <Ionicons name="eye-outline" size={18} color={COLORS.primary}/>*/}
-            {/*        </TouchableOpacity>*/}
-            {/*    </View>*/}
-            {/*)}*/}
-
             <KeyboardAvoidingView
                 style={styles.keyboardAvoiding}
-                behavior={Platform.OS === 'android' ? 'padding' : null}
-                keyboardVerticalOffset={Platform.OS === 'android' ? 0 : 0}
+                behavior={Platform.OS === 'ios' ? 'padding' : null}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
             >
-                {/* Messages */}
                 <FlatList
                     ref={flatListRef}
                     data={messages}
@@ -352,12 +300,6 @@ const ChatRoomScreen = ({route, navigation}) => {
                     showsVerticalScrollIndicator={false}
                     onContentSizeChange={() => {
                         flatListRef.current?.scrollToEnd({animated: true});
-                    }}
-                    onLayout={() => {
-                        flatListRef.current?.scrollToEnd({animated: false});
-                    }}
-                    maintainVisibleContentPosition={{
-                        minIndexForVisible: 0,
                     }}
                 />
 
@@ -397,7 +339,7 @@ const ChatRoomScreen = ({route, navigation}) => {
                         <TextInput
                             style={styles.input}
                             placeholder={isOtherUserBlocked ? "Cannot send messages" : "Message..."}
-                            placeholderTextColor={COLORS.dark.textTertiary}
+                            placeholderTextColor={COLORS.light.textTertiary}
                             value={input}
                             onChangeText={setInput}
                             multiline
@@ -418,7 +360,7 @@ const ChatRoomScreen = ({route, navigation}) => {
                         <Ionicons
                             name="send"
                             size={20}
-                            color={(input.trim() && !isOtherUserBlocked) ? COLORS.white : COLORS.dark.textTertiary}
+                            color={(input.trim() && !isOtherUserBlocked) ? COLORS.white : COLORS.light.textTertiary}
                         />
                     </TouchableOpacity>
                 </View>
@@ -430,8 +372,7 @@ const ChatRoomScreen = ({route, navigation}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
-        paddingTop: isAndroid ? StatusBar.currentHeight : 0,
+        backgroundColor: COLORS.light.bg,
     },
     keyboardAvoiding: {
         flex: 1,
@@ -441,9 +382,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: COLORS.dark.bgElevated,
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
+        borderBottomColor: COLORS.light.border,
+        marginTop: 30,
     },
     backButton: {
         width: 40,
@@ -464,19 +406,8 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        borderWidth: 2,
-        borderColor: COLORS.dark.border,
-    },
-    onlineIndicator: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-        backgroundColor: COLORS.status.online,
-        borderWidth: 2,
-        borderColor: COLORS.dark.bgElevated,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     headerInfo: {
         marginLeft: 12,
@@ -485,67 +416,12 @@ const styles = StyleSheet.create({
     headerName: {
         fontSize: 17,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 2,
-    },
-    statusRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    }, headerStatus: {
-        fontSize: 13,
-        color: COLORS.dark.textSecondary,
-        fontWeight: '500',
-    },
-    moreButton: {
-        width: 36,
-        height: 36,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 18,
-        backgroundColor: COLORS.dark.card,
-    },
-    productCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        margin: 12,
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-    },
-    productImage: {
-        width: 48,
-        height: 48,
-        borderRadius: 8,
-        backgroundColor: COLORS.dark.cardElevated,
-    },
-    productInfo: {
-        flex: 1,
-        marginLeft: 12,
-    },
-    productName: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: COLORS.dark.text,
-        marginBottom: 2,
-    },
-    productPrice: {
-        fontSize: 13,
-        fontWeight: '800',
-        color: COLORS.primary,
-    },
-    productViewButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: COLORS.transparentWhite10,
-        alignItems: 'center',
-        justifyContent: 'center',
     },
     messageList: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     messagesContent: {
         padding: 16,
@@ -559,12 +435,12 @@ const styles = StyleSheet.create({
     dateLine: {
         flex: 1,
         height: 1,
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border,
     },
     dateText: {
         fontSize: 12,
         fontWeight: '600',
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         marginHorizontal: 12,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -573,9 +449,6 @@ const styles = StyleSheet.create({
         marginVertical: 4,
         flexDirection: 'row',
         alignItems: 'flex-end',
-    },
-    messageRowGrouped: {
-        marginTop: 4,
     },
     rowSent: {
         justifyContent: 'flex-end',
@@ -596,10 +469,10 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 4,
     },
     bubbleReceived: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: '#F3F4F6', // Light gray for received bubbles
         borderBottomLeftRadius: 4,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     bubbleSentFirst: {
         borderTopRightRadius: 20,
@@ -615,7 +488,7 @@ const styles = StyleSheet.create({
         color: COLORS.white,
     },
     textReceived: {
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
     },
     messageFooter: {
         flexDirection: 'row',
@@ -625,21 +498,21 @@ const styles = StyleSheet.create({
     },
     timeText: {
         fontSize: 10,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         fontWeight: '500',
     },
     timeTextSent: {
-        color: COLORS.transparentWhite70,
+        color: 'rgba(255, 255, 255, 0.7)',
     },
     quickRepliesContainer: {
         padding: 16,
         paddingTop: 8,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     quickRepliesTitle: {
         fontSize: 12,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         marginBottom: 8,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -650,28 +523,29 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     quickReply: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     quickReplyText: {
         fontSize: 13,
         fontWeight: '600',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
     },
     inputBar: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
-        backgroundColor: COLORS.dark.bgElevated,
+        backgroundColor: COLORS.light.bg,
         borderTopWidth: 1,
-        borderTopColor: COLORS.dark.border,
-    }, inputWrapper: {
+        borderTopColor: COLORS.light.border,
+    },
+    inputWrapper: {
         flex: 1,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: '#F9FAFB',
         borderRadius: 24,
         paddingHorizontal: 16,
         paddingVertical: 10,
@@ -679,12 +553,13 @@ const styles = StyleSheet.create({
         minHeight: 44,
         maxHeight: 120,
         justifyContent: 'center',
-        // marginBottom: 10,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     input: {
         flex: 1,
         fontSize: 15,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         maxHeight: 100,
         paddingTop: 0,
         paddingBottom: 0,
@@ -698,9 +573,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     sendButtonDisabled: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: '#E5E7EB',
     },
-
     blockedBanner: {
         flexDirection: 'row',
         alignItems: 'center',

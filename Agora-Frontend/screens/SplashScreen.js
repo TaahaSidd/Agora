@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, Dimensions, Easing, StyleSheet, Text, View} from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import {authApiPost} from '../services/api';
+import { api } from '../services/api';
 import {COLORS} from '../utils/colors';
 import {jwtDecode} from 'jwt-decode';
 import {useUserStore} from "../stores/userStore";
@@ -116,12 +116,14 @@ export default function SplashScreen({navigation}) {
                         const jwtExpired = Date.now() >= exp * 1000;
 
                         if (!jwtExpired) {
-                            console.log('Valid token, fetching user...');
-                            await useUserStore.getState().fetchUser();
-                            const user = useUserStore.getState().currentUser;
+                            console.log('✅ Valid token, fetching user...');
+                            const user = await useUserStore.getState().fetchUser(); // ⭐ GET RETURNED USER
+
+                            console.log('🔍 FETCHED USER:', user);
+                            console.log('🔍 VERIFICATION STATUS:', user?.verificationStatus);
 
                             if (!user || !user.id) {
-                                console.log('No user found, logging out');
+                                console.log('❌ No user found, logging out');
                                 await SecureStore.deleteItemAsync('authToken');
                                 await SecureStore.deleteItemAsync('accessToken');
                                 await SecureStore.deleteItemAsync('refreshToken');
@@ -130,52 +132,57 @@ export default function SplashScreen({navigation}) {
                             }
 
                             if (user.verificationStatus === 'PENDING') {
-                                console.log('User pending, navigating to CompleteProfile');
+                                console.log('⚠️ User pending, navigating to CompleteProfile');
                                 navigation.replace('CompleteProfileScreen');
                                 return;
                             }
 
-                            console.log('User verified, navigating to MainLayout');
+                            console.log('✅ User verified, navigating to MainLayout');
                             navigation.replace('MainLayout', {guest: false});
                             return;
                         }
 
-                        console.log(' Token expired, will try refresh');
+                        console.log('⏰ Token expired, will try refresh');
                     } catch (e) {
-                        console.log(" JWT decode failed:", e);
+                        console.log("⚠️ JWT decode failed:", e);
                     }
                 }
 
                 if (refreshToken) {
                     try {
-                        console.log(' Refreshing token...');
-                        const res = await authApiPost('/auth/refresh', {refreshToken});
+                        console.log('🔄 Refreshing token...');
 
-                        await SecureStore.setItemAsync('authToken', res.jwt);
-                        if (res.refreshToken) {
-                            await SecureStore.setItemAsync('refreshToken', res.refreshToken);
+                        // ⭐ Use api.post directly instead of authApiPost
+                        const res = await api.post('/auth/refresh', { refreshToken });
+
+                        await SecureStore.setItemAsync('authToken', res.data.jwt);
+                        await SecureStore.setItemAsync('accessToken', res.data.jwt);
+                        if (res.data.refreshToken) {
+                            await SecureStore.setItemAsync('refreshToken', res.data.refreshToken);
                         }
 
-                        await useUserStore.getState().fetchUser();
-                        const user = useUserStore.getState().currentUser;
+                        const user = await useUserStore.getState().fetchUser();
+
+                        console.log('🔍 USER AFTER REFRESH:', user);
+                        console.log('🔍 VERIFICATION STATUS:', user?.verificationStatus);
 
                         if (!user || !user.id) {
-                            console.log(' No user after refresh');
+                            console.log('❌ No user after refresh');
                             navigation.replace('Login');
                             return;
                         }
 
                         if (user.verificationStatus === 'PENDING') {
-                            console.log('️ User pending after refresh');
+                            console.log('⚠️ User pending after refresh');
                             navigation.replace('CompleteProfileScreen');
                             return;
                         }
 
-                        console.log('Refresh successful');
+                        console.log('✅ Refresh successful');
                         navigation.replace('MainLayout', {guest: false});
                         return;
                     } catch (err) {
-                        console.log('❌ Refresh failed:', err);
+                        console.log('❌ Refresh failed:', err.message);
                         await SecureStore.deleteItemAsync('authToken');
                         await SecureStore.deleteItemAsync('accessToken');
                         await SecureStore.deleteItemAsync('refreshToken');
@@ -184,11 +191,11 @@ export default function SplashScreen({navigation}) {
                     }
                 }
 
-                console.log(' No valid auth, going to login');
+                console.log('🚫 No valid auth, going to login');
                 navigation.replace('Login');
 
             } catch (error) {
-                console.log(' Splash error:', error);
+                console.log('💥 Splash error:', error);
 
                 if (error.response?.status === 401 || error.response?.status === 403) {
                     await SecureStore.deleteItemAsync('authToken');

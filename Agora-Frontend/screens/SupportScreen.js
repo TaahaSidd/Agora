@@ -19,23 +19,9 @@ const SupportScreen = ({navigation}) => {
         },
     ];
 
-    const quickLinks = [
-        {icon: 'document-text', label: 'Help Center', gradient: ['#3B82F6', '#2563EB']},
-        {icon: 'book', label: 'User Guide', gradient: ['#8B5CF6', '#7C3AED']},
-        {icon: 'bug', label: 'Report Bug', gradient: ['#EF4444', '#DC2626']},
-        {icon: 'bulb', label: 'Feedback', gradient: ['#F59E0B', '#D97706']},
-    ];
-
-    const socialLinks = [
-        {icon: 'logo-twitter', color: '#1DA1F2'},
-        {icon: 'logo-facebook', color: '#4267B2'},
-        {icon: 'logo-instagram', color: '#E4405F'},
-        {icon: 'logo-linkedin', color: '#0A66C2'},
-    ];
-
     return (
         <SafeAreaView style={styles.safeArea}>
-            <AppHeader title="Support" onBack={() => navigation.goBack()}/>
+            <AppHeader title="Support" onBack={() => navigation.goBack()} />
 
             <ScrollView
                 contentContainerStyle={styles.container}
@@ -84,7 +70,7 @@ const SupportScreen = ({navigation}) => {
                                         <Text style={styles.optionTitle}>{option.title}</Text>
                                         <Text style={styles.optionDescription}>{option.description}</Text>
                                     </View>
-                                    <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
+                                    <Ionicons name="chevron-forward" size={20} color={COLORS.light.textTertiary}/>
                                 </TouchableOpacity>
                                 {index !== contactOptions.length - 1 && <View style={styles.divider}/>}
                             </React.Fragment>
@@ -92,52 +78,11 @@ const SupportScreen = ({navigation}) => {
                     </View>
                 </View>
 
-                {/* Quick Links */}
-                {/*<View style={styles.section}>*/}
-                {/*    <Text style={styles.sectionTitle}>Quick Links</Text>*/}
-
-                {/*    <View style={styles.quickLinksGrid}>*/}
-                {/*        {quickLinks.map((link, index) => (*/}
-                {/*            <TouchableOpacity*/}
-                {/*                key={index}*/}
-                {/*                style={styles.quickLinkCard}*/}
-                {/*                activeOpacity={0.85}*/}
-                {/*            >*/}
-                {/*                <LinearGradient*/}
-                {/*                    colors={link.gradient}*/}
-                {/*                    style={styles.quickLinkIcon}*/}
-                {/*                    start={{x: 0, y: 0}}*/}
-                {/*                    end={{x: 1, y: 1}}*/}
-                {/*                >*/}
-                {/*                    <Ionicons name={link.icon} size={24} color="#fff"/>*/}
-                {/*                </LinearGradient>*/}
-                {/*                <Text style={styles.quickLinkText}>{link.label}</Text>*/}
-                {/*            </TouchableOpacity>*/}
-                {/*        ))}*/}
-                {/*    </View>*/}
-                {/*</View>*/}
-
                 {/* Info Card */}
                 <InfoBox
                     icon="time-outline"
-                    text="Our support team typically responds within 24 hours. For urgent issues, please use the live chat option."
+                    text="Our support team typically responds within 24 hours. For urgent issues, please use our email support."
                 />
-
-                {/*/!* Social Media *!/*/}
-                {/*<View style={styles.section}>*/}
-                {/*    <Text style={styles.sectionTitle}>Follow Us</Text>*/}
-                {/*    <View style={styles.socialContainer}>*/}
-                {/*        {socialLinks.map((social, index) => (*/}
-                {/*            <TouchableOpacity*/}
-                {/*                key={index}*/}
-                {/*                style={styles.socialButton}*/}
-                {/*                activeOpacity={0.85}*/}
-                {/*            >*/}
-                {/*                <Ionicons name={social.icon} size={24} color={social.color}/>*/}
-                {/*            </TouchableOpacity>*/}
-                {/*        ))}*/}
-                {/*    </View>*/}
-                {/*</View>*/}
             </ScrollView>
         </SafeAreaView>
     );
@@ -146,7 +91,7 @@ const SupportScreen = ({navigation}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         padding: 20,
@@ -164,22 +109,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
+        // Blue Glow for Light Mode
         shadowColor: '#3B82F6',
         shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 5,
     },
     headerTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 8,
         letterSpacing: -0.3,
     },
     headerSubtitle: {
         fontSize: 15,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         lineHeight: 22,
         paddingHorizontal: 20,
@@ -191,20 +137,21 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 12,
         letterSpacing: -0.3,
     },
     optionsCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         overflow: 'hidden',
+        // Softer shadow for light mode
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
         elevation: 2,
     },
     optionItem: {
@@ -220,11 +167,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 14,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
     },
     optionContent: {
         flex: 1,
@@ -232,80 +174,20 @@ const styles = StyleSheet.create({
     optionTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 2,
         letterSpacing: -0.2,
     },
     optionDescription: {
         fontSize: 13,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: '500',
         letterSpacing: -0.1,
     },
     divider: {
         height: 1,
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border,
         marginHorizontal: 16,
-    },
-    quickLinksGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-    },
-    quickLinkCard: {
-        width: '48%',
-        backgroundColor: COLORS.dark.card,
-        borderRadius: 16,
-        padding: 20,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 2,
-    },
-    quickLinkIcon: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    quickLinkText: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: COLORS.dark.text,
-        textAlign: 'center',
-        letterSpacing: -0.2,
-    },
-    socialContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 16,
-        marginBottom:20,
-    },
-    socialButton: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
-        backgroundColor: COLORS.dark.card,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 2,
     },
 });
 

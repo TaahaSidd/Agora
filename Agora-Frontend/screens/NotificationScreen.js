@@ -163,7 +163,7 @@ export default function NotificationScreen() {
             <SafeAreaView style={styles.safeArea}>
                 <AppHeader title="Notifications" onBack={() => navigation.goBack()}/>
                 <View style={styles.emptyContainer}>
-                    <Ionicons name="notifications-outline" size={80} color={COLORS.dark.textTertiary}/>
+                    <Ionicons name="notifications-outline" size={80} color={COLORS.light.textTertiary}/>
                     <Text style={styles.emptyTitle}>Sign in Required</Text>
                     <Text style={styles.emptyText}>
                         Please log in to view your notifications
@@ -254,7 +254,7 @@ export default function NotificationScreen() {
 
     return (
         <SafeAreaProvider style={styles.container}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
 
             {/* Header */}
             <AppHeader
@@ -339,11 +339,11 @@ export default function NotificationScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     headerCenter: {
         flexDirection: 'row',
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
     },
     headerBadge: {
         backgroundColor: COLORS.error,
@@ -375,9 +375,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
+        borderBottomColor: COLORS.light.border,
     },
     filterTabs: {
         flexDirection: 'row',
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 30,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
         gap: 6,
     },
     activeTab: {
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     filterText: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
     },
     activeText: {
         color: '#fff',
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -442,16 +442,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 14,
-        //backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 26,
         position: 'relative',
         shadowColor: "#000",
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 3,
         borderWidth: 1,
-        borderColor: COLORS.dark.cardElevated,
+        borderColor: COLORS.light.border,
     },
     iconContainer: {
         width: 62,
@@ -467,22 +467,22 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         marginBottom: 2,
     },
     unreadTitle: {
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         fontWeight: '700',
     },
     description: {
         fontSize: 13,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         lineHeight: 18,
         marginBottom: 4,
     },
     time: {
         fontSize: 12,
-        color: COLORS.dark.textQuaternary,
+        color: COLORS.light.textQuaternary,
         fontWeight: '500',
     },
     unreadDot: {
@@ -506,13 +506,13 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginTop: 24,
         marginBottom: 8,
     },
     emptyText: {
         fontSize: 14,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         textAlign: 'center',
         marginBottom: 20,
     },

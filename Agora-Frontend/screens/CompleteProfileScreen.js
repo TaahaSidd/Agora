@@ -1,74 +1,136 @@
-import React, {useState} from 'react';
-import {KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {Ionicons} from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
-
 import {THEME} from '../utils/theme';
 import {COLORS} from "../utils/colors";
 import {useUserStore} from "../stores/userStore";
-import {completeProfile} from '../services/api';
+import {completeProfile, getColleges} from '../services/api';
 
 import ToastMessage from "../components/ToastMessage";
 import InputField from '../components/InputField';
 import Button from '../components/Button';
+import PhoneInputField from "../components/PhoneInputField";
 
-const CompleteProfileScreen = ({navigation, route}) => {
-    const {collegeName} = route.params || {collegeName: "your college"};
-    //console.log("COLLEGE _ NAME = ", collegeName);
-
-    //const {currentUser} = useUserStore();
-    //console.log("Current user in CompleteProfile screen:", currentUser);
+const CompleteProfileScreen = ({navigation}) => {
+    const {currentUser} = useUserStore();
 
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+    const [toast, setToast] = useState({visible: false, type: 'success', title: '', message: ''});
 
+    const [colleges, setColleges] = useState([]);
+    const [selectedCollege, setSelectedCollege] = useState(null);
+    const [collegeQuery, setCollegeQuery] = useState('');
+    const [loadingColleges, setLoadingColleges] = useState(false);
 
-    const isFormValid = firstName.trim().length >= 2
-        && lastName.trim().length >= 1 &&
-        email.trim().length >= 5;
+    useEffect(() => {
+        fetchColleges();
+        if (currentUser) {
+            setFirstName(currentUser.firstName || '');
+            setLastName(currentUser.lastName || '');
+            setPhoneNumber(currentUser.mobileNumber || '');
+        }
+    }, [currentUser]);
+
+    const fetchColleges = async () => {
+        setLoadingColleges(true);
+        try {
+            const data = await getColleges();
+            setColleges(data);
+        } catch (error) {
+            setToast({visible: true, type: 'error', title: 'Error', message: 'Failed to load colleges'});
+        } finally {
+            setLoadingColleges(false);
+        }
+    };
+
+    const filteredColleges = collegeQuery.trim()
+        ? colleges.filter(college =>
+            college.collegeName.toLowerCase().includes(collegeQuery.toLowerCase())
+        )
+        : [];
+
+    const handleCollegeSelect = (college) => {
+        setSelectedCollege(college);
+        setCollegeQuery(college.collegeName);
+    };
+
+    const isFormValid =
+        firstName.trim().length >= 2 &&
+        lastName.trim().length >= 1 &&
+        phoneNumber.trim().length >= 10 &&
+        selectedCollege !== null;
 
     const handleContinue = async () => {
         if (!isFormValid) return;
 
         setLoading(true);
         try {
-            const jwt = await SecureStore.getItemAsync('accessToken');
-            const {currentUser} = useUserStore.getState();
+            const token = await SecureStore.getItemAsync('accessToken');
 
             const profileData = {
-                firebaseToken: null,
-                phoneNumber: currentUser.mobileNumber,
+                userEmail: currentUser.userEmail,
                 firstName: firstName.trim(),
                 lastName: lastName.trim(),
-                userEmail: email.trim(),
-                college: currentUser.collegeName,
+                phoneNumber: phoneNumber.trim(),
+                college: selectedCollege.collegeName,
                 expoPushToken: null
             };
 
-            console.log('📤 Sending:', profileData);
-            const result = await completeProfile(jwt, profileData);
+            const result = await completeProfile(token, profileData);
 
             if (result) {
-                await SecureStore.setItemAsync('accessToken', result.jwt);
-                await useUserStore.getState().fetchUser();
-                navigation.replace('MainLayout');
+                if (result.jwt) await SecureStore.setItemAsync('accessToken', result.jwt);
+                if (result.refreshToken) await SecureStore.setItemAsync('refreshToken', result.refreshToken);
+
+                const updatedUser = {
+                    ...currentUser,
+                    firstName: result.firstName,
+                    lastName: result.lastName,
+                    name: `${result.firstName} ${result.lastName}`,
+                    mobileNumber: result.mobileNumber,
+                    collegeId: result.collegeId,
+                    verificationStatus: result.verificationStatus,
+                };
+
+                await SecureStore.setItemAsync('currentUser', JSON.stringify(updatedUser));
+                useUserStore.setState({currentUser: updatedUser, isGuest: false});
+
+                setToast({
+                    visible: true,
+                    type: 'success',
+                    title: 'Welcome!',
+                    message: 'Your profile is complete',
+                });
+
+                setTimeout(() => {
+                    navigation.replace('MainLayout');
+                }, 1500);
             }
         } catch (error) {
-            console.error("Profile Error:", error);
             setToast({
                 visible: true,
                 type: 'error',
                 title: 'Setup Failed',
-                message: error.message || 'Something went wrong. Please try again.',
+                message: error.response?.data?.message || error.message || 'Something went wrong.',
             });
         } finally {
             setLoading(false);
         }
     };
-
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -81,59 +143,114 @@ const CompleteProfileScreen = ({navigation, route}) => {
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
-                    {/* Header Section */}
                     <View style={styles.header}>
                         <View style={styles.iconContainer}>
                             <MaterialCommunityIcons
-                                name="account-group-outline"
+                                name="account-check-outline"
                                 size={THEME.iconSize['4xl']}
                                 color={COLORS.primary}
                             />
                         </View>
-
-                        <Text style={styles.title}>Represent your campus</Text>
-
+                        <Text style={styles.title}>Complete Your Profile</Text>
                         <Text style={styles.subtitle}>
-                            You’re joining as a student from{' '}
-                            <Text style={{color: COLORS.primary, fontWeight: '700'}}>
-                                {collegeName}
-                            </Text>
-                            . Using your real name helps build a trusted community across all campuses.
+                            Join your campus community. Just a few more details to get started.
                         </Text>
                     </View>
 
-                    {/* Form Section */}
-                    <View style={styles.form}>
-                        <InputField
-                            label="First Name"
-                            placeholder="e.g. Rahul"
-                            value={firstName}
-                            onChangeText={setFirstName}
-                            leftIcon="account-outline"
-                            autoFocus={true} // UX Pro-tip: Open keyboard immediately
-                        />
+                    {currentUser?.userEmail && (
+                        <View style={styles.verifiedBadge}>
+                            <MaterialCommunityIcons name="email-check" size={18} color="#22C55E"/>
+                            <Text style={styles.verifiedText}>{currentUser.userEmail}</Text>
+                        </View>
+                    )}
 
-                        <InputField
-                            label="Last Name"
-                            placeholder="e.g. Sharma"
-                            value={lastName}
-                            onChangeText={setLastName}
-                            leftIcon="account-outline"
+                    <View style={styles.form}>
+                        <View style={styles.nameRow}>
+                            <View style={{flex: 1}}>
+                                <InputField
+                                    label="First Name *"
+                                    placeholder="e.g. Rahul"
+                                    value={firstName}
+                                    onChangeText={setFirstName}
+                                    leftIcon="account-outline"
+                                />
+                            </View>
+                            <View style={{width: 12}} />
+                            <View style={{flex: 1}}>
+                                <InputField
+                                    label="Last Name *"
+                                    placeholder="e.g. Sharma"
+                                    value={lastName}
+                                    onChangeText={setLastName}
+                                    leftIcon="account-outline"
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.dropdownWrapper}>
+                            <InputField
+                                label="College *"
+                                placeholder="Search your college..."
+                                value={selectedCollege ? selectedCollege.collegeName : collegeQuery}
+                                onChangeText={(text) => {
+                                    setCollegeQuery(text);
+                                    if (selectedCollege) setSelectedCollege(null);
+                                }}
+                                leftIcon="school-outline"
+                                editable={!selectedCollege}
+                                rightIcon={selectedCollege ? "close-circle" : undefined}
+                                onRightIconPress={() => {
+                                    setSelectedCollege(null);
+                                    setCollegeQuery('');
+                                }}
+                            />
+
+                            {collegeQuery.length > 0 && filteredColleges.length > 0 && !selectedCollege && (
+                                <View style={styles.dropdown}>
+                                    <View style={styles.dropdownHeader}>
+                                        <Text style={styles.dropdownHeaderText}>
+                                            {filteredColleges.length} {filteredColleges.length === 1 ? 'college' : 'colleges'} found
+                                        </Text>
+                                    </View>
+                                    <ScrollView
+                                        style={{maxHeight: 220}}
+                                        nestedScrollEnabled={true}
+                                        showsVerticalScrollIndicator={true}
+                                    >
+                                        {filteredColleges.map((item, index) => (
+                                            <TouchableOpacity
+                                                key={item.id}
+                                                style={[
+                                                    styles.dropdownItem,
+                                                    index === filteredColleges.length - 1 && styles.dropdownItemLast
+                                                ]}
+                                                onPress={() => handleCollegeSelect(item)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <View style={styles.dropdownIconContainer}>
+                                                    <Ionicons name="school" size={18} color={COLORS.primary}/>
+                                                </View>
+                                                <Text style={styles.dropdownText} numberOfLines={2}>
+                                                    {item.collegeName}
+                                                </Text>
+                                                <Ionicons name="chevron-forward" size={16}
+                                                          color={COLORS.light.textTertiary}/>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                </View>
+                            )}
+                        </View>
+
+                        <PhoneInputField
+                            label="Mobile Number *"
+                            value={phoneNumber}
+                            onChangeText={setPhoneNumber}
+                            placeholder="98765 43210"
+                            error={phoneNumber.length > 0 && phoneNumber.length < 10 ? "Enter 10 digits" : null}
                         />
                     </View>
 
-                    <InputField
-                        label="Email Address"
-                        placeholder="e.g. rahul.sharma@gmail.com"
-                        value={email}
-                        onChangeText={setEmail}
-                        leftIcon="email-outline"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
-
-                    {/* Action Section */}
                     <View style={styles.footer}>
                         <Button
                             title="Finish Setup"
@@ -146,13 +263,11 @@ const CompleteProfileScreen = ({navigation, route}) => {
                             disabled={!isFormValid || loading}
                             fullWidth={true}
                         />
-
-
                         <View style={styles.securityNoteContainer}>
                             <MaterialCommunityIcons
                                 name="shield-check-outline"
                                 size={14}
-                                color={COLORS.gray500}
+                                color={COLORS.gray600}
                             />
                             <Text style={styles.securityNote}>
                                 Your real name helps verified students trust you.
@@ -177,7 +292,7 @@ const CompleteProfileScreen = ({navigation, route}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         flex: 1,
@@ -189,13 +304,13 @@ const styles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        marginBottom: THEME.spacing['4xl'],
+        marginBottom: THEME.spacing.lg,
     },
     iconContainer: {
         width: 80,
         height: 80,
         borderRadius: THEME.borderRadius.full,
-        backgroundColor: COLORS.primary + '15',
+        backgroundColor: COLORS.primary + '10',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: THEME.spacing.md,
@@ -203,19 +318,39 @@ const styles = StyleSheet.create({
     title: {
         fontSize: THEME.fontSize['2xl'],
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         textAlign: 'center',
         marginBottom: THEME.spacing.sm,
     },
     subtitle: {
         fontSize: THEME.fontSize.base,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         paddingHorizontal: THEME.spacing.md,
         lineHeight: THEME.lineHeight.normal * THEME.fontSize.base,
     },
-    form: {
-        marginTop: THEME.spacing.md,
+    verifiedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F0FDF4', // Light green bg
+        borderRadius: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        marginBottom: THEME.spacing.xl,
+        borderWidth: 1,
+        borderColor: '#DCFCE7',
+        gap: 8,
+    },
+    verifiedText: {
+        fontSize: THEME.fontSize.sm,
+        color: '#166534', // Dark green text
+        fontWeight: THEME.fontWeight.medium,
+    },
+    form: {},
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
     },
     footer: {
         marginTop: THEME.spacing['4xl'],
@@ -230,9 +365,72 @@ const styles = StyleSheet.create({
     },
     securityNote: {
         fontSize: THEME.fontSize.xs,
-        color: COLORS.gray500,
+        color: COLORS.gray600,
         textAlign: 'center',
-    }
+    },
+    dropdownWrapper: {
+        position: 'relative',
+        zIndex: 999,
+    },
+    dropdown: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        maxHeight: 280,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 15,
+        shadowOffset: {width: 0, height: 8},
+        zIndex: 999,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        overflow: 'hidden',
+        elevation: 10,
+    },
+    dropdownHeader: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#F9FAFB',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    dropdownHeaderText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: COLORS.light.textTertiary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    dropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+        gap: 12,
+    },
+    dropdownItemLast: {
+        borderBottomWidth: 0,
+    },
+    dropdownIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: `${COLORS.primary}10`,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    dropdownText: {
+        flex: 1,
+        fontSize: 15,
+        color: COLORS.light.text,
+        fontWeight: '500',
+        lineHeight: 20,
+    },
 });
 
 export default CompleteProfileScreen;

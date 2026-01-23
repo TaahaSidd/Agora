@@ -31,7 +31,6 @@ import {useUserStore} from "../stores/userStore";
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
 
-//subtle animations
 const ProfileScreen = ({navigation, route}) => {
     const {sellerId} = route.params;
     const {currentUser, loading: currentUserLoading, isGuest} = useUserStore();
@@ -84,14 +83,12 @@ const ProfileScreen = ({navigation, route}) => {
 
     const handleBlockConfirm = async () => {
         setIsBlockModalVisible(false);
-
         await blockUser(sellerId, () => {
             showToast({
                 type: 'success',
                 title: 'User Blocked',
                 message: `${seller?.firstName || 'User'} has been removed from your feed.`
             });
-
             setTimeout(() => {
                 navigation.reset({
                     index: 0,
@@ -99,22 +96,6 @@ const ProfileScreen = ({navigation, route}) => {
                 });
             }, 1500);
         });
-    };
-
-    const getMilestones = (listings, followers, rating) => {
-        const milestones = [];
-
-        if (listings.length >= 1) milestones.push({id: 1, label: 'First Sale', icon: 'rocket', color: '#F59E0B'});
-        if (listings.length >= 10) milestones.push({id: 2, label: 'Power Seller', icon: 'flame', color: '#EF4444'});
-        if (followers >= 20) milestones.push({id: 3, label: 'Campus Star', icon: 'star', color: '#3B82F6'});
-        if (rating >= 4.8 && listings.length > 5) milestones.push({
-            id: 4,
-            label: 'Top Trusted',
-            icon: 'shield-checkmark',
-            color: '#10B981'
-        });
-
-        return milestones;
     };
 
     const isOwnProfile = currentUser?.id === seller?.id;
@@ -154,34 +135,34 @@ const ProfileScreen = ({navigation, route}) => {
             }
         } catch (err) {
             console.error("Follow toggle failed:", err);
-            alert("Unable to update follow status.");
         }
     };
 
     const getRatingStyle = (rating) => {
+        // Light mode uses standard BG colors and slightly darker text for contrast
         if (rating >= 4.5) {
             return {
-                bg: COLORS.successBgDark,
-                text: COLORS.success,
-                border: COLORS.success + '30',
+                bg: '#DCFCE7', // success bg light
+                text: '#15803D', // success dark
+                border: '#BBF7D0',
             };
         } else if (rating >= 3.5) {
             return {
-                bg: COLORS.infoBgDark,
-                text: COLORS.info,
-                border: COLORS.info + '30',
+                bg: '#DBEAFE', // info bg light
+                text: '#1D4ED8', // info dark
+                border: '#BFDBFE',
             };
         } else if (rating >= 2.5) {
             return {
-                bg: COLORS.warningBgDark,
-                text: COLORS.warning,
-                border: COLORS.warning + '30',
+                bg: '#FEF3C7', // warning bg light
+                text: '#B45309', // warning dark
+                border: '#FDE68A',
             };
         } else {
             return {
-                bg: COLORS.errorBgDark,
-                text: COLORS.error,
-                border: COLORS.error + '30',
+                bg: '#FEE2E2', // error bg light
+                text: '#B91C1C', // error dark
+                border: '#FECACA',
             };
         }
     };
@@ -191,24 +172,13 @@ const ProfileScreen = ({navigation, route}) => {
     const totalReviews = stats.totalReviews;
 
     const getBannerGradient = (rating) => {
-        if (rating >= 4.5) {
-            return ['#7C3AED', '#EC4899', '#F59E0B'];
-        } else if (rating >= 3.5) {
-            return ['#1E3A8A', '#3B82F6', '#10B981'];
-        } else if (rating >= 2.5) {
-            return ['#EA580C', '#F59E0B', '#FCD34D'];
-        } else {
-            return ['#374151', '#4B5563', '#6B7280'];
-        }
+        if (rating >= 4.5) return ['#8B5CF6', '#EC4899', '#F59E0B'];
+        if (rating >= 3.5) return ['#2563EB', '#3B82F6', '#10B981'];
+        if (rating >= 2.5) return ['#EA580C', '#F59E0B', '#FCD34D'];
+        return ['#4B5563', '#6B7280', '#9CA3AF'];
     };
 
-    let sellerAvatar = seller?.profileImage;
-    if (typeof sellerAvatar === 'string' && sellerAvatar.includes('localhost')) {
-        sellerAvatar = sellerAvatar.replace('localhost', '192.168.8.15');
-    }
-    if (!sellerAvatar) {
-        sellerAvatar = 'https://i.pravatar.cc/100';
-    }
+    let sellerAvatar = seller?.profileImage || 'https://i.pravatar.cc/100';
 
     const filteredListings = filter === 'all' ? listings : listings.filter(item => {
         if (filter === 'available') return item.itemStatus === 'AVAILABLE';
@@ -216,15 +186,12 @@ const ProfileScreen = ({navigation, route}) => {
         return true;
     });
 
-    if (loading) {
-        return <ProfileSkeleton/>;
-    }
+    if (loading) return <ProfileSkeleton/>;
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent"/>
 
-            {/* Floating Header */}
             <View style={styles.floatingHeader}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
                     <Ionicons name="arrow-back" size={24} color="#fff"/>
@@ -235,9 +202,7 @@ const ProfileScreen = ({navigation, route}) => {
             </View>
 
             <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-                {/* Banner + Profile Section */}
                 <View style={styles.bannerSection}>
-                    {/* Banner with gradient */}
                     <LinearGradient
                         colors={getBannerGradient(ratingValue)}
                         start={{x: 0, y: 0}}
@@ -245,11 +210,10 @@ const ProfileScreen = ({navigation, route}) => {
                         style={styles.banner}
                     >
                         <View style={styles.patternOverlay}>
-                            <Ionicons name="grid" size={200} color="rgba(255,255,255,0.03)"/>
+                            <Ionicons name="grid" size={200} color="rgba(255,255,255,0.08)"/>
                         </View>
                     </LinearGradient>
 
-                    {/* Avatar - positioned at bottom of banner */}
                     <View style={styles.avatarWrapper}>
                         <View style={styles.avatarContainer}>
                             <Image source={{uri: sellerAvatar}} style={styles.avatar}/>
@@ -262,22 +226,19 @@ const ProfileScreen = ({navigation, route}) => {
                     </View>
                 </View>
 
-                {/* Profile Info */}
                 <View style={styles.profileInfo}>
                     <Text style={styles.name}>
                         {seller ? `${seller.firstName} ${seller.lastName}` : 'Seller'}
                     </Text>
 
                     <View style={styles.collegeRow}>
-                        <Ionicons name="school" size={16} color={COLORS.dark.textTertiary}/>
+                        <Ionicons name="school" size={16} color={COLORS.light.textTertiary}/>
                         <Text style={styles.collegeName}>
                             {seller?.collegeName || 'College'}
                         </Text>
                     </View>
 
-                    {/* Stats Row */}
                     <View style={styles.statsContainer}>
-                        {/* Listings */}
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber}>{listings?.length || 0}</Text>
                             <Text style={styles.statLabel}>Listings</Text>
@@ -285,7 +246,6 @@ const ProfileScreen = ({navigation, route}) => {
 
                         <View style={styles.statDivider}/>
 
-                        {/* Followers */}
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber}>{followersCount}</Text>
                             <Text style={styles.statLabel}>Followers</Text>
@@ -293,7 +253,6 @@ const ProfileScreen = ({navigation, route}) => {
 
                         <View style={styles.statDivider}/>
 
-                        {/* Rating - Now Tappable */}
                         <TouchableOpacity
                             style={styles.statItem}
                             onPress={() => setShowRatingModal(true)}
@@ -308,16 +267,15 @@ const ProfileScreen = ({navigation, route}) => {
                             ]}>
                                 <Ionicons name="star" size={14} color={ratingStyle.text}/>
                                 <Text style={[styles.ratingText, {color: ratingStyle.text}]}>
-                                    {loading ? '...' : ratingValue.toFixed(1)}
+                                    {ratingValue.toFixed(1)}
                                 </Text>
                             </View>
                             <Text style={styles.statLabel}>
-                                {loading ? 'Rating' : `${totalReviews} ${totalReviews === 1 ? 'Review' : 'Reviews'}`}
+                                {`${totalReviews} ${totalReviews === 1 ? 'Review' : 'Reviews'}`}
                             </Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Follow Button */}
                     {!isOwnProfile && (
                         <Button
                             title={isFollowing ? "Following" : "Follow"}
@@ -331,26 +289,6 @@ const ProfileScreen = ({navigation, route}) => {
                     )}
                 </View>
 
-                {/*<View style={styles.badgeSection}>*/}
-                {/*    <Text style={styles.badgeTitle}>Campus Achievements</Text>*/}
-                {/*    <ScrollView horizontal showsHorizontalScrollIndicator={false}*/}
-                {/*                contentContainerStyle={styles.badgeScroll}>*/}
-                {/*        {getMilestones(listings, followersCount, ratingValue).map(badge => (*/}
-                {/*            <View*/}
-                {/*                key={badge.id}*/}
-                {/*                style={[*/}
-                {/*                    styles.badgePill,*/}
-                {/*                    {borderColor: badge.color + '40'}*/}
-                {/*                ]}*/}
-                {/*            >*/}
-                {/*                <Ionicons name={badge.icon} size={14} color={badge.color}/>*/}
-                {/*                <Text style={styles.badgeLabel}>{badge.label}</Text>*/}
-                {/*            </View>*/}
-                {/*        ))}*/}
-                {/*    </ScrollView>*/}
-                {/*</View>*/}
-
-                {/* Listings Section */}
                 <View style={styles.listingsSection}>
                     <View style={styles.listingsHeader}>
                         <Text style={styles.sectionTitle}>Listings</Text>
@@ -359,73 +297,30 @@ const ProfileScreen = ({navigation, route}) => {
                         </View>
                     </View>
 
-                    {/* Filter Tabs */}
                     <View style={styles.filterContainer}>
-                        {/* All Tab */}
-                        <Animated.View style={{transform: [{scale: scaleValues.all}]}}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.filterTab,
-                                    filter === 'all' && styles.filterTabActive,
-                                ]}
-                                onPress={() => handlePress('all')}
-                                activeOpacity={0.8}
-                            >
-                                <Animated.Text
+                        {['all', 'available', 'sold'].map((type) => (
+                            <Animated.View key={type} style={{transform: [{scale: scaleValues[type]}]}}>
+                                <TouchableOpacity
                                     style={[
-                                        styles.filterText,
-                                        filter === 'all' && styles.filterTextActive,
+                                        styles.filterTab,
+                                        filter === type && styles.filterTabActive,
                                     ]}
+                                    onPress={() => handlePress(type)}
+                                    activeOpacity={0.8}
                                 >
-                                    All
-                                </Animated.Text>
-                            </TouchableOpacity>
-                        </Animated.View>
-
-                        {/* Available Tab */}
-                        <Animated.View style={{transform: [{scale: scaleValues.available}]}}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.filterTab,
-                                    filter === 'available' && styles.filterTabActive,
-                                ]}
-                                onPress={() => handlePress('available')}
-                                activeOpacity={0.8}
-                            >
-                                <Animated.Text
-                                    style={[
-                                        styles.filterText,
-                                        filter === 'available' && styles.filterTextActive,
-                                    ]}
-                                >
-                                    Available
-                                </Animated.Text>
-                            </TouchableOpacity>
-                        </Animated.View>
-
-                        {/* Sold Tab */}
-                        <Animated.View style={{transform: [{scale: scaleValues.sold}]}}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.filterTab,
-                                    filter === 'sold' && styles.filterTabActive,
-                                ]}
-                                onPress={() => handlePress('sold')}
-                                activeOpacity={0.8}
-                            >
-                                <Animated.Text
-                                    style={[
-                                        styles.filterText,
-                                        filter === 'sold' && styles.filterTextActive,
-                                    ]}
-                                >
-                                    Sold
-                                </Animated.Text>
-                            </TouchableOpacity>
-                        </Animated.View>
+                                    <Text
+                                        style={[
+                                            styles.filterText,
+                                            filter === type && styles.filterTextActive,
+                                        ]}
+                                    >
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                    </Text>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        ))}
                     </View>
 
-                    {/* Listings Grid */}
                     {filteredListings && filteredListings.length > 0 ? (
                         <View style={styles.listingsGrid}>
                             {filteredListings.map((item) => (
@@ -438,33 +333,20 @@ const ProfileScreen = ({navigation, route}) => {
                         </View>
                     ) : (
                         <View style={styles.emptyListings}>
-                            <Ionicons name="cube-outline" size={48} color={COLORS.dark.textTertiary}/>
+                            <Ionicons name="cube-outline" size={48} color={COLORS.light.textTertiary}/>
                             <Text style={styles.emptyText}>No listings found</Text>
                         </View>
                     )}
                 </View>
             </ScrollView>
 
-            {/* Bottom Sheet Menu */}
             <BottomSheetMenu
                 visible={showMenu}
                 onClose={() => setShowMenu(false)}
                 type="user"
                 title="Profile Options"
                 isGuest={isGuest}
-                onAuthRequired={() => {
-                    setShowMenu(false);
-                    setToast({
-                        visible: true,
-                        type: 'info',
-                        title: 'Members Only',
-                        message: 'Join the Agora community to report or block users!'
-                    });
-                }}
-                onShare={() => {
-                    setShowMenu(false);
-                    console.log('Share profile');
-                }}
+                onShare={() => setShowMenu(false)}
                 onReport={isOwnProfile ? null : () => {
                     setShowMenu(false);
                     navigation.navigate('ReportUserScreen', {
@@ -493,16 +375,9 @@ const ProfileScreen = ({navigation, route}) => {
                 rating={ratingValue}
                 isOwnProfile={isOwnProfile}
                 isGuest={isGuest}
-                onAuthPress={() => {
-                    setShowRatingModal(false);
-                    navigation.navigate('Login');
-                }}
                 onRatePress={() => {
                     setShowRatingModal(false);
-                    navigation.navigate('UserRatingScreen', {
-                        sellerId,
-                        seller
-                    });
+                    navigation.navigate('UserRatingScreen', { sellerId, seller });
                 }}
             />
 
@@ -521,7 +396,7 @@ const ProfileScreen = ({navigation, route}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         flex: 1,
@@ -542,7 +417,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: COLORS.transparentBlack50,
+        backgroundColor: 'rgba(0,0,0,0.3)',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -575,23 +450,23 @@ const styles = StyleSheet.create({
         position: 'relative',
         shadowColor: "#000",
         shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 8,
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 10,
     },
     avatar: {
         width: 100,
         height: 100,
         borderRadius: 50,
         borderWidth: 4,
-        borderColor: COLORS.dark.bg,
-        backgroundColor: COLORS.dark.card,
+        borderColor: COLORS.light.bg,
+        backgroundColor: COLORS.light.card,
     },
     verifiedBadge: {
         position: 'absolute',
         bottom: 2,
         right: 2,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
         borderRadius: 12,
     },
     profileInfo: {
@@ -602,7 +477,7 @@ const styles = StyleSheet.create({
     name: {
         fontSize: THEME.fontSize['2xl'],
         fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: THEME.spacing[2],
         textAlign: 'center',
     },
@@ -613,7 +488,7 @@ const styles = StyleSheet.create({
     },
     collegeName: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         marginLeft: THEME.spacing[1],
         fontWeight: THEME.fontWeight.medium,
     },
@@ -623,8 +498,9 @@ const styles = StyleSheet.create({
         borderRadius: THEME.borderRadius.lg,
         padding: THEME.spacing.lg,
         marginBottom: THEME.spacing.lg,
+        backgroundColor: COLORS.light.card,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     statItem: {
         flex: 1,
@@ -633,18 +509,18 @@ const styles = StyleSheet.create({
     statNumber: {
         fontSize: THEME.fontSize.xl,
         fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: THEME.spacing[1],
     },
     statLabel: {
         fontSize: THEME.fontSize.xs,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         fontWeight: THEME.fontWeight.semibold,
     },
     statDivider: {
         width: 1,
         height: '100%',
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border,
     },
     ratingBadge: {
         flexDirection: 'row',
@@ -673,7 +549,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: THEME.fontSize.xl,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
     },
     listingsCount: {
         backgroundColor: COLORS.primary,
@@ -695,9 +571,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: THEME.spacing.md,
         paddingVertical: THEME.spacing[2],
         borderRadius: THEME.borderRadius.pill,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     filterTabActive: {
         backgroundColor: COLORS.primary,
@@ -706,7 +582,7 @@ const styles = StyleSheet.create({
     filterText: {
         fontSize: THEME.fontSize.sm,
         fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
     },
     filterTextActive: {
         color: '#fff',
@@ -718,98 +594,19 @@ const styles = StyleSheet.create({
         marginBottom: THEME.spacing['2xl'],
     },
     emptyListings: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: THEME.borderRadius.lg,
         padding: THEME.spacing['3xl'],
         alignItems: 'center',
         marginBottom: THEME.spacing['2xl'],
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     emptyText: {
         fontSize: THEME.fontSize.base,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         marginTop: THEME.spacing.md,
         fontWeight: THEME.fontWeight.medium,
-    },
-
-    bigRatingBadge: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    modalRatingTitle: {
-        fontSize: 20,
-        fontWeight: '900',
-        marginBottom: 8,
-    },
-    modalRatingMsg: {
-        fontSize: 14,
-        color: COLORS.dark.textSecondary,
-        textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 24,
-        paddingHorizontal: 20,
-    },
-    rateUserCTA: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.dark.cardElevated,
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        borderRadius: THEME.borderRadius.lg,
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-        gap: 8,
-    },
-    rateUserCTAText: {
-        color: COLORS.primary,
-        fontWeight: '800',
-        fontSize: 14,
-    },
-
-    badgeSection: {
-        marginTop: THEME.spacing.md,
-        paddingHorizontal: THEME.spacing.lg,
-        marginBottom: THEME.spacing.md,
-    },
-    badgeTitle: {
-        fontSize: 12,
-        fontWeight: '800',
-        color: COLORS.dark.textTertiary,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        marginBottom: THEME.spacing.sm,
-    },
-    badgeScroll: {
-        paddingVertical: 4,
-        gap: 10, // Adds spacing between badges
-    },
-    badgePill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.dark.cardElevated,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: COLORS.dark.border,
-        // Shadow to give it that "sticker" lift
-        shadowColor: "#000",
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-        elevation: 3,
-        marginRight: 8, // Backup for older RN versions
-    },
-    badgeLabel: {
-        fontSize: 13,
-        fontWeight: '700',
-        color: COLORS.dark.text,
-        marginLeft: 6,
     },
 });
 

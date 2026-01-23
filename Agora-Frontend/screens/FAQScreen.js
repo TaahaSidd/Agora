@@ -69,7 +69,8 @@ export default function FAQScreen({navigation}) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            {/* Status bar changed to light bg with dark icons */}
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
             <AppHeader title="FAQs" onBack={() => navigation.goBack()}/>
 
             <ScrollView
@@ -113,7 +114,7 @@ export default function FAQScreen({navigation}) {
                                 <Ionicons
                                     name={expandedIndex === index ? "chevron-up" : "chevron-down"}
                                     size={20}
-                                    color={COLORS.dark.textTertiary}
+                                    color={COLORS.light.textTertiary}
                                 />
                             </View>
                         </View>
@@ -158,7 +159,7 @@ export default function FAQScreen({navigation}) {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         padding: 20,
@@ -170,33 +171,34 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 28,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         letterSpacing: -0.5,
         marginBottom: 8,
     },
     headerSubtitle: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: '500',
         lineHeight: 20,
     },
     item: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 18,
         padding: 16,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
     },
     itemExpanded: {
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 3,
+        borderColor: COLORS.primary + '30', // Subtle highlight when expanded
     },
     questionRow: {
         flexDirection: 'row',
@@ -211,7 +213,7 @@ const styles = StyleSheet.create({
         marginRight: 12,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 4,
         elevation: 3,
     },
@@ -219,7 +221,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 15,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         lineHeight: 20,
         letterSpacing: -0.2,
     },
@@ -235,27 +237,27 @@ const styles = StyleSheet.create({
         marginLeft: 56,
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: COLORS.dark.border,
+        borderTopColor: COLORS.light.border,
     },
     answer: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         lineHeight: 22,
         fontWeight: '500',
         letterSpacing: -0.1,
     },
     helpCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 20,
         padding: 24,
         marginTop: 20,
-        marginBottom:20,
+        marginBottom: 20,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
     },
@@ -270,20 +272,20 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         shadowColor: '#3B82F6',
         shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 6,
         elevation: 4,
     },
     helpTitle: {
         fontSize: 20,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 8,
         letterSpacing: -0.3,
     },
     helpText: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
         marginBottom: 20,

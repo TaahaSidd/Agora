@@ -17,7 +17,7 @@ import {useMyListings} from '../hooks/useMyListings';
 import {useUserStore} from "../stores/userStore";
 
 const MyListingsScreen = ({navigation, scrollY}) => {
-    const theme = COLORS.dark;
+    const theme = COLORS.light;
     const {currentUser, isGuest} = useUserStore();
 
     const {listings, loading, setListings, setLoading} = useMyListings();

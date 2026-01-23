@@ -11,7 +11,7 @@ import {COLORS} from '../utils/colors';
 export default function PrivacyPolicyScreen({navigation}) {
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
             <AppHeader title="Privacy Policy" onBack={() => navigation.goBack()}/>
 
             <ScrollView
@@ -184,23 +184,23 @@ export default function PrivacyPolicyScreen({navigation}) {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         padding: 20,
         paddingBottom: 40,
     },
     headerCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: 20,
         padding: 24,
         alignItems: 'center',
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
     },
@@ -211,34 +211,34 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
-        shadowColor: '#10B981',
+        shadowColor: '#4F46E5',
         shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 5,
     },
     headerTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 6,
         letterSpacing: -0.3,
     },
     headerSubtitle: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: '600',
     },
     contentCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: 20,
         padding: 24,
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
     },
@@ -248,13 +248,13 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 12,
         letterSpacing: -0.3,
     },
     paragraph: {
         fontSize: 15,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         lineHeight: 24,
         fontWeight: '500',
         letterSpacing: -0.1,
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     listText: {
         flex: 1,
         fontSize: 15,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         lineHeight: 24,
         fontWeight: '500',
         letterSpacing: -0.1,

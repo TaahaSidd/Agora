@@ -20,7 +20,6 @@ const ReportHistoryScreen = ({navigation}) => {
     const fetchReports = async () => {
         try {
             const response = await apiGet('/report/my-reports');
-            console.log("RESPONSE ->", response);
             setReports(response || []);
         } catch (error) {
             console.error('Error fetching reports:', error);
@@ -75,17 +74,6 @@ const ReportHistoryScreen = ({navigation}) => {
         }
     };
 
-    const getReportTypeLabel = (type) => {
-        switch (type) {
-            case 'LISTING':
-                return 'Listing Report';
-            case 'USER':
-                return 'User Report';
-            default:
-                return 'Other Report';
-        }
-    };
-
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -96,7 +84,7 @@ const ReportHistoryScreen = ({navigation}) => {
     };
 
     const renderReportCard = ({item}) => {
-        const statusInfo = getStatusInfo(item.reportStatus); // Updated key
+        const statusInfo = getStatusInfo(item.reportStatus);
         const isListing = item.reportType === 'LISTING';
 
         return (
@@ -127,7 +115,6 @@ const ReportHistoryScreen = ({navigation}) => {
 
                     <Text style={styles.reportDate}>{formatDate(item.reportedAt)}</Text>
                 </View>
-
             </TouchableOpacity>
         );
     };
@@ -135,7 +122,7 @@ const ReportHistoryScreen = ({navigation}) => {
     const renderEmptyState = () => (
         <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
-                <Ionicons name="document-text-outline" size={80} color={COLORS.dark.textTertiary}/>
+                <Ionicons name="document-text-outline" size={80} color={COLORS.light.textTertiary}/>
             </View>
             <Text style={styles.emptyTitle}>No Reports Yet</Text>
             <Text style={styles.emptySubtitle}>
@@ -205,7 +192,7 @@ const ReportHistoryScreen = ({navigation}) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
         marginTop: 0,
     },
     loadingContainer: {
@@ -214,18 +201,24 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     legendContainer: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         marginHorizontal: THEME.spacing.md,
         marginTop: THEME.spacing.md,
         padding: THEME.spacing.md,
         borderRadius: THEME.borderRadius.lg,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
+        // Subtle shadow for light mode
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2,
     },
     legendTitle: {
         fontSize: THEME.fontSize.sm,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: THEME.spacing.sm,
     },
     legendGrid: {
@@ -245,7 +238,7 @@ const styles = StyleSheet.create({
     },
     legendText: {
         fontSize: THEME.fontSize.xs,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: THEME.fontWeight.medium,
     },
     listContent: {
@@ -253,12 +246,12 @@ const styles = StyleSheet.create({
         paddingBottom: 100,
     },
     reportCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: THEME.borderRadius.lg,
         padding: THEME.spacing.md,
         marginBottom: THEME.spacing.sm,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         flexDirection: 'row',
         alignItems: 'center',
     },
@@ -284,19 +277,19 @@ const styles = StyleSheet.create({
     },
     reportType: {
         fontSize: THEME.fontSize.xs,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         fontWeight: THEME.fontWeight.semibold,
         marginBottom: 2,
     },
     reportReason: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         fontWeight: THEME.fontWeight.semibold,
         marginBottom: 4,
     },
     reportDate: {
         fontSize: THEME.fontSize.xs,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         fontWeight: THEME.fontWeight.medium,
     },
     emptyState: {
@@ -307,17 +300,17 @@ const styles = StyleSheet.create({
     },
     emptyIconContainer: {
         marginBottom: THEME.spacing.lg,
-        opacity: 0.4,
+        opacity: 0.2,
     },
     emptyTitle: {
         fontSize: THEME.fontSize.xl,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: THEME.spacing.sm,
     },
     emptySubtitle: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
     },
 });

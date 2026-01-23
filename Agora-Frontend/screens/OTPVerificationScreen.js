@@ -9,11 +9,10 @@ import Button from '../components/Button';
 import ToastMessage from '../components/ToastMessage';
 
 import {COLORS} from '../utils/colors';
-import {loginWithOtp, signupWithOtp} from "../services/api";
-import auth from "@react-native-firebase/auth";
+import {loginWithOtp, sendOtpForLogin, sendOtpForSignup, signupWithOtp} from "../services/api";
 
 export default function OTPVerificationScreen({route, navigation}) {
-    const {phoneNumber, collegeId, collegeName, expoPushToken, confirmation} = route.params;
+    const {email, collegeId, collegeName, expoPushToken} = route.params;
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
     const [resendTimer, setResendTimer] = useState(60);
@@ -54,44 +53,28 @@ export default function OTPVerificationScreen({route, navigation}) {
 
     const handleVerifyOTP = async () => {
         const otpCode = otp.join('');
-
         if (otpCode.length !== 6) {
-            showToast({
-                type: 'error',
-                title: 'Invalid OTP',
-                message: 'Please enter 6-digit code',
-            });
+            showToast({type: 'error', title: 'Invalid OTP', message: 'Enter 6-digit code'});
             return;
         }
 
         setLoading(true);
         try {
-            console.log('🔐 Verifying OTP...');
-
-            const userCredential = await confirmation.confirm(otpCode);
-
-            const firebaseToken = await userCredential.user.getIdToken();
-
-            const payload = {
-                firebaseToken,
-                collegeId,
-                expoPushToken
-            };
+            console.log('🔐 Verifying OTP with Backend...');
 
             let response;
 
             if (collegeId) {
-                response = await signupWithOtp(firebaseToken, collegeId, expoPushToken);
+                response = await signupWithOtp(email, otpCode, collegeId, expoPushToken);
             } else {
-                response = await loginWithOtp(firebaseToken, expoPushToken);
+                response = await loginWithOtp(email, otpCode, expoPushToken);
             }
 
-            console.log('✅ Backend response:', response);
+            console.log('✅ Backend verified:', response);
 
             await Promise.all([
                 SecureStore.deleteItemAsync('accessToken'),
                 SecureStore.deleteItemAsync('refreshToken'),
-                SecureStore.deleteItemAsync('currentUser'),
                 SecureStore.deleteItemAsync('userId')
             ]);
 
@@ -104,71 +87,131 @@ export default function OTPVerificationScreen({route, navigation}) {
             const userStore = useUserStore.getState();
             await userStore.fetchUser();
 
-            const finalCollegeName = userStore.currentUser?.college?.name || response.collegeName || collegeName;
-
             if (response.verificationStatus === 'VERIFIED') {
-                showToast({
-                    type: 'success',
-                    title: 'Welcome Back!',
-                    message: 'Login successful',
-                });
+                showToast({type: 'success', title: 'Success!', message: 'Logged in successfully'});
                 navigation.replace('MainLayout');
             } else {
-                // User is PENDING, must complete profile
-                showToast({
-                    type: 'success',
-                    title: 'Phone Verified!',
-                    message: 'Please complete your profile details',
-                });
+                showToast({type: 'success', title: 'Email Verified!', message: 'Complete your profile'});
                 navigation.replace('CompleteProfileScreen', {
-                    collegeName: finalCollegeName
+                    collegeName: response.collegeName || collegeName
                 });
             }
 
         } catch (error) {
             console.error('❌ Verification error:', error);
-            let errorMessage = 'Verification failed. Please try again.';
-
-            if (error.code === 'auth/invalid-verification-code') {
-                errorMessage = 'Invalid OTP code. Please try again.';
-            } else if (error.code === 'auth/code-expired') {
-                errorMessage = 'OTP expired. Please request a new code.';
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-
-            showToast({
-                type: 'error',
-                title: 'Verification Failed',
-                message: errorMessage,
-            });
+            const errorMsg = error.response?.data?.message || "Invalid OTP or request failed.";
+            showToast({type: 'error', title: 'Failed', message: errorMsg});
         } finally {
             setLoading(false);
         }
     };
 
+    // const handleVerifyOTP = async () => {
+    //     const otpCode = otp.join('');
+    //
+    //     if (otpCode.length !== 6) {
+    //         showToast({
+    //             type: 'error',
+    //             title: 'Invalid OTP',
+    //             message: 'Please enter 6-digit code',
+    //         });
+    //         return;
+    //     }
+    //
+    //     setLoading(true);
+    //     try {
+    //         console.log('🔐 Verifying OTP...');
+    //
+    //         const userCredential = await confirmation.confirm(otpCode);
+    //
+    //         const firebaseToken = await userCredential.user.getIdToken();
+    //
+    //         const payload = {
+    //             firebaseToken,
+    //             collegeId,
+    //             expoPushToken
+    //         };
+    //
+    //         let response;
+    //
+    //         if (collegeId) {
+    //             response = await signupWithOtp(firebaseToken, collegeId, expoPushToken);
+    //         } else {
+    //             response = await loginWithOtp(firebaseToken, expoPushToken);
+    //         }
+    //
+    //         console.log('✅ Backend response:', response);
+    //
+    //         await Promise.all([
+    //             SecureStore.deleteItemAsync('accessToken'),
+    //             SecureStore.deleteItemAsync('refreshToken'),
+    //             SecureStore.deleteItemAsync('currentUser'),
+    //             SecureStore.deleteItemAsync('userId')
+    //         ]);
+    //
+    //         await Promise.all([
+    //             SecureStore.setItemAsync('accessToken', response.jwt),
+    //             SecureStore.setItemAsync('refreshToken', response.refreshToken),
+    //             SecureStore.setItemAsync('userId', response.id.toString())
+    //         ]);
+    //
+    //         const userStore = useUserStore.getState();
+    //         await userStore.fetchUser();
+    //
+    //         const finalCollegeName = userStore.currentUser?.college?.name || response.collegeName || collegeName;
+    //
+    //         if (response.verificationStatus === 'VERIFIED') {
+    //             showToast({
+    //                 type: 'success',
+    //                 title: 'Welcome Back!',
+    //                 message: 'Login successful',
+    //             });
+    //             navigation.replace('MainLayout');
+    //         } else {
+    //             showToast({
+    //                 type: 'success',
+    //                 title: 'Phone Verified!',
+    //                 message: 'Please complete your profile details',
+    //             });
+    //             navigation.replace('CompleteProfileScreen', {
+    //                 collegeName: finalCollegeName
+    //             });
+    //         }
+    //
+    //     } catch (error) {
+    //         console.error('❌ Verification error:', error);
+    //         let errorMessage = 'Verification failed. Please try again.';
+    //
+    //         if (error.code === 'auth/invalid-verification-code') {
+    //             errorMessage = 'Invalid OTP code. Please try again.';
+    //         } else if (error.code === 'auth/code-expired') {
+    //             errorMessage = 'OTP expired. Please request a new code.';
+    //         } else if (error.message) {
+    //             errorMessage = error.message;
+    //         }
+    //
+    //         showToast({
+    //             type: 'error',
+    //             title: 'Verification Failed',
+    //             message: errorMessage,
+    //         });
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
     const handleResendOTP = async () => {
         try {
             setLoading(true);
-            console.log('🔄 Resending OTP to:', phoneNumber);
-
-            const newConfirmation = await auth().signInWithPhoneNumber(phoneNumber);
-
-            navigation.setParams({ confirmation: newConfirmation });
-
+            if (collegeId) {
+                await sendOtpForSignup(email);
+            } else {
+                await sendOtpForLogin(email);
+            }
             setResendTimer(60);
-            showToast({
-                type: 'success',
-                title: 'OTP Sent',
-                message: 'A new 6-digit code has been sent.',
-            });
+            showToast({type: 'success', title: 'OTP Resent', message: 'Check your inbox.'});
         } catch (error) {
-            console.error('❌ Resend error:', error);
-            showToast({
-                type: 'error',
-                title: 'Resend Failed',
-                message: 'Too many requests. Please try again later.',
-            });
+            showToast({type: 'error', title: 'Error', message: 'Try again later.'});
         } finally {
             setLoading(false);
         }
@@ -196,10 +239,10 @@ export default function OTPVerificationScreen({route, navigation}) {
                 </View>
 
                 {/* Title */}
-                <Text style={styles.title}>Verify Your Phone</Text>
+                <Text style={styles.title}>Verify Your email</Text>
                 <Text style={styles.subtitle}>
                     Enter the 6-digit code sent to{'\n'}
-                    <Text style={styles.phoneNumber}>{phoneNumber}</Text>
+                    <Text style={styles.phoneNumber}>{email}</Text>
                 </Text>
 
                 {/* OTP Input */}

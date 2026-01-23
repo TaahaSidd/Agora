@@ -99,7 +99,7 @@ const ChatScreen = ({scrollY}) => {
         return (<SafeAreaView style={styles.safeArea}>
             <AppHeader title="Messages"/>
             <View style={styles.emptyState}>
-                <Ionicons name="chatbubbles-outline" size={80} color={COLORS.dark.textTertiary}/>
+                <Ionicons name="chatbubbles-outline" size={80} color={COLORS.light.textTertiary}/>
                 <Text style={styles.emptyTitle}>Log in Required</Text>
                 <Text style={styles.emptyText}>
                     Please log in to view and send messages
@@ -205,9 +205,7 @@ const ChatScreen = ({scrollY}) => {
     const handleConfirmDelete = async () => {
         if (chatToDelete) {
             try {
-                console.log('Hiding chat', chatToDelete.id);
                 await deleteChatForMe(chatToDelete.id, currentUser.email);
-                console.log('Chat hidden successfully');
                 setModalVisible(false);
                 setChatToDelete(null);
                 setToastVisible(true);
@@ -229,20 +227,10 @@ const ChatScreen = ({scrollY}) => {
         };
 
         const imageUri = getImageUri();
-
         const sanitizedEmail = sanitizeEmail(currentUser.email);
         const userLastRead = item.lastRead?.[sanitizedEmail]?.seconds ?? 0;
         const lastMsgTimestamp = item.lastMessage?.createdAt?.seconds ?? 0;
         const isUnread = lastMsgTimestamp > 0 && lastMsgTimestamp > userLastRead && item.lastMessage?.senderId !== currentUser.email;
-
-        // console.log('Chat unread check:', {
-        //     chatId: item.id,
-        //     sanitizedEmail,
-        //     userLastRead,
-        //     lastMsgTimestamp,
-        //     isUnread,
-        //     lastReadData: item.lastRead?.[sanitizedEmail],
-        // });
 
         return (<TouchableOpacity
             style={styles.chatItem}
@@ -250,14 +238,11 @@ const ChatScreen = ({scrollY}) => {
             onLongPress={() => handleLongPress(item)}
             activeOpacity={0.7}
         >
-            {/* Listing Image with Avatar Badge */}
             <View style={styles.imageContainer}>
-                {/* Product Image */}
                 <Image
                     source={imageUri ? {uri: imageUri} : require('../assets/no-image.jpg')}
                     style={styles.productImage}
                 />
-                {/* User Avatar Badge */}
                 <View style={styles.avatarBadge}>
                     <Image
                         source={otherUser?.avatar ? {uri: otherUser.avatar} : require('../assets/defaultProfile.png')}
@@ -266,9 +251,7 @@ const ChatScreen = ({scrollY}) => {
                 </View>
             </View>
 
-            {/* Chat Content */}
             <View style={styles.chatContent}>
-                {/* Listing Title & Time */}
                 <View style={styles.topRow}>
                     <Text style={styles.listingTitle} numberOfLines={1}>
                         {listingTitle}
@@ -276,12 +259,10 @@ const ChatScreen = ({scrollY}) => {
                     <Text style={styles.time}>{formatTime(item.lastMessage?.createdAt)}</Text>
                 </View>
 
-                {/* User Name */}
                 <Text style={styles.userName} numberOfLines={1}>
                     with {otherUser?.name || 'Unknown Seller'}
                 </Text>
 
-                {/* Last Message */}
                 <View style={styles.messageRow}>
                     {item.lastMessage?.senderId === currentUser.email && (<Ionicons
                         name="checkmark-done"
@@ -298,12 +279,10 @@ const ChatScreen = ({scrollY}) => {
                 </View>
             </View>
 
-            {/* Unread badge */}
             {isUnread && (<View style={styles.unreadBadge}>
                 <View style={styles.unreadDot}/>
             </View>)}
 
-            {/* Chevron */}
             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" style={styles.chevron}/>
         </TouchableOpacity>);
     };
@@ -330,33 +309,28 @@ const ChatScreen = ({scrollY}) => {
     </View>);
 
     return (<SafeAreaView style={styles.safeArea}>
-        {/* Header */}
         <AppHeader title="Messages"/>
 
-        {/* Search Bar */}
         <View style={styles.searchContainer}>
-            <SearchInput
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder="Search conversations..."
-                onClear={() => setSearchQuery('')}
-            />
+            {/*<SearchInput*/}
+            {/*    value={searchQuery}*/}
+            {/*    onChangeText={setSearchQuery}*/}
+            {/*    placeholder="Search conversations..."*/}
+            {/*    onClear={() => setSearchQuery('')}*/}
+            {/*/>*/}
         </View>
 
-        {/* Filter Tabs */}
         {chatRooms.length > 0 && (<View style={styles.filterContainer}>
             <View style={styles.filterTabs}>
                 <TouchableOpacity
                     style={[styles.filterTab, filter === 'all' && styles.filterTabActive]}
                     onPress={() => setFilter('all')}
-                    activeOpacity={0.7}
                 >
                     <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>
                         All
                     </Text>
                     <View style={[styles.filterBadge, filter === 'all' && styles.filterBadgeActive]}>
-                        <Text
-                            style={[styles.filterBadgeText, filter === 'all' && styles.filterBadgeTextActive]}>
+                        <Text style={[styles.filterBadgeText, filter === 'all' && styles.filterBadgeTextActive]}>
                             {chatRooms.length}
                         </Text>
                     </View>
@@ -365,15 +339,13 @@ const ChatScreen = ({scrollY}) => {
                 <TouchableOpacity
                     style={[styles.filterTab, filter === 'unread' && styles.filterTabActive]}
                     onPress={() => setFilter('unread')}
-                    activeOpacity={0.7}
                 >
                     <Text style={[styles.filterText, filter === 'unread' && styles.filterTextActive]}>
                         Unread
                     </Text>
                     {unreadCount > 0 && (
                         <View style={[styles.filterBadge, filter === 'unread' && styles.filterBadgeActive]}>
-                            <Text
-                                style={[styles.filterBadgeText, filter === 'unread' && styles.filterBadgeTextActive]}>
+                            <Text style={[styles.filterBadgeText, filter === 'unread' && styles.filterBadgeTextActive]}>
                                 {unreadCount}
                             </Text>
                         </View>)}
@@ -381,16 +353,15 @@ const ChatScreen = ({scrollY}) => {
             </View>
         </View>)}
 
-        {/* Content Area */}
         {isFetchingChats ? (renderSkeletonLoader()) : filteredChats.length === 0 && chatRooms.length === 0 ? (renderEmptyState()) : filteredChats.length === 0 && searchQuery ? (
             <View style={styles.emptyState}>
-                <Ionicons name="search-outline" size={80} color={COLORS.dark.textTertiary}/>
+                <Ionicons name="search-outline" size={80} color={COLORS.light.textTertiary}/>
                 <Text style={styles.emptyTitle}>No Results Found</Text>
                 <Text style={styles.emptyText}>
                     Try searching with a different name or item
                 </Text>
             </View>) : filteredChats.length === 0 && filter === 'unread' ? (<View style={styles.emptyState}>
-            <Ionicons name="checkmark-done-outline" size={80} color={COLORS.dark.textTertiary}/>
+            <Ionicons name="checkmark-done-outline" size={80} color={COLORS.light.textTertiary}/>
             <Text style={styles.emptyTitle}>All Caught Up!</Text>
             <Text style={styles.emptyText}>
                 You have no unread messages
@@ -429,7 +400,6 @@ const ChatScreen = ({scrollY}) => {
             onHide={() => setToastVisible(false)}
         />)}
 
-        {/* Global Loading Overlay - ONE for all chats */}
         {openingChat && (
             <View style={styles.globalLoadingOverlay}>
                 <View style={styles.loadingCard}>
@@ -443,18 +413,18 @@ const ChatScreen = ({scrollY}) => {
 
 const styles = StyleSheet.create({
     safeArea: {
-        flex: 1, backgroundColor: COLORS.dark.bg,
+        flex: 1, backgroundColor: COLORS.light.bg,
     }, loadingContainer: {
-        flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.dark.bg,
+        flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.light.bg,
     }, searchContainer: {
-        paddingHorizontal: 16, paddingVertical: 8, backgroundColor: COLORS.dark.card,
+        paddingHorizontal: 16, paddingVertical: 8, backgroundColor: COLORS.white
     }, filterContainer: {
         paddingHorizontal: 16,
         paddingTop: 8,
         paddingBottom: 12,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
+        borderBottomColor: '#F3F4F6',
     }, filterTabs: {
         flexDirection: 'row', gap: 8,
     }, filterTab: {
@@ -463,16 +433,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: COLORS.dark.bgElevated,
+        backgroundColor: '#F3F4F6',
         gap: 6,
     }, filterTabActive: {
-        backgroundColor: COLORS.dark.cardElevated, borderWidth: 1, borderColor: COLORS.primary,
+        backgroundColor: '#EBF2FF', borderWidth: 1, borderColor: COLORS.primary,
     }, filterText: {
-        fontSize: 14, fontWeight: '600', color: COLORS.dark.textSecondary,
+        fontSize: 14, fontWeight: '600', color: COLORS.light.textSecondary,
     }, filterTextActive: {
         color: COLORS.primary,
     }, filterBadge: {
-        backgroundColor: COLORS.dark.bgElevated,
+        backgroundColor: '#E5E7EB',
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 10,
@@ -481,7 +451,7 @@ const styles = StyleSheet.create({
     }, filterBadgeActive: {
         backgroundColor: COLORS.primary,
     }, filterBadgeText: {
-        fontSize: 12, fontWeight: '700', color: COLORS.dark.textSecondary,
+        fontSize: 12, fontWeight: '700', color: COLORS.light.textSecondary,
     }, filterBadgeTextActive: {
         color: COLORS.white,
     }, chatItem: {
@@ -489,13 +459,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 14,
         paddingHorizontal: 16,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
+        borderBottomColor: '#F3F4F6',
     }, imageContainer: {
         position: 'relative', marginRight: 12,
     }, productImage: {
-        width: 56, height: 56, borderRadius: 12, backgroundColor: COLORS.dark.bgElevated,
+        width: 56, height: 56, borderRadius: 12, backgroundColor: '#F3F4F6',
     }, avatarBadge: {
         position: 'absolute',
         bottom: -4,
@@ -503,29 +473,29 @@ const styles = StyleSheet.create({
         width: 26,
         height: 26,
         borderRadius: 13,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderWidth: 2,
-        borderColor: COLORS.dark.card,
+        borderColor: COLORS.white,
         alignItems: 'center',
         justifyContent: 'center',
     }, avatarSmall: {
-        width: 22, height: 22, borderRadius: 11, backgroundColor: COLORS.dark.bgElevated,
+        width: 22, height: 22, borderRadius: 11, backgroundColor: '#F3F4F6',
     }, chatContent: {
         flex: 1, marginRight: 8,
     }, topRow: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3,
     }, listingTitle: {
-        fontSize: 16, fontWeight: '700', color: COLORS.dark.text, flex: 1, marginRight: 8, letterSpacing: -0.3,
+        fontSize: 16, fontWeight: '700', color: COLORS.light.text, flex: 1, marginRight: 8, letterSpacing: -0.3,
     }, userName: {
-        fontSize: 13, fontWeight: '500', color: COLORS.dark.textTertiary, marginBottom: 4, letterSpacing: -0.1,
+        fontSize: 13, fontWeight: '500', color: COLORS.light.textTertiary, marginBottom: 4, letterSpacing: -0.1,
     }, time: {
-        fontSize: 12, color: COLORS.dark.textSecondary, fontWeight: '600',
+        fontSize: 12, color: COLORS.light.textSecondary, fontWeight: '600',
     }, messageRow: {
         flexDirection: 'row', alignItems: 'center',
     }, lastMessage: {
-        fontSize: 14, color: COLORS.dark.textSecondary, flex: 1, lineHeight: 18,
+        fontSize: 14, color: COLORS.light.textSecondary, flex: 1, lineHeight: 18,
     }, lastMessageUnread: {
-        color: COLORS.dark.text, fontWeight: '600',
+        color: COLORS.light.text, fontWeight: '600',
     }, unreadBadge: {
         marginRight: 4,
     }, unreadDot: {
@@ -537,49 +507,52 @@ const styles = StyleSheet.create({
     }, emptyIcon: {
         width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', marginBottom: 24,
     }, emptyTitle: {
-        fontSize: 22, fontWeight: '800', color: COLORS.dark.text, marginBottom: 8,
+        fontSize: 22, fontWeight: '800', color: COLORS.light.text, marginBottom: 8,
     }, emptyText: {
-        fontSize: 15, color: COLORS.dark.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: 16,
+        fontSize: 15, color: COLORS.light.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: 16,
     }, globalLoadingOverlay: {
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
     },
     loadingCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         padding: 24,
         borderRadius: 16,
         alignItems: 'center',
         gap: 12,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
     },
     loadingText: {
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         fontSize: 14,
         fontWeight: '600',
-    }, // Skeleton styles
-    skeletonContainer: {
-        flex: 1, backgroundColor: COLORS.dark.bg,
+    }, skeletonContainer: {
+        flex: 1, backgroundColor: COLORS.light.bg,
     }, skeletonImage: {
-        width: 56, height: 56, borderRadius: 12, backgroundColor: COLORS.dark.cardElevated, marginRight: 12,
+        width: 56, height: 56, borderRadius: 12, backgroundColor: '#F3F4F6', marginRight: 12,
     }, skeletonName: {
-        width: 140, height: 16, borderRadius: 8, backgroundColor: COLORS.dark.cardElevated,
+        width: 140, height: 16, borderRadius: 8, backgroundColor: '#F3F4F6',
     }, skeletonUserName: {
         width: 100,
         height: 12,
         borderRadius: 6,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: '#F3F4F6',
         marginTop: 4,
         marginBottom: 6,
     }, skeletonTime: {
-        width: 40, height: 12, borderRadius: 6, backgroundColor: COLORS.dark.cardElevated,
+        width: 40, height: 12, borderRadius: 6, backgroundColor: '#F3F4F6',
     }, skeletonMessage: {
-        width: '75%', height: 14, borderRadius: 7, backgroundColor: COLORS.dark.cardElevated,
+        width: '75%', height: 14, borderRadius: 7, backgroundColor: '#F3F4F6',
     },
 });
 

@@ -28,9 +28,8 @@ const BlockedUsersScreen = ({ navigation }) => {
 
     const loadData = async () => {
         const data = await fetchBlockedUsers();
-        console.log("BLOCKED USErs = ", data);
-
-        setBlockedList(data.blocked || []);    };
+        setBlockedList(data.blocked || []);
+    };
 
     useEffect(() => {
         loadData();
@@ -39,7 +38,6 @@ const BlockedUsersScreen = ({ navigation }) => {
     const handleUnblock = async (user) => {
         await unblockUser(user.id, () => {
             setBlockedList(prev => prev.filter(u => u.id !== user.id));
-
             showToast({
                 type: 'success',
                 title: 'User Unblocked',
@@ -47,6 +45,7 @@ const BlockedUsersScreen = ({ navigation }) => {
             });
         });
     };
+
     const ListHeader = () => (
         <View style={styles.headerSection}>
             <Text style={styles.listTitle}>Privacy Control</Text>
@@ -78,7 +77,7 @@ const BlockedUsersScreen = ({ navigation }) => {
 
             <TouchableOpacity
                 onPress={() => handleUnblock(item)}
-                activeOpacity={THEME.opacity.pressed}
+                activeOpacity={0.7}
                 style={styles.unblockButton}
             >
                 <Text style={styles.unblockButtonText}>Unblock</Text>
@@ -88,7 +87,7 @@ const BlockedUsersScreen = ({ navigation }) => {
 
     return (
         <View style={styles.mainContainer}>
-            <StatusBar barStyle="light-content" />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
 
             <AppHeader
                 title="Blocked Users"
@@ -106,7 +105,7 @@ const BlockedUsersScreen = ({ navigation }) => {
                     ) : (
                         <View style={styles.emptyContainer}>
                             <View style={styles.emptyIconCircle}>
-                                <Ionicons name="shield-checkmark" size={40} color={COLORS.accent} />
+                                <Ionicons name="shield-checkmark-outline" size={40} color={COLORS.primary} />
                             </View>
                             <Text style={styles.emptyText}>Clean Slate</Text>
                             <Text style={styles.emptySubtext}>You haven't blocked anyone yet.</Text>
@@ -131,115 +130,118 @@ const BlockedUsersScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     headerSection: {
-        marginTop: THEME.spacing.md,
-        marginBottom: THEME.spacing.lg,
-        paddingHorizontal: 4,
+        marginTop: 20,
+        marginBottom: 24,
     },
     listTitle: {
-        color: COLORS.dark.text,
-        fontSize: THEME.fontSize.xl,
-        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.light.text,
+        fontSize: 22,
+        fontWeight: '800',
     },
     subtitle: {
-        color: COLORS.dark.textSecondary,
-        fontSize: THEME.fontSize.sm,
+        color: COLORS.light.textSecondary,
+        fontSize: 14,
         lineHeight: 20,
-        marginTop: 6,
+        marginTop: 8,
     },
     listContent: {
-        paddingHorizontal: THEME.spacing.screenPadding,
+        paddingHorizontal: 16,
         paddingBottom: 40,
     },
     card: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: THEME.borderRadius.card,
-        padding: THEME.spacing.cardPadding,
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 12,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: THEME.spacing.itemGap,
+        marginBottom: 12,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     userInfo: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
-        marginRight: 10,
+        marginRight: 12,
     },
     textContainer: {
         flex: 1,
     },
     avatar: {
-        width: THEME.avatarSize.md,
-        height: THEME.avatarSize.md,
-        borderRadius: THEME.borderRadius.avatar,
-        marginRight: THEME.spacing.sm,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        marginRight: 12,
     },
     avatarPlaceholder: {
-        width: THEME.avatarSize.md,
-        height: THEME.avatarSize.md,
-        borderRadius: THEME.borderRadius.avatar,
-        backgroundColor: COLORS.gray800,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: COLORS.light.bg,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: THEME.spacing.sm,
+        marginRight: 12,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     avatarText: {
-        color: COLORS.dark.text,
-        fontSize: THEME.fontSize.lg,
-        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.primary,
+        fontSize: 18,
+        fontWeight: '700',
     },
     userName: {
-        color: COLORS.dark.text,
-        fontSize: THEME.fontSize.md,
-        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.light.text,
+        fontSize: 16,
+        fontWeight: '700',
     },
     userStatus: {
-        color: COLORS.errorLight,
-        fontSize: THEME.fontSize.xs,
+        color: COLORS.error,
+        fontSize: 12,
+        fontWeight: '600',
         marginTop: 2,
     },
     unblockButton: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 14,
         paddingVertical: 8,
-        borderRadius: THEME.borderRadius.button,
-        backgroundColor: COLORS.dark.bg,
+        borderRadius: 10,
+        backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.primary,
     },
     unblockButtonText: {
-        color: COLORS.dark.text,
-        fontSize: THEME.fontSize.sm,
-        fontWeight: THEME.fontWeight.semibold,
+        color: COLORS.primary,
+        fontSize: 13,
+        fontWeight: '700',
     },
     emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 100,
+        marginTop: 80,
     },
     emptyIconCircle: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.primary + '10',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 20,
     },
     emptyText: {
-        color: COLORS.dark.text,
-        fontSize: THEME.fontSize.xl,
-        fontWeight: THEME.fontWeight.bold,
+        color: COLORS.light.text,
+        fontSize: 20,
+        fontWeight: '800',
     },
     emptySubtext: {
-        color: COLORS.dark.textSecondary,
-        fontSize: THEME.fontSize.sm,
+        color: COLORS.light.textSecondary,
+        fontSize: 14,
         textAlign: 'center',
         marginTop: 8,
+        paddingHorizontal: 40,
     },
 });
 

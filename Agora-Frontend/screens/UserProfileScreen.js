@@ -14,7 +14,6 @@ import {Ionicons} from '@expo/vector-icons';
 
 import {useUserStore} from '../stores/userStore';
 import AppHeader from '../components/AppHeader';
-import SellerCelebrationModal from "../components/SellerCelebrationModal";
 
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
@@ -28,7 +27,6 @@ const UserProfileScreen = ({navigation, route}) => {
     } = useUserStore();
     const {profileImage} = route.params || {};
     const [refreshing, setRefreshing] = useState(false);
-    const [celebrationVisible, setCelebrationVisible] = useState(false);
 
     useEffect(() => {
         fetchUser();
@@ -57,7 +55,7 @@ const UserProfileScreen = ({navigation, route}) => {
             <SafeAreaView style={styles.loadingContainer}>
                 <AppHeader title="My Profile" onBack={() => navigation.goBack()}/>
                 <View style={styles.emptyState}>
-                    <Ionicons name="person-outline" size={80} color={COLORS.dark.textTertiary}/>
+                    <Ionicons name="person-outline" size={80} color={COLORS.light.textTertiary}/>
                     <Text style={styles.emptyTitle}>Sign in Required</Text>
                     <Text style={styles.emptyText}>Please log in to view your profile</Text>
                 </View>
@@ -125,7 +123,7 @@ const UserProfileScreen = ({navigation, route}) => {
 
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="person-outline" size={18} color={COLORS.dark.textTertiary}/>
+                            <Ionicons name="person-outline" size={18} color={COLORS.light.textTertiary}/>
                             <Text style={styles.infoLabel}>Full Name</Text>
                         </View>
                         <Text style={styles.infoValue}>{currentUser.name || 'N/A'}</Text>
@@ -133,7 +131,7 @@ const UserProfileScreen = ({navigation, route}) => {
 
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="mail-outline" size={18} color={COLORS.dark.textTertiary}/>
+                            <Ionicons name="mail-outline" size={18} color={COLORS.light.textTertiary}/>
                             <Text style={styles.infoLabel}>Email</Text>
                         </View>
                         <Text style={styles.infoValue} numberOfLines={1}>{currentUser.email || 'N/A'}</Text>
@@ -141,7 +139,7 @@ const UserProfileScreen = ({navigation, route}) => {
 
                     <View style={[styles.infoItem, styles.infoItemLast]}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="call-outline" size={18} color={COLORS.dark.textTertiary}/>
+                            <Ionicons name="call-outline" size={18} color={COLORS.light.textTertiary}/>
                             <Text style={styles.infoLabel}>Phone</Text>
                         </View>
                         <Text style={styles.infoValue}>
@@ -159,10 +157,9 @@ const UserProfileScreen = ({navigation, route}) => {
                         <Text style={styles.cardTitle}>College Information</Text>
                     </View>
 
-
                     <View style={[styles.infoItem, styles.infoItemLast]}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="school-outline" size={18} color={COLORS.dark.textTertiary}/>
+                            <Ionicons name="school-outline" size={18} color={COLORS.light.textTertiary}/>
                             <Text style={styles.infoLabel}>College</Text>
                         </View>
                         <Text style={styles.infoValue} numberOfLines={1}>
@@ -178,14 +175,14 @@ const UserProfileScreen = ({navigation, route}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     scrollContainer: {
         paddingBottom: THEME.spacing['3xl'],
     },
     loadingContainer: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     loadingContent: {
         flex: 1,
@@ -201,13 +198,13 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: THEME.fontSize.xl,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginTop: THEME.spacing.lg,
         marginBottom: THEME.spacing[2],
     },
     emptyText: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
     },
     editButton: {
@@ -218,8 +215,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-
-    // Profile Header
     profileHeader: {
         alignItems: 'center',
         paddingVertical: THEME.spacing['2xl'],
@@ -233,40 +228,44 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderWidth: 3,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     verifiedBadge: {
         position: 'absolute',
         bottom: 0,
         right: 0,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
         borderRadius: 14,
     },
     userName: {
         fontSize: THEME.fontSize['2xl'],
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: THEME.spacing[1],
         textAlign: 'center',
     },
     userEmail: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: THEME.fontWeight.medium,
         textAlign: 'center',
     },
-
-    // Card Styles
     card: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         marginHorizontal: THEME.spacing.md,
         marginBottom: THEME.spacing.md,
         borderRadius: THEME.borderRadius.lg,
         padding: THEME.spacing.md,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
+        // Light theme shadow
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -285,17 +284,15 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: THEME.fontSize.base,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
     },
-
-    // Info Items
     infoItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingVertical: THEME.spacing[3],
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
+        borderBottomColor: COLORS.light.border,
     },
     infoItemLast: {
         borderBottomWidth: 0,
@@ -308,13 +305,13 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         fontWeight: THEME.fontWeight.medium,
     },
     infoValue: {
         fontSize: THEME.fontSize.sm,
         fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         textAlign: 'right',
         flex: 1,
     },

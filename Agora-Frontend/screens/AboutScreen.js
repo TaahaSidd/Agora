@@ -51,7 +51,7 @@ export default function AboutScreen({navigation}) {
             icon: 'shield-checkmark',
             label: 'Safe & Secure',
             desc: 'Campus-verified users',
-            detail: 'Every user on Agora must sign up with a valid college email. We also use a reputation system where you can see a seller’s trade history before meeting up.',
+            detail: "Every user on Agora must sign up with a valid college email. We also use a reputation system where you can see a seller's trade history before meeting up.",
             gradient: ['#3B82F6', '#2563EB']
         },
         {
@@ -85,7 +85,7 @@ export default function AboutScreen({navigation}) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content"/>
             <AppHeader title="About Agora" onBack={() => navigation.goBack()}/>
 
             <ScrollView
@@ -105,18 +105,12 @@ export default function AboutScreen({navigation}) {
                     <Text style={styles.subtitle}>
                         Connecting students to buy, sell, and trade items within their college community.
                     </Text>
-
-                    {/*<View style={styles.versionBadge}>*/}
-                    {/*    <Ionicons name="code-outline" size={16} color={COLORS.primary}/>*/}
-                    {/*    <Text style={styles.versionText}>Version 1.0.0</Text>*/}
-                    {/*</View>*/}
                 </View>
 
                 {/* Mission Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Our Mission</Text>
                     <View style={styles.missionCard}>
-                        {/* Added a subtle icon background for personality */}
                         <Ionicons
                             name="megaphone-outline"
                             size={40}
@@ -125,7 +119,7 @@ export default function AboutScreen({navigation}) {
                         />
                         <Text style={styles.missionText}>
                             Agora was built by students, for students. We believe campus life is better when we help
-                            each other out—whether it’s passing down a textbook or finding a deal on a cycle. Our
+                            each other out—whether it's passing down a textbook or finding a deal on a cycle. Our
                             mission is to create a trusted, sustainable marketplace that belongs to the community.
                         </Text>
                     </View>
@@ -139,7 +133,7 @@ export default function AboutScreen({navigation}) {
                             <TouchableOpacity
                                 key={index}
                                 style={styles.featureCard}
-                                onPress={() => openFeature(feature)} // 👈 Click to open modal
+                                onPress={() => openFeature(feature)}
                                 activeOpacity={0.7}
                             >
                                 <LinearGradient
@@ -153,11 +147,10 @@ export default function AboutScreen({navigation}) {
                                 <Text style={styles.featureTitle}>{feature.label}</Text>
                                 <Text style={styles.featureText}>{feature.desc}</Text>
 
-                                {/* Visual cue that it's clickable */}
                                 <Ionicons
                                     name="information-circle-outline"
                                     size={14}
-                                    color={COLORS.dark.textTertiary}
+                                    color={COLORS.light.textTertiary}
                                     style={{marginTop: 8}}
                                 />
                             </TouchableOpacity>
@@ -186,7 +179,7 @@ export default function AboutScreen({navigation}) {
                                 <Text style={styles.contactLabel}>Email Support</Text>
                                 <Text style={styles.contactValue}>hello.spicalabs@gmail.com</Text>
                             </View>
-                            <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
+                            <Ionicons name="chevron-forward" size={20} color={COLORS.light.textTertiary}/>
                         </TouchableOpacity>
 
                         <View style={styles.divider}/>
@@ -208,36 +201,10 @@ export default function AboutScreen({navigation}) {
                                 <Text style={styles.contactLabel}>Website</Text>
                                 <Text style={styles.contactValue}>spicalabs.netlify.app/agora</Text>
                             </View>
-                            <Ionicons name="chevron-forward" size={20} color={COLORS.dark.textTertiary}/>
+                            <Ionicons name="chevron-forward" size={20} color={COLORS.light.textTertiary}/>
                         </TouchableOpacity>
                     </View>
                 </View>
-
-                {/*/!* Social Media *!/*/}
-                {/*<View style={styles.section}>*/}
-                {/*    <Text style={styles.sectionTitle}>Follow Us</Text>*/}
-                {/*    <View style={styles.socialCard}>*/}
-                {/*        {socialButtons.map((social, index) => (*/}
-                {/*            <TouchableOpacity*/}
-                {/*                key={index}*/}
-                {/*                style={styles.socialButton}*/}
-                {/*                onPress={() => handleSocial(social.platform)}*/}
-                {/*                activeOpacity={0.85}*/}
-                {/*            >*/}
-                {/*                <LinearGradient*/}
-                {/*                    colors={social.gradient}*/}
-                {/*                    style={styles.socialIcon}*/}
-                {/*                    start={{x: 0, y: 0}}*/}
-                {/*                    end={{x: 1, y: 1}}*/}
-                {/*                >*/}
-                {/*                    <Ionicons name={social.icon} size={24} color="#fff"/>*/}
-                {/*                </LinearGradient>*/}
-                {/*                <Text style={styles.socialText}>{social.label}</Text>*/}
-                {/*            </TouchableOpacity>*/}
-                {/*        ))}*/}
-                {/*    </View>*/}
-                {/*</View>*/}
-
 
                 {/* Legal Links */}
                 <View style={styles.section}>
@@ -247,7 +214,7 @@ export default function AboutScreen({navigation}) {
                             onPress={() => navigation.navigate('PrivacyPolicyScreen')}
                             activeOpacity={0.85}
                         >
-                            <Ionicons name="shield-outline" size={18} color={COLORS.dark.textSecondary}/>
+                            <Ionicons name="shield-outline" size={18} color={COLORS.light.textSecondary}/>
                             <Text style={styles.legalText}>Privacy Policy</Text>
                         </TouchableOpacity>
 
@@ -258,7 +225,7 @@ export default function AboutScreen({navigation}) {
                             onPress={() => navigation.navigate('PrivacyPolicyScreen')}
                             activeOpacity={0.85}
                         >
-                            <Ionicons name="document-text-outline" size={18} color={COLORS.dark.textSecondary}/>
+                            <Ionicons name="document-text-outline" size={18} color={COLORS.light.textSecondary}/>
                             <Text style={styles.legalText}>Terms of Service</Text>
                         </TouchableOpacity>
                     </View>
@@ -322,23 +289,23 @@ export default function AboutScreen({navigation}) {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         padding: 20,
         paddingBottom: 40,
     },
     appCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 20,
         padding: 32,
         marginBottom: 24,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
     },
@@ -350,12 +317,12 @@ const styles = StyleSheet.create({
         height: 100,
         borderRadius: THEME.borderRadius.full,
         borderWidth: 3,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     title: {
         fontSize: 28,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 4,
         letterSpacing: -0.5,
     },
@@ -367,7 +334,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
         marginBottom: 20,
@@ -377,7 +344,7 @@ const styles = StyleSheet.create({
     versionBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.cardElevated,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 12,
@@ -394,29 +361,29 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 12,
         letterSpacing: -0.3,
     },
     missionCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         padding: 24,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         borderLeftWidth: 5,
         borderLeftColor: COLORS.primary,
         position: 'relative',
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 10,
         elevation: 3,
     },
     missionText: {
         fontSize: 15,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         lineHeight: 24,
         fontWeight: '500',
         fontStyle: 'italic',
@@ -434,15 +401,15 @@ const styles = StyleSheet.create({
     },
     featureCard: {
         width: '48%',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         padding: 20,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
     },
@@ -455,33 +422,33 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 4,
         elevation: 3,
     },
     featureTitle: {
         fontSize: 14,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         textAlign: 'center',
         marginBottom: 4,
         letterSpacing: -0.2,
     },
     featureText: {
         fontSize: 12,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         fontWeight: '500',
     },
     contactCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 18,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
     },
@@ -499,7 +466,7 @@ const styles = StyleSheet.create({
         marginRight: 12,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 4,
         elevation: 3,
     },
@@ -509,18 +476,18 @@ const styles = StyleSheet.create({
     contactLabel: {
         fontSize: 13,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         marginBottom: 2,
     },
     contactValue: {
         fontSize: 15,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         letterSpacing: -0.2,
     },
     divider: {
         height: 1,
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border,
         marginHorizontal: 16,
     },
     socialCard: {
@@ -530,14 +497,14 @@ const styles = StyleSheet.create({
     socialButton: {
         flex: 1,
         alignItems: 'center',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         paddingVertical: 20,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
     },
@@ -550,26 +517,26 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 4,
         elevation: 3,
     },
     socialText: {
         fontSize: 13,
         fontWeight: '700',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         letterSpacing: -0.2,
     },
     legalCard: {
         flexDirection: 'row',
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         padding: 16,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
     },
@@ -583,12 +550,12 @@ const styles = StyleSheet.create({
     legalText: {
         fontSize: 13,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         letterSpacing: -0.1,
     },
     legalDivider: {
         width: 1,
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border,
         marginHorizontal: 12,
     },
     footer: {
@@ -600,7 +567,7 @@ const styles = StyleSheet.create({
     },
     footerText: {
         fontSize: 14,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: '600',
     },
     heartIcon: {
@@ -608,7 +575,7 @@ const styles = StyleSheet.create({
     },
     copyright: {
         fontSize: 12,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         textAlign: 'center',
         fontWeight: '500',
         marginBottom: 20,
@@ -616,22 +583,22 @@ const styles = StyleSheet.create({
 
     modalOverlay: {
         flex: 1,
-        backgroundColor: COLORS.dark.overlayHeavy,
+        backgroundColor: COLORS.light.overlay,
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.white,
         borderTopLeftRadius: 32,
         borderTopRightRadius: 32,
         padding: 24,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     modalHandle: {
         width: 40,
         height: 4,
-        backgroundColor: COLORS.dark.divider,
+        backgroundColor: COLORS.light.divider,
         borderRadius: 2,
         marginBottom: 24,
     },
@@ -646,24 +613,24 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 22,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginBottom: 12,
     },
     modalDescription: {
         fontSize: 16,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         lineHeight: 24,
         marginBottom: 24,
         paddingHorizontal: 10,
     },
     modalCloseButton: {
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: COLORS.light.cardElevated,
         paddingHorizontal: 40,
         paddingVertical: 14,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         width: '100%',
         alignItems: 'center',
     },

@@ -45,7 +45,7 @@ const FavoritesScreen = ({navigation}) => {
                 images:
                     item.imageUrl && item.imageUrl.length > 0
                         ? item.imageUrl.map(url => ({uri: url}))
-                        : [require('../assets/LW.jpg')],
+                        : [require('../assets/no-image.jpg')],
             }));
 
             setFavorites(formatted);
@@ -95,14 +95,14 @@ const FavoritesScreen = ({navigation}) => {
             <Text style={styles.emptyText}>
                 Start adding items to your favorites to see them here
             </Text>
-            <Button
-                title="Browse Listings"
-                icon="compass-outline"
-                iconPosition="left"
-                onPress={() => navigation.navigate('MainLayout')}
-                variant="primary"
-                size="medium"
-            />
+            {/*<Button*/}
+            {/*    title="Browse Listings"*/}
+            {/*    icon="compass-outline"*/}
+            {/*    iconPosition="left"*/}
+            {/*    onPress={() => navigation.navigate('MainLayout')}*/}
+            {/*    variant="primary"*/}
+            {/*    size="medium"*/}
+            {/*/>*/}
         </View>
     );
 
@@ -170,7 +170,7 @@ const FavoritesScreen = ({navigation}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
             <AppHeader title="Favorites" onBack={() => navigation.goBack()}/>
 
             {favorites.length === 0 ? (
@@ -195,7 +195,7 @@ const FavoritesScreen = ({navigation}) => {
                     ListEmptyComponent={
                         <View style={styles.emptyFilterState}>
                             <View style={styles.emptyFilterIcon}>
-                                <Ionicons name="filter-outline" size={40} color={COLORS.dark.textTertiary}/>
+                                <Ionicons name="filter-outline" size={40} color={COLORS.light.textTertiary}/>
                             </View>
                             <Text style={styles.emptyFilterText}>No items in this category</Text>
                         </View>
@@ -203,7 +203,6 @@ const FavoritesScreen = ({navigation}) => {
                 />
             )}
 
-            {/* Clear All Confirmation Modal */}
             <ModalComponent
                 visible={showClearModal}
                 type="delete"
@@ -221,7 +220,7 @@ const FavoritesScreen = ({navigation}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     loadingContainer: {
         flex: 1,
@@ -231,6 +230,7 @@ const styles = StyleSheet.create({
     headerContainer: {
         paddingHorizontal: THEME.spacing.md,
         marginBottom: THEME.spacing.md,
+        marginTop: THEME.spacing.md,
     },
     filterContainer: {
         flexDirection: 'row',
@@ -248,9 +248,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: THEME.spacing.md,
         paddingVertical: THEME.spacing[2],
         borderRadius: THEME.borderRadius.pill,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: '#F3F4F6', // Light gray background for tabs
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
         gap: THEME.spacing[1],
     },
     filterTabActive: {
@@ -260,13 +260,13 @@ const styles = StyleSheet.create({
     filterText: {
         fontSize: THEME.fontSize.sm,
         fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
     },
     filterTextActive: {
         color: '#fff',
     },
     filterBadge: {
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(255,255,255,0.25)',
         paddingHorizontal: THEME.spacing[2],
         paddingVertical: 2,
         borderRadius: THEME.borderRadius.pill,
@@ -282,11 +282,11 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: '#FEF2F2', // Light red tint for delete
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: '#FEE2E2',
         marginLeft: THEME.spacing[2],
     },
     listContent: {
@@ -307,15 +307,15 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: THEME.fontSize['2xl'],
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         marginTop: THEME.spacing.lg,
         marginBottom: THEME.spacing[2],
     },
     emptyText: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
-        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
+        lineHeight: 20,
         marginBottom: THEME.spacing.lg,
     },
     emptyFilterState: {
@@ -326,16 +326,16 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: '#F9FAFB',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: THEME.spacing.md,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
     },
     emptyFilterText: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textTertiary,
         fontWeight: THEME.fontWeight.medium,
     },
 });

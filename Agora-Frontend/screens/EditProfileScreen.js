@@ -1,7 +1,7 @@
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
     ActivityIndicator,
-    Alert,
+    Modal,
     SafeAreaView,
     ScrollView,
     StatusBar,
@@ -21,7 +21,7 @@ import {apiPut, completeProfile} from '../services/api';
 import {uploadProfilePicture} from '../utils/upload';
 import {useUserStore} from '../stores/userStore';
 
-import SuccessModal from '../components/Modal';
+import ModalComponent from '../components/Modal';
 import Button from '../components/Button';
 import AppHeader from '../components/AppHeader';
 import ToastMessage from "../components/ToastMessage";
@@ -36,16 +36,15 @@ const EditProfileScreen = ({navigation, route}) => {
         lastName: user?.lastName || '',
         userEmail: user?.userEmail || user?.email || '',
         mobileNumber: user?.mobileNumber || '',
-        idCardNo: user?.idCardNo || '',
         collegeName: user?.collegeName || '',
     });
+
+    const [phoneError, setPhoneError] = useState('');
 
     const originalData = useMemo(() => ({
         firstName: user?.firstName || '',
         lastName: user?.lastName || '',
-        userEmail: user?.userEmail || user?.email || '',
         mobileNumber: user?.mobileNumber || '',
-        idCardNo: user?.idCardNo || '',
         profileImage: user?.avatar || user?.profileImage || null,
     }), [user]);
 
@@ -55,20 +54,47 @@ const EditProfileScreen = ({navigation, route}) => {
     const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
     const [loading, setLoading] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
+    const [successModalVisible, setSuccessModalVisible] = useState(false);
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+
+    // Unsaved changes state
+    const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+    const [showLockedFieldModal, setShowLockedFieldModal] = useState(false);
+    const [lockedFieldName, setLockedFieldName] = useState('');
+    const [navigationAction, setNavigationAction] = useState(null);
 
     const showToast = ({type, title, message}) => {
         setToast({visible: true, type, title, message});
     };
 
-    const handleChange = (key, value) => {
-        setForm({...form, [key]: value});
+    const handleLockedFieldPress = (fieldName) => {
+        setLockedFieldName(fieldName);
+        setShowLockedFieldModal(true);
+    };
+
+    const handlePhoneChange = (text) => {
+        // Only allow numbers and limit to 10 digits
+        const cleaned = text.replace(/[^0-9]/g, '');
+        const limited = cleaned.slice(0, 10);
+        setForm({...form, mobileNumber: limited});
+
+        // Indian mobile validation: Starts with 6-9 and must be 10 digits
+        if (limited.length > 0 && limited.length < 10) {
+            setPhoneError('Enter all 10 digits');
+        } else if (limited.length === 10 && !/^[6-9]\d{9}$/.test(limited)) {
+            setPhoneError('Enter a valid Indian mobile number');
+        } else {
+            setPhoneError('');
+        }
     };
 
     const handlePickImage = async () => {
         if (uploadingImage) {
-            Alert.alert('Please wait', 'Image upload in progress...');
+            showToast({
+                type: 'info',
+                title: 'Please wait',
+                message: 'Image upload in progress...',
+            });
             return;
         }
 
@@ -95,11 +121,7 @@ const EditProfileScreen = ({navigation, route}) => {
 
             try {
                 setUploadingImage(true);
-
-                console.log('📤 Uploading to Cloudinary...');
                 const {url} = await uploadProfilePicture(uri);
-                console.log('✅ Uploaded:', url);
-
                 setUploadedImageUrl(url);
                 setLocalProfileImage(url);
 
@@ -110,7 +132,6 @@ const EditProfileScreen = ({navigation, route}) => {
                 });
 
             } catch (error) {
-                console.error('❌ Upload error:', error);
                 showToast({
                     type: 'error',
                     title: 'Upload Failed',
@@ -126,43 +147,43 @@ const EditProfileScreen = ({navigation, route}) => {
     const hasChanges =
         form.firstName.trim() !== originalData.firstName ||
         form.lastName.trim() !== originalData.lastName ||
-        form.userEmail.trim() !== originalData.userEmail ||
-        form.idCardNo.trim() !== originalData.idCardNo ||
+        form.mobileNumber.trim() !== originalData.mobileNumber ||
         uploadedImageUrl !== null;
 
     const isFormValid =
         form.firstName.trim() !== '' &&
         form.lastName.trim() !== '' &&
-        form.userEmail.trim() !== '';
+        (form.mobileNumber === '' || (form.mobileNumber.length === 10 && phoneError === ''));
 
-    const isButtonDisabled = !hasChanges || !isFormValid;
+    // Handle back navigation with unsaved changes warning
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+            if (!hasChanges) {
+                return;
+            }
+
+            e.preventDefault();
+            setNavigationAction(e.data.action);
+            setShowUnsavedModal(true);
+        });
+
+        return unsubscribe;
+    }, [navigation, hasChanges]);
+
+    const handleDiscardChanges = () => {
+        setShowUnsavedModal(false);
+        if (navigationAction) {
+            navigation.dispatch(navigationAction);
+        }
+    };
 
     const handleSave = async () => {
-        if (!hasChanges) {
-            showToast({
-                type: 'info',
-                title: 'No Changes',
-                message: 'Make some changes before saving',
-            });
-            return;
-        }
-
-        if (!isFormValid) {
-            showToast({
-                type: 'error',
-                title: 'Invalid Form',
-                message: 'Please fill in all required fields',
-            });
-            return;
-        }
-
         try {
             setLoading(true);
 
             const profileData = {
                 firstName: form.firstName.trim(),
                 lastName: form.lastName.trim(),
-                userEmail: form.userEmail.trim(),
                 mobileNumber: form.mobileNumber.trim(),
             };
 
@@ -170,29 +191,22 @@ const EditProfileScreen = ({navigation, route}) => {
                 profileData.profileImage = uploadedImageUrl;
             }
 
-            console.log('💾 Saving:', profileData);
-
             const isPendingUser = user?.verificationStatus === 'PENDING';
 
             if (isPendingUser) {
-                await completeProfile(jwt, profileData);
+                await completeProfile(null, profileData);
             } else {
                 await apiPut(`/profile/update/${user.id}`, profileData);
             }
 
-            updateUser({
-                firstName: profileData.firstName,
-                lastName: profileData.lastName,
-                userEmail: profileData.userEmail,
-                email: profileData.userEmail,
-            });
+            updateUser(profileData);
 
             if (uploadedImageUrl) {
                 updateAvatar(uploadedImageUrl);
             }
 
             await fetchUser();
-            setModalVisible(true);
+            setSuccessModalVisible(true);
 
         } catch (error) {
             showToast({
@@ -205,19 +219,9 @@ const EditProfileScreen = ({navigation, route}) => {
         }
     };
 
-
-    if (loading) {
-        return (
-            <SafeAreaView style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary}/>
-                <Text style={styles.loadingText}>Updating profile...</Text>
-            </SafeAreaView>
-        );
-    }
-
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content"/>
 
             <AppHeader title="Edit Profile" onBack={() => navigation.goBack()}/>
 
@@ -257,11 +261,11 @@ const EditProfileScreen = ({navigation, route}) => {
                     </Text>
                 </View>
 
-                {/* Unsaved Changes Banner */}
-                {hasChanges && !uploadingImage && (
-                    <View style={styles.changesBanner}>
-                        <Ionicons name="alert-circle" size={20} color={COLORS.warning}/>
-                        <Text style={styles.changesBannerText}>You have unsaved changes</Text>
+                {/* Unsaved changes indicator */}
+                {hasChanges && (
+                    <View style={styles.unsavedBanner}>
+                        <Ionicons name="alert-circle" size={18} color={COLORS.warning}/>
+                        <Text style={styles.unsavedText}>You have unsaved changes</Text>
                     </View>
                 )}
 
@@ -274,18 +278,17 @@ const EditProfileScreen = ({navigation, route}) => {
                         <Text style={styles.cardTitle}>Personal Information</Text>
                     </View>
 
-                    {/* Name Row (First & Last) */}
+                    {/* Name Row */}
                     <View style={styles.nameRow}>
                         <View style={[styles.inputWrapper, styles.inputWrapperHalf]}>
                             <Text style={styles.label}>First Name</Text>
                             <View style={styles.inputContainer}>
-                                <Ionicons name="person-outline" size={18} color={COLORS.dark.textTertiary}/>
                                 <TextInput
                                     style={styles.input}
                                     value={form.firstName}
-                                    onChangeText={(text) => handleChange('firstName', text)}
+                                    onChangeText={(text) => setForm({...form, firstName: text})}
                                     placeholder="First name"
-                                    placeholderTextColor={COLORS.dark.textTertiary}
+                                    placeholderTextColor={COLORS.light.textTertiary}
                                 />
                             </View>
                         </View>
@@ -293,61 +296,60 @@ const EditProfileScreen = ({navigation, route}) => {
                         <View style={[styles.inputWrapper, styles.inputWrapperHalf]}>
                             <Text style={styles.label}>Last Name</Text>
                             <View style={styles.inputContainer}>
-                                <Ionicons name="person-outline" size={18} color={COLORS.dark.textTertiary}/>
                                 <TextInput
                                     style={styles.input}
                                     value={form.lastName}
-                                    onChangeText={(text) => handleChange('lastName', text)}
+                                    onChangeText={(text) => setForm({...form, lastName: text})}
                                     placeholder="Last name"
-                                    placeholderTextColor={COLORS.dark.textTertiary}
+                                    placeholderTextColor={COLORS.light.textTertiary}
                                 />
                             </View>
                         </View>
                     </View>
 
-                    {/* Email Input */}
-                    <View style={styles.inputWrapper}>
-                        <Text style={styles.label}>Email Address</Text>
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="mail-outline" size={18} color={COLORS.dark.textTertiary}/>
-                            <TextInput
-                                style={styles.input}
-                                value={form.userEmail}
-                                onChangeText={(text) => handleChange('userEmail', text)}
-                                placeholder="email@example.com"
-                                placeholderTextColor={COLORS.dark.textTertiary}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                            />
-                        </View>
-                    </View>
-
-                    {/* Phone Input */}
-                    <View style={[styles.inputWrapper, styles.inputWrapperLast]}>
+                    {/* Email Input - LOCKED */}
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => handleLockedFieldPress('Email Address')}
+                        style={styles.inputWrapper}
+                    >
                         <View style={styles.labelRow}>
-                            <Text style={styles.label}>Phone Number</Text>
+                            <Text style={styles.label}>Email Address</Text>
                             <View style={styles.lockedBadge}>
-                                <Ionicons name="lock-closed" size={12} color={COLORS.gray500}/>
+                                <Ionicons name="lock-closed" size={12} color={COLORS.gray600}/>
                                 <Text style={styles.lockedText}>Locked</Text>
                             </View>
                         </View>
                         <View style={[styles.inputContainer, styles.inputDisabled]}>
-                            <Ionicons name="call-outline" size={18} color={COLORS.dark.textTertiary}/>
+                            <Ionicons name="mail-outline" size={18} color={COLORS.light.textTertiary}/>
+                            <Text style={styles.lockedFieldValue}>{form.userEmail}</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Phone Input - INDIAN VALIDATION */}
+                    <View style={[styles.inputWrapper, styles.inputWrapperLast]}>
+                        <Text style={styles.label}>Phone Number (Indian)</Text>
+                        <View style={[styles.inputContainer, phoneError ? styles.inputErrorBorder : null]}>
+                            <Text style={styles.countryCode}>+91</Text>
                             <TextInput
                                 style={styles.input}
                                 value={form.mobileNumber}
-                                editable={false}
-                                placeholder="+91 00000 00000"
-                                placeholderTextColor={COLORS.dark.textTertiary}
+                                onChangeText={handlePhoneChange}
+                                placeholder="00000 00000"
+                                placeholderTextColor={COLORS.light.textTertiary}
+                                keyboardType="phone-pad"
+                                maxLength={10}
                             />
                         </View>
-                        <Text style={styles.helperText}>
-                            Used for login and security. Cannot be edited.
-                        </Text>
+                        {phoneError ? (
+                            <Text style={styles.errorText}>{phoneError}</Text>
+                        ) : (
+                            <Text style={styles.helperText}>Used for buyer/seller communication.</Text>
+                        )}
                     </View>
                 </View>
 
-                {/* Academic Information Card */}
+                {/* Academic Information Card - LOCKED */}
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
                         <View style={[styles.iconCircle, {backgroundColor: COLORS.warning + '15'}]}>
@@ -356,71 +358,93 @@ const EditProfileScreen = ({navigation, route}) => {
                         <Text style={styles.cardTitle}>College Information</Text>
                     </View>
 
-                    {/* College Input (Disabled) */}
-                    <View style={[styles.inputWrapper, styles.inputWrapperLast]}>
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => handleLockedFieldPress('College Name')}
+                        style={styles.inputWrapperLast}
+                    >
                         <View style={styles.labelRow}>
                             <Text style={styles.label}>College</Text>
                             <View style={styles.lockedBadge}>
-                                <Ionicons name="lock-closed" size={12} color={COLORS.gray500}/>
+                                <Ionicons name="lock-closed" size={12} color={COLORS.gray600}/>
                                 <Text style={styles.lockedText}>Locked</Text>
                             </View>
                         </View>
                         <View style={[styles.inputContainer, styles.inputDisabled]}>
-                            <Ionicons name="school-outline" size={18} color={COLORS.dark.textTertiary}/>
-                            <TextInput
-                                style={styles.input}
-                                value={form.collegeName}
-                                editable={false}
-                                placeholder="College"
-                                placeholderTextColor={COLORS.dark.textTertiary}
-                            />
+                            <Ionicons name="school-outline" size={18} color={COLORS.light.textTertiary}/>
+                            <Text style={styles.lockedFieldValue} numberOfLines={1}>{form.collegeName}</Text>
                         </View>
-                        <Text style={styles.helperText}>
-                            Verified college. Contact support to update.
-                        </Text>
-                    </View>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Info Banner */}
-                <View style={styles.infoBanner}>
-                    <Ionicons name="information-circle" size={20} color={COLORS.primary}/>
-                    <Text style={styles.infoBannerText}>
-                        Accurate information helps maintain a safe community for everyone
-                    </Text>
-                </View>
-
-                {/* Save Button */}
-                <View style={{marginHorizontal: THEME.spacing.md}}>
+                <View style={styles.buttonContainer}>
                     <Button
                         title="Save Changes"
                         onPress={handleSave}
                         variant="primary"
-                        fullWidth
-                        icon={hasChanges ? 'checkmark-circle' : 'alert-circle-outline'}
                         size="large"
-                        disabled={isButtonDisabled}
+                        disabled={!hasChanges || !isFormValid}
+                        loading={loading}
                     />
                 </View>
 
-                {/* Helper text below button */}
-                {!hasChanges && (
-                    <Text style={styles.noChangesText}>Make changes to update your profile</Text>
+                {!hasChanges && !loading && (
+                    <Text style={styles.noChangesText}>No changes detected</Text>
                 )}
             </ScrollView>
 
+            {/* Unsaved Changes Modal - Using ModalComponent */}
+            <ModalComponent
+                visible={showUnsavedModal}
+                type="warning"
+                title="Discard Changes?"
+                message="You have unsaved changes. Are you sure you want to discard them and leave?"
+                primaryButtonText="Discard"
+                secondaryButtonText="Keep Editing"
+                onPrimaryPress={handleDiscardChanges}
+                onSecondaryPress={() => setShowUnsavedModal(false)}
+            />
+
+            {/* Locked Field Modal - Custom Design */}
+            <Modal
+                visible={showLockedFieldModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowLockedFieldModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <View style={[styles.modalIconContainer, {backgroundColor: COLORS.info + '15'}]}>
+                            <Ionicons name="lock-closed" size={48} color={COLORS.info}/>
+                        </View>
+                        <Text style={styles.modalTitle}>Field Locked</Text>
+                        <Text style={styles.modalMessage}>
+                            Your {lockedFieldName} is verified and linked to your account security. It cannot be changed manually. Please contact support if you need to update this information.
+                        </Text>
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.modalButtonPrimary]}
+                                onPress={() => setShowLockedFieldModal(false)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.modalButtonTextPrimary}>Got it</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
             {/* Success Modal */}
-            <SuccessModal
-                visible={modalVisible}
+            <ModalComponent
+                visible={successModalVisible}
+                type="success"
                 title="Profile Updated!"
-                message="Your profile has been updated successfully."
-                onClose={() => {
-                    setModalVisible(false);
+                message="Your changes have been saved successfully."
+                primaryButtonText="Done"
+                onPrimaryPress={() => {
+                    setSuccessModalVisible(false);
                     navigation.goBack();
                 }}
-                iconSize={50}
-                iconColor={COLORS.success}
-                iconBgColor={COLORS.successBg}
-                buttonText="Done"
             />
 
             {toast.visible && (
@@ -438,39 +462,23 @@ const EditProfileScreen = ({navigation, route}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     scrollContainer: {
         paddingBottom: THEME.spacing['3xl'],
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: COLORS.dark.bg,
-    },
-    loadingText: {
-        marginTop: THEME.spacing.md,
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
-        fontWeight: THEME.fontWeight.medium,
-    },
-
-    // Profile Section
     profileSection: {
         alignItems: 'center',
         paddingVertical: THEME.spacing['2xl'],
-        paddingHorizontal: THEME.spacing.md,
     },
     profileImageContainer: {
         width: 100,
         height: 100,
         borderRadius: 50,
         overflow: 'hidden',
-        position: 'relative',
-        backgroundColor: COLORS.dark.card,
-        borderWidth: 3,
-        borderColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.card,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     profilePic: {
         width: '100%',
@@ -479,188 +487,227 @@ const styles = StyleSheet.create({
     cameraOverlay: {
         position: 'absolute',
         bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        width: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: THEME.spacing[2],
+        paddingVertical: 4,
     },
     uploadingOverlay: {
         position: 'absolute',
-        bottom: 0,
+        top: 0,
         left: 0,
         right: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: THEME.spacing[2],
     },
     profileHint: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
-        fontWeight: THEME.fontWeight.medium,
-        marginTop: THEME.spacing.md,
+        fontSize: 14,
+        color: COLORS.light.textSecondary,
+        marginTop: 12,
+        fontWeight: '500',
     },
-
-    // Changes Banner
-    changesBanner: {
+    unsavedBanner: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.warning + '15',
-        marginHorizontal: THEME.spacing.md,
-        padding: THEME.spacing.sm + 2,
-        borderRadius: THEME.borderRadius.md,
-        marginBottom: THEME.spacing.md,
-        gap: THEME.spacing[2],
+        backgroundColor: COLORS.warningBg,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        gap: 10,
         borderWidth: 1,
         borderColor: COLORS.warning + '30',
     },
-    changesBannerText: {
-        flex: 1,
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.warning,
-        fontWeight: THEME.fontWeight.semibold,
+    unsavedText: {
+        fontSize: 14,
+        color: COLORS.warningDark,
+        fontWeight: '600',
     },
-
-    // Card Styles (Matching UserProfileScreen)
     card: {
-        backgroundColor: COLORS.dark.card,
-        marginHorizontal: THEME.spacing.md,
-        marginBottom: THEME.spacing.md,
-        borderRadius: THEME.borderRadius.lg,
-        padding: THEME.spacing.md,
+        backgroundColor: COLORS.white,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        borderRadius: 12,
+        padding: 16,
         borderWidth: 1,
-        borderColor: COLORS.dark.border,
+        borderColor: COLORS.light.border,
+        elevation: 2,
     },
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: THEME.spacing.md,
-        gap: THEME.spacing[3],
+        marginBottom: 16,
+        gap: 12,
     },
     iconCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: COLORS.primary + '15',
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: COLORS.primary + '10',
         alignItems: 'center',
         justifyContent: 'center',
     },
     cardTitle: {
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.light.text,
     },
-
-    // Input Styles
     nameRow: {
         flexDirection: 'row',
-        gap: THEME.spacing[3],
-        marginBottom: THEME.spacing[3],
-        paddingBottom: THEME.spacing[3],
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
+        gap: 12,
+        marginBottom: 12,
     },
     inputWrapper: {
-        marginBottom: THEME.spacing[3],
-        paddingBottom: THEME.spacing[3],
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.dark.border,
+        marginBottom: 16,
     },
     inputWrapperHalf: {
         flex: 1,
-        marginBottom: 0,
-        paddingBottom: 0,
-        borderBottomWidth: 0,
     },
     inputWrapperLast: {
-        borderBottomWidth: 0,
         marginBottom: 0,
-        paddingBottom: 0,
     },
     labelRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: THEME.spacing[2],
+        marginBottom: 8,
     },
     label: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textTertiary,
-        fontWeight: THEME.fontWeight.medium,
-        marginBottom: THEME.spacing[2],
+        fontSize: 13,
+        color: COLORS.light.textSecondary,
+        fontWeight: '600',
+        marginBottom: 8,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.dark.bg,
-        borderRadius: THEME.borderRadius.md,
-        paddingHorizontal: THEME.spacing.sm + 2,
-        gap: THEME.spacing[2],
-        minHeight: 44,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        height: 48,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
     },
     inputDisabled: {
-        opacity: 0.6,
+        backgroundColor: '#F3F4F6',
+        borderColor: '#E5E7EB',
+    },
+    inputErrorBorder: {
+        borderColor: COLORS.error,
     },
     input: {
         flex: 1,
-        paddingVertical: THEME.spacing.sm,
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.text,
-        fontWeight: THEME.fontWeight.semibold,
+        fontSize: 14,
+        color: COLORS.light.text,
+        fontWeight: '500',
+    },
+    countryCode: {
+        fontSize: 14,
+        color: COLORS.light.textTertiary,
+        marginRight: 8,
+        fontWeight: '600',
+    },
+    lockedFieldValue: {
+        flex: 1,
+        fontSize: 14,
+        color: COLORS.light.textTertiary,
+        fontWeight: '500',
+        marginLeft: 8,
     },
     lockedBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.dark.bg,
-        paddingHorizontal: THEME.spacing[2],
-        paddingVertical: THEME.spacing[1],
-        borderRadius: THEME.borderRadius.sm,
-        gap: THEME.spacing[1],
+        backgroundColor: '#F3F4F6',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 4,
+        gap: 4,
     },
     lockedText: {
-        fontSize: THEME.fontSize.xs,
-        fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.textTertiary,
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: COLORS.light.textTertiary,
+    },
+    errorText: {
+        fontSize: 12,
+        color: COLORS.error,
+        marginTop: 4,
+        fontWeight: '500',
     },
     helperText: {
-        fontSize: THEME.fontSize.xs,
-        color: COLORS.dark.textTertiary,
-        marginTop: THEME.spacing[2],
-        fontWeight: THEME.fontWeight.medium,
+        fontSize: 11,
+        color: COLORS.light.textTertiary,
+        marginTop: 4,
     },
-
-    // Info Banner
-    infoBanner: {
-        flexDirection: 'row',
-        backgroundColor: COLORS.primary + '10',
-        marginHorizontal: THEME.spacing.md,
-        padding: THEME.spacing.sm + 2,
-        borderRadius: THEME.borderRadius.md,
-        marginBottom: THEME.spacing.md,
-        gap: THEME.spacing[2],
-        borderWidth: 1,
-        borderColor: COLORS.primary + '20',
-        alignItems: 'flex-start',
+    buttonContainer: {
+        marginHorizontal: 16,
     },
-    infoBannerText: {
-        flex: 1,
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
-        lineHeight: THEME.fontSize.sm * 1.4,
-        fontWeight: THEME.fontWeight.medium,
-    },
-
-    // No Changes Text
     noChangesText: {
         textAlign: 'center',
-        fontSize: THEME.fontSize.xs,
-        color: COLORS.dark.textTertiary,
-        marginTop: THEME.spacing[2],
+        fontSize: 12,
+        color: COLORS.light.textTertiary,
+        marginTop: 12,
+    },
+
+    // Locked Field Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContainer: {
+        backgroundColor: COLORS.white,
+        borderRadius: 20,
+        padding: 24,
+        width: '100%',
+        maxWidth: 340,
+        alignItems: 'center',
+    },
+    modalIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: COLORS.info + '15',
+        alignItems: 'center',
+        justifyContent: 'center',
         marginBottom: 20,
-        marginHorizontal: THEME.spacing.md,
-        fontWeight: THEME.fontWeight.medium,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: COLORS.light.text,
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    modalMessage: {
+        fontSize: 14,
+        color: COLORS.light.textSecondary,
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24,
+    },
+    modalButtons: {
+        width: '100%',
+    },
+    modalButton: {
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalButtonPrimary: {
+        backgroundColor: COLORS.primary,
+    },
+    modalButtonTextPrimary: {
+        color: COLORS.white,
+        fontSize: 15,
+        fontWeight: '700',
     },
 });
 

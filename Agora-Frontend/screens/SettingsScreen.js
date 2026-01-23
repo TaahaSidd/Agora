@@ -15,6 +15,7 @@ import {
 import {apiDelete, apiPost} from '../services/api';
 import {useProfileImage} from '../hooks/useProfileImage';
 import {useUserStore} from "../stores/userStore";
+import { api } from '../services/api';
 
 import {COLORS} from '../utils/colors';
 import {THEME} from '../utils/theme';
@@ -30,7 +31,6 @@ import Icon from "react-native-vector-icons/Ionicons";
 
 const SettingsScreen = ({navigation, scrollY}) => {
     const {currentUser: user, loading, isGuest, fetchUser, clearAuthData} = useUserStore();
-    //console.log("CUrrent user - > ", user);
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const {profileImage} = useProfileImage();
@@ -58,15 +58,24 @@ const SettingsScreen = ({navigation, scrollY}) => {
                 await apiPost('/auth/logout', {refreshToken});
             }
 
+            await SecureStore.deleteItemAsync('authToken');
             await SecureStore.deleteItemAsync('accessToken');
             await SecureStore.deleteItemAsync('refreshToken');
             await SecureStore.deleteItemAsync('currentUser');
+
+            useUserStore.getState().clearAuthData();
+
+            api.defaults.headers.common['Authorization'] = '';
             navigation.replace('Login');
         } catch (err) {
             console.error('Logout failed:', err);
+            await SecureStore.deleteItemAsync('authToken');
             await SecureStore.deleteItemAsync('accessToken');
             await SecureStore.deleteItemAsync('refreshToken');
             await SecureStore.deleteItemAsync('currentUser');
+
+            useUserStore.getState().clearAuthData();
+            api.defaults.headers.common['Authorization'] = '';
             navigation.replace('Login');
         }
     };
@@ -74,7 +83,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
     const handleDeleteAccount = async () => {
         try {
             setIsDeleting(true);
-
             await apiDelete('/profile/me');
 
             showToast({
@@ -89,7 +97,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
                     index: 0,
                     routes: [{name: 'Login'}],
                 });
-
             }, 2000);
 
         } catch (error) {
@@ -111,7 +118,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
         >
             <View style={styles.modalOverlay}>
                 <Animated.View style={styles.campusCard}>
-                    {/* Top Decoration */}
                     <View style={styles.iconCircle}>
                         <Icon name="school" size={40} color="#fff"/>
                     </View>
@@ -143,7 +149,7 @@ const SettingsScreen = ({navigation, scrollY}) => {
     if (loading || !user) {
         return (
             <SafeAreaView style={styles.safeArea}>
-                <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+                <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
                 <SettingsScreenSkeleton/>
             </SafeAreaView>
         );
@@ -151,7 +157,7 @@ const SettingsScreen = ({navigation, scrollY}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content"/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
 
             {showSkeleton ? (
                 <SettingsScreenSkeleton/>
@@ -164,33 +170,18 @@ const SettingsScreen = ({navigation, scrollY}) => {
                         {useNativeDriver: true})}
                     scrollEventThrottle={16}
                 >
-                    {/* Header */}
                     <View style={styles.headerSection}>
                         <Text style={styles.header}>Settings</Text>
                         <Text style={styles.subHeader}>Manage your account and preferences</Text>
                     </View>
 
-                    {/* Profile Card */}
                     <ProfileSection
-                        user={
-                            isGuest
-                                ? {name: 'Guest User', email: 'guest@studex.app'}
-                                : user
-                        }
-                        profileImage={
-                            isGuest
-                                ? 'https://i.pravatar.cc/100?img=1'
-                                : profileImage || user?.avatar
-                        }
+                        user={isGuest ? {name: 'Guest User', email: 'guest@studex.app'} : user}
+                        profileImage={isGuest ? 'https://i.pravatar.cc/100?img=1' : profileImage || user?.avatar}
                         verified={!isGuest}
                         buttonLabel={isGuest ? 'Login to Continue' : 'View Profile'}
                         onButtonPress={() => {
                             if (isGuest) {
-                                showToast({
-                                    type: 'info',
-                                    title: 'Login Required',
-                                    message: 'Sign in to view your full profile'
-                                });
                                 navigation.replace('Login');
                             } else {
                                 navigation.navigate('UserProfileScreen');
@@ -205,8 +196,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
                         } : () => navigation.navigate('UserProfileScreen')}
                     />
 
-
-                    {/* Quick Actions */}
                     <QuickActions
                         title="Quick Actions"
                         actions={[
@@ -246,14 +235,12 @@ const SettingsScreen = ({navigation, scrollY}) => {
                                 label: 'Language',
                                 gradient: ['#6366F1', '#4F46E5'],
                                 value: 'English',
-                                onPress: () => {
-                                },
+                                onPress: () => {},
                             },
                             {
                                 icon: 'school',
                                 iconType: 'ion',
                                 label: 'My Campus',
-                                description: '',
                                 gradient: ['#10B981', '#059669'],
                                 value: isGuest ? 'Guest Access' : (user?.collegeName || 'Not Set'),
                                 onPress: () => {
@@ -337,26 +324,17 @@ const SettingsScreen = ({navigation, scrollY}) => {
                                 description: 'Permanently remove your data',
                                 gradient: ['#FF416C', '#FF4B2B'],
                                 onPress: () => {
-                                    if (isGuest) {
-                                        showToast({
-                                            type: 'info',
-                                            title: 'Guest Mode',
-                                            message: 'No account found to delete.',
-                                        });
-                                        return;
-                                    }
+                                    if (isGuest) return;
                                     setDeleteModalVisible(true);
                                 },
                             },
                         ]}
                     />
 
-                    {/* App Version */}
                     <View style={styles.versionContainer}>
                         <Text style={styles.versionText}>Agora v1.0.0</Text>
                     </View>
 
-                    {/* Logout Button */}
                     {!isGuest && (
                         <Button
                             title="Logout"
@@ -371,7 +349,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
                 </Animated.ScrollView>
             )}
 
-            {/* Logout Modal */}
             <ModalComponent
                 visible={logoutModalVisible}
                 type="logout"
@@ -385,7 +362,6 @@ const SettingsScreen = ({navigation, scrollY}) => {
 
             <CampusInfoModal/>
 
-            {/* Delete Account Modal */}
             <ModalComponent
                 visible={deleteModalVisible}
                 type="delete"
@@ -400,17 +376,15 @@ const SettingsScreen = ({navigation, scrollY}) => {
                 onSecondaryPress={() => setDeleteModalVisible(false)}
             />
 
-            {
-                toast.visible && (
-                    <ToastMessage
-                        type={toast.type}
-                        title={toast.title}
-                        message={toast.message}
-                        onHide={() => setToast({...toast, visible: false})}
-                    />
-                )
-            }
-            {/* Deletion Loading Overlay */}
+            {toast.visible && (
+                <ToastMessage
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                    onHide={() => setToast({...toast, visible: false})}
+                />
+            )}
+
             {isDeleting && (
                 <View style={styles.globalLoadingOverlay}>
                     <View style={styles.loadingCard}>
@@ -426,7 +400,7 @@ const SettingsScreen = ({navigation, scrollY}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     container: {
         padding: THEME.spacing.screenPadding,
@@ -439,13 +413,13 @@ const styles = StyleSheet.create({
     header: {
         fontSize: THEME.fontSize['4xl'],
         fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         letterSpacing: THEME.letterSpacing.tight,
         marginBottom: THEME.spacing[1],
     },
     subHeader: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         fontWeight: THEME.fontWeight.medium,
     },
     versionContainer: {
@@ -454,51 +428,51 @@ const styles = StyleSheet.create({
     },
     versionText: {
         fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textTertiary,
         fontWeight: THEME.fontWeight.medium,
     },
-
     globalLoadingOverlay: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
     },
     loadingCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         padding: 24,
         borderRadius: 16,
         alignItems: 'center',
         gap: 12,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     loadingText: {
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         fontSize: 14,
         fontWeight: '600',
     },
-
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
     },
     campusCard: {
-        backgroundColor: COLORS.dark.card,
+        backgroundColor: COLORS.light.card,
         borderRadius: 24,
         padding: 24,
         width: '100%',
         alignItems: 'center',
-        elevation: 5,
+        elevation: 10,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 10},
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.1,
         shadowRadius: 20,
     },
     iconCircle: {
@@ -511,12 +485,12 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         marginTop: -60,
         borderWidth: 5,
-        borderColor: COLORS.dark.bg,
+        borderColor: COLORS.light.bg,
     },
     campusTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         marginBottom: 8,
         textAlign: 'center',
     },
@@ -531,7 +505,7 @@ const styles = StyleSheet.create({
     campusMessage: {
         fontSize: 15,
         lineHeight: 22,
-        color: COLORS.dark.textTertiary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         marginBottom: 24,
         width: '100%',

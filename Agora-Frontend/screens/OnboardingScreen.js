@@ -96,7 +96,7 @@ export default function OnboardingScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor={COLORS.dark.bg} />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.light.bg} />
 
             {/* Skip Button */}
             {currentIndex < onboardingData.length - 1 && (
@@ -155,7 +155,7 @@ export default function OnboardingScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.dark.bg,
+        backgroundColor: COLORS.light.bg,
     },
     skipButton: {
         position: 'absolute',
@@ -164,13 +164,13 @@ const styles = StyleSheet.create({
         zIndex: 10,
         paddingVertical: 8,
         paddingHorizontal: 16,
-        backgroundColor: COLORS.dark.cardElevated,
+        backgroundColor: '#F3F4F6', // Light mode equivalent for card elevated
         borderRadius: 20,
     },
     skipText: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
     },
 
     // Slide
@@ -200,11 +200,11 @@ const styles = StyleSheet.create({
         width: 160,
         height: 160,
         borderRadius: 80,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 3,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
     },
 
     // Decorative dots
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
         width: 12,
         height: 12,
         borderRadius: 6,
-        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
     },
     dot1: {
         top: 60,
@@ -236,14 +236,14 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: '800',
-        color: COLORS.dark.text,
+        color: COLORS.light.text,
         textAlign: 'center',
         marginBottom: 16,
         lineHeight: 36,
     },
     description: {
         fontSize: 16,
-        color: COLORS.dark.textSecondary,
+        color: COLORS.light.textSecondary,
         textAlign: 'center',
         lineHeight: 24,
         fontWeight: '500',
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: COLORS.dark.border,
+        backgroundColor: COLORS.light.border,
     },
     dotActive: {
         width: 24,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
         gap: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 4,
     },

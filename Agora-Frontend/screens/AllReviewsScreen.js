@@ -19,7 +19,7 @@ import AppHeader from '../components/AppHeader';
 import InputModal from '../components/InputModal';
 
 const AllReviewsScreen = ({ navigation, route }) => {
-    const { reviews = [], productName, productId, onAddReview } = route.params || {};
+    const { reviews = [], productName, productId } = route.params || {};
     const { addReview, loading } = useAddReview();
     const [localReviews, setLocalReviews] = useState(reviews);
     const [reviewModalVisible, setReviewModalVisible] = useState(false);
@@ -41,7 +41,6 @@ const AllReviewsScreen = ({ navigation, route }) => {
         return { star, count, percentage };
     });
 
-    // Filter and sort reviews
     const getFilteredReviews = () => {
         let filtered = [...localReviews];
         if (filterRating !== 'all') {
@@ -75,19 +74,11 @@ const AllReviewsScreen = ({ navigation, route }) => {
                 });
             }
         } catch (error) {
-            if (error.response?.status === 401) {
-                showToast({
-                    type: 'info',
-                    title: 'Sign in required',
-                    message: 'Please log in to add a review.'
-                });
-            } else {
-                showToast({
-                    type: 'error',
-                    title: 'Failed',
-                    message: 'Could not submit your review. Please try again.'
-                });
-            }
+            showToast({
+                type: 'error',
+                title: 'Failed',
+                message: 'Could not submit review. Please try again.'
+            });
         }
     };
 
@@ -95,13 +86,12 @@ const AllReviewsScreen = ({ navigation, route }) => {
         <TouchableOpacity
             style={[styles.filterChip, isActive && styles.filterChipActive]}
             onPress={() => setFilterRating(value)}
-            activeOpacity={THEME.opacity.hover}
         >
             {value !== 'all' && (
                 <Ionicons
                     name="star"
                     size={14}
-                    color={isActive ? COLORS.primary : COLORS.gray400}
+                    color={isActive ? COLORS.primary : COLORS.light.textTertiary}
                 />
             )}
             <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
@@ -114,197 +104,111 @@ const AllReviewsScreen = ({ navigation, route }) => {
         <TouchableOpacity
             style={[styles.sortOption, isActive && styles.sortOptionActive]}
             onPress={() => setSortBy(value)}
-            activeOpacity={THEME.opacity.hover}
         >
             <Text style={[styles.sortOptionText, isActive && styles.sortOptionTextActive]}>
                 {label}
             </Text>
-            {isActive && (
-                <Ionicons name="checkmark" size={18} color={COLORS.primary} />
-            )}
+            {isActive && <Ionicons name="checkmark" size={18} color={COLORS.primary} />}
         </TouchableOpacity>
-    );
-
-    const renderEmptyState = () => (
-        <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconCircle}>
-                <Ionicons name="chatbox-ellipses-outline" size={60} color={COLORS.gray500} />
-            </View>
-            <Text style={styles.emptyTitle}>No Reviews Yet</Text>
-            <Text style={styles.emptyText}>
-                Be the first to share your experience with this item!
-            </Text>
-            <TouchableOpacity
-                style={styles.emptyButton}
-                onPress={() => setReviewModalVisible(true)}
-                activeOpacity={THEME.opacity.hover}
-            >
-                <Ionicons name="create" size={18} color={COLORS.white} />
-                <Text style={styles.emptyButtonText}>Write First Review</Text>
-            </TouchableOpacity>
-        </View>
     );
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.dark.bg} barStyle="light-content" />
-            <AppHeader
-                title="Reviews & Ratings"
-                onBack={() => navigation.goBack()}
-            />
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content" />
+            <AppHeader title="Reviews & Ratings" onBack={() => navigation.goBack()} />
 
-            {localReviews.length === 0 ? (
-                renderEmptyState()
-            ) : (
-                <FlatList
-                    data={filteredReviews.filter(r => r && r.id)}
-                    keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
-                    renderItem={({ item }) => {
-                        if (!item) return null;
-                        return (
-                            <View style={styles.reviewCard}>
-                                <View style={styles.reviewHeader}>
-                                    <View style={styles.reviewUserInfo}>
-                                        <View style={styles.reviewAvatar}>
-                                            <Text style={styles.reviewAvatarText}>
-                                                {item.reviewerName ? item.reviewerName.charAt(0) : '?'}
-                                            </Text>
-                                        </View>
-                                        <View>
-                                            <Text style={styles.reviewUser}>
-                                                {item.reviewerName || 'Anonymous'}
-                                            </Text>
-                                            <View style={styles.reviewRatingRow}>
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Ionicons
-                                                        key={i}
-                                                        name={i < item.rating ? 'star' : 'star-outline'}
-                                                        size={14}
-                                                        color={COLORS.warning}
-                                                    />
-                                                ))}
-                                            </View>
-                                        </View>
-                                    </View>
-                                    {item.createdAt && (
-                                        <Text style={styles.reviewDate}>
-                                            {new Date(item.createdAt).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                            })}
-                                        </Text>
-                                    )}
-                                </View>
-                                <Text style={styles.reviewComment}>{item.comment || ''}</Text>
-                            </View>
-                        );
-                    }}
-                    contentContainerStyle={styles.listContainer}
-                    showsVerticalScrollIndicator={false}
-                    ListHeaderComponent={
-                        <>
-                            {/* Rating Summary Card */}
-                            <View style={styles.ratingSummaryCard}>
-                                <View style={styles.ratingLeft}>
-                                    <Text style={styles.avgRatingNumber}>{avgRating}</Text>
-                                    <View style={styles.ratingStarsRow}>
-                                        {[...Array(5)].map((_, i) => (
-                                            <Ionicons
-                                                key={i}
-                                                name={i < Math.floor(avgRating) ? "star" : "star-outline"}
-                                                size={18}
-                                                color={COLORS.warning}
-                                            />
-                                        ))}
-                                    </View>
-                                    <Text style={styles.totalReviews}>
-                                        Based on {localReviews.length} review{localReviews.length !== 1 ? 's' : ''}
-                                    </Text>
-                                </View>
-
-                                <View style={styles.ratingRight}>
-                                    {ratingBreakdown.map(item => (
-                                        <View key={item.star} style={styles.ratingBarRow}>
-                                            <Text style={styles.ratingBarLabel}>{item.star}★</Text>
-                                            <View style={styles.ratingBarTrack}>
-                                                <View
-                                                    style={[
-                                                        styles.ratingBarFill,
-                                                        { width: `${item.percentage}%` }
-                                                    ]}
-                                                />
-                                            </View>
-                                            <Text style={styles.ratingBarCount}>{item.count}</Text>
-                                        </View>
+            <FlatList
+                data={filteredReviews.filter(r => r && r.id)}
+                keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
+                contentContainerStyle={styles.listContainer}
+                showsVerticalScrollIndicator={false}
+                ListHeaderComponent={
+                    <>
+                        <View style={styles.ratingSummaryCard}>
+                            <View style={styles.ratingLeft}>
+                                <Text style={styles.avgRatingNumber}>{avgRating}</Text>
+                                <View style={styles.ratingStarsRow}>
+                                    {[...Array(5)].map((_, i) => (
+                                        <Ionicons
+                                            key={i}
+                                            name={i < Math.floor(avgRating) ? "star" : "star-outline"}
+                                            size={18}
+                                            color={COLORS.warning}
+                                        />
                                     ))}
                                 </View>
+                                <Text style={styles.totalReviews}>{localReviews.length} Reviews</Text>
                             </View>
 
-                            {/* Write Review Button */}
-                            <Button
-                                title="Write a Review"
-                                variant="primary"
-                                size="medium"
-                                icon="create-outline"
-                                iconPosition="left"
-                                onPress={() => setReviewModalVisible(true)}
-                                style={styles.writeReviewButton}
-                            />
+                            <View style={styles.ratingRight}>
+                                {ratingBreakdown.map(item => (
+                                    <View key={item.star} style={styles.ratingBarRow}>
+                                        <Text style={styles.ratingBarLabel}>{item.star}★</Text>
+                                        <View style={styles.ratingBarTrack}>
+                                            <View style={[styles.ratingBarFill, { width: `${item.percentage}%` }]} />
+                                        </View>
+                                        <Text style={styles.ratingBarCount}>{item.count}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
 
-                            {/* Filter + Sort */}
-                            <View style={styles.filterSection}>
-                                <Text style={styles.filterTitle}>Filter by Rating</Text>
-                                <View style={styles.filterChips}>
-                                    <FilterChip label="All" value="all" isActive={filterRating === 'all'} />
-                                    <FilterChip label="5" value="5" isActive={filterRating === '5'} />
-                                    <FilterChip label="4" value="4" isActive={filterRating === '4'} />
-                                    <FilterChip label="3" value="3" isActive={filterRating === '3'} />
-                                    <FilterChip label="2" value="2" isActive={filterRating === '2'} />
-                                    <FilterChip label="1" value="1" isActive={filterRating === '1'} />
+                        <Button
+                            title="Write a Review"
+                            variant="primary"
+                            icon="create-outline"
+                            onPress={() => setReviewModalVisible(true)}
+                            style={styles.writeReviewButton}
+                        />
+
+                        <View style={styles.filterSection}>
+                            <Text style={styles.sectionTitle}>Filter by Rating</Text>
+                            <View style={styles.filterChips}>
+                                {['all', '5', '4', '3', '2', '1'].map(val => (
+                                    <FilterChip key={val} label={val === 'all' ? 'All' : val} value={val} isActive={filterRating === val} />
+                                ))}
+                            </View>
+                        </View>
+
+                        <View style={styles.sortSection}>
+                            <Text style={styles.sectionTitle}>Sort By</Text>
+                            <View style={styles.sortOptions}>
+                                <SortOption label="Most Recent" value="recent" isActive={sortBy === 'recent'} />
+                                <SortOption label="Highest Rating" value="highest" isActive={sortBy === 'highest'} />
+                                <SortOption label="Lowest Rating" value="lowest" isActive={sortBy === 'lowest'} />
+                            </View>
+                        </View>
+                    </>
+                }
+                renderItem={({ item }) => (
+                    <View style={styles.reviewCard}>
+                        <View style={styles.reviewHeader}>
+                            <View style={styles.reviewUserInfo}>
+                                <View style={styles.reviewAvatar}>
+                                    <Text style={styles.reviewAvatarText}>{item.reviewerName?.charAt(0) || '?'}</Text>
+                                </View>
+                                <View>
+                                    <Text style={styles.reviewUser}>{item.reviewerName || 'Anonymous'}</Text>
+                                    <View style={styles.reviewRatingRow}>
+                                        {[...Array(5)].map((_, i) => (
+                                            <Ionicons key={i} name={i < item.rating ? 'star' : 'star-outline'} size={12} color={COLORS.warning} />
+                                        ))}
+                                    </View>
                                 </View>
                             </View>
+                            <Text style={styles.reviewDate}>
+                                {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </Text>
+                        </View>
+                        <Text style={styles.reviewComment}>{item.comment}</Text>
+                    </View>
+                )}
+            />
 
-                            <View style={styles.sortSection}>
-                                <Text style={styles.sortTitle}>Sort By</Text>
-                                <View style={styles.sortOptions}>
-                                    <SortOption label="Most Recent" value="recent" isActive={sortBy === 'recent'} />
-                                    <SortOption label="Highest Rating" value="highest" isActive={sortBy === 'highest'} />
-                                    <SortOption label="Lowest Rating" value="lowest" isActive={sortBy === 'lowest'} />
-                                </View>
-                            </View>
-
-                            <View style={styles.resultsHeader}>
-                                <Text style={styles.resultsText}>
-                                    Showing {filteredReviews.length} of {localReviews.length} review{localReviews.length !== 1 ? 's' : ''}
-                                </Text>
-                            </View>
-
-                            {filteredReviews.length === 0 && (
-                                <View style={styles.noResultsContainer}>
-                                    <Ionicons name="search-outline" size={48} color={COLORS.gray500} />
-                                    <Text style={styles.noResultsText}>No reviews with this rating yet</Text>
-                                    <TouchableOpacity
-                                        style={styles.clearFilterButton}
-                                        onPress={() => setFilterRating('all')}
-                                        activeOpacity={THEME.opacity.hover}
-                                    >
-                                        <Text style={styles.clearFilterText}>Clear Filters</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                        </>
-                    }
-                />
-            )}
-
-            {/* Add Review Modal */}
             <InputModal
                 visible={reviewModalVisible}
                 type="review"
                 enableRating
-                message="How was this item?"
-                placeholder="Share your experience with this product..."
-                multiline={true}
                 onPrimaryPress={(comment, rating) => handleSubmitReview(rating, comment)}
                 onSecondaryPress={() => setReviewModalVisible(false)}
                 onClose={() => setReviewModalVisible(false)}
@@ -323,293 +227,79 @@ const AllReviewsScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: COLORS.dark.bg,
-    },
-    listContainer: {
-        padding: THEME.spacing.screenPadding,
-        paddingBottom: THEME.spacing['3xl'],
-    },
+    safeArea: { flex: 1, backgroundColor: COLORS.light.bg },
+    listContainer: { padding: 16, paddingBottom: 40 },
     ratingSummaryCard: {
         flexDirection: 'row',
-        backgroundColor: COLORS.dark.card,
-        borderRadius: THEME.borderRadius.card,
-        padding: THEME.spacing.sectionGap,
-        marginBottom: THEME.spacing.lg,
-        borderWidth: THEME.borderWidth.hairline,
-        borderColor: COLORS.dark.border,
-        ...THEME.shadows.sm,
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
     ratingLeft: {
         alignItems: 'center',
-        paddingRight: THEME.spacing.sectionGap,
-        borderRightWidth: THEME.borderWidth.hairline,
-        borderRightColor: COLORS.dark.border,
+        paddingRight: 20,
+        borderRightWidth: 1,
+        borderRightColor: COLORS.light.border,
         minWidth: 100,
     },
-    avgRatingNumber: {
-        fontSize: THEME.fontSize['6xl'],
-        fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.dark.text,
-        lineHeight: THEME.fontSize['6xl'] + 8,
-    },
-    ratingStarsRow: {
-        flexDirection: 'row',
-        marginVertical: THEME.spacing[2],
-    },
-    totalReviews: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
-        fontWeight: THEME.fontWeight.semibold,
-        textAlign: 'center',
-    },
-    ratingRight: {
-        flex: 1,
-        paddingLeft: THEME.spacing.sectionGap,
-        justifyContent: 'center',
-    },
-    ratingBarRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: THEME.spacing[2],
-    },
-    ratingBarLabel: {
-        fontSize: THEME.fontSize.sm,
-        fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.textSecondary,
-        width: 30,
-    },
-    ratingBarTrack: {
-        flex: 1,
-        height: 8,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.xs,
-        marginHorizontal: THEME.spacing[2],
-        overflow: 'hidden',
-    },
-    ratingBarFill: {
-        height: '100%',
-        backgroundColor: COLORS.warning,
-        borderRadius: THEME.borderRadius.xs,
-    },
-    ratingBarCount: {
-        fontSize: THEME.fontSize.xs,
-        fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.gray400,
-        width: 25,
-        textAlign: 'right',
-    },
-    writeReviewButton: {
-        marginBottom: THEME.spacing.itemGap,
-    },
-    filterSection: {
-        marginBottom: THEME.spacing.lg,
-    },
-    filterTitle: {
-        fontSize: THEME.fontSize.md,
-        fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.dark.text,
-        marginBottom: THEME.spacing.itemGap,
-    },
-    filterChips: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: THEME.spacing[2],
-    },
+    avgRatingNumber: { fontSize: 48, fontWeight: '800', color: COLORS.light.text },
+    ratingStarsRow: { flexDirection: 'row', marginVertical: 4 },
+    totalReviews: { fontSize: 12, color: COLORS.light.textSecondary, fontWeight: '600' },
+    ratingRight: { flex: 1, paddingLeft: 20, justifyContent: 'center' },
+    ratingBarRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+    ratingBarLabel: { fontSize: 12, fontWeight: '700', color: COLORS.light.textSecondary, width: 25 },
+    ratingBarTrack: { flex: 1, height: 6, backgroundColor: COLORS.light.bg, borderRadius: 3, marginHorizontal: 8, overflow: 'hidden' },
+    ratingBarFill: { height: '100%', backgroundColor: COLORS.warning, borderRadius: 3 },
+    ratingBarCount: { fontSize: 10, fontWeight: '600', color: COLORS.light.textTertiary, width: 20, textAlign: 'right' },
+    writeReviewButton: { marginBottom: 24 },
+    sectionTitle: { fontSize: 16, fontWeight: '800', color: COLORS.light.text, marginBottom: 12 },
+    filterSection: { marginBottom: 24 },
+    filterChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     filterChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.dark.bgElevated,
-        paddingHorizontal: THEME.spacing.sm + 2,
-        paddingVertical: THEME.spacing[2],
-        borderRadius: THEME.borderRadius.md,
-        borderWidth: THEME.borderWidth.medium,
-        borderColor: COLORS.dark.border,
-        gap: THEME.spacing[1],
+        backgroundColor: COLORS.white,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 10,
+        borderWidth: 1.5,
+        borderColor: COLORS.light.border,
+        gap: 4,
     },
-    filterChipActive: {
-        backgroundColor: COLORS.dark.cardElevated,
-        borderColor: COLORS.primary,
-    },
-    filterChipText: {
-        fontSize: THEME.fontSize.sm,
-        fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.textSecondary,
-    },
-    filterChipTextActive: {
-        color: COLORS.primary,
-        fontWeight: THEME.fontWeight.bold,
-    },
-    sortSection: {
-        marginBottom: THEME.spacing.lg,
-    },
-    sortTitle: {
-        fontSize: THEME.fontSize.md,
-        fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.dark.text,
-        marginBottom: THEME.spacing.itemGap,
-    },
+    filterChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' },
+    filterChipText: { fontSize: 14, fontWeight: '600', color: COLORS.light.textSecondary },
+    filterChipTextActive: { color: COLORS.primary, fontWeight: '700' },
+    sortSection: { marginBottom: 24 },
     sortOptions: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: THEME.borderRadius.card,
-        padding: THEME.spacing[1],
-        borderWidth: THEME.borderWidth.hairline,
-        borderColor: COLORS.dark.border,
-        ...THEME.shadows.sm,
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 4,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
-    sortOption: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: THEME.spacing.itemGap,
-        paddingHorizontal: THEME.spacing.md,
-        borderRadius: THEME.borderRadius.md,
-    },
-    sortOptionActive: {
-        backgroundColor: COLORS.dark.cardElevated,
-    },
-    sortOptionText: {
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.textSecondary,
-    },
-    sortOptionTextActive: {
-        color: COLORS.primary,
-        fontWeight: THEME.fontWeight.bold,
-    },
-    resultsHeader: {
-        marginBottom: THEME.spacing.md,
-    },
-    resultsText: {
-        fontSize: THEME.fontSize.sm,
-        fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.textSecondary,
-    },
+    sortOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderRadius: 12 },
+    sortOptionActive: { backgroundColor: COLORS.light.bg },
+    sortOptionText: { fontSize: 15, fontWeight: '600', color: COLORS.light.textSecondary },
+    sortOptionTextActive: { color: COLORS.primary, fontWeight: '700' },
     reviewCard: {
-        backgroundColor: COLORS.dark.card,
-        borderRadius: THEME.borderRadius.card,
-        padding: THEME.spacing.md,
-        marginBottom: THEME.spacing.itemGap,
-        borderWidth: THEME.borderWidth.hairline,
-        borderColor: COLORS.dark.border,
-        ...THEME.shadows.sm,
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: COLORS.light.border,
     },
-    reviewHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: THEME.spacing.itemGap,
-    },
-    reviewUserInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    reviewAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: THEME.borderRadius.full,
-        backgroundColor: COLORS.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: THEME.spacing.itemGap,
-    },
-    reviewAvatarText: {
-        fontSize: THEME.fontSize.md,
-        fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.white,
-    },
-    reviewUser: {
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.text,
-        marginBottom: THEME.spacing[1],
-    },
-    reviewRatingRow: {
-        flexDirection: 'row',
-    },
-    reviewDate: {
-        fontSize: THEME.fontSize.xs,
-        color: COLORS.gray400,
-        fontWeight: THEME.fontWeight.medium,
-    },
-    reviewComment: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
-        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
-        fontWeight: THEME.fontWeight.medium,
-    },
-    emptyContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 80,
-        paddingHorizontal: THEME.spacing['3xl'],
-    },
-    emptyIconCircle: {
-        width: 100,
-        height: 100,
-        borderRadius: THEME.borderRadius.full,
-        backgroundColor: COLORS.dark.cardElevated,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: THEME.spacing.lg,
-        borderWidth: THEME.borderWidth.thick,
-        borderColor: COLORS.dark.border,
-    },
-    emptyTitle: {
-        fontSize: THEME.fontSize.xl,
-        fontWeight: THEME.fontWeight.extrabold,
-        color: COLORS.dark.text,
-        marginBottom: THEME.spacing[2],
-    },
-    emptyText: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.dark.textSecondary,
-        textAlign: 'center',
-        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
-        marginBottom: THEME.spacing.sectionGap,
-    },
-    emptyButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.primary,
-        paddingHorizontal: THEME.spacing.sectionGap,
-        paddingVertical: THEME.spacing.itemGap,
-        borderRadius: THEME.borderRadius.button,
-        ...THEME.shadows.md,
-    },
-    emptyButtonText: {
-        color: COLORS.white,
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.bold,
-        marginLeft: THEME.spacing[2],
-    },
-    noResultsContainer: {
-        alignItems: 'center',
-        paddingVertical: THEME.spacing['3xl'],
-    },
-    noResultsText: {
-        fontSize: THEME.fontSize.md,
-        fontWeight: THEME.fontWeight.semibold,
-        color: COLORS.dark.textSecondary,
-        marginTop: THEME.spacing.itemGap,
-        marginBottom: THEME.spacing.md,
-    },
-    clearFilterButton: {
-        paddingHorizontal: THEME.spacing.lg,
-        paddingVertical: THEME.spacing[2] + 2,
-        backgroundColor: COLORS.dark.cardElevated,
-        borderRadius: THEME.borderRadius.md,
-        borderWidth: THEME.borderWidth.hairline,
-        borderColor: COLORS.dark.border,
-    },
-    clearFilterText: {
-        fontSize: THEME.fontSize.sm,
-        fontWeight: THEME.fontWeight.bold,
-        color: COLORS.dark.textSecondary,
-    },
+    reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+    reviewUserInfo: { flexDirection: 'row', alignItems: 'center' },
+    reviewAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+    reviewAvatarText: { fontSize: 14, fontWeight: '800', color: COLORS.white },
+    reviewUser: { fontSize: 15, fontWeight: '700', color: COLORS.light.text },
+    reviewRatingRow: { flexDirection: 'row', marginTop: 2 },
+    reviewDate: { fontSize: 12, color: COLORS.light.textTertiary },
+    reviewComment: { fontSize: 14, color: COLORS.light.textSecondary, lineHeight: 20 },
 });
 
 export default AllReviewsScreen;
