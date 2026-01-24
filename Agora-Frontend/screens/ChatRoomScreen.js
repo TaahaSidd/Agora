@@ -25,8 +25,6 @@ import {useMarkChatAsRead} from "../hooks/useMarkChatAsRead";
 import {useUserStore} from "../stores/userStore";
 import {useChatBlocking} from '../context/ChatBlockingProvider';
 
-const isAndroid = Platform.OS === 'android';
-
 const ChatRoomScreen = ({route, navigation}) => {
     const insets = useSafeAreaInsets();
     const {roomId, sellerId} = route.params;
@@ -38,7 +36,6 @@ const ChatRoomScreen = ({route, navigation}) => {
     const flatListRef = useRef(null);
     const {sellerAvatar} = route.params;
     const markChatAsRead = useMarkChatAsRead();
-    const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
     const isOtherUserBlocked = isUserBlocked(sellerId);
 
@@ -76,17 +73,6 @@ const ChatRoomScreen = ({route, navigation}) => {
             keyboardDidHideListener.remove();
         };
     }, []);
-
-    useEffect(() => {
-        const showSubscription = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
-        const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
-
-        return () => {
-            showSubscription.remove();
-            hideSubscription.remove();
-        };
-    }, []);
-
 
     useEffect(() => {
         const markAsRead = async () => {
@@ -245,8 +231,8 @@ const ChatRoomScreen = ({route, navigation}) => {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content"/>
 
             {/* Header */}
             <View style={styles.header}>
@@ -287,15 +273,18 @@ const ChatRoomScreen = ({route, navigation}) => {
 
             <KeyboardAvoidingView
                 style={styles.keyboardAvoiding}
-                behavior={Platform.OS === 'ios' ? 'padding' : null}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             >
                 <FlatList
                     ref={flatListRef}
                     data={messages}
                     keyExtractor={(item) => item.id}
                     renderItem={renderMessage}
-                    contentContainerStyle={styles.messagesContent}
+                    contentContainerStyle={[
+                        styles.messagesContent,
+                        messages.length === 0 && styles.messagesContentEmpty
+                    ]}
                     style={styles.messageList}
                     showsVerticalScrollIndicator={false}
                     onContentSizeChange={() => {
@@ -324,16 +313,10 @@ const ChatRoomScreen = ({route, navigation}) => {
                     </View>
                 )}
 
-                {/* Input Bar */}
+                {/* Input Bar - FIXED */}
                 <View style={[
                     styles.inputBar,
                     isOtherUserBlocked && styles.inputBarDisabled,
-                    {
-                        paddingBottom: isKeyboardVisible
-                            ? 12
-                            : (insets.bottom > 0 ? insets.bottom : 20),
-                        paddingTop: 12
-                    }
                 ]}>
                     <View style={styles.inputWrapper}>
                         <TextInput
@@ -372,10 +355,11 @@ const ChatRoomScreen = ({route, navigation}) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.light.bg,
+        backgroundColor: COLORS.white,
     },
     keyboardAvoiding: {
         flex: 1,
+        backgroundColor: COLORS.light.bg,
     },
     header: {
         flexDirection: 'row',
@@ -385,7 +369,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         borderBottomWidth: 1,
         borderBottomColor: COLORS.light.border,
-        marginTop: 30,
+        marginTop:30,
     },
     backButton: {
         width: 40,
@@ -425,7 +409,10 @@ const styles = StyleSheet.create({
     },
     messagesContent: {
         padding: 16,
-        paddingBottom: 20,
+        paddingBottom: 8,
+    },
+    messagesContentEmpty: {
+        flexGrow: 1,
     },
     dateSeparator: {
         flexDirection: 'row',
@@ -469,7 +456,7 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 4,
     },
     bubbleReceived: {
-        backgroundColor: '#F3F4F6', // Light gray for received bubbles
+        backgroundColor: '#F3F4F6',
         borderBottomLeftRadius: 4,
         borderWidth: 1,
         borderColor: COLORS.light.border,
@@ -507,6 +494,7 @@ const styles = StyleSheet.create({
     quickRepliesContainer: {
         padding: 16,
         paddingTop: 8,
+        paddingBottom: 16,
         backgroundColor: COLORS.light.bg,
     },
     quickRepliesTitle: {
@@ -523,7 +511,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     quickReply: {
-        backgroundColor: COLORS.light.card,
+        backgroundColor: COLORS.white,
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 16,
@@ -538,8 +526,10 @@ const styles = StyleSheet.create({
     inputBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 12,
-        backgroundColor: COLORS.light.bg,
+        paddingHorizontal: 12,
+        paddingTop: 12,
+        paddingBottom: Platform.OS === 'ios' ? 12 : 16,
+        backgroundColor: COLORS.white,
         borderTopWidth: 1,
         borderTopColor: COLORS.light.border,
     },
@@ -557,7 +547,6 @@ const styles = StyleSheet.create({
         borderColor: COLORS.light.border,
     },
     input: {
-        flex: 1,
         fontSize: 15,
         color: COLORS.light.text,
         maxHeight: 100,
