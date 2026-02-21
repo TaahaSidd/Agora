@@ -69,7 +69,7 @@ const Button = ({
         >
             {loading ? (
                 <ActivityIndicator
-                    color={variant === 'primary' ? COLORS.white : COLORS.primary}
+                    color={variant === 'primary' ? COLORS.primary : COLORS.primary}
                     size="small"
                 />
             ) : (
@@ -106,10 +106,9 @@ const styles = StyleSheet.create({
         elevation: 0,
     },
     secondary: {
-        // FIXED: Using a more visible "Primary Tint" (approx 12-15% opacity of blue)
         backgroundColor: '#EBF2FF',
         borderWidth: 1,
-        borderColor: '#D1E1FF', // Adding a subtle border makes it pop on white
+        borderColor: '#D1E1FF',
         elevation: 0,
     },
     outline: {
@@ -133,7 +132,7 @@ const styles = StyleSheet.create({
     large: {paddingVertical: 18, paddingHorizontal: 32},
 
     disabled: {
-        backgroundColor: '#F3F4F6',
+        backgroundColor: '#e1e2e4',
         borderColor: '#E5E7EB',
         borderWidth: 1,
         elevation: 0,

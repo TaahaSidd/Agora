@@ -5,13 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../utils/colors';
 
 export default function AppHeader({
-                                      title,
-                                      centerComponent,
-                                      onBack,
-                                      rightIcon,
-                                      rightComponent,
-                                      onRightPress,
-                                  }) {
+    title,
+    centerComponent,
+    onBack,
+    rightIcon,
+    rightComponent,
+    onRightPress,
+}) {
     // UPDATED: Now using Light Theme constants
     const backgroundColor = COLORS.light.bgElevated; // Pure White
     const textColor = COLORS.light.text;            // Dark Charcoal

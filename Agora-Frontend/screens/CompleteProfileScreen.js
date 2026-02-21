@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -10,34 +10,33 @@ import {
     View
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Ionicons} from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
-import {THEME} from '../utils/theme';
-import {COLORS} from "../utils/colors";
-import {useUserStore} from "../stores/userStore";
-import {completeProfile, getColleges} from '../services/api';
+import { THEME } from '../utils/theme';
+import { COLORS } from "../utils/colors";
+import { useUserStore } from "../stores/userStore";
+import { completeProfile, searchColleges } from '../services/api';
 
 import ToastMessage from "../components/ToastMessage";
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 import PhoneInputField from "../components/PhoneInputField";
 
-const CompleteProfileScreen = ({navigation}) => {
-    const {currentUser} = useUserStore();
+const CompleteProfileScreen = ({ navigation }) => {
+    const { currentUser } = useUserStore();
 
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState({visible: false, type: 'success', title: '', message: ''});
+    const [toast, setToast] = useState({ visible: false, type: 'success', title: '', message: '' });
 
-    const [colleges, setColleges] = useState([]);
     const [selectedCollege, setSelectedCollege] = useState(null);
     const [collegeQuery, setCollegeQuery] = useState('');
+    const [collegeResults, setCollegeResults] = useState([]);
     const [loadingColleges, setLoadingColleges] = useState(false);
 
     useEffect(() => {
-        fetchColleges();
         if (currentUser) {
             setFirstName(currentUser.firstName || '');
             setLastName(currentUser.lastName || '');
@@ -45,23 +44,25 @@ const CompleteProfileScreen = ({navigation}) => {
         }
     }, [currentUser]);
 
-    const fetchColleges = async () => {
-        setLoadingColleges(true);
-        try {
-            const data = await getColleges();
-            setColleges(data);
-        } catch (error) {
-            setToast({visible: true, type: 'error', title: 'Error', message: 'Failed to load colleges'});
-        } finally {
-            setLoadingColleges(false);
+    useEffect(() => {
+        if (collegeQuery.trim().length < 2 || selectedCollege) {
+            setCollegeResults([]);
+            return;
         }
-    };
+        const debounce = setTimeout(async () => {
+            setLoadingColleges(true);
+            try {
+                const data = await searchColleges(collegeQuery.trim());
+                setCollegeResults(data);
+            } catch (error) {
+                setToast({ visible: true, type: 'error', title: 'Error', message: 'Failed to search colleges' });
+            } finally {
+                setLoadingColleges(false);
+            }
+        }, 150);
 
-    const filteredColleges = collegeQuery.trim()
-        ? colleges.filter(college =>
-            college.collegeName.toLowerCase().includes(collegeQuery.toLowerCase())
-        )
-        : [];
+        return () => clearTimeout(debounce);
+    }, [collegeQuery]);
 
     const handleCollegeSelect = (college) => {
         setSelectedCollege(college);
@@ -107,7 +108,7 @@ const CompleteProfileScreen = ({navigation}) => {
                 };
 
                 await SecureStore.setItemAsync('currentUser', JSON.stringify(updatedUser));
-                useUserStore.setState({currentUser: updatedUser, isGuest: false});
+                useUserStore.setState({ currentUser: updatedUser, isGuest: false });
 
                 setToast({
                     visible: true,
@@ -159,14 +160,14 @@ const CompleteProfileScreen = ({navigation}) => {
 
                     {currentUser?.userEmail && (
                         <View style={styles.verifiedBadge}>
-                            <MaterialCommunityIcons name="email-check" size={18} color="#22C55E"/>
+                            <MaterialCommunityIcons name="email-check" size={18} color="#22C55E" />
                             <Text style={styles.verifiedText}>{currentUser.userEmail}</Text>
                         </View>
                     )}
 
                     <View style={styles.form}>
                         <View style={styles.nameRow}>
-                            <View style={{flex: 1}}>
+                            <View style={{ flex: 1 }}>
                                 <InputField
                                     label="First Name *"
                                     placeholder="e.g. Rahul"
@@ -175,8 +176,8 @@ const CompleteProfileScreen = ({navigation}) => {
                                     leftIcon="account-outline"
                                 />
                             </View>
-                            <View style={{width: 12}} />
-                            <View style={{flex: 1}}>
+                            <View style={{ width: 12 }} />
+                            <View style={{ flex: 1 }}>
                                 <InputField
                                     label="Last Name *"
                                     placeholder="e.g. Sharma"
@@ -190,8 +191,8 @@ const CompleteProfileScreen = ({navigation}) => {
                         <View style={styles.dropdownWrapper}>
                             <InputField
                                 label="College *"
-                                placeholder="Search your college..."
-                                value={selectedCollege ? selectedCollege.collegeName : collegeQuery}
+                                placeholder="Type to search your college..."
+                                value={selectedCollege ? selectedCollege.collegeName : collegeQuery || undefined}
                                 onChangeText={(text) => {
                                     setCollegeQuery(text);
                                     if (selectedCollege) setSelectedCollege(null);
@@ -204,37 +205,40 @@ const CompleteProfileScreen = ({navigation}) => {
                                     setCollegeQuery('');
                                 }}
                             />
+                            <Text style={{ fontSize: 11, color: COLORS.light.textTertiary, marginTop: -10, marginBottom: 16, marginLeft: 4 }}>
+                                Start typing at least 2 letters to search your college
+                            </Text>
 
-                            {collegeQuery.length > 0 && filteredColleges.length > 0 && !selectedCollege && (
+                            {collegeQuery.length > 0 && collegeResults.length > 0 && !selectedCollege && (
                                 <View style={styles.dropdown}>
                                     <View style={styles.dropdownHeader}>
                                         <Text style={styles.dropdownHeaderText}>
-                                            {filteredColleges.length} {filteredColleges.length === 1 ? 'college' : 'colleges'} found
+                                            {collegeResults.length} {collegeResults.length === 1 ? 'college' : 'colleges'} found
                                         </Text>
                                     </View>
                                     <ScrollView
-                                        style={{maxHeight: 220}}
+                                        style={{ maxHeight: 220 }}
                                         nestedScrollEnabled={true}
                                         showsVerticalScrollIndicator={true}
                                     >
-                                        {filteredColleges.map((item, index) => (
+                                        {collegeResults.map((item, index) => (
                                             <TouchableOpacity
                                                 key={item.id}
                                                 style={[
                                                     styles.dropdownItem,
-                                                    index === filteredColleges.length - 1 && styles.dropdownItemLast
+                                                    index === collegeResults.length - 1 && styles.dropdownItemLast
                                                 ]}
                                                 onPress={() => handleCollegeSelect(item)}
                                                 activeOpacity={0.7}
                                             >
                                                 <View style={styles.dropdownIconContainer}>
-                                                    <Ionicons name="school" size={18} color={COLORS.primary}/>
+                                                    <Ionicons name="school" size={18} color={COLORS.primary} />
                                                 </View>
                                                 <Text style={styles.dropdownText} numberOfLines={2}>
                                                     {item.collegeName}
                                                 </Text>
                                                 <Ionicons name="chevron-forward" size={16}
-                                                          color={COLORS.light.textTertiary}/>
+                                                    color={COLORS.light.textTertiary} />
                                             </TouchableOpacity>
                                         ))}
                                     </ScrollView>
@@ -280,7 +284,7 @@ const CompleteProfileScreen = ({navigation}) => {
                             type={toast.type}
                             title={toast.title}
                             message={toast.message}
-                            onHide={() => setToast({...toast, visible: false})}
+                            onHide={() => setToast({ ...toast, visible: false })}
                         />
                     )}
                 </ScrollView>
@@ -383,7 +387,7 @@ const styles = StyleSheet.create({
         shadowColor: '#000',
         shadowOpacity: 0.1,
         shadowRadius: 15,
-        shadowOffset: {width: 0, height: 8},
+        shadowOffset: { width: 0, height: 8 },
         zIndex: 999,
         borderWidth: 1,
         borderColor: '#E5E7EB',

@@ -1,15 +1,13 @@
 import React from "react";
-import {Image, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import {useAverageRating} from "../hooks/useAverageRating";
-import {COLORS} from "../utils/colors";
-import {THEME} from "../utils/theme";
-import {LinearGradient} from "expo-linear-gradient";
+import { useAverageRating } from "../hooks/useAverageRating";
+import { COLORS } from "../utils/colors";
+import { THEME } from "../utils/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
-const SellerCard = ({seller, sellerSince, onPress}) => {
-    const {rating, loading} = useAverageRating('seller', seller.id);
-
-    let sellerAvatar = seller?.profileImage || require("../assets/defaultProfile.png");
+const SellerCard = ({ seller, onPress }) => {
+    const { rating, loading } = useAverageRating('seller', seller.id);
 
     // Updated Rating Styles for Light Mode
     const getRatingStyle = (rating) => {
@@ -42,26 +40,45 @@ const SellerCard = ({seller, sellerSince, onPress}) => {
 
     const ratingValue = rating || 0;
     const ratingStyle = getRatingStyle(ratingValue);
+    const sellerAvatar = seller?.profileImage || require("../assets/defaultProfile.png");
 
     return (
         <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+            {/* Left: Avatar Section */}
             <View style={styles.avatarContainer}>
                 <Image
-                    source={typeof sellerAvatar === "string" ? {uri: sellerAvatar} : sellerAvatar}
+                    source={typeof sellerAvatar === "string" ? { uri: sellerAvatar } : sellerAvatar}
                     style={styles.avatar}
                 />
                 {seller?.isVerified && (
                     <View style={styles.verifiedBadge}>
-                        <Icon name="checkmark-circle" size={20} color={COLORS.success}/>
+                        <Icon name="checkmark-circle" size={20} color={COLORS.success} />
                     </View>
                 )}
             </View>
 
+            {/* Middle: Info Section */}
             <View style={styles.info}>
+                {/* Row 1: Name (Now has full width) */}
                 <View style={styles.nameRow}>
                     <Text style={styles.name} numberOfLines={1}>
                         {seller.firstName} {seller.lastName}
                     </Text>
+                </View>
+
+                {/* Row 2: Metadata Badges (Grouped together) */}
+                <View style={styles.statsRow}>
+                    <View style={styles.sellerBadge}>
+                        <LinearGradient
+                            colors={['#6366F1', '#4F46E5']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.pillGradient}
+                        >
+                            <Icon name="cart-outline" size={10} color="#fff" />
+                            <Text style={styles.pillText}>CAMPUS SELLER</Text>
+                        </LinearGradient>
+                    </View>
 
                     <View style={[
                         styles.ratingBadge,
@@ -70,27 +87,16 @@ const SellerCard = ({seller, sellerSince, onPress}) => {
                             borderColor: ratingStyle.border,
                         }
                     ]}>
-                        <Icon name="star" size={12} color={ratingStyle.text}/>
-                        <Text style={[styles.ratingText, {color: ratingStyle.text}]}>
+                        <Icon name="star" size={10} color={ratingStyle.text} />
+                        <Text style={[styles.ratingText, { color: ratingStyle.text }]}>
                             {loading ? '...' : ratingValue.toFixed(1)}
                         </Text>
                     </View>
                 </View>
-
-                <View style={styles.sellerBadge}>
-                    <LinearGradient
-                        colors={['#6366F1', '#4F46E5']}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 0}}
-                        style={styles.pillGradient}
-                    >
-                        <Icon name="cart-outline" size={10} color="#fff"/>
-                        <Text style={styles.pillText}>CAMPUS SELLER</Text>
-                    </LinearGradient>
-                </View>
             </View>
 
-            <Icon name="chevron-forward" size={20} color={COLORS.light.textTertiary}/>
+            {/* Right: Action Icon */}
+            <Icon name="chevron-forward" size={20} color={COLORS.light.textTertiary} />
         </TouchableOpacity>
     );
 };
@@ -99,11 +105,11 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: COLORS.white, // Swapped from dark.card
+        backgroundColor: COLORS.white,
         borderRadius: THEME.borderRadius.lg,
         padding: THEME.spacing.md,
         borderWidth: 1,
-        borderColor: COLORS.light.border, // Swapped from dark.border
+        borderColor: COLORS.light.border,
     },
     avatarContainer: {
         position: "relative",
@@ -113,7 +119,7 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: COLORS.light.bg, // Swapped from dark.cardElevated
+        backgroundColor: COLORS.light.bg,
         borderWidth: 2,
         borderColor: COLORS.light.border,
     },
@@ -128,38 +134,26 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     nameRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: THEME.spacing[2],
+        marginBottom: 6,
     },
     name: {
         fontSize: THEME.fontSize.lg,
         fontWeight: THEME.fontWeight.bold,
-        color: COLORS.light.text, // Swapped from dark.text
-        marginRight: THEME.spacing[2],
+        color: COLORS.light.text,
+        letterSpacing: -0.4,
     },
-    ratingBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: THEME.spacing[2],
-        paddingVertical: THEME.spacing[1],
-        borderRadius: THEME.borderRadius.pill,
-        borderWidth: 1,
-        gap: 4,
-    },
-    ratingText: {
-        fontSize: THEME.fontSize.xs,
-        fontWeight: THEME.fontWeight.bold,
+    statsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     sellerBadge: {
-        marginBottom: THEME.spacing[2],
-        alignSelf: 'flex-start',
+        marginRight: 8,
     },
     pillGradient: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 8,
-        paddingVertical: 3,
+        paddingVertical: 4,
         borderRadius: 6,
         gap: 4,
     },
@@ -168,6 +162,19 @@ const styles = StyleSheet.create({
         fontSize: 9,
         fontWeight: '900',
         letterSpacing: 0.5,
+    },
+    ratingBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        borderWidth: 1,
+        gap: 3,
+    },
+    ratingText: {
+        fontSize: 10,
+        fontWeight: 'bold',
     },
 });
 

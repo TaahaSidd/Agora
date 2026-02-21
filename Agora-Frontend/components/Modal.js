@@ -1,92 +1,67 @@
 import React from 'react';
-import {View, Text, Modal, StyleSheet, TouchableOpacity} from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
+import { View, Text, Modal, StyleSheet, TouchableOpacity } from 'react-native';
 
-import Button from './Button';
+import { COLORS } from '../utils/colors';
 
-import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
+const MODAL_CONFIG = {
+    success: {
+        title: 'Success!',
+        primary: 'Continue',
+    },
+    warning: {
+        title: 'Warning',
+        primary: 'Yes, Continue',
+        secondary: 'Cancel',
+    },
+    error: {
+        title: 'Error',
+        primary: 'Try Again',
+        secondary: 'Cancel',
+    },
+    confirm: {
+        title: 'Confirm Action',
+        primary: 'Confirm',
+        secondary: 'Cancel',
+    },
+    delete: {
+        title: 'Delete Item?',
+        primary: 'Delete',
+        secondary: 'Cancel',
+        danger: true,
+    },
+    logout: {
+        title: 'Logout?',
+        primary: 'Logout',
+        secondary: 'Cancel',
+        danger: true,
+    },
+};
 
 const ModalComponent = ({
-                            visible,
-                            type = 'success',
-                            title,
-                            message,
-                            primaryButtonText,
-                            secondaryButtonText,
-                            onPrimaryPress,
-                            onSecondaryPress,
-                            onClose,
-                        }) => {
-    const getConfig = () => {
-        switch (type) {
-            case 'success':
-                return {
-                    title: title || 'Success!',
-                    primaryButtonText: primaryButtonText || 'Continue',
-                    showSecondary: false,
-                };
-            case 'warning':
-                return {
-                    title: title || 'Warning',
-                    primaryButtonText: primaryButtonText || 'Yes, Continue',
-                    secondaryButtonText: secondaryButtonText || 'Cancel',
-                    showSecondary: true,
-                };
-            case 'error':
-                return {
-                    title: title || 'Error',
-                    primaryButtonText: primaryButtonText || 'Try Again',
-                    secondaryButtonText: secondaryButtonText || 'Cancel',
-                    showSecondary: true,
-                };
-            case 'confirm':
-                return {
-                    title: title || 'Confirm Action',
-                    primaryButtonText: primaryButtonText || 'Confirm',
-                    secondaryButtonText: secondaryButtonText || 'Cancel',
-                    showSecondary: true,
-                };
-            case 'delete':
-                return {
-                    title: title || 'Delete Item?',
-                    primaryButtonText: primaryButtonText || 'Delete',
-                    secondaryButtonText: secondaryButtonText || 'Cancel',
-                    showSecondary: true,
-                };
-            case 'logout':
-                return {
-                    title: title || 'Logout?',
-                    primaryButtonText: primaryButtonText || 'Logout',
-                    secondaryButtonText: secondaryButtonText || 'Cancel',
-                    showSecondary: true,
-                };
-            default:
-                return {
-                    title: title || 'Information',
-                    primaryButtonText: primaryButtonText || 'OK',
-                    showSecondary: false,
-                };
-        }
+    visible,
+    type = 'success',
+    title,
+    message,
+    primaryButtonText,
+    secondaryButtonText,
+    onPrimaryPress,
+    onSecondaryPress,
+    onClose,
+}) => {
+    const base = MODAL_CONFIG[type] || {};
+
+    const config = {
+        title: title || base.title || 'Information',
+        primary: primaryButtonText || base.primary || 'OK',
+        secondary: secondaryButtonText || base.secondary,
+        danger: base.danger,
     };
 
-    const config = getConfig();
-
-    const handlePrimaryPress = () => {
-        if (onPrimaryPress) {
-            onPrimaryPress();
-        } else if (onClose) {
-            onClose();
-        }
+    const handlePress = (callback) => {
+        callback ? callback() : onClose?.();
     };
 
-    const handleSecondaryPress = () => {
-        if (onSecondaryPress) {
-            onSecondaryPress();
-        } else if (onClose) {
-            onClose();
-        }
-    };
+    const allowBackdropClose = !config.secondary;
 
     return (
         <Modal
@@ -98,51 +73,50 @@ const ModalComponent = ({
             <TouchableOpacity
                 style={styles.overlay}
                 activeOpacity={1}
-                onPress={config.showSecondary ? null : handleSecondaryPress}
+                onPress={allowBackdropClose ? onClose : undefined}
             >
-                <TouchableOpacity
-                    activeOpacity={1}
-                    onPress={(e) => e.stopPropagation()}
-                >
+                <TouchableOpacity activeOpacity={1}>
                     <View style={styles.container}>
                         {/* Title */}
                         <Text style={styles.title}>{config.title}</Text>
 
                         {/* Message */}
-                        {message && (
+                        {message ? (
                             <Text style={styles.message}>{message}</Text>
-                        )}
+                        ) : null}
 
                         {/* Divider */}
-                        <View style={styles.divider}/>
+                        <View style={styles.divider} />
 
                         {/* Buttons */}
-                        <View style={styles.buttonsContainer}>
-                            {config.showSecondary && (
+                        <View>
+                            {config.secondary && (
                                 <>
                                     <TouchableOpacity
                                         style={styles.button}
-                                        onPress={handleSecondaryPress}
                                         activeOpacity={0.7}
+                                        onPress={() => handlePress(onSecondaryPress)}
                                     >
                                         <Text style={styles.secondaryButtonText}>
-                                            {config.secondaryButtonText}
+                                            {config.secondary}
                                         </Text>
                                     </TouchableOpacity>
-                                    <View style={styles.buttonDivider}/>
+                                    <View style={styles.divider} />
                                 </>
                             )}
+
                             <TouchableOpacity
                                 style={styles.button}
-                                onPress={handlePrimaryPress}
                                 activeOpacity={0.7}
+                                onPress={() => handlePress(onPrimaryPress)}
                             >
-                                <Text style={[
-                                    styles.primaryButtonText,
-                                    type === 'delete' && styles.deleteButtonText,
-                                    type === 'logout' && styles.deleteButtonText,
-                                ]}>
-                                    {config.primaryButtonText}
+                                <Text
+                                    style={[
+                                        styles.primaryButtonText,
+                                        config.danger && styles.dangerText,
+                                    ]}
+                                >
+                                    {config.primary}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -156,68 +130,56 @@ const ModalComponent = ({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        // Using a slightly softer overlay for light mode
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0,0,0,0.45)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     container: {
-        width: 300,
-        backgroundColor: COLORS.white, // Changed from dark.card
-        borderRadius: 16,
-        overflow: 'hidden',
+        width: 280,
+        backgroundColor: COLORS.white,
+        borderRadius: 14,
         borderWidth: 1,
-        borderColor: COLORS.light.border, // Changed from dark.border
+        borderColor: COLORS.light.border,
+        overflow: 'hidden',
     },
     title: {
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: '700',
-        color: COLORS.light.text, // Changed from dark.text
+        color: COLORS.light.text,
         textAlign: 'center',
-        paddingHorizontal: 24,
-        paddingTop: 24,
-        paddingBottom: 8,
-        letterSpacing: -0.3,
+        paddingTop: 20,
+        paddingBottom: 6,
+        paddingHorizontal: 20,
     },
     message: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
-        textAlign: 'center',
-        paddingHorizontal: 24,
-        paddingBottom: 20,
-        lineHeight: 20,
+        fontSize: 13.5,
         fontWeight: '500',
-        letterSpacing: -0.1,
+        color: COLORS.light.textSecondary,
+        textAlign: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 16,
+        lineHeight: 19,
     },
     divider: {
         height: 1,
         backgroundColor: COLORS.light.border,
     },
-    buttonsContainer: {
-        flexDirection: 'column',
-    },
     button: {
-        paddingVertical: 16,
+        paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    buttonDivider: {
-        height: 1,
-        backgroundColor: COLORS.light.border,
-    },
     primaryButtonText: {
-        fontSize: 16,
+        fontSize: 15.5,
         fontWeight: '700',
         color: COLORS.primary,
-        letterSpacing: -0.2,
     },
     secondaryButtonText: {
-        fontSize: 16,
+        fontSize: 15.5,
         fontWeight: '600',
         color: COLORS.light.textSecondary,
-        letterSpacing: -0.2,
     },
-    deleteButtonText: {
+    dangerText: {
         color: '#EF4444',
     },
 });

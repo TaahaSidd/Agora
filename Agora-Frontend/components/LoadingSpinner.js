@@ -3,9 +3,9 @@ import { View, Animated, StyleSheet, Easing } from 'react-native';
 import { COLORS } from '../utils/colors';
 
 const LoadingSpinner = ({
-                            size = 'medium',
-                            color = COLORS.primary,
-                        }) => {
+    size = 'medium',
+    color = COLORS.primary,
+}) => {
     const spinValue = useRef(new Animated.Value(0)).current;
 
     const sizes = {

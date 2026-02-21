@@ -64,15 +64,15 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: COLORS.light.text, // Swapped from dark.text
+        color: COLORS.light.text,
         marginBottom: 14,
         letterSpacing: -0.3,
     },
     optionsCard: {
-        backgroundColor: COLORS.white, // Swapped from dark.card
+        backgroundColor: COLORS.white,
         borderRadius: 18,
         borderWidth: 1,
-        borderColor: COLORS.light.border, // Swapped from dark.border
+        borderColor: COLORS.light.border,
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.light.border, // Swapped from dark.border
+        borderBottomColor: COLORS.light.border,
     },
     lastItem: {
         borderBottomWidth: 0,
@@ -116,12 +116,12 @@ const styles = StyleSheet.create({
     optionText: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.light.text, // Swapped from dark.text
+        color: COLORS.light.text,
         letterSpacing: -0.2,
     },
     optionDescription: {
         fontSize: 12,
-        color: COLORS.light.textTertiary, // Swapped from dark.textTertiary
+        color: COLORS.light.textTertiary,
         marginTop: 2,
         fontWeight: '500',
         letterSpacing: -0.1,

@@ -1,54 +1,69 @@
-import React, {useState} from 'react';
-import {ActivityIndicator, StyleSheet, TouchableOpacity, View} from 'react-native';
+import React, { useRef } from 'react';
+import { StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {THEME} from '../utils/theme';
-import {COLORS} from '../utils/colors'; // Added COLORS import
-import {useFavorites} from '../context/FavoritesContext';
-import {useUserStore} from '../stores/userStore';
+import { THEME } from '../utils/theme';
+import { COLORS } from '../utils/colors';
+import { useFavorites } from '../context/FavoritesContext';
+import { useUserStore } from '../stores/userStore';
 
-const FavoriteButton = ({listingId, size = 22, style, onGuestPress}) => {
-    const {favorites, toggleFavorite} = useFavorites();
-    const {isGuest} = useUserStore();
-    const [loading, setLoading] = useState(false);
+const FavoriteButton = ({ listingId, size = 22, style, onGuestPress }) => {
+    const { favorites, toggleFavorite } = useFavorites();
+    const { isGuest } = useUserStore();
 
+    // Scale value for the "Pop" animation
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    // This is now instant because the Context updates immediately
     const isFavorite = favorites.some(f => f.id === listingId);
 
-    const handlePress = async () => {
+    const animateButton = () => {
+        // Reset scale to 1 first in case of rapid clicks
+        scaleAnim.setValue(1);
+
+        Animated.sequence([
+            Animated.timing(scaleAnim, {
+                toValue: 1.3,
+                duration: 100,
+                useNativeDriver: true,
+                easing: Easing.out(Easing.ease),
+            }),
+            Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 150,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    };
+
+    const handlePress = () => {
         if (isGuest) {
-            if (onGuestPress) {
-                onGuestPress();
-            }
+            onGuestPress?.();
             return;
         }
 
-        if (loading) return;
-        setLoading(true);
-        try {
-            await toggleFavorite(listingId);
-        } catch (err) {
-            console.log("Favorite toggle failed:", err.message);
-        } finally {
-            setLoading(false);
-        }
+        animateButton();
+
+        toggleFavorite(listingId);
     };
 
     return (
-        <TouchableOpacity
-            onPress={handlePress}
-            style={[styles.button, style]}
-            activeOpacity={0.7}
-        >
-            {loading ? (
-                <ActivityIndicator size="small" color={COLORS.primary}/>
-            ) : (
+        <Animated.View style={[
+            styles.button,
+            style,
+            { transform: [{ scale: scaleAnim }] }
+        ]}>
+            <TouchableOpacity
+                onPress={handlePress}
+                activeOpacity={0.8}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
                 <Icon
                     name={isFavorite ? 'heart' : 'heart-outline'}
                     size={size}
-                    // In light mode, outline is better as a dark gray/black for contrast
                     color={isFavorite ? '#EF4444' : COLORS.light.text}
                 />
-            )}
-        </TouchableOpacity>
+            </TouchableOpacity>
+        </Animated.View>
     );
 };
 
@@ -60,9 +75,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         padding: THEME.spacing.sm - 2,
         borderRadius: THEME.borderRadius.full,
-        elevation: 2,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
         borderWidth: 1,
         borderColor: 'rgba(0,0,0,0.05)',
+        zIndex: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
 

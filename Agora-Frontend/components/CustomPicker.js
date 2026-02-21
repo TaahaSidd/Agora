@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 15,
         fontWeight: '700',
-        color: COLORS.light.text, // Changed
+        color: COLORS.light.text,
         marginBottom: 10,
     },
 
@@ -169,10 +169,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: COLORS.white, // Changed
+        backgroundColor: COLORS.white,
         borderRadius: 14,
         borderWidth: 1.5,
-        borderColor: COLORS.light.border, // Changed
+        borderColor: COLORS.light.border,
         paddingHorizontal: 16,
         height: 52,
         shadowColor: "#000",
@@ -200,12 +200,12 @@ const styles = StyleSheet.create({
     pickerText: {
         fontSize: 15,
         fontWeight: '500',
-        color: COLORS.light.text, // Changed
+        color: COLORS.light.text,
         flex: 1,
     },
 
     placeholderText: {
-        color: COLORS.light.textTertiary, // Changed
+        color: COLORS.light.textTertiary,
         fontWeight: '500',
     },
 
@@ -219,12 +219,12 @@ const styles = StyleSheet.create({
 
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)', // Changed to standard light overlay
+        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'flex-end',
     },
 
     modalContent: {
-        backgroundColor: COLORS.white, // Changed
+        backgroundColor: COLORS.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         maxHeight: '80%',
@@ -243,13 +243,13 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.light.border, // Changed
+        borderBottomColor: COLORS.light.border,
     },
 
     modalTitle: {
         fontSize: 20,
         fontWeight: '800',
-        color: COLORS.light.text, // Changed
+        color: COLORS.light.text,
         letterSpacing: -0.3,
     },
 
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: COLORS.light.bg, // Changed
+        backgroundColor: COLORS.light.bg,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -276,17 +276,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderRadius: 12,
         marginBottom: 8,
-        backgroundColor: COLORS.light.bg, // Changed
+        backgroundColor: COLORS.light.bg,
     },
 
     optionItemSelected: {
-        backgroundColor: COLORS.white, // Changed
+        backgroundColor: COLORS.white,
         borderWidth: 1.5,
         borderColor: COLORS.primary,
     },
 
     lastItem: {
-        marginBottom: 0,
+        marginBottom: 40,
     },
 
     optionContent: {
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: COLORS.white, // Changed
+        backgroundColor: COLORS.white,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     optionText: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.light.textSecondary, // Changed
+        color: COLORS.light.textSecondary,
         flex: 1,
     },
 
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     },
 
     optionTextDisabled: {
-        color: COLORS.light.textTertiary, // Changed
+        color: COLORS.light.textTertiary,
     },
 
     checkmarkContainer: {

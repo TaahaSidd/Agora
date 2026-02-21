@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Animated, StyleSheet, Text, View} from 'react-native';
-import {LinearGradient} from 'expo-linear-gradient';
-import {COLORS} from "../utils/colors";
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from "../utils/colors";
 
-const DynamicHeader = ({userName = 'there'}) => {
+const DynamicHeader = ({ userName = 'there' }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const slideAnim = useRef(new Animated.Value(0)).current;
@@ -12,47 +12,57 @@ const DynamicHeader = ({userName = 'there'}) => {
     const pulseAnim = useRef(new Animated.Value(1)).current;
 
     const getTimeBasedGreeting = () => {
-        const hour = new Date().getHours();
+        const date = new Date();
+        const hour = date.getHours();
+        const day = date.getDay(); 
 
-        // 1. LATE NIGHT (00:00 - 04:59)
+        if (day === 0) {
+            return [
+                { text: 'Campus on Standby', gradient: ['#E0E7FF', '#C7D2FE'], textColor: '#3730A3' },
+                { text: 'Sukoon...', gradient: ['#D1FAE5', '#A7F3D0'], textColor: '#065F46' },
+                { text: 'Academic Detox', gradient: ['#FCE7F3', '#FBCFE8'], textColor: '#9F1239' },
+                { text: 'Slow Motion Day', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E' },
+                { text: 'Zero Pressure.', gradient: ['#E9D5FF', '#D8B4FE'], textColor: '#6B21A8' },
+                { text: 'Sunday Solitude', gradient: ['#DBEAFE', '#BFDBFE'], textColor: '#1E40AF' }
+            ];
+        }
+
         if (hour < 5) {
             return [
-                {text: 'Maggi Break?', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6'},
-                {text: 'Late Night Deals?', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E'},
-                {text: 'One Last Scroll?', gradient: ['#E9D5FF', '#D8B4FE'], textColor: '#6B21A8'},
-                {text: 'Abhi tak jaag rahe ho?', gradient: ['#BFDBFE', '#93C5FD'], textColor: '#1E40AF'}
+                { text: 'Maggi Break?', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6' },
+                { text: 'Late Night Deals?', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E' },
+                { text: 'One Last Scroll?', gradient: ['#E9D5FF', '#D8B4FE'], textColor: '#6B21A8' },
+                { text: 'Abhi tak jaag rahe ho?', gradient: ['#BFDBFE', '#93C5FD'], textColor: '#1E40AF' }
             ];
         }
-        // 2. MORNING (05:00 - 11:59)
-        else if (hour < 12) {
+
+        if (hour < 12) {
             return [
-                {text: 'Aaiye Aaiye!', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E'},
-                {text: 'Morning Hustle!', gradient: ['#DBEAFE', '#BFDBFE'], textColor: '#1E40AF'},
-                {text: 'Chalo, Uth Jao!', gradient: ['#FCE7F3', '#FBCFE8'], textColor: '#9F1239'},
-                {text: 'Early Bird Deals?', gradient: ['#D1FAE5', '#A7F3D0'], textColor: '#065F46'},
-                {text: '8 AM Lecture?', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E'}
+                { text: 'Aaiye Aaiye!', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E' },
+                { text: 'Morning Hustle!', gradient: ['#DBEAFE', '#BFDBFE'], textColor: '#1E40AF' },
+                { text: 'Chalo, Uth Jao!', gradient: ['#FCE7F3', '#FBCFE8'], textColor: '#9F1239' },
+                { text: 'Early Bird Deals?', gradient: ['#D1FAE5', '#A7F3D0'], textColor: '#065F46' },
+                { text: '8 AM Lecture?', gradient: ['#FEF3C7', '#FDE68A'], textColor: '#92400E' }
             ];
         }
-        // 3. AFTERNOON (12:00 - 16:59)
-        else if (hour < 17) {
+
+        if (hour < 17) {
             return [
-                {text: 'Namaste Ji!', gradient: ['#E0E7FF', '#C7D2FE'], textColor: '#3730A3'},
-                {text: 'Kya Haal Chaal?', gradient: ['#D1FAE5', '#A7F3D0'], textColor: '#065F46'},
-                {text: 'Lecture Bored?', gradient: ['#FED7AA', '#FDBA74'], textColor: '#9A3412'},
-                {text: 'Lunch Break?', gradient: ['#E0E7FF', '#C7D2FE'], textColor: '#3730A3'},
-                {text: 'Arrey Machaa!', gradient: ['#FCE7F3', '#FBCFE8'], textColor: '#9F1239'}
+                { text: 'Namaste Ji!', gradient: ['#E0E7FF', '#C7D2FE'], textColor: '#3730A3' },
+                { text: 'Kya Haal Chaal?', gradient: ['#D1FAE5', '#A7F3D0'], textColor: '#065F46' },
+                { text: 'Lecture Bored?', gradient: ['#FED7AA', '#FDBA74'], textColor: '#9A3412' },
+                { text: 'Lunch Break?', gradient: ['#E0E7FF', '#C7D2FE'], textColor: '#3730A3' },
+                { text: 'Arrey Machaa!', gradient: ['#FCE7F3', '#FBCFE8'], textColor: '#9F1239' }
             ];
         }
-        // 4. EVENING (17:00 - 23:59)
-        else {
-            return [
-                {text: 'Shaam ki Gedi!', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6'},
-                {text: 'Good Evening!', gradient: ['#BFDBFE', '#93C5FD'], textColor: '#1E40AF'},
-                {text: 'One Last Scroll?', gradient: ['#E9D5FF', '#D8B4FE'], textColor: '#6B21A8'},
-                {text: 'Maggi Break?', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6'},
-                {text: 'Late Night Deals?', gradient: ['#FDE68A', '#FEF3C7'], textColor: '#92400E'}
-            ];
-        }
+
+        return [
+            { text: 'Shaam ki Gedi!', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6' },
+            { text: 'Good Evening!', gradient: ['#BFDBFE', '#93C5FD'], textColor: '#1E40AF' },
+            { text: 'One Last Scroll?', gradient: ['#E9D5FF', '#D8B4FE'], textColor: '#6B21A8' },
+            { text: 'Maggi Break?', gradient: ['#DDD6FE', '#C4B5FD'], textColor: '#5B21B6' },
+            { text: 'Late Night Deals?', gradient: ['#FDE68A', '#FEF3C7'], textColor: '#92400E' }
+        ];
     };
 
     const messages = getTimeBasedGreeting();
@@ -145,20 +155,20 @@ const DynamicHeader = ({userName = 'there'}) => {
             <Animated.View
                 style={[
                     styles.gradientWrapper,
-                    {transform: [{scale: pulseAnim}]}
+                    { transform: [{ scale: pulseAnim }] }
                 ]}
             >
                 <LinearGradient
                     colors={currentMessage.gradient}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 1}}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={styles.gradient}
                 >
                     <Animated.View
                         style={[
                             styles.shimmer,
                             {
-                                transform: [{translateX: shimmerTranslate}],
+                                transform: [{ translateX: shimmerTranslate }],
                             },
                         ]}
                     />
@@ -170,11 +180,11 @@ const DynamicHeader = ({userName = 'there'}) => {
                     styles.textContainer,
                     {
                         opacity: fadeAnim,
-                        transform: [{translateY: slideAnim}, {scale: scaleAnim}],
+                        transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
                     },
                 ]}
             >
-                <Text style={[styles.greetingOnly, {color: currentMessage.textColor}]}>
+                <Text style={[styles.greetingOnly, { color: currentMessage.textColor }]}>
                     {currentMessage.text}
                 </Text>
             </Animated.View>
