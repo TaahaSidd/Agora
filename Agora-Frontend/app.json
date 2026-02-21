@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Agora-Frontend",
+    "name": "Agora – Student Marketplace",
     "slug": "Agora-Frontend",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/LogoApp.png",
     "userInterfaceStyle": "light",
@@ -22,9 +22,11 @@
         "foregroundImage": "./assets/LogoApp.png",
         "backgroundColor": "#001F3F"
       },
+      "versionCode": 2,
       "edgeToEdgeEnabled": true,
       "package": "com.Agora.App",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -49,6 +51,7 @@
       "eas": {
         "projectId": "ab8254ef-e49b-437f-be6a-ff0a040dd210"
       }
-    }
+    },
+    "owner": "taaha1290"
   }
 }
