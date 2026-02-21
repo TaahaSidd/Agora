@@ -1,5 +1,6 @@
 package com.Agora.Agora.Controller;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Agora.Agora.Dto.Request.CollegeReqDto;
@@ -63,6 +65,16 @@ public class CollegeController {
     public ResponseEntity<Void> deleteCollege(@Valid @PathVariable Long id) {
         collegeService.deleteCollege(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Search colleges
+    @GetMapping("/colleges/search")
+    public ResponseEntity<List<CollegeResponseDto>> searchColleges(
+            @RequestParam(name = "query", defaultValue = "") String query) {
+        if (query.trim().length() < 2) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+        return ResponseEntity.ok(collegeService.searchColleges(query));
     }
 
 }

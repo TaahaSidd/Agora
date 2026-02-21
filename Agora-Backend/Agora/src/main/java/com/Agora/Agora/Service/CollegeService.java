@@ -3,6 +3,7 @@ package com.Agora.Agora.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.Agora.Agora.Dto.Request.CollegeReqDto;
@@ -42,10 +43,19 @@ public class CollegeService {
     }
 
     // Get All Colleges.
-    public List<CollegeResponseDto> getAllColleges  () {
+    public List<CollegeResponseDto> getAllColleges() {
         List<College> college = collegeRepo.findAll();
 
         return college.stream()
+                .map(dto::mapToCollegeResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    //Search Colleges.
+    public List<CollegeResponseDto> searchColleges(String query) {
+        PageRequest limit = PageRequest.of(0, 20);
+        List<College> colleges = collegeRepo.searchByCollegeName(query.trim(), limit);
+        return colleges.stream()
                 .map(dto::mapToCollegeResponseDto)
                 .collect(Collectors.toList());
     }

@@ -243,10 +243,20 @@ public class NotificationService {
         }
     }
 
-    @Scheduled(cron = "0 0 21 * * *")
+    @Scheduled(cron = "0 0 21 * * MON,WED,FRI,SUN")
     public void sendDailyUpdate() {
-        String title = "Daily Update";
-        String body = "Here is your daily update from Agora.";
+
+        String[] messages = {
+                "Check out what's new on campus today! 🎓",
+                "Dorm spring cleaning? Turn your items into cash! 💰",
+                "Safe Tip: Always meet in well-lit campus areas for exchanges. 🛡️",
+                "Someone might be looking for what you have! Post a listing today. 🚀",
+                "Browse latest deals from students at your college. 🎒"
+        };
+
+        String body = messages[new java.util.Random().nextInt(messages.length)];
+        String title = "Agora Campus Update";
+
         sendSystemNotification(title, body);
     }
 
