@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as SecureStore from 'expo-secure-store';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 //const BASE_URL = "http://192.168.8.15:9000/Agora";
 // const BASE_URL = "https://francisca-overjocular-cheryle.ngrok-free.dev/Agora";
@@ -16,17 +16,15 @@ async function refreshJwt() {
     if (!refreshToken) throw new Error('No refresh token');
 
     try {
-        const res = await authApi.post('/auth/refresh', {refreshToken});
-        const {jwt: newJwt, refreshToken: newRefresh} = res.data;
+        const res = await authApi.post('/auth/refresh', { refreshToken });
+        const { jwt: newJwt, refreshToken: newRefresh } = res.data;
 
-        // ⭐ Only save to accessToken (single token key)
         await SecureStore.setItemAsync('accessToken', newJwt);
         if (newRefresh) await SecureStore.setItemAsync('refreshToken', newRefresh);
         return newJwt;
     } catch (err) {
-        // ⭐ Clear ALL tokens on refresh failure
         await SecureStore.deleteItemAsync('accessToken');
-        await SecureStore.deleteItemAsync('authToken'); // Clean up legacy token
+        await SecureStore.deleteItemAsync('authToken');
         await SecureStore.deleteItemAsync('refreshToken');
         await SecureStore.deleteItemAsync('currentUser');
 
@@ -43,7 +41,7 @@ export const api = axios.create({
 async function isJwtExpired(token) {
     if (!token) return true;
     try {
-        const {exp} = jwtDecode(token);
+        const { exp } = jwtDecode(token);
         return Date.now() >= exp * 1000;
     } catch (e) {
         return true;
@@ -52,13 +50,13 @@ async function isJwtExpired(token) {
 
 api.interceptors.request.use(
     async (config) => {
-        // Skip auth for refresh endpoint
         if (config.url.includes("/auth/refresh")) {
             return config;
         }
 
         const publicEndpoints = [
             "/college/colleges",
+            "/college/colleges/search",
             "/auth/login",
             "/auth/signup",
             "/auth/google-signin",
@@ -72,7 +70,6 @@ api.interceptors.request.use(
 
         const isPublic = publicEndpoints.some((url) => config.url.includes(url));
 
-        // ⭐ Only check accessToken (single source of truth)
         let token = await SecureStore.getItemAsync("accessToken");
 
         if (!token) {
@@ -80,7 +77,6 @@ api.interceptors.request.use(
             return config;
         }
 
-        // Check if token is expired
         if (await isJwtExpired(token)) {
             console.log('⏰ INTERCEPTOR - Token expired, refreshing...');
             try {
@@ -95,12 +91,11 @@ api.interceptors.request.use(
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            console.log('✅ INTERCEPTOR - Auth header set');
+            console.log('INTERCEPTOR - Auth header set');
         } else {
-            console.log('⚠️ INTERCEPTOR - No token, making public request');
+            console.log('INTERCEPTOR - No token, making public request');
         }
 
-        // Handle FormData
         if (config.data instanceof FormData) {
             config.headers['Content-Type'] = 'multipart/form-data';
         }
@@ -134,15 +129,20 @@ export const getColleges = async () => {
     return res.data;
 };
 
+export const searchColleges = async (query) => {
+    const res = await api.get('/college/colleges/search', { params: { query } });
+    return res.data;
+};
+
 export const apiGet = async (endpoint, params = {}) => {
-    const res = await api.get(endpoint, {params});
+    const res = await api.get(endpoint, { params });
     return res.data;
 };
 
 export const apiPost = async (endpoint, body) => {
     const config = {};
     if (body instanceof FormData) {
-        config.headers = {'Content-Type': 'multipart/form-data'};
+        config.headers = { 'Content-Type': 'multipart/form-data' };
         config.transformRequest = [(data) => data];
     }
     const res = await api.post(endpoint, body, config);
@@ -167,20 +167,20 @@ export const apiPatch = async (endpoint, body) => {
 // ===== AUTH FUNCTIONS =====
 
 export const sendOtpForLogin = async (email) => {
-    return await apiPost('/auth/send-otp/login', {email});
+    return await apiPost('/auth/send-otp/login', { email });
 };
 
 export const sendOtpForSignup = async (email) => {
-    return await apiPost('/auth/send-otp/signup', {email});
+    return await apiPost('/auth/send-otp/signup', { email });
 };
 
 export const loginWithOtp = async (email, otp, expoPushToken) => {
-    const payload = {email, otp, expoPushToken};
+    const payload = { email, otp, expoPushToken };
     return await apiPost('/auth/login/otp', payload);
 };
 
 export const signupWithOtp = async (email, otp, collegeId, expoPushToken) => {
-    const payload = {email, otp, collegeId, expoPushToken};
+    const payload = { email, otp, collegeId, expoPushToken };
     return await apiPost('/auth/signup/otp', payload);
 };
 
@@ -194,10 +194,11 @@ export const login = async (payload) => {
 
 export const completeProfile = async (token, profileData) => {
     const res = await api.put('/auth/complete-profile', profileData, {
-        headers: {'Authorization': `Bearer ${token}`}
+        headers: { 'Authorization': `Bearer ${token}` }
     });
     return res.data;
 };
+
 
 // ===== UTILITY FUNCTIONS =====
 
