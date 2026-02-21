@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Dimensions,
     FlatList,
@@ -10,9 +10,9 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import {useNavigation, useRoute} from "@react-navigation/native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {Image} from "expo-image";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Image } from "expo-image";
 import ImageViewing from 'react-native-image-viewing';
 
 import Icon from "react-native-vector-icons/Ionicons";
@@ -28,28 +28,28 @@ import SafetyTips from "../components/SafetyTips";
 import BottomSheetMenu from "../components/BottomSheetMenu";
 import ToastMessage from "../components/ToastMessage";
 
-import {shareItem} from '../services/share';
-import {useUserStore} from "../stores/userStore";
-import {useListings} from "../hooks/useListings";
+import { shareItem } from '../services/share';
+import { useUserStore } from "../stores/userStore";
+import { useListings } from "../hooks/useListings";
 
-import {COLORS} from "../utils/colors";
-import {THEME} from "../utils/theme";
-import {formatPrice} from '../utils/formatters';
+import { COLORS } from "../utils/colors";
+import { THEME } from "../utils/theme";
+import { formatPrice } from '../utils/formatters';
 
 
-const {height, width} = Dimensions.get("window");
+const { height, width } = Dimensions.get("window");
 
 export default function ProductDetailsScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
     const route = useRoute();
     const product = route.params?.item;
-    const {items: allListings} = useListings();
-    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
-    const showToast = ({type, title, message}) => {
-        setToast({visible: true, type, title, message});
+    const { items: allListings } = useListings();
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
+    const showToast = ({ type, title, message }) => {
+        setToast({ visible: true, type, title, message });
     };
-    const {currentUser, loading, isGuest} = useUserStore();
+    const { currentUser, loading, isGuest } = useUserStore();
     const isOwnListing = currentUser?.id === product?.seller?.id;
     const [isViewerVisible, setIsViewerVisible] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -61,12 +61,12 @@ export default function ProductDetailsScreen() {
 
     if (!product) {
         return (
-            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.light.bg}}>
-                <Text style={{color: COLORS.light.text}}>Product not found!</Text>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.light.bg }}>
+                <Text style={{ color: COLORS.light.text }}>Product not found!</Text>
             </View>);
     }
 
-    const images = product?.images?.length ? product.images : product?.image ? [{uri: product.image}] : [require("../assets/no-image.jpg")];
+    const images = product?.images?.length ? product.images : product?.image ? [{ uri: product.image }] : [require("../assets/no-image.jpg")];
 
     const productName = product?.title || product?.name || "Product";
     const productPrice = product?.price ? (product.price.includes('₹') ? product.price : `₹ ${product.price}`) : "N/A";
@@ -78,7 +78,7 @@ export default function ProductDetailsScreen() {
     const scrollViewRef = useRef(null);
 
     useEffect(() => {
-        scrollViewRef.current?.scrollTo({y: 0, animated: false});
+        scrollViewRef.current?.scrollTo({ y: 0, animated: false });
     }, [product?.id]);
 
     const openChatRoom = async () => {
@@ -136,7 +136,7 @@ export default function ProductDetailsScreen() {
         if (currentImageIndex < images.length - 1) {
             const nextIndex = currentImageIndex + 1;
             setCurrentImageIndex(nextIndex);
-            flatListRef.current?.scrollToIndex({index: nextIndex, animated: true});
+            flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
         }
     };
 
@@ -144,11 +144,11 @@ export default function ProductDetailsScreen() {
         if (currentImageIndex > 0) {
             const prevIndex = currentImageIndex - 1;
             setCurrentImageIndex(prevIndex);
-            flatListRef.current?.scrollToIndex({index: prevIndex, animated: true});
+            flatListRef.current?.scrollToIndex({ index: prevIndex, animated: true });
         }
     };
 
-    const onViewableItemsChanged = useRef(({viewableItems}) => {
+    const onViewableItemsChanged = useRef(({ viewableItems }) => {
         if (viewableItems.length > 0) {
             setCurrentImageIndex(viewableItems[0].index);
         }
@@ -158,7 +158,7 @@ export default function ProductDetailsScreen() {
         itemVisiblePercentThreshold: 50
     }).current;
 
-    const renderImageItem = ({item, index}) => (<TouchableOpacity
+    const renderImageItem = ({ item, index }) => (<TouchableOpacity
         onPress={() => {
             setCurrentImageIndex(index);
             setIsViewerVisible(true);
@@ -167,233 +167,237 @@ export default function ProductDetailsScreen() {
         activeOpacity={0.9}
     >
         <Image
-            source={typeof item === 'string' ? {uri: item} : item}
+            source={typeof item === 'string' ? { uri: item } : item}
             style={styles.productImage}
             resizeMode="cover"
         />
     </TouchableOpacity>);
 
     return (<View style={styles.container}>
-            <StatusBar barStyle="dark-content" translucent backgroundColor="transparent"/>
+        <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
-            {/* Floating Header */}
-            <View style={styles.headerRow}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-                    <Icon name="arrow-back" size={24} color="#000"/>
+        {/* Floating Header */}
+        <View style={styles.headerRow}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+                <Icon name="arrow-back" size={24} color="#000" />
+            </TouchableOpacity>
+
+            <View style={styles.headerActions}>
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setShowMenu(true)}
+                    style={styles.iconBtn}
+                >
+                    <Ionicons name="ellipsis-vertical" size={20} color="#000" />
                 </TouchableOpacity>
+            </View>
+        </View>
 
-                <View style={styles.headerActions}>
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={() => setShowMenu(true)}
-                        style={styles.iconBtn}
+        <ScrollView ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
+            {/* Image Carousel */}
+            <View style={styles.imageContainer}>
+                <FlatList
+                    ref={flatListRef}
+                    data={images}
+                    renderItem={renderImageItem}
+                    keyExtractor={(item, index) => index.toString()}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    viewabilityConfig={viewabilityConfig}
+                    getItemLayout={(data, index) => ({
+                        length: width, offset: width * index, index,
+                    })}
+                />
+
+                {/* Navigation Arrows */}
+                {images.length > 1 && (<>
+                    {currentImageIndex > 0 && (<TouchableOpacity
+                        style={[styles.arrowButton, styles.leftArrow]}
+                        onPress={handlePreviousImage}
+                        activeOpacity={0.8}
                     >
-                        <Ionicons name="ellipsis-vertical" size={20} color="#000"/>
-                    </TouchableOpacity>
-                </View>
+                        <Icon name="chevron-back" size={24} color="#fff" />
+                    </TouchableOpacity>)}
+                    {currentImageIndex < images.length - 1 && (<TouchableOpacity
+                        style={[styles.arrowButton, styles.rightArrow]}
+                        onPress={handleNextImage}
+                        activeOpacity={0.8}
+                    >
+                        <Icon name="chevron-forward" size={24} color="#fff" />
+                    </TouchableOpacity>)}
+                </>)}
+
+                {/* Dot Indicators */}
+                {images.length > 1 && (<View style={styles.dotContainer}>
+                    {images.map((_, index) => (<View
+                        key={index}
+                        style={[styles.dot, currentImageIndex === index && styles.activeDot]}
+                    />))}
+                </View>)}
+
+                <ImageViewing
+                    images={images.map(img => (typeof img === 'string' ? { uri: img } : img))}
+                    imageIndex={currentImageIndex}
+                    visible={isViewerVisible}
+                    onRequestClose={() => setIsViewerVisible(false)}
+                />
             </View>
 
-            <ScrollView ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Image Carousel */}
-                <View style={styles.imageContainer}>
-                    <FlatList
-                        ref={flatListRef}
-                        data={images}
-                        renderItem={renderImageItem}
-                        keyExtractor={(item, index) => index.toString()}
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        onViewableItemsChanged={onViewableItemsChanged}
-                        viewabilityConfig={viewabilityConfig}
-                        getItemLayout={(data, index) => ({
-                            length: width, offset: width * index, index,
-                        })}
-                    />
-
-                    {/* Navigation Arrows */}
-                    {images.length > 1 && (<>
-                        {currentImageIndex > 0 && (<TouchableOpacity
-                            style={[styles.arrowButton, styles.leftArrow]}
-                            onPress={handlePreviousImage}
-                            activeOpacity={0.8}
-                        >
-                            <Icon name="chevron-back" size={24} color="#fff"/>
-                        </TouchableOpacity>)}
-                        {currentImageIndex < images.length - 1 && (<TouchableOpacity
-                            style={[styles.arrowButton, styles.rightArrow]}
-                            onPress={handleNextImage}
-                            activeOpacity={0.8}
-                        >
-                            <Icon name="chevron-forward" size={24} color="#fff"/>
-                        </TouchableOpacity>)}
-                    </>)}
-
-                    {/* Dot Indicators */}
-                    {images.length > 1 && (<View style={styles.dotContainer}>
-                        {images.map((_, index) => (<View
-                            key={index}
-                            style={[styles.dot, currentImageIndex === index && styles.activeDot]}
-                        />))}
-                    </View>)}
-
-                    <ImageViewing
-                        images={images.map(img => (typeof img === 'string' ? {uri: img} : img))}
-                        imageIndex={currentImageIndex}
-                        visible={isViewerVisible}
-                        onRequestClose={() => setIsViewerVisible(false)}
-                    />
+            {/* Main Content */}
+            <View style={styles.content}>
+                <View style={styles.titleSection}>
+                    <Text style={styles.productName} numberOfLines={2}>
+                        {productName}
+                    </Text>
+                    <View style={styles.favoriteContainer}>
+                        <FavoriteButton listingId={product.id} size={28} />
+                    </View>
                 </View>
 
-                {/* Main Content */}
-                <View style={styles.content}>
-                    <View style={styles.titleSection}>
-                        <Text style={styles.productName}>{productName}</Text>
-                        <FavoriteButton listingId={product.id} size={28}/>
-                    </View>
+                <Text style={styles.productPrice}>{formatPrice(productPrice)}</Text>
 
-                    <Text style={styles.productPrice}>{formatPrice(productPrice)}</Text>
-
-                    {/* College Row */}
-                    <View style={styles.infoRow}>
-                        <View style={styles.infoItem}>
-                            <View style={styles.infoIconCircle}>
-                                <Icon name="school" size={16} color={COLORS.primary}/>
-                            </View>
-                            <View style={styles.infoTextContainer}>
-                                <Text style={styles.infoLabel}>College</Text>
-                                <Text style={styles.infoValue} numberOfLines={1}>{productCollege}</Text>
-                            </View>
+                {/* College Row */}
+                <View style={styles.infoRow}>
+                    <View style={styles.infoItem}>
+                        <View style={styles.infoIconCircle}>
+                            <Icon name="school" size={16} color={COLORS.primary} />
+                        </View>
+                        <View style={styles.infoTextContainer}>
+                            <Text style={styles.infoLabel}>College</Text>
+                            <Text style={styles.infoValue} numberOfLines={1}>{productCollege}</Text>
                         </View>
                     </View>
+                </View>
 
-                    <Text style={styles.sectionTitle}>Description</Text>
-                    <ExpandableText text={productDescription || "No description available."}/>
+                <Text style={styles.sectionTitle}>Description</Text>
+                <ExpandableText text={productDescription || "No description available."} />
 
-                    <View style={styles.sectionDivider}/>
+                <View style={styles.sectionDivider} />
 
-                    <Text style={styles.sectionTitle}>Seller</Text>
-                    <SellerCard
-                        seller={product.seller}
-                        sellerSince={sellerSince}
-                        currentUser={currentUser}
-                        onPress={() => navigation.navigate("ProfileScreen", {
-                            sellerId: product.seller.id, profileImage: product.seller.profileImage
-                        })}
+                <Text style={styles.sectionTitle}>Seller</Text>
+                <SellerCard
+                    seller={product.seller}
+                    sellerSince={sellerSince}
+                    currentUser={currentUser}
+                    onPress={() => navigation.navigate("ProfileScreen", {
+                        sellerId: product.seller.id, profileImage: product.seller.profileImage
+                    })}
+                />
+
+                <View style={styles.sectionDivider} />
+
+                <Text style={styles.sectionTitle}>Product Details</Text>
+                <View style={styles.detailsGrid}>
+                    <ProductDetailItem label="Condition" value={productCondition} />
+                    <ProductDetailItem
+                        label="Category"
+                        value={product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : 'N/A'}
                     />
+                    <ProductDetailItem label="Availability" value={product.itemStatus} type="availability" />
+                </View>
 
-                    <View style={styles.sectionDivider}/>
+                <View style={styles.sectionDivider} />
 
-                    <Text style={styles.sectionTitle}>Product Details</Text>
-                    <View style={styles.detailsGrid}>
-                        <ProductDetailItem label="Condition" value={productCondition}/>
-                        <ProductDetailItem
-                            label="Category"
-                            value={product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : 'N/A'}
-                        />
-                        <ProductDetailItem label="Availability" value={product.itemStatus} type="availability"/>
-                    </View>
+                <View style={styles.relatedHeader}>
+                    <Text style={styles.sectionTitle}>Similar Listings</Text>
+                </View>
 
-                    <View style={styles.sectionDivider}/>
-
-                    <View style={styles.relatedHeader}>
-                        <Text style={styles.sectionTitle}>Similar Listings</Text>
-                    </View>
-
-                    {relatedListings.length === 0 ? (<View style={styles.emptyRelatedContainer}>
-                        <Ionicons name="cube-outline" size={32} color={COLORS.gray400}/>
-                        <Text style={styles.emptyRelatedText}>
-                            No similar listings found.
-                        </Text>
-                    </View>) : (<ScrollView
+                {relatedListings.length === 0 ? (<View style={styles.emptyRelatedContainer}>
+                    <Ionicons name="cube-outline" size={32} color={COLORS.gray400} />
+                    <Text style={styles.emptyRelatedText}>
+                        No similar listings found.
+                    </Text>
+                </View>) : (<ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.relatedList}
+                >
+                    {relatedListings.slice(0, 5).map((item) => (<Card
+                        key={item.id}
+                        item={item}
                         horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.relatedList}
-                    >
-                        {relatedListings.slice(0, 5).map((item) => (<Card
-                            key={item.id}
-                            item={item}
-                            horizontal
-                            onPress={() => navigation.push('ProductDetailsScreen', {item})}
-                        />))}
-                    </ScrollView>)}
+                        onPress={() => navigation.push('ProductDetailsScreen', { item })}
+                    />))}
+                </ScrollView>)}
 
-                    <View style={styles.sectionDivider}/>
+                <View style={styles.sectionDivider} />
 
-                    <SafetyTips/>
+                <SafetyTips />
 
-                </View>
-            </ScrollView>
+            </View>
+        </ScrollView>
 
-            {/* Floating Bottom Action Bar */}
-            {!isOwnListing && (
-                <View style={[
-                    styles.bottomBar,
-                    {
-                        paddingBottom: insets.bottom > 0 ? insets.bottom + 10 : 20,
-                        paddingTop: 12,
-                    }
-                ]}>
-                    {isGuest ? (
-                        <Button
-                            title="Log In to Chat"
-                            variant="primary"
-                            size="large"
-                            icon="log-in-outline"
-                            iconPosition="left"
-                            onPress={() => navigation.navigate('Login')}
-                            fullWidth
-                        />
-                    ) : (
-                        <Button
-                            title={chatLoading ? "Opening..." : "Chat with Seller"}
-                            variant="primary"
-                            size="large"
-                            icon="chatbubble-ellipses"
-                            iconPosition="left"
-                            onPress={openChatRoom}
-                            fullWidth
-                            loading={chatLoading}
-                            disabled={chatLoading}
-                        />
-                    )}
-                </View>
-            )}
+        {/* Floating Bottom Action Bar */}
+        {!isOwnListing && (
+            <View style={[
+                styles.bottomBar,
+                {
+                    paddingBottom: insets.bottom > 0 ? insets.bottom + 10 : 20,
+                    paddingTop: 12,
+                }
+            ]}>
+                {isGuest ? (
+                    <Button
+                        title="Log In to Chat"
+                        variant="primary"
+                        size="large"
+                        icon="log-in-outline"
+                        iconPosition="left"
+                        onPress={() => navigation.navigate('Login')}
+                        fullWidth
+                    />
+                ) : (
+                    <Button
+                        title={chatLoading ? "Opening..." : "Chat with Seller"}
+                        variant="primary"
+                        size="large"
+                        icon="chatbubble-ellipses"
+                        iconPosition="left"
+                        onPress={openChatRoom}
+                        fullWidth
+                        loading={chatLoading}
+                        disabled={chatLoading}
+                    />
+                )}
+            </View>
+        )}
 
-            <BottomSheetMenu
-                visible={showMenu}
-                onClose={() => setShowMenu(false)}
-                type="listing"
-                title="Listing Options"
-                isGuest={isGuest}
+        <BottomSheetMenu
+            visible={showMenu}
+            onClose={() => setShowMenu(false)}
+            type="listing"
+            title="Listing Options"
+            isGuest={isGuest}
 
-                onAuthRequired={() => {
-                    setShowMenu(false);
-                    showToast({
-                        type: 'info',
-                        title: 'Join Agora',
-                        message: 'Sign up to report inappropriate listings and help keep campus safe!'
-                    });
-                }}
-                onShare={() => {
-                    setShowMenu(false);
-                    shareItem({type: 'LISTING', title: product.title, id: product.id});
-                }}
-                onReport={isOwnListing ? null : () => {
-                    setShowMenu(false);
-                    navigation.navigate('ReportListingScreen', {
-                        listingId: product.id,
-                    });
-                }}
-            />
+            onAuthRequired={() => {
+                setShowMenu(false);
+                showToast({
+                    type: 'info',
+                    title: 'Join Agora',
+                    message: 'Sign up to report inappropriate listings and help keep campus safe!'
+                });
+            }}
+            onShare={() => {
+                setShowMenu(false);
+                shareItem({ type: 'LISTING', title: product.title, id: product.id });
+            }}
+            onReport={isOwnListing ? null : () => {
+                setShowMenu(false);
+                navigation.navigate('ReportListingScreen', {
+                    listingId: product.id,
+                });
+            }}
+        />
 
-            {toast.visible && (<ToastMessage
-                type={toast.type}
-                title={toast.title}
-                message={toast.message}
-                onHide={() => setToast({...toast, visible: false})}
-            />)}
-        </View>
+        {toast.visible && (<ToastMessage
+            type={toast.type}
+            title={toast.title}
+            message={toast.message}
+            onHide={() => setToast({ ...toast, visible: false })}
+        />)}
+    </View>
     );
 }
 
@@ -422,7 +426,7 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255, 255, 255, 0.8)",
         borderRadius: THEME.borderRadius.full,
         shadowColor: "#000",
-        shadowOffset: {width: 0, height: 2},
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
@@ -458,7 +462,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     }, dot: {
-        width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(0, 0, 0, 0.2)", marginHorizontal: 3,
+        width: 6, height: 6, borderRadius: 3, backgroundColor: "rgb(239, 234, 234)", marginHorizontal: 3,
     }, activeDot: {
         backgroundColor: COLORS.primary, width: 24,
     }, content: {
@@ -483,7 +487,12 @@ const styles = StyleSheet.create({
         color: COLORS.light.text,
         lineHeight: THEME.fontSize['2xl'] * 1.3,
         letterSpacing: -0.5,
-        paddingRight: THEME.spacing.md,
+        paddingRight: THEME.spacing.sm,
+    },
+    favoriteContainer: {
+        marginLeft: THEME.spacing.xl,
+        width: 42,
+        alignItems: 'center',
     },
     productPrice: {
         fontSize: THEME.fontSize['3xl'],
@@ -530,7 +539,7 @@ const styles = StyleSheet.create({
     }, relatedHeader: {
         marginBottom: THEME.spacing.md,
     }, relatedList: {
-        gap: THEME.spacing[3],
+        gap: THEME.spacing[1],
     }, emptyRelatedContainer: {
         paddingVertical: THEME.spacing['2xl'], alignItems: 'center', gap: THEME.spacing[2],
     }, emptyRelatedText: {

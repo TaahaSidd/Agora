@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     FlatList,
     Image,
@@ -14,30 +14,35 @@ import {
     View,
     Alert,
 } from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {COLORS} from '../utils/colors';
+import { COLORS } from '../utils/colors';
 
-import {useChatMessages} from '../hooks/useChatMessages';
-import {getOrCreateChatRoom, sendMessage} from '../services/chatService';
-import {useMarkChatAsRead} from "../hooks/useMarkChatAsRead";
-import {useUserStore} from "../stores/userStore";
-import {useChatBlocking} from '../context/ChatBlockingProvider';
+import { useChatMessages } from '../hooks/useChatMessages';
+import { getOrCreateChatRoom, sendMessage } from '../services/chatService';
+import { useMarkChatAsRead } from "../hooks/useMarkChatAsRead";
+import { useUserStore } from "../stores/userStore";
+import { useChatBlocking } from '../context/ChatBlockingProvider';
 
-const ChatRoomScreen = ({route, navigation}) => {
+const ChatRoomScreen = ({ route, navigation }) => {
     const insets = useSafeAreaInsets();
-    const {roomId, sellerId} = route.params;
-    const messages = useChatMessages(roomId);
-    const {sellerName, productInfo} = route.params || {};
+    const { roomId, sellerId } = route.params;
+    const firebaseMessages = useChatMessages(roomId);
+    const [messages, setMessages] = useState([]);
+    const { sellerName } = route.params || {};
     const [input, setInput] = useState('');
-    const {currentUser, loading} = useUserStore();
-    const {isUserBlocked} = useChatBlocking();
+    const { currentUser, loading } = useUserStore();
+    const { isUserBlocked } = useChatBlocking();
     const flatListRef = useRef(null);
-    const {sellerAvatar} = route.params;
+    const { sellerAvatar } = route.params;
     const markChatAsRead = useMarkChatAsRead();
 
     const isOtherUserBlocked = isUserBlocked(sellerId);
+
+    useEffect(() => {
+        setMessages(firebaseMessages);
+    }, [firebaseMessages]);
 
     let avatarUri = sellerAvatar;
 
@@ -54,7 +59,7 @@ const ChatRoomScreen = ({route, navigation}) => {
             'keyboardDidShow',
             () => {
                 setTimeout(() => {
-                    flatListRef.current?.scrollToEnd({animated: true});
+                    flatListRef.current?.scrollToEnd({ animated: true });
                 }, 100);
             }
         );
@@ -63,7 +68,7 @@ const ChatRoomScreen = ({route, navigation}) => {
             'keyboardDidHide',
             () => {
                 setTimeout(() => {
-                    flatListRef.current?.scrollToEnd({animated: false});
+                    flatListRef.current?.scrollToEnd({ animated: false });
                 }, 100);
             }
         );
@@ -99,17 +104,34 @@ const ChatRoomScreen = ({route, navigation}) => {
             Alert.alert(
                 'Cannot Send Message',
                 'You cannot message this user.',
-                [{text: 'OK'}]
+                [{ text: 'OK' }]
             );
             return;
         }
 
         if (!input.trim()) return;
+
         const text = input.trim();
+        const tempId = `temp_${Date.now()}_${Math.random()}`;
+
+        const optimisticMessage = {
+            id: tempId,
+            text: text,
+            senderId: currentUser.email,
+            createdAt: { seconds: Date.now() / 1000 },
+            read: false,
+            pending: true,
+        };
+
+        setMessages(prev => [...prev, optimisticMessage]);
         setInput('');
 
+        setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+        }, 50);
+
         try {
-            const {listingId, buyer, seller, listingData} = route.params;
+            const { listingId, buyer, seller, listingData } = route.params;
 
             if (listingId && buyer && seller) {
                 const roomRef = await getOrCreateChatRoom(listingId, buyer, seller, listingData);
@@ -118,13 +140,15 @@ const ChatRoomScreen = ({route, navigation}) => {
                 await sendMessage(roomId, currentUser.email, text);
             }
 
-            requestAnimationFrame(() => {
-                flatListRef.current?.scrollToEnd({animated: true});
-            });
+            setMessages(prev => prev.filter(m => m.id !== tempId));
 
         } catch (e) {
             console.error('Error sending message:', e);
+
+            setMessages(prev => prev.filter(m => m.id !== tempId));
             setInput(text);
+
+            Alert.alert('Failed to send', 'Please try again');
         }
     };
 
@@ -135,9 +159,9 @@ const ChatRoomScreen = ({route, navigation}) => {
         const diffInHours = (now - date) / (1000 * 60 * 60);
 
         if (diffInHours < 24) {
-            return date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         } else {
-            return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
     };
 
@@ -168,7 +192,7 @@ const ChatRoomScreen = ({route, navigation}) => {
         }
     };
 
-    const renderMessage = ({item, index}) => {
+    const renderMessage = ({ item, index }) => {
         if (!item.createdAt) return null;
 
         const isSent = item.senderId === currentUser.email;
@@ -181,9 +205,9 @@ const ChatRoomScreen = ({route, navigation}) => {
             <>
                 {showDateSeparator && (
                     <View style={styles.dateSeparator}>
-                        <View style={styles.dateLine}/>
+                        <View style={styles.dateLine} />
                         <Text style={styles.dateText}>{formatDateSeparator(item.createdAt)}</Text>
-                        <View style={styles.dateLine}/>
+                        <View style={styles.dateLine} />
                     </View>
                 )}
 
@@ -199,6 +223,7 @@ const ChatRoomScreen = ({route, navigation}) => {
                                 styles.messageBubble,
                                 isSent ? styles.bubbleSent : styles.bubbleReceived,
                                 isFirstInGroup && (isSent ? styles.bubbleSentFirst : styles.bubbleReceivedFirst),
+                                item.pending && styles.bubblePending,
                             ]}
                         >
                             <Text
@@ -215,12 +240,21 @@ const ChatRoomScreen = ({route, navigation}) => {
                                     {formatTime(item.createdAt)}
                                 </Text>
                                 {isSent && (
-                                    <Ionicons
-                                        name={item.read ? "checkmark-done" : "checkmark"}
-                                        size={14}
-                                        color={item.read ? COLORS.success : COLORS.gray400}
-                                        style={{marginLeft: 4}}
-                                    />
+                                    item.pending ? (
+                                        <Ionicons
+                                            name="time-outline"
+                                            size={14}
+                                            color="rgba(255, 255, 255, 0.5)"
+                                            style={{ marginLeft: 4 }}
+                                        />
+                                    ) : (
+                                        <Ionicons
+                                            name={item.read ? "checkmark-done" : "checkmark"}
+                                            size={14}
+                                            color={item.read ? COLORS.success : COLORS.gray400}
+                                            style={{ marginLeft: 4 }}
+                                        />
+                                    )
                                 )}
                             </View>
                         </View>
@@ -232,7 +266,7 @@ const ChatRoomScreen = ({route, navigation}) => {
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content"/>
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content" />
 
             {/* Header */}
             <View style={styles.header}>
@@ -241,17 +275,17 @@ const ChatRoomScreen = ({route, navigation}) => {
                     onPress={() => navigation.goBack()}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="arrow-back" size={24} color={COLORS.light.text}/>
+                    <Ionicons name="arrow-back" size={24} color={COLORS.light.text} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.headerCenter}
-                    onPress={() => {}}
+                    onPress={() => { }}
                     activeOpacity={0.8}
                 >
                     <View style={styles.avatarContainer}>
                         <Image
-                            source={typeof avatarUri === 'string' ? {uri: avatarUri} : avatarUri}
+                            source={typeof avatarUri === 'string' ? { uri: avatarUri } : avatarUri}
                             style={styles.headerAvatar}
                         />
                     </View>
@@ -264,7 +298,7 @@ const ChatRoomScreen = ({route, navigation}) => {
             {/* BLOCKED USER BANNER */}
             {isOtherUserBlocked && (
                 <View style={styles.blockedBanner}>
-                    <Ionicons name="ban" size={16} color="#EF4444"/>
+                    <Ionicons name="ban" size={16} color="#EF4444" />
                     <Text style={styles.blockedText}>
                         You cannot message this user
                     </Text>
@@ -274,7 +308,7 @@ const ChatRoomScreen = ({route, navigation}) => {
             <KeyboardAvoidingView
                 style={styles.keyboardAvoiding}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                keyboardVerticalOffset={0}
             >
                 <FlatList
                     ref={flatListRef}
@@ -288,8 +322,13 @@ const ChatRoomScreen = ({route, navigation}) => {
                     style={styles.messageList}
                     showsVerticalScrollIndicator={false}
                     onContentSizeChange={() => {
-                        flatListRef.current?.scrollToEnd({animated: true});
+                        flatListRef.current?.scrollToEnd({ animated: true });
                     }}
+                    windowSize={10}
+                    maxToRenderPerBatch={5}
+                    initialNumToRender={20}
+                    removeClippedSubviews={Platform.OS === 'android'}
+                    updateCellsBatchingPeriod={50}
                 />
 
                 {messages.length === 0 && (
@@ -313,9 +352,10 @@ const ChatRoomScreen = ({route, navigation}) => {
                     </View>
                 )}
 
-                {/* Input Bar - FIXED */}
+                {/* Input Bar */}
                 <View style={[
                     styles.inputBar,
+                    { paddingBottom: Math.max(insets.bottom, 12) },
                     isOtherUserBlocked && styles.inputBarDisabled,
                 ]}>
                     <View style={styles.inputWrapper}>
@@ -369,7 +409,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         borderBottomWidth: 1,
         borderBottomColor: COLORS.light.border,
-        marginTop:30,
+        marginTop: StatusBar.currentHeight || 0,
     },
     backButton: {
         width: 40,
@@ -456,7 +496,7 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 4,
     },
     bubbleReceived: {
-        backgroundColor: '#F3F4F6',
+        backgroundColor: '#ECECEC',
         borderBottomLeftRadius: 4,
         borderWidth: 1,
         borderColor: COLORS.light.border,
@@ -466,6 +506,9 @@ const styles = StyleSheet.create({
     },
     bubbleReceivedFirst: {
         borderTopLeftRadius: 20,
+    },
+    bubblePending: {
+        opacity: 0.7,
     },
     messageText: {
         fontSize: 15,
@@ -528,7 +571,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 12,
         paddingTop: 12,
-        paddingBottom: Platform.OS === 'ios' ? 12 : 16,
         backgroundColor: COLORS.white,
         borderTopWidth: 1,
         borderTopColor: COLORS.light.border,

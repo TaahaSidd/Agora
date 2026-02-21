@@ -166,7 +166,7 @@ export default function PrivacyPolicyScreen({navigation}) {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Contact Us</Text>
                         <Text style={styles.paragraph}>
-                            For privacy-related questions or concerns, please contact us at support@agora.com
+                            For privacy-related questions or concerns, please contact us at hello.spicalabs@gmail.com
                         </Text>
                     </View>
                 </View>

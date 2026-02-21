@@ -12,7 +12,7 @@ export default function SafetyCenterScreen({navigation}) {
     const insets = useSafeAreaInsets();
 
     const contactSupport = () => {
-        Linking.openURL('mailto:support@agora-app.com');
+        Linking.openURL('mailto:hello.spicalabs@gmail.com');
     };
 
     return (

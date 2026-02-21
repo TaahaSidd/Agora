@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     RefreshControl,
@@ -9,23 +9,24 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {Image} from 'expo-image';
-import {Ionicons} from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 
-import {useUserStore} from '../stores/userStore';
+import { useUserStore } from '../stores/userStore';
 import AppHeader from '../components/AppHeader';
+import LoadingSpinner from '../components/LoadingSpinner';
 
-import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
+import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
-const UserProfileScreen = ({navigation, route}) => {
+const UserProfileScreen = ({ navigation, route }) => {
     const {
         currentUser,
         loading: userLoading,
         isGuest,
         fetchUser,
     } = useUserStore();
-    const {profileImage} = route.params || {};
+    const { profileImage } = route.params || {};
     const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
@@ -42,9 +43,9 @@ const UserProfileScreen = ({navigation, route}) => {
     if (userLoading) {
         return (
             <SafeAreaView style={styles.loadingContainer}>
-                <AppHeader title="My Profile" onBack={() => navigation.goBack()}/>
+                <AppHeader title="My Profile" onBack={() => navigation.goBack()} />
                 <View style={styles.loadingContent}>
-                    <ActivityIndicator size="large" color={COLORS.primary}/>
+                    <LoadingSpinner />
                 </View>
             </SafeAreaView>
         );
@@ -53,9 +54,9 @@ const UserProfileScreen = ({navigation, route}) => {
     if (!currentUser || isGuest) {
         return (
             <SafeAreaView style={styles.loadingContainer}>
-                <AppHeader title="My Profile" onBack={() => navigation.goBack()}/>
+                <AppHeader title="My Profile" onBack={() => navigation.goBack()} />
                 <View style={styles.emptyState}>
-                    <Ionicons name="person-outline" size={80} color={COLORS.light.textTertiary}/>
+                    <Ionicons name="person-outline" size={80} color={COLORS.light.textTertiary} />
                     <Text style={styles.emptyTitle}>Sign in Required</Text>
                     <Text style={styles.emptyText}>Please log in to view your profile</Text>
                 </View>
@@ -79,7 +80,7 @@ const UserProfileScreen = ({navigation, route}) => {
                         style={styles.editButton}
                         activeOpacity={0.7}
                     >
-                        <Ionicons name="create-outline" size={22} color={COLORS.primary}/>
+                        <Ionicons name="create-outline" size={22} color={COLORS.primary} />
                     </TouchableOpacity>
                 }
             />
@@ -99,12 +100,12 @@ const UserProfileScreen = ({navigation, route}) => {
                 <View style={styles.profileHeader}>
                     <View style={styles.avatarContainer}>
                         <Image
-                            source={{uri: currentUser?.avatar || profileImage || 'https://i.pravatar.cc/100'}}
+                            source={{ uri: currentUser?.avatar || profileImage || 'https://i.pravatar.cc/100' }}
                             style={styles.avatar}
                             cachePolicy="disk"
                         />
                         <View style={styles.verifiedBadge}>
-                            <Ionicons name="checkmark-circle" size={28} color={COLORS.success}/>
+                            <Ionicons name="checkmark-circle" size={28} color={COLORS.success} />
                         </View>
                     </View>
 
@@ -116,14 +117,14 @@ const UserProfileScreen = ({navigation, route}) => {
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
                         <View style={styles.iconCircle}>
-                            <Ionicons name="person" size={20} color={COLORS.primary}/>
+                            <Ionicons name="person" size={20} color={COLORS.primary} />
                         </View>
                         <Text style={styles.cardTitle}>Personal Information</Text>
                     </View>
 
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="person-outline" size={18} color={COLORS.light.textTertiary}/>
+                            <Ionicons name="person-outline" size={18} color={COLORS.light.textTertiary} />
                             <Text style={styles.infoLabel}>Full Name</Text>
                         </View>
                         <Text style={styles.infoValue}>{currentUser.name || 'N/A'}</Text>
@@ -131,7 +132,7 @@ const UserProfileScreen = ({navigation, route}) => {
 
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="mail-outline" size={18} color={COLORS.light.textTertiary}/>
+                            <Ionicons name="mail-outline" size={18} color={COLORS.light.textTertiary} />
                             <Text style={styles.infoLabel}>Email</Text>
                         </View>
                         <Text style={styles.infoValue} numberOfLines={1}>{currentUser.email || 'N/A'}</Text>
@@ -139,7 +140,7 @@ const UserProfileScreen = ({navigation, route}) => {
 
                     <View style={[styles.infoItem, styles.infoItemLast]}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="call-outline" size={18} color={COLORS.light.textTertiary}/>
+                            <Ionicons name="call-outline" size={18} color={COLORS.light.textTertiary} />
                             <Text style={styles.infoLabel}>Phone</Text>
                         </View>
                         <Text style={styles.infoValue}>
@@ -151,15 +152,15 @@ const UserProfileScreen = ({navigation, route}) => {
                 {/* Academic Information Card */}
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
-                        <View style={[styles.iconCircle, {backgroundColor: COLORS.warning + '15'}]}>
-                            <Ionicons name="school" size={20} color={COLORS.warning}/>
+                        <View style={[styles.iconCircle, { backgroundColor: COLORS.warning + '15' }]}>
+                            <Ionicons name="school" size={20} color={COLORS.warning} />
                         </View>
                         <Text style={styles.cardTitle}>College Information</Text>
                     </View>
 
                     <View style={[styles.infoItem, styles.infoItemLast]}>
                         <View style={styles.infoLeft}>
-                            <Ionicons name="school-outline" size={18} color={COLORS.light.textTertiary}/>
+                            <Ionicons name="school-outline" size={18} color={COLORS.light.textTertiary} />
                             <Text style={styles.infoLabel}>College</Text>
                         </View>
                         <Text style={styles.infoValue} numberOfLines={1}>

@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     Modal,
@@ -11,23 +11,23 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {Image} from 'expo-image';
-import {Ionicons} from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
+import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
-import {apiPut, completeProfile} from '../services/api';
-import {uploadProfilePicture} from '../utils/upload';
-import {useUserStore} from '../stores/userStore';
+import { apiPut, completeProfile } from '../services/api';
+import { uploadProfilePicture } from '../utils/upload';
+import { useUserStore } from '../stores/userStore';
 
 import ModalComponent from '../components/Modal';
 import Button from '../components/Button';
 import AppHeader from '../components/AppHeader';
 import ToastMessage from "../components/ToastMessage";
 
-const EditProfileScreen = ({navigation, route}) => {
-    const {currentUser, fetchUser, updateUser, updateAvatar} = useUserStore();
+const EditProfileScreen = ({ navigation, route }) => {
+    const { currentUser, fetchUser, updateUser, updateAvatar } = useUserStore();
 
     const user = currentUser || route.params?.user;
 
@@ -55,7 +55,7 @@ const EditProfileScreen = ({navigation, route}) => {
     const [loading, setLoading] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [successModalVisible, setSuccessModalVisible] = useState(false);
-    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
 
     // Unsaved changes state
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
@@ -63,8 +63,8 @@ const EditProfileScreen = ({navigation, route}) => {
     const [lockedFieldName, setLockedFieldName] = useState('');
     const [navigationAction, setNavigationAction] = useState(null);
 
-    const showToast = ({type, title, message}) => {
-        setToast({visible: true, type, title, message});
+    const showToast = ({ type, title, message }) => {
+        setToast({ visible: true, type, title, message });
     };
 
     const handleLockedFieldPress = (fieldName) => {
@@ -76,7 +76,7 @@ const EditProfileScreen = ({navigation, route}) => {
         // Only allow numbers and limit to 10 digits
         const cleaned = text.replace(/[^0-9]/g, '');
         const limited = cleaned.slice(0, 10);
-        setForm({...form, mobileNumber: limited});
+        setForm({ ...form, mobileNumber: limited });
 
         // Indian mobile validation: Starts with 6-9 and must be 10 digits
         if (limited.length > 0 && limited.length < 10) {
@@ -98,7 +98,7 @@ const EditProfileScreen = ({navigation, route}) => {
             return;
         }
 
-        const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
             showToast({
                 type: 'error',
@@ -121,7 +121,7 @@ const EditProfileScreen = ({navigation, route}) => {
 
             try {
                 setUploadingImage(true);
-                const {url} = await uploadProfilePicture(uri);
+                const { url } = await uploadProfilePicture(uri);
                 setUploadedImageUrl(url);
                 setLocalProfileImage(url);
 
@@ -199,10 +199,12 @@ const EditProfileScreen = ({navigation, route}) => {
                 await apiPut(`/profile/update/${user.id}`, profileData);
             }
 
+            setUploadedImageUrl(null);
+
             updateUser(profileData);
 
-            if (uploadedImageUrl) {
-                updateAvatar(uploadedImageUrl);
+            if (profileData.profileImage) {
+                updateAvatar(profileData.profileImage);
             }
 
             await fetchUser();
@@ -221,9 +223,9 @@ const EditProfileScreen = ({navigation, route}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content"/>
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content" />
 
-            <AppHeader title="Edit Profile" onBack={() => navigation.goBack()}/>
+            <AppHeader title="Edit Profile" onBack={() => navigation.goBack()} />
 
             <ScrollView
                 contentContainerStyle={styles.scrollContainer}
@@ -240,7 +242,7 @@ const EditProfileScreen = ({navigation, route}) => {
                         <Image
                             source={
                                 localProfileImage
-                                    ? {uri: localProfileImage}
+                                    ? { uri: localProfileImage }
                                     : require('../assets/no-image.jpg')
                             }
                             style={styles.profilePic}
@@ -248,11 +250,11 @@ const EditProfileScreen = ({navigation, route}) => {
                         />
                         {uploadingImage ? (
                             <View style={styles.uploadingOverlay}>
-                                <ActivityIndicator size="small" color={COLORS.white}/>
+                                <ActivityIndicator size="small" color={COLORS.white} />
                             </View>
                         ) : (
                             <View style={styles.cameraOverlay}>
-                                <Ionicons name="camera" size={22} color={COLORS.white}/>
+                                <Ionicons name="camera" size={22} color={COLORS.white} />
                             </View>
                         )}
                     </TouchableOpacity>
@@ -264,7 +266,7 @@ const EditProfileScreen = ({navigation, route}) => {
                 {/* Unsaved changes indicator */}
                 {hasChanges && (
                     <View style={styles.unsavedBanner}>
-                        <Ionicons name="alert-circle" size={18} color={COLORS.warning}/>
+                        <Ionicons name="alert-circle" size={18} color={COLORS.warning} />
                         <Text style={styles.unsavedText}>You have unsaved changes</Text>
                     </View>
                 )}
@@ -273,7 +275,7 @@ const EditProfileScreen = ({navigation, route}) => {
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
                         <View style={styles.iconCircle}>
-                            <Ionicons name="person" size={20} color={COLORS.primary}/>
+                            <Ionicons name="person" size={20} color={COLORS.primary} />
                         </View>
                         <Text style={styles.cardTitle}>Personal Information</Text>
                     </View>
@@ -286,7 +288,7 @@ const EditProfileScreen = ({navigation, route}) => {
                                 <TextInput
                                     style={styles.input}
                                     value={form.firstName}
-                                    onChangeText={(text) => setForm({...form, firstName: text})}
+                                    onChangeText={(text) => setForm({ ...form, firstName: text })}
                                     placeholder="First name"
                                     placeholderTextColor={COLORS.light.textTertiary}
                                 />
@@ -299,7 +301,7 @@ const EditProfileScreen = ({navigation, route}) => {
                                 <TextInput
                                     style={styles.input}
                                     value={form.lastName}
-                                    onChangeText={(text) => setForm({...form, lastName: text})}
+                                    onChangeText={(text) => setForm({ ...form, lastName: text })}
                                     placeholder="Last name"
                                     placeholderTextColor={COLORS.light.textTertiary}
                                 />
@@ -316,12 +318,12 @@ const EditProfileScreen = ({navigation, route}) => {
                         <View style={styles.labelRow}>
                             <Text style={styles.label}>Email Address</Text>
                             <View style={styles.lockedBadge}>
-                                <Ionicons name="lock-closed" size={12} color={COLORS.gray600}/>
+                                <Ionicons name="lock-closed" size={12} color={COLORS.gray600} />
                                 <Text style={styles.lockedText}>Locked</Text>
                             </View>
                         </View>
                         <View style={[styles.inputContainer, styles.inputDisabled]}>
-                            <Ionicons name="mail-outline" size={18} color={COLORS.light.textTertiary}/>
+                            <Ionicons name="mail-outline" size={18} color={COLORS.light.textTertiary} />
                             <Text style={styles.lockedFieldValue}>{form.userEmail}</Text>
                         </View>
                     </TouchableOpacity>
@@ -352,8 +354,8 @@ const EditProfileScreen = ({navigation, route}) => {
                 {/* Academic Information Card - LOCKED */}
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
-                        <View style={[styles.iconCircle, {backgroundColor: COLORS.warning + '15'}]}>
-                            <Ionicons name="school" size={20} color={COLORS.warning}/>
+                        <View style={[styles.iconCircle, { backgroundColor: COLORS.warning + '15' }]}>
+                            <Ionicons name="school" size={20} color={COLORS.warning} />
                         </View>
                         <Text style={styles.cardTitle}>College Information</Text>
                     </View>
@@ -366,12 +368,12 @@ const EditProfileScreen = ({navigation, route}) => {
                         <View style={styles.labelRow}>
                             <Text style={styles.label}>College</Text>
                             <View style={styles.lockedBadge}>
-                                <Ionicons name="lock-closed" size={12} color={COLORS.gray600}/>
+                                <Ionicons name="lock-closed" size={12} color={COLORS.gray600} />
                                 <Text style={styles.lockedText}>Locked</Text>
                             </View>
                         </View>
                         <View style={[styles.inputContainer, styles.inputDisabled]}>
-                            <Ionicons name="school-outline" size={18} color={COLORS.light.textTertiary}/>
+                            <Ionicons name="school-outline" size={18} color={COLORS.light.textTertiary} />
                             <Text style={styles.lockedFieldValue} numberOfLines={1}>{form.collegeName}</Text>
                         </View>
                     </TouchableOpacity>
@@ -414,8 +416,8 @@ const EditProfileScreen = ({navigation, route}) => {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
-                        <View style={[styles.modalIconContainer, {backgroundColor: COLORS.info + '15'}]}>
-                            <Ionicons name="lock-closed" size={48} color={COLORS.info}/>
+                        <View style={[styles.modalIconContainer, { backgroundColor: COLORS.info + '15' }]}>
+                            <Ionicons name="lock-closed" size={48} color={COLORS.info} />
                         </View>
                         <Text style={styles.modalTitle}>Field Locked</Text>
                         <Text style={styles.modalMessage}>
@@ -452,7 +454,7 @@ const EditProfileScreen = ({navigation, route}) => {
                     type={toast.type}
                     title={toast.title}
                     message={toast.message}
-                    onHide={() => setToast({...toast, visible: false})}
+                    onHide={() => setToast({ ...toast, visible: false })}
                 />
             )}
         </SafeAreaView>

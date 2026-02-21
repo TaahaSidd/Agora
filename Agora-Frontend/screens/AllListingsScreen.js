@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -12,19 +12,18 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {apiGet} from '../services/api';
+import { Ionicons } from '@expo/vector-icons';
+import { apiGet } from '../services/api';
 
 import AppHeader from '../components/AppHeader';
 import Card from '../components/Cards';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 
-import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
+import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
-const AllListingsScreen = ({navigation}) => {
-    // ... logic (fetchListings, applyFilters, etc.) remains identical ...
+const AllListingsScreen = ({ navigation }) => {
     const [items, setItems] = useState([]);
     const [filteredItems, setFilteredItems] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -44,44 +43,44 @@ const AllListingsScreen = ({navigation}) => {
     const PAGE_SIZE = 20;
 
     const categories = [
-        {id: 'all', name: 'All Categories', icon: 'apps-outline'},
-        {id: 'textbooks', name: 'Textbooks', icon: 'book-outline'},
-        {id: 'electronics', name: 'Electronics', icon: 'laptop-outline'},
-        {id: 'clothing', name: 'Clothing', icon: 'shirt-outline'},
-        {id: 'furniture', name: 'Furniture', icon: 'bed-outline'},
-        {id: 'stationery', name: 'Stationery', icon: 'pencil-outline'},
-        {id: 'sports', name: 'Sports', icon: 'basketball-outline'},
-        {id: 'bicycles', name: 'Bicycles', icon: 'bicycle-outline'},
-        {id: 'food', name: 'Food & Snacks', icon: 'fast-food-outline'},
-        {id: 'housing', name: 'Housing', icon: 'home-outline'},
-        {id: 'tutoring', name: 'Tutoring', icon: 'school-outline'},
-        {id: 'events', name: 'Events', icon: 'ticket-outline'},
-        {id: 'miscellaneous', name: 'Misc', icon: 'grid-outline'},
+        { id: 'all', name: 'All Categories', icon: 'apps-outline' },
+        { id: 'textbooks', name: 'Textbooks', icon: 'book-outline' },
+        { id: 'electronics', name: 'Electronics', icon: 'laptop-outline' },
+        { id: 'clothing', name: 'Clothing', icon: 'shirt-outline' },
+        { id: 'furniture', name: 'Furniture', icon: 'bed-outline' },
+        { id: 'stationery', name: 'Stationery', icon: 'pencil-outline' },
+        { id: 'sports', name: 'Sports', icon: 'basketball-outline' },
+        { id: 'bicycles', name: 'Bicycles', icon: 'bicycle-outline' },
+        { id: 'food', name: 'Food & Snacks', icon: 'fast-food-outline' },
+        { id: 'housing', name: 'Housing', icon: 'home-outline' },
+        { id: 'tutoring', name: 'Tutoring', icon: 'school-outline' },
+        { id: 'events', name: 'Events', icon: 'ticket-outline' },
+        { id: 'miscellaneous', name: 'Misc', icon: 'grid-outline' },
     ];
 
     const conditions = [
-        {id: 'all', name: 'All Conditions'},
-        {id: 'NEW', name: 'New'},
-        {id: 'USED', name: 'Used'},
-        {id: 'GOOD', name: 'Good'},
-        {id: 'REFURBISHED', name: 'Refurbished'},
+        { id: 'all', name: 'All Conditions' },
+        { id: 'NEW', name: 'New' },
+        { id: 'USED', name: 'Used' },
+        { id: 'GOOD', name: 'Good' },
+        { id: 'REFURBISHED', name: 'Refurbished' },
     ];
 
     const priceRanges = [
-        {id: 'all', name: 'All Prices'},
-        {id: '0-500', name: 'Under ₹500'},
-        {id: '500-1000', name: '₹500 - ₹1k'},
-        {id: '1000-2500', name: '₹1k - ₹2.5k'},
-        {id: '2500-5000', name: '₹2.5k - ₹5k'},
-        {id: '5000-10000', name: '₹5k - ₹10k'},
-        {id: '10000+', name: 'Above ₹10k'},
+        { id: 'all', name: 'All Prices' },
+        { id: '0-500', name: 'Under ₹500' },
+        { id: '500-1000', name: '₹500 - ₹1k' },
+        { id: '1000-2500', name: '₹1k - ₹2.5k' },
+        { id: '2500-5000', name: '₹2.5k - ₹5k' },
+        { id: '5000-10000', name: '₹5k - ₹10k' },
+        { id: '10000+', name: 'Above ₹10k' },
     ];
 
     const sortOptions = [
-        {id: 'recent', name: 'Most Recent'},
-        {id: 'price-low', name: 'Price: Low to High'},
-        {id: 'price-high', name: 'Price: High to Low'},
-        {id: 'popular', name: 'Most Popular'},
+        { id: 'recent', name: 'Most Recent' },
+        { id: 'price-low', name: 'Price: Low to High' },
+        { id: 'price-high', name: 'Price: High to Low' },
+        { id: 'popular', name: 'Most Popular' },
     ];
 
     const fetchListings = async (page = 0, isRefresh = false) => {
@@ -89,7 +88,7 @@ const AllListingsScreen = ({navigation}) => {
         if (!hasMore && !isRefresh && page > 0) return;
         try {
             if (page === 0) setLoading(true); else setLoadingMore(true);
-            const response = await apiGet('/listing/all', {page, size: PAGE_SIZE});
+            const response = await apiGet('/listing/all', { page, size: PAGE_SIZE });
             const rawItems = response?.content || [];
             const totalPagesFromApi = response?.totalPages || 0;
 
@@ -100,7 +99,7 @@ const AllListingsScreen = ({navigation}) => {
                 price: `₹ ${item.price || 0}`,
                 actualPrice: Number(item.price) || 0,
                 images: item.imageUrl && item.imageUrl.length > 0
-                    ? item.imageUrl.map(url => ({uri: url}))
+                    ? item.imageUrl.map(url => ({ uri: url }))
                     : [],
             }));
 
@@ -130,11 +129,46 @@ const AllListingsScreen = ({navigation}) => {
 
     const handleApplyFilters = () => {
         setFilterModalVisible(false);
-        // Using the same logic as your snippet
+
         let updated = [...items];
-        if (selectedCategory !== 'all') updated = updated.filter(item => item.category?.toLowerCase() === selectedCategory.toLowerCase());
-        if (selectedCondition !== 'all') updated = updated.filter(item => item.itemCondition?.toUpperCase() === selectedCondition.toUpperCase());
-        // ... (Price filter and Sort logic from your snippet)
+
+        if (selectedCategory !== 'all') {
+            updated = updated.filter(item =>
+                item.category?.toLowerCase() === selectedCategory.toLowerCase()
+            );
+        }
+
+        if (selectedCondition !== 'all') {
+            updated = updated.filter(item =>
+                item.itemCondition?.toUpperCase() === selectedCondition.toUpperCase()
+            );
+        }
+
+        if (priceRange !== 'all') {
+            updated = updated.filter(item => {
+                const price = item.actualPrice;
+                if (priceRange === '0-500') return price <= 500;
+                if (priceRange === '500-1000') return price > 500 && price <= 1000;
+                if (priceRange === '1000-2500') return price > 1000 && price <= 2500;
+                if (priceRange === '2500-5000') return price > 2500 && price <= 5000;
+                if (priceRange === '5000-10000') return price > 5000 && price <= 10000;
+                if (priceRange === '10000+') return price > 10000;
+                return true;
+            });
+        }
+
+        updated.sort((a, b) => {
+            if (sortBy === 'price-low') {
+                return a.actualPrice - b.actualPrice;
+            } else if (sortBy === 'price-high') {
+                return b.actualPrice - a.actualPrice;
+            } else if (sortBy === 'popular') {
+                return (b.viewCount || 0) - (a.viewCount || 0);
+            } else {
+                return new Date(b.createdAt || b.id) - new Date(a.createdAt || a.id);
+            }
+        });
+
         setFilteredItems(updated);
     };
 
@@ -157,7 +191,7 @@ const AllListingsScreen = ({navigation}) => {
     const renderFooter = () => (
         loadingMore ? (
             <View style={styles.footerLoader}>
-                <ActivityIndicator size="small" color={COLORS.primary}/>
+                <ActivityIndicator size="small" color={COLORS.primary} />
                 <Text style={styles.footerLoaderText}>Loading more...</Text>
             </View>
         ) : null
@@ -166,7 +200,7 @@ const AllListingsScreen = ({navigation}) => {
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-                <Ionicons name="search-outline" size={60} color={COLORS.light.textTertiary}/>
+                <Ionicons name="search-outline" size={60} color={COLORS.light.textTertiary} />
             </View>
             <Text style={styles.emptyTitle}>No Listings Found</Text>
             <Text style={styles.emptyText}>Adjust your filters to see more results.</Text>
@@ -176,8 +210,8 @@ const AllListingsScreen = ({navigation}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content"/>
-            <AppHeader title="All Listings" onBack={() => navigation.goBack()}/>
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content" />
+            <AppHeader title="All Listings" onBack={() => navigation.goBack()} />
 
             {/* Filter Bar */}
             <View style={styles.filterBar}>
@@ -186,7 +220,7 @@ const AllListingsScreen = ({navigation}) => {
                     onPress={() => setFilterModalVisible(true)}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="options-outline" size={20} color={COLORS.primary}/>
+                    <Ionicons name="options-outline" size={20} color={COLORS.primary} />
                     <Text style={styles.filterButtonText}>Filters</Text>
                     {activeFiltersCount > 0 && (
                         <View style={styles.filterBadge}>
@@ -200,7 +234,7 @@ const AllListingsScreen = ({navigation}) => {
                     onPress={() => setFilterModalVisible(true)}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="swap-vertical-outline" size={18} color={COLORS.light.textSecondary}/>
+                    <Ionicons name="swap-vertical-outline" size={18} color={COLORS.light.textSecondary} />
                     <Text style={styles.sortButtonText}>
                         {sortOptions.find(s => s.id === sortBy)?.name}
                     </Text>
@@ -209,17 +243,17 @@ const AllListingsScreen = ({navigation}) => {
 
             {loading && currentPage === 0 ? (
                 <View style={styles.loadingContainer}>
-                    <LoadingSpinner/>
+                    <LoadingSpinner />
                 </View>
             ) : filteredItems.length === 0 ? (
                 renderEmptyState()
             ) : (
                 <FlatList
                     data={filteredItems}
-                    renderItem={({item}) => <Card item={item}/>}
+                    renderItem={({ item }) => <Card item={item} />}
                     keyExtractor={(item, index) => `${item.id}-${index}`}
                     numColumns={2}
-                    columnWrapperStyle={{justifyContent: 'space-between', paddingHorizontal: 12}}
+                    columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 12 }}
                     contentContainerStyle={{ paddingBottom: 60, marginTop: 10 }}
                     showsVerticalScrollIndicator={false}
                     onEndReached={handleLoadMore}
@@ -231,11 +265,11 @@ const AllListingsScreen = ({navigation}) => {
             )}
 
             {/* Filter Bottom Sheet */}
-            <Modal visible={filterModalVisible} transparent animationType="slide">
+            <Modal visible={filterModalVisible} transparent animationType="fade">
                 <View style={styles.modalOverlay}>
                     <Pressable style={styles.modalOverlayTouchable} onPress={() => setFilterModalVisible(false)} />
                     <View style={styles.bottomSheet}>
-                        <View style={styles.handleBar}/>
+                        <View style={styles.handleBar} />
                         <View style={styles.sheetHeader}>
                             <Text style={styles.sheetTitle}>Filters & Sort</Text>
                             <TouchableOpacity onPress={() => setFilterModalVisible(false)} style={styles.closeButton}>
@@ -252,6 +286,17 @@ const AllListingsScreen = ({navigation}) => {
                                         selected={sortBy === opt.id}
                                         onPress={() => setSortBy(opt.id)}
                                         showCheck
+                                    />
+                                ))}
+                            </FilterSection>
+
+                            <FilterSection title="Price Range">
+                                {priceRanges.map(range => (
+                                    <OptionChip
+                                        key={range.id}
+                                        label={range.name}
+                                        selected={priceRange === range.id}
+                                        onPress={() => setPriceRange(range.id)}
                                     />
                                 ))}
                             </FilterSection>
@@ -281,8 +326,8 @@ const AllListingsScreen = ({navigation}) => {
                         </ScrollView>
 
                         <View style={styles.sheetFooter}>
-                            <Button title="Reset" variant="outline" style={{flex: 1}} onPress={handleResetFilters} />
-                            <Button title="Apply" variant="primary" style={{flex: 1}} onPress={handleApplyFilters} />
+                            <Button title="Reset" variant="outline" style={{ flex: 1 }} onPress={handleResetFilters} />
+                            <Button title="Apply" variant="primary" style={{ flex: 1 }} onPress={handleApplyFilters} />
                         </View>
                     </View>
                 </View>
@@ -291,22 +336,21 @@ const AllListingsScreen = ({navigation}) => {
     );
 };
 
-// Internal Helper Components for the Modal
-const FilterSection = ({title, children}) => (
+const FilterSection = ({ title, children }) => (
     <View style={styles.filterSection}>
         <Text style={styles.filterSectionTitle}>{title}</Text>
         <View style={styles.optionsGrid}>{children}</View>
     </View>
 );
 
-const OptionChip = ({label, selected, onPress, icon, showCheck}) => (
+const OptionChip = ({ label, selected, onPress, icon, showCheck }) => (
     <TouchableOpacity
         style={[styles.optionChip, selected && styles.optionChipSelected]}
         onPress={onPress}
     >
-        {icon && <Ionicons name={icon} size={14} color={selected ? COLORS.primary : COLORS.light.textSecondary} style={{marginRight: 6}} />}
+        {icon && <Ionicons name={icon} size={14} color={selected ? COLORS.primary : COLORS.light.textSecondary} style={{ marginRight: 6 }} />}
         <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
-        {showCheck && selected && <Ionicons name="checkmark" size={14} color={COLORS.primary} style={{marginLeft: 6}} />}
+        {showCheck && selected && <Ionicons name="checkmark" size={14} color={COLORS.primary} style={{ marginLeft: 6 }} />}
     </TouchableOpacity>
 );
 

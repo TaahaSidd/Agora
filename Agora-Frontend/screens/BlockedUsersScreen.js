@@ -16,14 +16,15 @@ import { Ionicons } from '@expo/vector-icons';
 
 import AppHeader from '../components/AppHeader';
 import ToastMessage from "../components/ToastMessage";
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const BlockedUsersScreen = ({ navigation }) => {
     const { fetchBlockedUsers, unblockUser, loading } = useModeration();
     const [blockedList, setBlockedList] = useState([]);
-    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
 
-    const showToast = ({type, title, message}) => {
-        setToast({visible: true, type, title, message});
+    const showToast = ({ type, title, message }) => {
+        setToast({ visible: true, type, title, message });
     };
 
     const loadData = async () => {
@@ -101,7 +102,7 @@ const BlockedUsersScreen = ({ navigation }) => {
                 ListHeaderComponent={ListHeader}
                 ListEmptyComponent={
                     loading ? (
-                        <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 40 }} />
+                        <LoadingSpinner />
                     ) : (
                         <View style={styles.emptyContainer}>
                             <View style={styles.emptyIconCircle}>
@@ -120,7 +121,7 @@ const BlockedUsersScreen = ({ navigation }) => {
                     type={toast.type}
                     title={toast.title}
                     message={toast.message}
-                    onHide={() => setToast({...toast, visible: false})}
+                    onHide={() => setToast({ ...toast, visible: false })}
                 />
             )}
         </View>

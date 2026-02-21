@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
@@ -9,18 +9,18 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import {SafeAreaProvider} from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Icon from "react-native-vector-icons/Ionicons";
-import {Ionicons} from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
-import {useNavigation} from "@react-navigation/native";
-import {apiDelete, apiGet, apiPatch} from "../services/api";
-import {useUserStore} from "../stores/userStore";
-import {useNotificationCount} from "../hooks/useNotificationCount";
+import { useNavigation } from "@react-navigation/native";
+import { apiDelete, apiGet, apiPatch } from "../services/api";
+import { useUserStore } from "../stores/userStore";
+import { useNotificationCount } from "../hooks/useNotificationCount";
 
 import AppHeader from "../components/AppHeader";
 import Button from '../components/Button';
-import {COLORS} from "../utils/colors";
+import { COLORS } from "../utils/colors";
 
 import RelaxSVG from '../assets/svg/RelaxSVG.svg';
 
@@ -78,7 +78,7 @@ const formatTime = (timestamp) => {
     return `${Math.floor(diffDays / 7)}w`;
 };
 
-const NotificationItem = ({item, onPress}) => {
+const NotificationItem = ({ item, onPress }) => {
     const iconName = getNotificationIcon(item.type);
     const iconColor = getIconColor(item.type);
 
@@ -89,11 +89,11 @@ const NotificationItem = ({item, onPress}) => {
             activeOpacity={0.6}
         >
             {/* Left indicator for unread */}
-            {!item.read && <View style={styles.unreadIndicator}/>}
+            {!item.read && <View style={styles.unreadIndicator} />}
 
             {/* Icon */}
-            <View style={[styles.iconContainer, {backgroundColor: iconColor + '15'}]}>
-                <Icon name={iconName} size={22} color={iconColor}/>
+            <View style={[styles.iconContainer, { backgroundColor: iconColor + '15' }]}>
+                <Icon name={iconName} size={22} color={iconColor} />
             </View>
 
             {/* Content */}
@@ -108,18 +108,18 @@ const NotificationItem = ({item, onPress}) => {
             </View>
 
             {/* Unread dot */}
-            {!item.read && <View style={styles.unreadDot}/>}
+            {!item.read && <View style={styles.unreadDot} />}
         </TouchableOpacity>
     );
 };
 
 export default function NotificationScreen() {
     const navigation = useNavigation();
-    const {currentUser, loading, isGuest} = useUserStore();
+    const { currentUser, loading, isGuest } = useUserStore();
     const [notifications, setNotifications] = useState([]);
     const [filter, setFilter] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
-    const {unreadCount, refresh} = useNotificationCount(currentUser?.id, loading, isGuest);
+    const { unreadCount, refresh } = useNotificationCount(currentUser?.id, loading, isGuest);
 
     const loadNotifications = async () => {
         if (!currentUser?.id) {
@@ -161,9 +161,9 @@ export default function NotificationScreen() {
     if (isGuest || !currentUser) {
         return (
             <SafeAreaView style={styles.safeArea}>
-                <AppHeader title="Notifications" onBack={() => navigation.goBack()}/>
+                <AppHeader title="Notifications" onBack={() => navigation.goBack()} />
                 <View style={styles.emptyContainer}>
-                    <Ionicons name="notifications-outline" size={80} color={COLORS.light.textTertiary}/>
+                    <Ionicons name="notifications-outline" size={80} color={COLORS.light.textTertiary} />
                     <Text style={styles.emptyTitle}>Sign in Required</Text>
                     <Text style={styles.emptyText}>
                         Please log in to view your notifications
@@ -184,7 +184,7 @@ export default function NotificationScreen() {
 
         if (!notification.read) {
             setNotifications(prev =>
-                prev.map(n => n.id === notification.id ? {...n, read: true} : n)
+                prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
             );
             apiPatch(`/notifications/read/${notification.id}`).catch(console.error);
             refresh();
@@ -195,7 +195,7 @@ export default function NotificationScreen() {
             case 'LISTING_LIKED':
             case 'REVIEW':
                 if (notification.listingsId) {
-                    navigation.navigate('ProductDetailsScreen', {listingId: notification.listingsId});
+                    navigation.navigate('ProductDetailsScreen', { listingId: notification.listingsId });
                 }
                 break;
             case 'FOLLOW':
@@ -208,7 +208,7 @@ export default function NotificationScreen() {
         if (!currentUser?.id || unreadCount === 0) return;
 
         try {
-            setNotifications(prev => prev.map(n => ({...n, read: true})));
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
             await apiPatch(`/notifications/mark-all-read/${currentUser.id}`);
             refresh();
         } catch (error) {
@@ -236,7 +236,7 @@ export default function NotificationScreen() {
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <RelaxSVG width={180} height={180}/>
+            <RelaxSVG width={180} height={180} />
             <Text style={styles.emptyTitle}>All Caught Up!</Text>
             <Text style={styles.emptyText}>
                 {filter === 'unread'
@@ -248,13 +248,13 @@ export default function NotificationScreen() {
 
     const renderLoadingState = () => (
         <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary}/>
+            <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
     );
 
     return (
         <SafeAreaProvider style={styles.container}>
-            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content" />
 
             {/* Header */}
             <AppHeader
@@ -304,11 +304,11 @@ export default function NotificationScreen() {
                     <View style={styles.actions}>
                         {unreadCount > 0 && (
                             <TouchableOpacity onPress={handleMarkAllRead} style={styles.actionBtn}>
-                                <Icon name="checkmark-done" size={18} color={COLORS.primary}/>
+                                <Icon name="checkmark-done" size={18} color={COLORS.primary} />
                             </TouchableOpacity>
                         )}
                         <TouchableOpacity onPress={handleClearAll} style={styles.actionBtn}>
-                            <Icon name="trash-outline" size={18} color="#EF4444"/>
+                            <Icon name="trash-outline" size={18} color="#EF4444" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -321,8 +321,8 @@ export default function NotificationScreen() {
                 <FlatList
                     data={filteredNotifications}
                     keyExtractor={(item) => item.id}
-                    renderItem={({item}) => (
-                        <NotificationItem item={item} onPress={handleNotificationPress}/>
+                    renderItem={({ item }) => (
+                        <NotificationItem item={item} onPress={handleNotificationPress} />
                     )}
                     ListEmptyComponent={renderEmptyState}
                     contentContainerStyle={[
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     filterBadge: {
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: COLORS.error,
         minWidth: 18,
         height: 18,
         borderRadius: 9,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
         borderRadius: 26,
         position: 'relative',
         shadowColor: "#000",
-        shadowOffset: {width: 0, height: 2},
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 3,

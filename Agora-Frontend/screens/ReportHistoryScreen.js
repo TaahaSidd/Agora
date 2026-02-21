@@ -1,14 +1,18 @@
-import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {Ionicons} from '@expo/vector-icons';
-import {LinearGradient} from 'expo-linear-gradient';
-import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
-import AppHeader from '../components/AppHeader';
-import {apiGet} from '../services/api';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const ReportHistoryScreen = ({navigation}) => {
+import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
+
+import AppHeader from '../components/AppHeader';
+import LoadingSpinner from '../components/LoadingSpinner';
+
+import { apiGet } from '../services/api';
+
+const ReportHistoryScreen = ({ navigation }) => {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -83,7 +87,7 @@ const ReportHistoryScreen = ({navigation}) => {
         });
     };
 
-    const renderReportCard = ({item}) => {
+    const renderReportCard = ({ item }) => {
         const statusInfo = getStatusInfo(item.reportStatus);
         const isListing = item.reportType === 'LISTING';
 
@@ -96,10 +100,10 @@ const ReportHistoryScreen = ({navigation}) => {
                     <LinearGradient
                         colors={statusInfo.gradient}
                         style={styles.statusBadge}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 1}}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                     >
-                        <Ionicons name={statusInfo.icon} size={12} color="#fff"/>
+                        <Ionicons name={statusInfo.icon} size={12} color="#fff" />
                         <Text style={styles.statusText}>{statusInfo.label}</Text>
                     </LinearGradient>
                 </View>
@@ -122,7 +126,7 @@ const ReportHistoryScreen = ({navigation}) => {
     const renderEmptyState = () => (
         <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
-                <Ionicons name="document-text-outline" size={80} color={COLORS.light.textTertiary}/>
+                <Ionicons name="document-text-outline" size={80} color={COLORS.light.textTertiary} />
             </View>
             <Text style={styles.emptyTitle}>No Reports Yet</Text>
             <Text style={styles.emptySubtitle}>
@@ -134,9 +138,9 @@ const ReportHistoryScreen = ({navigation}) => {
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
-                <AppHeader title="Report History" onBack={() => navigation.goBack()}/>
+                <AppHeader title="Report History" onBack={() => navigation.goBack()} />
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={COLORS.primary}/>
+                    <LoadingSpinner />
                 </View>
             </SafeAreaView>
         );
@@ -144,26 +148,26 @@ const ReportHistoryScreen = ({navigation}) => {
 
     return (
         <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-            <AppHeader title="Report History" onBack={() => navigation.goBack()}/>
+            <AppHeader title="Report History" onBack={() => navigation.goBack()} />
 
             {/* Status Legend */}
             <View style={styles.legendContainer}>
                 <Text style={styles.legendTitle}>Report Status Guide</Text>
                 <View style={styles.legendGrid}>
                     <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, {backgroundColor: '#F59E0B'}]}/>
+                        <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
                         <Text style={styles.legendText}>Under Review</Text>
                     </View>
                     <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, {backgroundColor: '#3B82F6'}]}/>
+                        <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
                         <Text style={styles.legendText}>Being Reviewed</Text>
                     </View>
                     <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, {backgroundColor: '#10B981'}]}/>
+                        <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
                         <Text style={styles.legendText}>Resolved</Text>
                     </View>
                     <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, {backgroundColor: '#6B7280'}]}/>
+                        <View style={[styles.legendDot, { backgroundColor: '#6B7280' }]} />
                         <Text style={styles.legendText}>Dismissed</Text>
                     </View>
                 </View>
@@ -193,7 +197,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.light.bg,
-        marginTop: 0,
+        // marginTop: 0,
     },
     loadingContainer: {
         flex: 1,
@@ -208,7 +212,6 @@ const styles = StyleSheet.create({
         borderRadius: THEME.borderRadius.lg,
         borderWidth: 1,
         borderColor: COLORS.light.border,
-        // Subtle shadow for light mode
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
