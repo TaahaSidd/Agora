@@ -1,9 +1,7 @@
-# Agora — Student Marketplace App
+<img width="6036" height="1854" alt="Dev-banner-Agora" src="https://github.com/user-attachments/assets/eafd090d-6420-4798-b036-a3e6ee75dbd9" /># Agora — Student Marketplace App
 A student-focused marketplace designed for college communities, enabling safe and structured buying, selling, and service exchange.
 
-<img width="1823" height="1186" alt="Github" src="https://github.com/user-attachments/assets/65423c51-5b21-4510-bd98-24a12bdb8679" />
- 
-<img width="1501" height="733" alt="Billboards" src="https://github.com/user-attachments/assets/c7603727-711d-41b4-a35b-0b92fd9bc5c1" />
+<img width="6036" height="1854" alt="Dev-banner-Agora" src="https://github.com/user-attachments/assets/7eed174a-6ae8-4f96-b582-7580489463f8" />
 
 # Project Overview
 Agora is a mobile marketplace application built to help college students buy, sell, rent, and exchange items and services within their academic communities.
