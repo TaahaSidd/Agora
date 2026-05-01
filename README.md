@@ -1,4 +1,4 @@
-<img width="6036" height="1854" alt="Dev-banner-Agora" src="https://github.com/user-attachments/assets/eafd090d-6420-4798-b036-a3e6ee75dbd9" /># Agora — Student Marketplace App
+# Agora — Student Marketplace App
 A student-focused marketplace designed for college communities, enabling safe and structured buying, selling, and service exchange.
 
 <img width="6036" height="1854" alt="Dev-banner-Agora" src="https://github.com/user-attachments/assets/7eed174a-6ae8-4f96-b582-7580489463f8" />
