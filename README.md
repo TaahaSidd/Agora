@@ -29,7 +29,7 @@ Agora provides a dedicated, student-focused marketplace where:
 Rather than competing with general marketplaces, Agora narrows the audience to increase usefulness and reliability.
 
 
-# Core Features (MVP)
+# Core Features
 - User & Access Management
 - Phone number–based authentication
 - Mandatory college selection from an approved list
