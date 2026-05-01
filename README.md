@@ -3,6 +3,9 @@ A student-focused marketplace designed for college communities, enabling safe an
 
 <img width="6036" height="1854" alt="Dev-banner-Agora" src="https://github.com/user-attachments/assets/7eed174a-6ae8-4f96-b582-7580489463f8" />
 
+# Download the App
+https://play.google.com/store/apps/details?id=com.Agora.App
+
 # Project Overview
 Agora is a mobile marketplace application built to help college students buy, sell, rent, and exchange items and services within their academic communities.
 It replaces fragmented WhatsApp and Telegram groups with a structured, campus-aware platform focused on relevance, trust, and usability.
