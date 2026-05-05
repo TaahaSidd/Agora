@@ -1,154 +1,127 @@
-import React, {useState} from 'react';
-import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {LinearGradient} from 'expo-linear-gradient';
+import React, { useState } from 'react';
+import {
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    LayoutAnimation,
+    Platform,
+    UIManager,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import AppHeader from '../components/AppHeader';
 import Button from '../components/Button';
+import { COLORS } from '../utils/colors';
 
-import {COLORS} from '../utils/colors';
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const faqData = [
     {
-        question: "How do I buy or sell items?",
-        answer: "Browse the feed, tap an item to see details, and chat with the seller. To sell, just tap the '+' icon and upload your item details.",
-        icon: "cart-outline",
-        gradient: ['#3B82F6', '#2563EB'],
+        question: 'How do I buy or sell items?',
+        answer: "Browse the feed, tap an item to see details, and chat with the seller. To sell, tap the '+' icon and upload your item details.",
+        icon: 'cart',
+        color: '#3B82F6',
     },
     {
-        question: "How do I pay for items?",
-        answer: "All payments happen directly between students. We recommend using UPI or cash only AFTER you have inspected the item in person.",
-        icon: "card-outline",
-        gradient: ['#8B5CF6', '#7C3AED'],
+        question: 'How do I pay for items?',
+        answer: 'All payments happen directly between students. We recommend using UPI or cash only after you have inspected the item in person.',
+        icon: 'card',
+        color: '#8B5CF6',
     },
     {
-        question: "Where should I meet the seller?",
-        answer: "Always meet in public campus areas like the Library, Canteens, or Main Gate. Never meet in isolated areas or off-campus alone.",
-        icon: "location-outline",
-        gradient: ['#EC4899', '#DB2777'],
+        question: 'Where should I meet the seller?',
+        answer: 'Always meet in public campus areas like the Library, Canteens, or Main Gate. Never meet in isolated areas or off-campus alone.',
+        icon: 'location',
+        color: '#EC4899',
     },
     {
-        question: "Is my data safe?",
-        answer: "Absolutely. We only use your data for campus verification. Your phone number is only shared if you choose to show it.",
-        icon: "shield-checkmark-outline",
-        gradient: ['#10B981', '#059669'],
+        question: 'Is my data safe?',
+        answer: 'We only use your data for campus verification. Your phone number is only shared if you choose to show it.',
+        icon: 'shield-checkmark',
+        color: '#10B981',
     },
     {
-        question: "How do I report a scam or issue?",
-        answer: "Tap the 'Flag' icon on any listing or user profile. Our student moderation team reviews all reports within 24 hours.",
-        icon: "flag-outline",
-        gradient: ['#F59E0B', '#D97706'],
+        question: 'How do I report a scam or issue?',
+        answer: "Tap the 'Flag' icon on any listing or user profile. Our moderation team reviews all reports within 24 hours.",
+        icon: 'flag',
+        color: '#F59E0B',
     },
-    {
-        question: "Can I search for specific items?",
-        answer: "Yes! Use the search bar at the top or filter by categories like Textbooks, Electronics, or Cycle to find what you need.",
-        icon: "search-outline",
-        gradient: ['#06B6D4', '#0891B2'],
-    },
-    {
-        question: "Can I delete my account?",
-        answer: "Yes. Go to Profile → Settings → Delete Account. All your listings and data will be permanently removed from our servers.",
-        icon: "trash-outline",
-        gradient: ['#EF4444', '#DC2626'],
-    },
-    {
-        question: "Who runs Agora?",
-        answer: "Agora is a student-led initiative built to help the college community. We aren't a business—we're your peers!",
-        icon: "people-outline",
-        gradient: ['#14B8A6', '#0D9488'],
-    }
 ];
 
-
-export default function FAQScreen({navigation}) {
+export default function FAQScreen({ navigation }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
 
     const toggleExpand = (index) => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            {/* Status bar changed to light bg with dark icons */}
-            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
-            <AppHeader title="FAQs" onBack={() => navigation.goBack()}/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content" />
+            <AppHeader title="Help Center" onBack={() => navigation.goBack()} />
 
             <ScrollView
                 contentContainerStyle={styles.container}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Header Section */}
-                <View style={styles.headerSection}>
-                    <Text style={styles.headerTitle}>Frequently Asked Questions</Text>
-                    <Text style={styles.headerSubtitle}>
-                        Find answers to common questions about using Agora
+                {/* Hero */}
+                <View style={styles.hero}>
+                    <Text style={styles.heroTitle}>Support & FAQs</Text>
+                    <Text style={styles.heroSubtitle}>
+                        Everything you need to know about the Agora campus marketplace.
                     </Text>
                 </View>
 
-                {/* FAQ Items */}
-                {faqData.map((item, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={[
-                            styles.item,
-                            expandedIndex === index && styles.itemExpanded
-                        ]}
-                        onPress={() => toggleExpand(index)}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.questionRow}>
-                            <LinearGradient
-                                colors={item.gradient}
-                                style={styles.iconCircle}
-                                start={{x: 0, y: 0}}
-                                end={{x: 1, y: 1}}
-                            >
-                                <Ionicons
-                                    name={item.icon}
-                                    size={22}
-                                    color="#fff"
-                                />
-                            </LinearGradient>
-                            <Text style={styles.question}>{item.question}</Text>
-                            <View style={styles.chevronContainer}>
-                                <Ionicons
-                                    name={expandedIndex === index ? "chevron-up" : "chevron-down"}
-                                    size={20}
-                                    color={COLORS.light.textTertiary}
-                                />
-                            </View>
-                        </View>
-
-                        {expandedIndex === index && (
-                            <View style={styles.answerContainer}>
-                                <Text style={styles.answer}>{item.answer}</Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                ))}
-
-                {/* Bottom Help Section */}
-                <View style={styles.helpCard}>
-                    <View style={styles.helpIconContainer}>
-                        <LinearGradient
-                            colors={['#3B82F6', '#2563EB']}
-                            style={styles.helpIconGradient}
-                            start={{x: 0, y: 0}}
-                            end={{x: 1, y: 1}}
+                {/* FAQ items */}
+                {faqData.map((item, index) => {
+                    const isExpanded = expandedIndex === index;
+                    return (
+                        <TouchableOpacity
+                            key={index}
+                            style={[styles.item, isExpanded && styles.itemExpanded]}
+                            onPress={() => toggleExpand(index)}
+                            activeOpacity={0.6}
                         >
-                            <Ionicons name="help-circle" size={32} color="#fff"/>
-                        </LinearGradient>
-                    </View>
-                    <Text style={styles.helpTitle}>Still need help?</Text>
-                    <Text style={styles.helpText}>
-                        Can't find what you're looking for? Our support team is here to help.
+                            <View style={styles.questionRow}>
+                                <View style={[styles.iconWrapper, { backgroundColor: `${item.color}12` }]}>
+                                    <Ionicons name={item.icon} size={18} color={item.color} />
+                                </View>
+                                <Text style={styles.question}>{item.question}</Text>
+                                <Ionicons
+                                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                                    size={14}
+                                    color={isExpanded ? COLORS.primary : COLORS.gray300}
+                                />
+                            </View>
+
+                            {isExpanded && (
+                                <View style={styles.answerContainer}>
+                                    <Text style={styles.answer}>{item.answer}</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    );
+                })}
+
+                {/* Help card */}
+                <View style={styles.helpCard}>
+                    <Text style={styles.helpTitle}>Still have questions?</Text>
+                    <Text style={styles.helpSubtitle}>
+                        Our student support team is online and ready to help.
                     </Text>
                     <Button
-                        title="Contact Support"
+                        title="Chat with Support"
                         onPress={() => navigation.navigate('SupportScreen')}
-                        icon="headset-outline"
+                        icon="chatbubbles-outline"
                         fullWidth
-                        size="medium"
+                        variant="primary"
                     />
                 </View>
             </ScrollView>
@@ -162,133 +135,111 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        padding: 20,
+        padding: 16,
         paddingBottom: 40,
     },
-    headerSection: {
-        marginBottom: 24,
+
+    // Hero
+    hero: {
+        marginBottom: 16,
+        paddingHorizontal: 4,
     },
-    headerTitle: {
-        fontSize: 28,
-        fontWeight: '800',
+    heroTitle: {
+        fontSize: 22,
+        fontWeight: '700',
         color: COLORS.light.text,
         letterSpacing: -0.5,
-        marginBottom: 8,
+        marginBottom: 4,
     },
-    headerSubtitle: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
-        fontWeight: '500',
-        lineHeight: 20,
+    heroSubtitle: {
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 19,
     },
+
+    // FAQ items
     item: {
         backgroundColor: COLORS.white,
-        borderRadius: 18,
-        padding: 16,
-        marginBottom: 12,
+        borderRadius: 16,
+        padding: 14,
+        marginBottom: 8,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        elevation: 2,
+        borderColor: COLORS.gray100,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
     },
     itemExpanded: {
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-        borderColor: COLORS.primary + '30', // Subtle highlight when expanded
+        borderColor: `${COLORS.primary}30`,
     },
     questionRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 12,
     },
-    iconCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+    iconWrapper: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
     },
     question: {
         flex: 1,
-        fontSize: 15,
-        fontWeight: '700',
+        fontSize: 14,
+        fontWeight: '600',
         color: COLORS.light.text,
-        lineHeight: 20,
         letterSpacing: -0.2,
-    },
-    chevronContainer: {
-        width: 32,
-        height: 32,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: 8,
     },
     answerContainer: {
         marginTop: 12,
-        marginLeft: 56,
         paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: COLORS.light.border,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: COLORS.gray100,
     },
     answer: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
-        lineHeight: 22,
-        fontWeight: '500',
-        letterSpacing: -0.1,
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 20,
     },
+
+    // Help card
     helpCard: {
         backgroundColor: COLORS.white,
-        borderRadius: 20,
-        padding: 24,
-        marginTop: 20,
-        marginBottom: 20,
-        alignItems: 'center',
+        borderRadius: 16,
+        padding: 16,
+        marginTop: 16,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        elevation: 2,
-    },
-    helpIconContainer: {
-        marginBottom: 16,
-    },
-    helpIconGradient: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+        borderColor: COLORS.gray100,
         alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#3B82F6',
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 4,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
     },
     helpTitle: {
-        fontSize: 20,
-        fontWeight: '800',
+        fontSize: 15,
+        fontWeight: '600',
         color: COLORS.light.text,
-        marginBottom: 8,
         letterSpacing: -0.3,
+        marginBottom: 4,
     },
-    helpText: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
+    helpSubtitle: {
+        fontSize: 12,
+        color: COLORS.gray400,
         textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 20,
-        letterSpacing: -0.1,
+        marginBottom: 14,
+        lineHeight: 17,
     },
 });

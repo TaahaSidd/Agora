@@ -1,185 +1,128 @@
 import React from 'react';
-import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {LinearGradient} from 'expo-linear-gradient';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import AppHeader from '../components/AppHeader';
 import InfoBox from '../components/InfoBox';
+import { COLORS } from '../utils/colors';
 
-import {COLORS} from '../utils/colors';
+const sections = [
+    {
+        title: '1. Data Collection & Usage',
+        body: 'Spica Labs collects information necessary to maintain a functional and safe marketplace. This includes your institutional email to verify campus affiliation and your phone number to facilitate peer-to-peer communication.',
+        bullets: [
+            'Account Data: Name, email, and encrypted credentials.',
+            'Listing Data: Images, descriptions, and pricing of items.',
+            'Metadata: IP addresses and device identifiers for fraud prevention.',
+            'Location: Approximate campus location for proximity sorting.',
+        ],
+    },
+    {
+        title: '2. Retention & Deletion',
+        body: 'Your data is stored as long as your account remains active. Users may request full account deletion at any time through the settings menu. Once requested, all personal identifiers are purged from our active databases within 30 days.',
+    },
+    {
+        title: '3. Peer-to-Peer Safety',
+        body: 'Agora acts solely as a discovery layer. We do not process payments or manage logistics. By using the app, you agree to:',
+        bullets: [
+            'Conduct all physical inspections before payment.',
+            'Never share sensitive bank OTPs or login codes.',
+            'Report suspicious listings or harassment immediately.',
+        ],
+    },
+];
 
-export default function PrivacyPolicyScreen({navigation}) {
+const disclaimerBullets = [
+    'We do not verify the condition or legality of listed items.',
+    'We are not liable for any injury or loss during physical meetups.',
+    'Users are responsible for verifying the identity of the counterparty.',
+    'No financial transactions are handled by Spica Labs.',
+];
+
+export default function PrivacyPolicyScreen({ navigation }) {
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
-            <AppHeader title="Privacy Policy" onBack={() => navigation.goBack()}/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content" />
+            <AppHeader title="Privacy Policy" onBack={() => navigation.goBack()} />
 
             <ScrollView
                 contentContainerStyle={styles.container}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Header */}
-                <View style={styles.headerCard}>
-                    <LinearGradient
-                        colors={['#6366F1', '#4F46E5']}
-                        style={styles.headerIconCircle}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 1}}
-                    >
-                        <Ionicons name="shield-checkmark" size={32} color="#fff"/>
-                    </LinearGradient>
-                    <Text style={styles.headerTitle}>Your Privacy Matters</Text>
-                    <Text style={styles.headerSubtitle}>Last updated: January 2026</Text>
+                {/* Hero */}
+                <View style={styles.hero}>
+                    <Text style={styles.heroTitle}>Privacy & Terms</Text>
+                    <Text style={styles.heroSubtitle}>
+                        Effective March 2026. Please read these terms carefully before using Agora.
+                    </Text>
                 </View>
 
-                {/* Content Card */}
-                <View style={styles.contentCard}>
-                    {/* Introduction */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Introduction</Text>
-                        <Text style={styles.paragraph}>
-                            We value your privacy and are committed to protecting your personal information. This policy
-                            explains how we collect, use, and safeguard your data.
-                        </Text>
-                    </View>
-
-                    {/* Information We Collect */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Information We Collect</Text>
-                        <Text style={styles.paragraph}>
-                            We collect the following information to provide you with our services:
-                        </Text>
-                        <View style={styles.list}>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Name, email address, and phone number</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Profile details and preferences</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>App usage data and analytics</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Device information and location</Text>
-                            </View>
+                {/* Content card */}
+                <View style={styles.card}>
+                    {sections.map((section, index) => (
+                        <View
+                            key={index}
+                            style={[styles.section, index < sections.length - 1 && styles.sectionBorder]}
+                        >
+                            <Text style={styles.sectionTitle}>{section.title}</Text>
+                            <Text style={styles.paragraph}>{section.body}</Text>
+                            {section.bullets && (
+                                <View style={styles.bulletList}>
+                                    {section.bullets.map((item, i) => (
+                                        <BulletItem key={i} text={item} />
+                                    ))}
+                                </View>
+                            )}
                         </View>
-                    </View>
+                    ))}
 
-                    {/* How We Use Your Data */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>How We Use Your Data</Text>
-                        <Text style={styles.paragraph}>Your information is used to:</Text>
-                        <View style={styles.list}>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Provide and improve our services</Text>
+                    {/* Disclaimer */}
+                    <View style={styles.disclaimerBox}>
+                        <View style={styles.disclaimerHeader}>
+                            <View style={styles.disclaimerIconWrapper}>
+                                <Ionicons name="shield-half" size={16} color={COLORS.error} />
                             </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Communicate important updates</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Ensure security and prevent fraud</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Comply with legal obligations</Text>
-                            </View>
+                            <Text style={styles.disclaimerTitle}>Platform Disclaimer</Text>
                         </View>
-                    </View>
-
-                    {/* Third-party Sharing */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Third-party Sharing</Text>
-                        <Text style={styles.paragraph}>
-                            We do not share your personal data with third parties without your consent, except when
-                            required by law or necessary to provide our services.
+                        <Text style={styles.disclaimerBody}>
+                            Agora is provided "as-is" without warranties of any kind.
                         </Text>
-                    </View>
-
-                    {/* Your Rights */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Your Rights</Text>
-                        <Text style={styles.paragraph}>You have the right to:</Text>
-                        <View style={styles.list}>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Access and update your personal data</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Request deletion of your information</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={styles.bullet}/>
-                                <Text style={styles.listText}>Withdraw consent at any time</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Data Security */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Data Security</Text>
-                        <Text style={styles.paragraph}>
-                            We implement industry-standard security measures to protect your data from unauthorized
-                            access, alteration, or destruction.
-                        </Text>
-                    </View>
-
-                    {/* Platform Terms & Disclaimer */}
-                    <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, {color: COLORS.error}]}>Terms & Disclaimer</Text>
-                        <Text style={styles.paragraph}>
-                            Agora is a peer-to-peer campus marketplace. By using this platform, you acknowledge and
-                            agree to the following:
-                        </Text>
-                        <View style={styles.list}>
-                            <View style={styles.listItem}>
-                                <View style={[styles.bullet, {backgroundColor: COLORS.error}]}/>
-                                <Text style={styles.listText}>Agora does not own, inspect, or guarantee any items
-                                    listed.</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={[styles.bullet, {backgroundColor: COLORS.error}]}/>
-                                <Text style={styles.listText}>All transactions, payments, and meetings are strictly at
-                                    your own risk.</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={[styles.bullet, {backgroundColor: COLORS.error}]}/>
-                                <Text style={styles.listText}>Agora is not liable for any financial losses, damages, or
-                                    disputes between users.</Text>
-                            </View>
-                            <View style={styles.listItem}>
-                                <View style={[styles.bullet, {backgroundColor: COLORS.error}]}/>
-                                <Text style={styles.listText}>For safety, always meet in public, well-lit campus
-                                    areas.</Text>
-                            </View>
+                        <View style={styles.bulletList}>
+                            {disclaimerBullets.map((item, i) => (
+                                <BulletItem key={i} text={item} color={COLORS.error} />
+                            ))}
                         </View>
                     </View>
 
                     {/* Contact */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Contact Us</Text>
+                    <View style={[styles.section, { marginBottom: 0 }]}>
+                        <Text style={styles.sectionTitle}>5. Updates & Contact</Text>
                         <Text style={styles.paragraph}>
-                            For privacy-related questions or concerns, please contact us at hello.spicalabs@gmail.com
+                            We may update this policy to reflect changes in campus regulations or app features. For legal inquiries, contact:
                         </Text>
+                        <Text style={styles.emailText}>hello.spicalabs@gmail.com</Text>
                     </View>
                 </View>
 
-                {/* Footer Note */}
                 <InfoBox
-                    text="By using Agora, you acknowledge that you have read our safety guidelines and agree that all campus trades are conducted at your own discretion."
-                    icon="information-circle"
+                    text="Your use of Agora constitutes acceptance of these terms. Stay safe and happy trading!"
+                    icon="checkmark-circle"
                 />
             </ScrollView>
         </SafeAreaView>
     );
 }
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+const BulletItem = ({ text, color = COLORS.primary }) => (
+    <View style={styles.bulletItem}>
+        <View style={[styles.bullet, { backgroundColor: color }]} />
+        <Text style={styles.bulletText}>{text}</Text>
+    </View>
+);
+
+// ─── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
     safeArea: {
@@ -187,100 +130,132 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        padding: 20,
+        padding: 16,
         paddingBottom: 40,
     },
-    headerCard: {
-        backgroundColor: COLORS.light.card,
-        borderRadius: 20,
-        padding: 24,
-        alignItems: 'center',
+
+    // Hero
+    hero: {
         marginBottom: 20,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        marginTop: 4,
+        paddingHorizontal: 4,
     },
-    headerIconCircle: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 16,
-        shadowColor: '#4F46E5',
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-    },
-    headerTitle: {
+    heroTitle: {
         fontSize: 24,
-        fontWeight: '800',
+        fontWeight: '700',
         color: COLORS.light.text,
+        letterSpacing: -0.6,
         marginBottom: 6,
-        letterSpacing: -0.3,
     },
-    headerSubtitle: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
-        fontWeight: '600',
+    heroSubtitle: {
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 19,
     },
-    contentCard: {
-        backgroundColor: COLORS.light.card,
-        borderRadius: 20,
-        padding: 24,
-        marginBottom: 20,
+
+    // Card
+    card: {
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        borderColor: COLORS.gray100,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
     },
     section: {
-        marginBottom: 28,
+        paddingVertical: 16,
+    },
+    sectionBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: '800',
+        fontSize: 14,
+        fontWeight: '600',
         color: COLORS.light.text,
-        marginBottom: 12,
-        letterSpacing: -0.3,
+        letterSpacing: -0.2,
+        marginBottom: 8,
     },
     paragraph: {
-        fontSize: 15,
-        color: COLORS.light.textSecondary,
-        lineHeight: 24,
-        fontWeight: '500',
-        letterSpacing: -0.1,
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 20,
     },
-    list: {
-        marginTop: 12,
+
+    // Bullets
+    bulletList: {
+        marginTop: 10,
+        gap: 8,
     },
-    listItem: {
+    bulletItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        marginBottom: 12,
     },
     bullet: {
-        width: 6,
-        height: 6,
+        width: 5,
+        height: 5,
         borderRadius: 3,
-        backgroundColor: COLORS.primary,
-        marginTop: 9,
-        marginRight: 12,
+        marginTop: 7,
+        marginRight: 10,
     },
-    listText: {
+    bulletText: {
         flex: 1,
-        fontSize: 15,
-        color: COLORS.light.textSecondary,
-        lineHeight: 24,
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 19,
+    },
+
+    // Disclaimer
+    disclaimerBox: {
+        backgroundColor: `${COLORS.error}08`,
+        borderRadius: 12,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: `${COLORS.error}15`,
+        marginVertical: 16,
+    },
+    disclaimerHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+        gap: 8,
+    },
+    disclaimerIconWrapper: {
+        width: 28,
+        height: 28,
+        borderRadius: 8,
+        backgroundColor: `${COLORS.error}12`,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    disclaimerTitle: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: COLORS.error,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+    },
+    disclaimerBody: {
+        fontSize: 13,
         fontWeight: '500',
-        letterSpacing: -0.1,
+        color: COLORS.light.text,
+        marginBottom: 8,
+    },
+
+    // Email
+    emailText: {
+        color: COLORS.primary,
+        fontWeight: '500',
+        marginTop: 8,
+        fontSize: 13,
     },
 });

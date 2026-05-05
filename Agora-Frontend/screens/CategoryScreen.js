@@ -69,7 +69,7 @@ const CategoryScreen = ({ route, navigation }) => {
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <EmptyBoxSvg width={200} height={200} />
+            <EmptyBoxSvg width={200} height={70} />
             <Text style={styles.emptyTitle}>No Items Found</Text>
             <Text style={styles.emptyText}>
                 Be the first to list something in this category or check back later!

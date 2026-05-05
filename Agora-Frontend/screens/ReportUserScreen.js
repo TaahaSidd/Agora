@@ -1,145 +1,117 @@
 import React, {useState} from 'react';
-import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {
+    SafeAreaView, ScrollView, StatusBar, StyleSheet,
+    Text, TextInput, TouchableOpacity, View,
+} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {COLORS} from '../utils/colors';
-
 import {useReport} from '../hooks/useReport';
 
 import AppHeader from '../components/AppHeader';
 import Button from '../components/Button';
 import ToastMessage from '../components/ToastMessage';
 import ModalComponent from '../components/Modal';
-import InfoBox from "../components/InfoBox";
-import {THEME} from '../utils/theme';
+import InfoBox from '../components/InfoBox';
+
+const REPORT_REASONS = [
+    {id: 'spam',          title: 'Spam',                   desc: 'Posting spam or unwanted content',   icon: 'megaphone-outline',          color: COLORS.warning},
+    {id: 'harassment',    title: 'Harassment',             desc: 'Bullying or abusive behavior',       icon: 'alert-circle-outline',       color: COLORS.error},
+    {id: 'fake',          title: 'Fake Account',           desc: 'Pretending to be someone else',      icon: 'person-remove-outline',      color: COLORS.primary},
+    {id: 'scam',          title: 'Scam or Fraud',          desc: 'Suspicious or fraudulent activity',  icon: 'warning-outline',            color: COLORS.error},
+    {id: 'inappropriate', title: 'Inappropriate Content',  desc: 'Offensive or adult content',         icon: 'eye-off-outline',            color: COLORS.error},
+    {id: 'other',         title: 'Other',                  desc: 'Something else',                     icon: 'ellipsis-horizontal-outline', color: COLORS.gray400},
+];
 
 const ReportUserScreen = ({navigation, route}) => {
     const {userId, userName} = route.params;
+    const {submitReport, loading} = useReport();
+
     const [selectedReason, setSelectedReason] = useState('');
     const [additionalDetails, setAdditionalDetails] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const {submitReport, loading} = useReport();
     const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
 
-    const reportReasons = [
-        { id: 'spam', title: 'Spam', description: 'Posting spam or unwanted content', icon: 'megaphone-outline', color: '#F59E0B' },
-        { id: 'harassment', title: 'Harassment', description: 'Bullying or abusive behavior', icon: 'alert-circle-outline', color: '#EF4444' },
-        { id: 'fake', title: 'Fake Account', description: 'Pretending to be someone else', icon: 'person-remove-outline', color: '#8B5CF6' },
-        { id: 'scam', title: 'Scam or Fraud', description: 'Suspicious or fraudulent activity', icon: 'warning-outline', color: '#DC2626' },
-        { id: 'inappropriate', title: 'Inappropriate Content', description: 'Offensive or adult content', icon: 'eye-off-outline', color: '#EF4444' },
-        { id: 'other', title: 'Other', description: 'Something else', icon: 'ellipsis-horizontal-outline', color: '#6B7280' },
-    ];
+    const showToast = (type, title, message) => setToast({visible: true, type, title, message});
 
     const handleSubmit = async () => {
         if (!selectedReason) {
-            setToast({
-                visible: true,
-                type: 'error',
-                title: 'Required',
-                message: 'Please select a reason for reporting',
-            });
+            showToast('error', 'Required', 'Please select a reason for reporting.');
             return;
         }
-
-        const success = await submitReport("USER", selectedReason, userId, additionalDetails);
-
-        if (success) {
-            setShowSuccessModal(true);
-        } else {
-            setToast({
-                visible: true,
-                type: 'error',
-                title: 'Error',
-                message: 'Failed to submit report. Please try again.',
-            });
-        }
+        const success = await submitReport('USER', selectedReason, userId, additionalDetails);
+        if (success) setShowSuccessModal(true);
+        else showToast('error', 'Error', 'Failed to submit report. Please try again.');
     };
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content"/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
             <AppHeader title="Report User" onBack={() => navigation.goBack()}/>
 
-            <ScrollView
-                contentContainerStyle={styles.container}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* Header Info */}
-                <View style={styles.headerCard}>
-                    <View style={styles.warningIconCircle}>
-                        <Ionicons name="flag" size={32} color="#EF4444"/>
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+
+                {/* Header preview — same pattern as ReportListingScreen */}
+                <View style={styles.preview}>
+                    <View style={styles.previewIconWrapper}>
+                        <Ionicons name="flag" size={22} color={COLORS.error}/>
                     </View>
-                    <Text style={styles.headerTitle}>Report {userName}</Text>
-                    <Text style={styles.headerSubtitle}>
-                        Help us understand what's happening. Your report is anonymous and helps keep the campus safe.
-                    </Text>
+                    <View style={styles.previewInfo}>
+                        <Text style={styles.previewTitle} numberOfLines={1}>
+                            {userName || 'User'}
+                        </Text>
+                        <View style={styles.reportBadge}>
+                            <Ionicons name="flag" size={10} color={COLORS.error}/>
+                            <Text style={styles.reportBadgeText}>Reporting this user</Text>
+                        </View>
+                    </View>
                 </View>
 
-                {/* Reason Selection */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Why are you reporting this user? *</Text>
-
-                    {reportReasons.map((reason) => (
-                        <TouchableOpacity
-                            key={reason.id}
-                            style={[
-                                styles.reasonCard,
-                                selectedReason === reason.id && styles.reasonCardSelected,
-                            ]}
-                            onPress={() => setSelectedReason(reason.id)}
-                            activeOpacity={0.7}
-                        >
-                            <View
-                                style={[
-                                    styles.reasonIconCircle,
-                                    {backgroundColor: `${reason.color}10`},
-                                ]}
+                {/* Reason selection */}
+                <Text style={styles.sectionLabel}>Why are you reporting this user?</Text>
+                <View style={styles.reasons}>
+                    {REPORT_REASONS.map((reason) => {
+                        const selected = selectedReason === reason.id;
+                        return (
+                            <TouchableOpacity
+                                key={reason.id}
+                                style={[styles.reasonRow, selected && styles.reasonRowSelected]}
+                                onPress={() => setSelectedReason(reason.id)}
+                                activeOpacity={0.6}
                             >
-                                <Ionicons name={reason.icon} size={24} color={reason.color}/>
-                            </View>
-                            <View style={styles.reasonContent}>
-                                <Text style={styles.reasonTitle}>{reason.title}</Text>
-                                <Text style={styles.reasonDescription}>{reason.description}</Text>
-                            </View>
-                            <View style={[styles.radioButton, selectedReason === reason.id && styles.radioButtonActive]}>
-                                {selectedReason === reason.id && (
-                                    <View style={styles.radioButtonInner}/>
-                                )}
-                            </View>
-                        </TouchableOpacity>
-                    ))}
+                                <View style={[styles.reasonIcon, {backgroundColor: `${reason.color}12`}]}>
+                                    <Ionicons name={reason.icon} size={18} color={reason.color}/>
+                                </View>
+                                <View style={styles.reasonText}>
+                                    <Text style={styles.reasonTitle}>{reason.title}</Text>
+                                    <Text style={styles.reasonDesc}>{reason.desc}</Text>
+                                </View>
+                                <View style={[styles.radio, selected && styles.radioSelected]}>
+                                    {selected && <View style={styles.radioInner}/>}
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
-                {/* Additional Details */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Additional Details (Optional)</Text>
-                    <View style={styles.textAreaContainer}>
-                        <Ionicons
-                            name="document-text-outline"
-                            size={20}
-                            color={COLORS.light.textTertiary}
-                            style={styles.textAreaIcon}
-                        />
-                        <TextInput
-                            style={styles.textArea}
-                            placeholder="Provide more context about this report..."
-                            placeholderTextColor={COLORS.light.textTertiary}
-                            multiline
-                            numberOfLines={5}
-                            value={additionalDetails}
-                            onChangeText={setAdditionalDetails}
-                            textAlignVertical="top"
-                            maxLength={500}
-                        />
-                    </View>
-                    <Text style={styles.characterCount}>{additionalDetails.length}/500</Text>
+                {/* Additional details */}
+                <Text style={[styles.sectionLabel, {marginTop: 8}]}>Additional Details (Optional)</Text>
+                <View style={styles.textAreaWrapper}>
+                    <TextInput
+                        style={styles.textArea}
+                        placeholder="Provide more context about this report..."
+                        placeholderTextColor={COLORS.gray400}
+                        multiline
+                        numberOfLines={5}
+                        value={additionalDetails}
+                        onChangeText={setAdditionalDetails}
+                        textAlignVertical="top"
+                        maxLength={500}
+                    />
+                    <Text style={styles.charCount}>{additionalDetails.length}/500</Text>
                 </View>
 
-                {/* Info Box */}
-                <InfoBox
-                    text="We take reports seriously. False reports may result in action against your account."
-                />
+                <InfoBox text="We take reports seriously. False reports may result in action against your account."/>
 
-                {/* Submit Button */}
                 <Button
                     title="Submit Report"
                     onPress={handleSubmit}
@@ -148,6 +120,8 @@ const ReportUserScreen = ({navigation, route}) => {
                     icon="send"
                     loading={loading}
                     disabled={!selectedReason || loading}
+                    fullWidth
+                    style={{marginTop: 8}}
                 />
             </ScrollView>
 
@@ -168,7 +142,7 @@ const ReportUserScreen = ({navigation, route}) => {
                     type={toast.type}
                     title={toast.title}
                     message={toast.message}
-                    onHide={() => setToast({...toast, visible: false})}
+                    onHide={() => setToast(p => ({...p, visible: false}))}
                 />
             )}
         </SafeAreaView>
@@ -181,135 +155,144 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        padding: 20,
+        padding: 16,
         paddingBottom: 40,
     },
-    headerCard: {
-        backgroundColor: COLORS.light.card,
-        borderRadius: 24,
-        padding: 24,
-        alignItems: 'center',
+
+    // Preview — matches ReportListingScreen exactly
+    preview: {
+        flexDirection: 'row',
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 12,
         marginBottom: 24,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 3,
+        borderColor: COLORS.gray100,
+        gap: 12,
     },
-    warningIconCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: '#FEF2F2', // Soft red
+    previewIconWrapper: {
+        width: 64,
+        height: 64,
+        borderRadius: 12,
+        backgroundColor: `${COLORS.error}12`,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 16,
     },
-    headerTitle: {
-        fontSize: 22,
-        fontWeight: '800',
-        color: COLORS.light.text,
-        marginBottom: 8,
-        letterSpacing: -0.5,
+    previewInfo: {
+        flex: 1,
+        justifyContent: 'center',
+        gap: 6,
     },
-    headerSubtitle: {
+    previewTitle: {
         fontSize: 14,
-        color: COLORS.light.textSecondary,
-        textAlign: 'center',
-        lineHeight: 20,
-        fontWeight: '500',
-        paddingHorizontal: 10,
+        fontWeight: '600',
+        color: COLORS.light.text,
     },
-    section: {
-        marginBottom: 24,
-    },
-    sectionLabel: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.light.textSecondary,
-        marginBottom: 12,
-    },
-    reasonCard: {
+    reportBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.light.card,
-        borderRadius: 16,
-        padding: 16,
+        gap: 4,
+        backgroundColor: `${COLORS.error}12`,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+        alignSelf: 'flex-start',
+    },
+    reportBadgeText: {
+        fontSize: 10,
+        color: COLORS.error,
+        fontWeight: '600',
+    },
+
+    // Section label
+    sectionLabel: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: COLORS.gray400,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
         marginBottom: 12,
-        borderWidth: 1.5,
-        borderColor: COLORS.light.border,
     },
-    reasonCardSelected: {
-        borderColor: COLORS.primary,
-        backgroundColor: '#EFF6FF', // Light primary tint
+
+    // Reasons
+    reasons: {
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        marginBottom: 24,
+        overflow: 'hidden',
     },
-    reasonIconCircle: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+    reasonRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 14,
+        gap: 12,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
+    },
+    reasonRowSelected: {
+        backgroundColor: `${COLORS.primary}06`,
+    },
+    reasonIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 14,
     },
-    reasonContent: {
+    reasonText: {
         flex: 1,
+        gap: 2,
     },
     reasonTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: COLORS.light.text,
-        marginBottom: 2,
-    },
-    reasonDescription: {
         fontSize: 13,
-        color: COLORS.light.textSecondary,
-        fontWeight: '500',
+        fontWeight: '600',
+        color: COLORS.light.text,
     },
-    radioButton: {
-        width: 22,
-        height: 22,
-        borderRadius: 11,
+    reasonDesc: {
+        fontSize: 11,
+        color: COLORS.gray400,
+    },
+    radio: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
         borderWidth: 2,
-        borderColor: COLORS.light.border,
+        borderColor: COLORS.gray200,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    radioButtonActive: {
+    radioSelected: {
         borderColor: COLORS.primary,
     },
-    radioButtonInner: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+    radioInner: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
         backgroundColor: COLORS.primary,
     },
-    textAreaContainer: {
-        flexDirection: 'row',
-        backgroundColor: COLORS.light.card,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: COLORS.light.border,
-        padding: 16,
-    },
-    textAreaIcon: {
-        marginRight: 12,
-        marginTop: 2,
+
+    // Text area
+    textAreaWrapper: {
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        padding: 12,
+        marginBottom: 16,
     },
     textArea: {
-        flex: 1,
-        fontSize: 15,
+        fontSize: 13,
         color: COLORS.light.text,
         minHeight: 100,
-        fontWeight: '500',
+        lineHeight: 20,
     },
-    characterCount: {
-        fontSize: 12,
-        color: COLORS.light.textTertiary,
+    charCount: {
+        fontSize: 11,
+        color: COLORS.gray400,
         textAlign: 'right',
-        marginTop: 6,
-        fontWeight: '500',
+        marginTop: 4,
     },
 });
 

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Animated,
@@ -10,16 +10,16 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {Ionicons} from '@expo/vector-icons';
-import {signInAnonymously} from 'firebase/auth';
-import {auth} from '../firebase/firebaseConfig';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { signInAnonymously } from 'firebase/auth';
+import { auth } from '../firebase/firebaseConfig';
 
-import {useUserStore} from "../stores/userStore";
-import {useChatRooms} from '../hooks/useChatRooms';
-import {useChatNotifications} from '../hooks/useChatNotifications';
-import {useMarkChatAsRead} from '../hooks/useMarkChatAsRead';
-import {deleteChatForMe} from "../utils/chatService";
+import { useUserStore } from "../stores/userStore";
+import { useChatRooms } from '../hooks/useChatRooms';
+import { useChatNotifications } from '../hooks/useChatNotifications';
+import { useMarkChatAsRead } from '../hooks/useMarkChatAsRead';
+import { deleteChatForMe } from "../utils/chatService";
 
 import LoadingSpinner from '../components/LoadingSpinner';
 import ModalComponent from '../components/Modal';
@@ -27,10 +27,11 @@ import ToastMessage from '../components/ToastMessage';
 import AppHeader from '../components/AppHeader';
 import SearchInput from '../components/SearchInput';
 import Button from '../components/Button';
+import AgoraSegmentedFilter from '../components/SegmentedFilter';
 
 import CloudsSvg from '../assets/svg/clouds.svg'
 
-import {COLORS} from '../utils/colors';
+import { COLORS } from '../utils/colors';
 
 const sanitizeEmail = (email) => email.replace(/\./g, '_');
 
@@ -49,22 +50,22 @@ const ChatItemSkeleton = () => {
     });
 
     return (<View style={styles.chatItem}>
-        <Animated.View style={[styles.skeletonImage, {opacity}]}/>
+        <Animated.View style={[styles.skeletonImage, { opacity }]} />
 
         <View style={styles.chatContent}>
             <View style={styles.topRow}>
-                <Animated.View style={[styles.skeletonName, {opacity}]}/>
-                <Animated.View style={[styles.skeletonTime, {opacity}]}/>
+                <Animated.View style={[styles.skeletonName, { opacity }]} />
+                <Animated.View style={[styles.skeletonTime, { opacity }]} />
             </View>
-            <Animated.View style={[styles.skeletonUserName, {opacity}]}/>
-            <Animated.View style={[styles.skeletonMessage, {opacity}]}/>
+            <Animated.View style={[styles.skeletonUserName, { opacity }]} />
+            <Animated.View style={[styles.skeletonMessage, { opacity }]} />
         </View>
     </View>);
 };
 
-const ChatScreen = ({scrollY}) => {
+const ChatScreen = ({ scrollY }) => {
     const navigation = useNavigation();
-    const {currentUser, loading, fetchUser, isGuest} = useUserStore();
+    const { currentUser, loading, fetchUser, isGuest } = useUserStore();
     const markChatAsRead = useMarkChatAsRead();
     useChatNotifications(currentUser?.email, currentUser?.id);
 
@@ -76,7 +77,7 @@ const ChatScreen = ({scrollY}) => {
         }
     }, [currentUser]);
 
-    const {chatRooms, loading: chatsLoading, error} = useChatRooms(currentUser?.email);
+    const { chatRooms, loading: chatsLoading, error } = useChatRooms(currentUser?.email);
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [filter, setFilter] = useState('all');
@@ -85,21 +86,22 @@ const ChatScreen = ({scrollY}) => {
     const [toastVisible, setToastVisible] = useState(false);
     const [openingChat, setOpeningChat] = useState(false);
     const isFetchingChats = chatsLoading;
+    const CHAT_OPTIONS = ['all', 'unread'];
 
     if (loading) {
         return (<SafeAreaView style={styles.safeArea}>
-            <AppHeader title="Messages"/>
+            <AppHeader title="Messages" />
             <View style={styles.loadingContainer}>
-                <LoadingSpinner size="large" color={COLORS.primary}/>
+                <LoadingSpinner size="large" color={COLORS.primary} />
             </View>
         </SafeAreaView>);
     }
 
     if (isGuest || !currentUser) {
         return (<SafeAreaView style={styles.safeArea}>
-            <AppHeader title="Messages"/>
+            <AppHeader title="Messages" />
             <View style={styles.emptyState}>
-                <Ionicons name="chatbubbles-outline" size={80} color={COLORS.light.textTertiary}/>
+                <Ionicons name="chatbubbles-outline" size={80} color={COLORS.light.textTertiary} />
                 <Text style={styles.emptyTitle}>Log in Required</Text>
                 <Text style={styles.emptyText}>
                     Please log in to view and send messages
@@ -137,7 +139,7 @@ const ChatScreen = ({scrollY}) => {
         if (diffHours < 24) return `${diffHours}h`;
         if (diffDays === 1) return 'Yesterday';
         if (diffDays < 7) return `${diffDays}d`;
-        return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
     const filteredChats = chatRooms.filter(chat => {
@@ -215,7 +217,7 @@ const ChatScreen = ({scrollY}) => {
         }
     };
 
-    const renderChatItem = ({item, index}) => {
+    const renderChatItem = ({ item, index }) => {
         const otherUser = item.participantsInfo?.find(p => p.id !== currentUser.email);
         const lastMessage = item.lastMessage?.text || 'No messages yet';
         const listingTitle = item.listing?.title || 'Item';
@@ -240,12 +242,12 @@ const ChatScreen = ({scrollY}) => {
         >
             <View style={styles.imageContainer}>
                 <Image
-                    source={imageUri ? {uri: imageUri} : require('../assets/no-image.jpg')}
+                    source={imageUri ? { uri: imageUri } : require('../assets/no-image.jpg')}
                     style={styles.productImage}
                 />
                 <View style={styles.avatarBadge}>
                     <Image
-                        source={otherUser?.avatar ? {uri: otherUser.avatar} : require('../assets/defaultProfile.png')}
+                        source={otherUser?.avatar ? { uri: otherUser.avatar } : require('../assets/defaultProfile.png')}
                         style={styles.avatarSmall}
                     />
                 </View>
@@ -268,7 +270,7 @@ const ChatScreen = ({scrollY}) => {
                         name="checkmark-done"
                         size={14}
                         color="#9CA3AF"
-                        style={{marginRight: 4}}
+                        style={{ marginRight: 4 }}
                     />)}
                     <Text
                         style={[styles.lastMessage, isUnread && styles.lastMessageUnread]}
@@ -280,16 +282,16 @@ const ChatScreen = ({scrollY}) => {
             </View>
 
             {isUnread && (<View style={styles.unreadBadge}>
-                <View style={styles.unreadDot}/>
+                <View style={styles.unreadDot} />
             </View>)}
 
-            <Ionicons name="chevron-forward" size={18} color="#D1D5DB" style={styles.chevron}/>
+            <Ionicons name="chevron-forward" size={18} color="#D1D5DB" style={styles.chevron} />
         </TouchableOpacity>);
     };
 
     const renderEmptyState = () => (<View style={styles.emptyState}>
         <View style={styles.emptyIcon}>
-            <CloudsSvg width={240} height={200}/>
+            <CloudsSvg width={200} height={80} />
         </View>
         <Text style={styles.emptyTitle}>No active chats... yet!</Text>
         <Text style={styles.emptyText}>
@@ -305,11 +307,11 @@ const ChatScreen = ({scrollY}) => {
     </View>);
 
     const renderSkeletonLoader = () => (<View style={styles.skeletonContainer}>
-        {[1, 2, 3, 4, 5].map((item) => (<ChatItemSkeleton key={item}/>))}
+        {[1, 2, 3, 4, 5].map((item) => (<ChatItemSkeleton key={item} />))}
     </View>);
 
     return (<SafeAreaView style={styles.safeArea}>
-        <AppHeader title="Messages"/>
+        <AppHeader title="Messages" />
 
         <View style={styles.searchContainer}>
             {/*<SearchInput*/}
@@ -320,67 +322,48 @@ const ChatScreen = ({scrollY}) => {
             {/*/>*/}
         </View>
 
-        {chatRooms.length > 0 && (<View style={styles.filterContainer}>
-            <View style={styles.filterTabs}>
-                <TouchableOpacity
-                    style={[styles.filterTab, filter === 'all' && styles.filterTabActive]}
-                    onPress={() => setFilter('all')}
-                >
-                    <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>
-                        All
-                    </Text>
-                    <View style={[styles.filterBadge, filter === 'all' && styles.filterBadgeActive]}>
-                        <Text style={[styles.filterBadgeText, filter === 'all' && styles.filterBadgeTextActive]}>
-                            {chatRooms.length}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.filterTab, filter === 'unread' && styles.filterTabActive]}
-                    onPress={() => setFilter('unread')}
-                >
-                    <Text style={[styles.filterText, filter === 'unread' && styles.filterTextActive]}>
-                        Unread
-                    </Text>
-                    {unreadCount > 0 && (
-                        <View style={[styles.filterBadge, filter === 'unread' && styles.filterBadgeActive]}>
-                            <Text style={[styles.filterBadgeText, filter === 'unread' && styles.filterBadgeTextActive]}>
-                                {unreadCount}
-                            </Text>
-                        </View>)}
-                </TouchableOpacity>
+        {chatRooms.length > 0 && (
+            <View style={styles.filterContainer}>
+                <AgoraSegmentedFilter
+                    options={['all', 'unread']}
+                    activeFilter={filter}
+                    onSelect={(selected) => setFilter(selected)}
+                    counts={{
+                        all: chatRooms.length,
+                        unread: unreadCount
+                    }}
+                />
             </View>
-        </View>)}
+        )}
 
         {isFetchingChats ? (renderSkeletonLoader()) : filteredChats.length === 0 && chatRooms.length === 0 ? (renderEmptyState()) : filteredChats.length === 0 && searchQuery ? (
             <View style={styles.emptyState}>
-                <Ionicons name="search-outline" size={80} color={COLORS.light.textTertiary}/>
+                <Ionicons name="search-outline" size={80} color={COLORS.light.textTertiary} />
                 <Text style={styles.emptyTitle}>No Results Found</Text>
                 <Text style={styles.emptyText}>
                     Try searching with a different name or item
                 </Text>
             </View>) : filteredChats.length === 0 && filter === 'unread' ? (<View style={styles.emptyState}>
-            <Ionicons name="checkmark-done-outline" size={80} color={COLORS.light.textTertiary}/>
-            <Text style={styles.emptyTitle}>All Caught Up!</Text>
-            <Text style={styles.emptyText}>
-                You have no unread messages
-            </Text>
-        </View>) : (<Animated.FlatList
-            data={filteredChats}
-            keyExtractor={(item) => item.id}
-            renderItem={renderChatItem}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{paddingBottom: 16}}
-            scrollEventThrottle={16}
-            onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {useNativeDriver: true})}
-            refreshControl={<RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={[COLORS.primary]}
-                tintColor={COLORS.primary}
-            />}
-        />)}
+                <Ionicons name="checkmark-done-outline" size={80} color={COLORS.light.textTertiary} />
+                <Text style={styles.emptyTitle}>All Caught Up!</Text>
+                <Text style={styles.emptyText}>
+                    You have no unread messages
+                </Text>
+            </View>) : (<Animated.FlatList
+                data={filteredChats}
+                keyExtractor={(item) => item.id}
+                renderItem={renderChatItem}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 16 }}
+                scrollEventThrottle={16}
+                onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+                refreshControl={<RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    colors={[COLORS.primary]}
+                    tintColor={COLORS.primary}
+                />}
+            />)}
 
         <ModalComponent
             visible={modalVisible}
@@ -403,7 +386,7 @@ const ChatScreen = ({scrollY}) => {
         {openingChat && (
             <View style={styles.globalLoadingOverlay}>
                 <View style={styles.loadingCard}>
-                    <ActivityIndicator size="large" color={COLORS.primary}/>
+                    <ActivityIndicator size="large" color={COLORS.primary} />
                     <Text style={styles.loadingText}>Opening chat...</Text>
                 </View>
             </View>
@@ -503,7 +486,7 @@ const styles = StyleSheet.create({
     }, chevron: {
         marginLeft: 4,
     }, emptyState: {
-        alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, paddingTop: 100,
+        alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, paddingTop: 100, marginBottom: -10,
     }, emptyIcon: {
         width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', marginBottom: 24,
     }, emptyTitle: {

@@ -1,21 +1,11 @@
 import React, {useState} from 'react';
 import {
-    View,
-    Text,
-    SafeAreaView,
-    StyleSheet,
-    TouchableOpacity,
-    TextInput,
-    Image,
-    ScrollView,
-    StatusBar,
-    ActivityIndicator,
+    View, Text, SafeAreaView, StyleSheet, TouchableOpacity,
+    TextInput, Image, ScrollView, StatusBar,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
 import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
 import {apiPut} from '../services/api';
 import {uploadToCloudinary} from '../utils/upload';
 
@@ -26,15 +16,55 @@ import AppHeader from '../components/AppHeader';
 import CustomPicker from '../components/CustomPicker';
 import InfoBox from '../components/InfoBox';
 
+const MAX_IMAGES = 5;
+
+const CATEGORY_ITEMS = [
+    {label: 'Select Category',              value: '',             icon: null},
+    {label: 'Textbooks & Study Materials',  value: 'textbooks',   icon: 'book-outline'},
+    {label: 'Electronics & Gadgets',        value: 'electronics', icon: 'laptop-outline'},
+    {label: 'Clothing & Accessories',       value: 'clothing',    icon: 'shirt-outline'},
+    {label: 'Furniture & Dorm Supplies',    value: 'furniture',   icon: 'bed-outline'},
+    {label: 'Stationery & Office Supplies', value: 'stationery',  icon: 'pencil-outline'},
+    {label: 'Sports & Fitness Equipment',   value: 'sports',      icon: 'basketball-outline'},
+    {label: 'Bicycles & Transportation',    value: 'bicycles',    icon: 'bicycle-outline'},
+    {label: 'Food & Snacks',                value: 'food',        icon: 'fast-food-outline'},
+    {label: 'Housing & Roommates',          value: 'housing',     icon: 'home-outline'},
+    {label: 'Tutoring & Academic Services', value: 'tutoring',    icon: 'school-outline'},
+    {label: 'Events & Tickets',             value: 'events',      icon: 'ticket-outline'},
+    {label: 'Miscellaneous',                value: 'miscellaneous', icon: 'apps-outline'},
+];
+
+const CONDITION_ITEMS = [
+    {label: 'Select Condition', value: ''},
+    {label: 'New',              value: 'NEW'},
+    {label: 'Used',             value: 'USED'},
+    {label: 'Good',             value: 'GOOD'},
+    {label: 'Refurbished',      value: 'REFURBISHED'},
+    {label: 'Repaired',         value: 'REPAIRED'},
+    {label: 'Damaged',          value: 'DAMAGED'},
+];
+
+const STATUS_ITEMS = [
+    {label: 'Available',   value: 'AVAILABLE'},
+    {label: 'Sold',        value: 'SOLD'},
+    {label: 'Reserved',    value: 'RESERVED'},
+    {label: 'Rented',      value: 'RENTED'},
+    {label: 'Exchanged',   value: 'EXCHANGED'},
+    {label: 'Deactivated', value: 'DEACTIVATED'},
+];
+
 const EditListingScreen = ({navigation, route}) => {
     const {listing: existingListing} = route.params;
 
     const [listing, setListing] = useState({
         title: existingListing.title || existingListing.name || '',
         description: existingListing.description || '',
-        price: existingListing.price ? String(existingListing.price).replace('₹ ', '').replace(/[^0-9.]/g, '') : '',
+        price: existingListing.price
+            ? String(existingListing.price).replace('₹ ', '').replace(/[^0-9.]/g, '')
+            : '',
         category: existingListing.category?.toLowerCase() || '',
         condition: existingListing.condition?.toUpperCase() || existingListing.itemCondition?.toUpperCase() || '',
+        itemStatus: existingListing.itemStatus || 'AVAILABLE',
         images: existingListing.images?.map(img => typeof img === 'string' ? img : img.uri) ||
             existingListing.imageUrl?.map(img => typeof img === 'string' ? img : img.uri) || [],
     });
@@ -42,51 +72,12 @@ const EditListingScreen = ({navigation, route}) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
-    const [touched, setTouched] = useState(false);
     const [toast, setToast] = useState({visible: false, type: 'info', message: ''});
 
-    const categoryItems = [
-        {label: "Select Category", value: "", icon: null},
-        {label: "Textbooks & Study Materials", value: "textbooks", icon: "book-outline"},
-        {label: "Electronics & Gadgets", value: "electronics", icon: "laptop-outline"},
-        {label: "Clothing & Accessories", value: "clothing", icon: "shirt-outline"},
-        {label: "Furniture & Dorm Supplies", value: "furniture", icon: "bed-outline"},
-        {label: "Stationery & Office Supplies", value: "stationery", icon: "pencil-outline"},
-        {label: "Sports & Fitness Equipment", value: "sports", icon: "basketball-outline"},
-        {label: "Bicycles & Transportation", value: "bicycles", icon: "bicycle-outline"},
-        {label: "Food & Snacks", value: "food", icon: "fast-food-outline"},
-        {label: "Housing & Roommates", value: "housing", icon: "home-outline"},
-        {label: "Tutoring & Academic Services", value: "tutoring", icon: "school-outline"},
-        {label: "Events & Tickets", value: "events", icon: "ticket-outline"},
-        {label: "Miscellaneous", value: "miscellaneous", icon: "apps-outline"},
-    ];
-
-    const conditionItems = [
-        {label: "Select Condition", value: ""},
-        {label: "New", value: "NEW"},
-        {label: "Used", value: "USED"},
-        {label: "Good", value: "GOOD"},
-        {label: "Refurbished", value: "REFURBISHED"},
-        {label: "Repaired", value: "REPAIRED"},
-        {label: "Damaged", value: "DAMAGED"},
-    ];
-
-    const statusItems = [
-        {label: "Available", value: "AVAILABLE"},
-        {label: "Sold", value: "SOLD"},
-        {label: "Reserved", value: "RESERVED"},
-        {label: "Rented", value: "RENTED"},
-        {label: "Exchanged", value: "EXCHANGED"},
-        {label: "Deactivated", value: "DEACTIVATED"},
-    ];
-
     const handleChange = (key, value) => {
-        setListing({...listing, [key]: value});
-        setErrors((prev) => ({...prev, [key]: null}));
+        setListing(prev => ({...prev, [key]: value}));
+        setErrors(prev => ({...prev, [key]: null}));
     };
-
-    const MAX_IMAGES = 5;
-    const MAX_FILE_SIZE_MB = 5;
 
     const pickImages = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -95,67 +86,50 @@ const EditListingScreen = ({navigation, route}) => {
             quality: 0.7,
         });
         if (!result.canceled) {
-            const pickedImage = result.assets[0];
-            const newImages = [...listing.images, pickedImage.uri];
-            handleChange('images', newImages);
+            handleChange('images', [...listing.images, result.assets[0].uri]);
         }
     };
 
     const removeImage = (index) => {
-        const newImages = listing.images.filter((_, i) => i !== index);
-        handleChange('images', newImages);
+        handleChange('images', listing.images.filter((_, i) => i !== index));
     };
 
     const validateFields = () => {
-        const validationErrors = {};
-        if (!listing.title.trim()) validationErrors.title = 'Title is required';
-        if (!listing.description.trim()) {
-            validationErrors.description = 'Description is required';
-        } else if (listing.description.length < 20) {
-            validationErrors.description = 'Description must be at least 20 characters';
-        }
-        if (!listing.price.trim() || isNaN(listing.price)) validationErrors.price = 'Valid price is required';
-        if (!listing.category) validationErrors.category = 'Category is required';
-        if (!listing.condition) validationErrors.condition = 'Condition is required';
-        if (listing.images.length === 0) validationErrors.images = 'At least one product image is required';
-        setErrors(validationErrors);
-        return Object.keys(validationErrors).length === 0;
+        const e = {};
+        if (!listing.title.trim())                                          e.title = 'Title is required';
+        if (!listing.description.trim())                                    e.description = 'Description is required';
+        else if (listing.description.length < 20)                          e.description = 'Description must be at least 20 characters';
+        if (!listing.price.trim() || isNaN(listing.price))                 e.price = 'Valid price is required';
+        if (!listing.category)                                              e.category = 'Category is required';
+        if (!listing.condition)                                             e.condition = 'Condition is required';
+        if (listing.images.length === 0)                                    e.images = 'At least one image is required';
+        setErrors(e);
+        return Object.keys(e).length === 0;
     };
 
     const handleUpdate = async () => {
         if (!validateFields()) return;
-
         setLoading(true);
         try {
-            const newImages = listing.images.filter(img => !img.startsWith('http'));
+            const newImages      = listing.images.filter(img => !img.startsWith('http'));
             const existingImages = listing.images.filter(img => img.startsWith('http'));
+            const uploaded       = await Promise.all(newImages.map(uri => uploadToCloudinary(uri)));
 
-            const uploadPromises = newImages.map(imageUri => uploadToCloudinary(imageUri));
-            const cloudinaryResults = await Promise.all(uploadPromises);
-
-            const allImages = [
-                ...existingImages.map(url => ({url, publicId: null})),
-                ...cloudinaryResults.map(img => ({url: img.url, publicId: img.publicId}))
-            ];
-
-            const payload = {
-                title: listing.title,
-                description: listing.description,
-                price: Number(listing.price),
-                category: listing.category,
+            await apiPut(`/listing/update/${existingListing.id}`, {
+                title:         listing.title,
+                description:   listing.description,
+                price:         Number(listing.price),
+                category:      listing.category,
                 itemCondition: listing.condition.toUpperCase(),
-                itemStatus: listing.itemStatus,
-                images: allImages,
-            };
-
-            await apiPut(`/listing/update/${existingListing.id}`, payload);
-            setModalVisible(true);
-        } catch (error) {
-            setToast({
-                visible: true,
-                type: 'error',
-                message: `Error updating listing! Please try again later`,
+                itemStatus:    listing.itemStatus,
+                images: [
+                    ...existingImages.map(url => ({url, publicId: null})),
+                    ...uploaded.map(img => ({url: img.url, publicId: img.publicId})),
+                ],
             });
+            setModalVisible(true);
+        } catch {
+            setToast({visible: true, type: 'error', message: 'Error updating listing. Please try again.'});
         } finally {
             setLoading(false);
         }
@@ -163,61 +137,59 @@ const EditListingScreen = ({navigation, route}) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content"/>
-            <AppHeader title="Edit Your Listing" onBack={() => navigation.goBack()}/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
+            <AppHeader title="Edit Listing" onBack={() => navigation.goBack()}/>
 
             {toast.visible && (
                 <ToastMessage
                     type={toast.type}
                     message={toast.message}
-                    onHide={() => setToast({...toast, visible: false})}
+                    onHide={() => setToast(p => ({...p, visible: false}))}
                 />
             )}
 
-            <ScrollView
-                contentContainerStyle={styles.container}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={styles.headerInfo}>
-                    <Text style={styles.headerTitle}>Edit Listing</Text>
-                    <Text style={styles.headerSubtitle}>Update your item details</Text>
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+
+                {/* Hero */}
+                <View style={styles.hero}>
+                    <Text style={styles.heroTitle}>Edit Listing</Text>
+                    <Text style={styles.heroSubtitle}>Update your item details</Text>
                 </View>
 
+                {/* Photos */}
                 <View style={styles.section}>
                     <View style={styles.labelRow}>
-                        <Text style={styles.sectionLabel}>Product Photos *</Text>
-                        <Text style={styles.imageCount}>
-                            {listing.images.length}/{MAX_IMAGES}
-                        </Text>
+                        <Text style={styles.fieldLabel}>Product Photos *</Text>
+                        <View style={styles.countPill}>
+                            <Text style={styles.countPillText}>{listing.images.length}/{MAX_IMAGES}</Text>
+                        </View>
                     </View>
-
                     <View style={styles.imagesGrid}>
-                        {listing.images.map((imageUri, index) => (
+                        {listing.images.map((uri, index) => (
                             <View key={index} style={styles.imageCard}>
-                                <Image source={{uri: imageUri}} style={styles.uploadedImage}/>
+                                <Image source={{uri}} style={styles.uploadedImage}/>
                                 {index === 0 && (
                                     <View style={styles.primaryBadge}>
-                                        <Text style={styles.primaryText}>Primary</Text>
+                                        <Text style={styles.primaryBadgeText}>Cover</Text>
                                     </View>
                                 )}
                                 <TouchableOpacity
-                                    style={styles.removeButton}
+                                    style={styles.removeBtn}
                                     onPress={() => removeImage(index)}
                                     activeOpacity={0.7}
                                 >
-                                    <Ionicons name="close-circle" size={24} color="#EF4444"/>
+                                    <Ionicons name="close-circle" size={20} color={COLORS.error}/>
                                 </TouchableOpacity>
                             </View>
                         ))}
-
                         {listing.images.length < MAX_IMAGES && (
                             <TouchableOpacity
-                                style={[styles.addImageCard, errors.images && listing.images.length === 0 && styles.inputError]}
+                                style={[styles.addImageCard, errors.images && styles.errorBorder]}
                                 onPress={pickImages}
                                 activeOpacity={0.7}
                             >
-                                <View style={styles.uploadIcon}>
-                                    <Ionicons name="add" size={32} color={COLORS.primary}/>
+                                <View style={styles.addIconWrapper}>
+                                    <Ionicons name="add" size={24} color={COLORS.primary}/>
                                 </View>
                                 <Text style={styles.addImageText}>Add Photo</Text>
                             </TouchableOpacity>
@@ -226,38 +198,39 @@ const EditListingScreen = ({navigation, route}) => {
                     {errors.images && <Text style={styles.errorText}>{errors.images}</Text>}
                 </View>
 
+                {/* Title */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Title *</Text>
-                    <View style={[styles.inputContainer, errors.title && styles.inputError]}>
-                        <Ionicons name="pricetag-outline" size={20} color="#9CA3AF" style={styles.inputIcon}/>
+                    <Text style={styles.fieldLabel}>Title *</Text>
+                    <View style={[styles.inputRow, errors.title && styles.errorBorder]}>
+                        <Ionicons name="pricetag-outline" size={16} color={COLORS.gray400} style={styles.inputIcon}/>
                         <TextInput
                             style={styles.input}
                             placeholder="e.g. iPhone 13 Pro"
-                            placeholderTextColor="#9CA3AF"
+                            placeholderTextColor={COLORS.gray400}
                             value={listing.title}
-                            onChangeText={(text) => handleChange('title', text)}
+                            onChangeText={t => handleChange('title', t)}
                             maxLength={50}
                         />
-                        <Text style={[styles.counterText, {color: listing.title.length > 45 ? '#EF4444' : '#6B7280'}]}>
+                        <Text style={[styles.counter, listing.title.length > 45 && {color: COLORS.error}]}>
                             {listing.title.length}/50
                         </Text>
                     </View>
                     {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
                 </View>
 
+                {/* Description */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Description *</Text>
-                    <View style={[styles.inputContainer, styles.textAreaContainer, errors.description && styles.inputError]}>
-                        <Ionicons name="document-text-outline" size={20} color="#9CA3AF"
-                                  style={[styles.inputIcon, {alignSelf: 'flex-start', marginTop: 12}]}/>
+                    <Text style={styles.fieldLabel}>Description *</Text>
+                    <View style={[styles.inputRow, styles.textAreaRow, errors.description && styles.errorBorder]}>
+                        <Ionicons name="document-text-outline" size={16} color={COLORS.gray400} style={[styles.inputIcon, {marginTop: 2}]}/>
                         <TextInput
                             style={[styles.input, styles.textArea]}
                             placeholder="Describe your item in detail..."
-                            placeholderTextColor="#9CA3AF"
+                            placeholderTextColor={COLORS.gray400}
                             multiline
                             numberOfLines={5}
                             value={listing.description}
-                            onChangeText={(text) => handleChange('description', text)}
+                            onChangeText={t => handleChange('description', t)}
                             textAlignVertical="top"
                             maxLength={800}
                         />
@@ -265,31 +238,30 @@ const EditListingScreen = ({navigation, route}) => {
                     {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
                 </View>
 
+                {/* Price */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Price (₹) *</Text>
-                    <View style={[styles.inputContainer, errors.price && styles.inputError]}>
-                        <Ionicons name="cash-outline" size={20} color="#9CA3AF" style={styles.inputIcon}/>
+                    <Text style={styles.fieldLabel}>Price (₹) *</Text>
+                    <View style={[styles.inputRow, errors.price && styles.errorBorder]}>
+                        <Ionicons name="cash-outline" size={16} color={COLORS.gray400} style={styles.inputIcon}/>
                         <TextInput
                             style={styles.input}
                             placeholder="0.00"
-                            placeholderTextColor="#9CA3AF"
+                            placeholderTextColor={COLORS.gray400}
                             keyboardType="numeric"
                             value={String(listing.price || '')}
-                            onChangeText={(text) => {
-                                const value = text.replace(/[^0-9.]/g, '');
-                                handleChange('price', value);
-                            }}
+                            onChangeText={t => handleChange('price', t.replace(/[^0-9.]/g, ''))}
                         />
                     </View>
                     {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
                 </View>
 
+                {/* Pickers */}
                 <View style={styles.section}>
                     <CustomPicker
                         label="Category *"
                         value={listing.category}
-                        items={categoryItems}
-                        onValueChange={(value) => handleChange('category', value)}
+                        items={CATEGORY_ITEMS}
+                        onValueChange={v => handleChange('category', v)}
                         icon="grid-outline"
                         placeholder="Select Category"
                         error={errors.category}
@@ -300,8 +272,8 @@ const EditListingScreen = ({navigation, route}) => {
                     <CustomPicker
                         label="Condition *"
                         value={listing.condition}
-                        items={conditionItems}
-                        onValueChange={(value) => handleChange('condition', value)}
+                        items={CONDITION_ITEMS}
+                        onValueChange={v => handleChange('condition', v)}
                         icon="shield-checkmark-outline"
                         placeholder="Select Condition"
                         error={errors.condition}
@@ -310,16 +282,16 @@ const EditListingScreen = ({navigation, route}) => {
 
                 <View style={styles.section}>
                     <CustomPicker
-                        label="Status *"
-                        value={listing.itemStatus || 'AVAILABLE'}
-                        items={statusItems}
-                        onValueChange={(value) => handleChange('itemStatus', value)}
+                        label="Status"
+                        value={listing.itemStatus}
+                        items={STATUS_ITEMS}
+                        onValueChange={v => handleChange('itemStatus', v)}
                         icon="checkmark-circle-outline"
                         placeholder="Select Status"
                     />
                 </View>
 
-                <InfoBox text="Changes will be updated immediately and visible to all buyers" />
+                <InfoBox text="Changes will be updated immediately and visible to all buyers."/>
 
                 <Button
                     title="Update Listing"
@@ -330,6 +302,8 @@ const EditListingScreen = ({navigation, route}) => {
                     iconPosition="left"
                     loading={loading}
                     disabled={loading}
+                    fullWidth
+                    style={{marginTop: 8}}
                 />
             </ScrollView>
 
@@ -354,26 +328,29 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        padding: 20,
+        padding: 16,
         paddingBottom: 40,
     },
-    headerInfo: {
-        marginBottom: 24,
-    },
-    headerTitle: {
-        fontSize: 28,
-        fontWeight: '800',
-        color: COLORS.light.text,
-        marginBottom: 4,
-        letterSpacing: -0.5,
-    },
-    headerSubtitle: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
-        fontWeight: '500',
-    },
-    section: {
+
+    // Hero
+    hero: {
         marginBottom: 20,
+    },
+    heroTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: COLORS.light.text,
+        letterSpacing: -0.5,
+        marginBottom: 4,
+    },
+    heroSubtitle: {
+        fontSize: 13,
+        color: COLORS.gray400,
+    },
+
+    // Section
+    section: {
+        marginBottom: 16,
     },
     labelRow: {
         flexDirection: 'row',
@@ -381,33 +358,38 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 10,
     },
-    sectionLabel: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.light.text,
-        marginBottom: 6,
+    fieldLabel: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: COLORS.gray400,
+        marginBottom: 8,
     },
-    imageCount: {
-        fontSize: 13,
-        fontWeight: '700',
+
+    // Count pill
+    countPill: {
+        backgroundColor: `${COLORS.primary}12`,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+    },
+    countPillText: {
+        fontSize: 11,
+        fontWeight: '600',
         color: COLORS.primary,
-        backgroundColor: '#EBF2FF',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
     },
+
+    // Images
     imagesGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 10,
+        gap: 8,
     },
     imageCard: {
         width: '31%',
         aspectRatio: 1,
         borderRadius: 12,
         overflow: 'hidden',
-        position: 'relative',
-        backgroundColor: '#F3F4F6',
+        backgroundColor: COLORS.gray100,
     },
     uploadedImage: {
         width: '100%',
@@ -418,91 +400,89 @@ const styles = StyleSheet.create({
         top: 6,
         left: 6,
         backgroundColor: COLORS.primary,
-        paddingHorizontal: 8,
+        paddingHorizontal: 7,
         paddingVertical: 3,
-        borderRadius: 6,
+        borderRadius: 5,
     },
-    primaryText: {
+    primaryBadgeText: {
         color: COLORS.white,
         fontSize: 9,
-        fontWeight: '800',
-        textTransform: 'uppercase',
+        fontWeight: '700',
     },
-    removeButton: {
+    removeBtn: {
         position: 'absolute',
-        top: 6,
-        right: 6,
-        backgroundColor: 'rgba(255,255,255,0.8)',
-        borderRadius: 12,
+        top: 5,
+        right: 5,
+        backgroundColor: 'rgba(255,255,255,0.85)',
+        borderRadius: 10,
     },
     addImageCard: {
         width: '31%',
         aspectRatio: 1,
         borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#E5E7EB',
+        borderWidth: 1.5,
+        borderColor: COLORS.gray100,
         borderStyle: 'dashed',
-        backgroundColor: '#F9FAFB',
+        backgroundColor: COLORS.gray50,
         justifyContent: 'center',
         alignItems: 'center',
+        gap: 6,
     },
-    uploadIcon: {
-        width: 50,
-        height: 50,
-        borderRadius: 24,
-        backgroundColor: '#EBF2FF',
+    addIconWrapper: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: `${COLORS.primary}12`,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
     },
     addImageText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '600',
-        color: COLORS.light.textSecondary,
+        color: COLORS.gray400,
     },
-    inputContainer: {
+
+    // Inputs
+    inputRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.white,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: '#E5E7EB',
-        paddingHorizontal: 16,
+        backgroundColor: COLORS.gray50,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        paddingHorizontal: 12,
+        height: 46,
     },
-    textAreaContainer: {
+    textAreaRow: {
+        height: 'auto',
         alignItems: 'flex-start',
+        paddingVertical: 12,
     },
     inputIcon: {
-        marginRight: 12,
+        marginRight: 10,
     },
     input: {
         flex: 1,
-        fontSize: 15,
+        fontSize: 14,
         color: COLORS.light.text,
-        paddingVertical: 14,
-        fontWeight: '500',
+        fontWeight: '400',
     },
     textArea: {
-        minHeight: 120,
-        paddingTop: 14,
-        paddingBottom: 14,
+        minHeight: 100,
+        paddingTop: 0,
     },
-    counterText: {
-        textAlign: 'right',
-        fontSize: 13,
-        fontWeight: '500',
-        color: COLORS.light.textSecondary,
+    counter: {
+        fontSize: 11,
+        color: COLORS.gray400,
     },
-    inputError: {
+    errorBorder: {
         borderColor: COLORS.error,
-        borderWidth: 2,
     },
     errorText: {
         color: COLORS.error,
-        fontSize: 12,
-        marginTop: 2,
-        marginLeft: 4,
-        fontWeight: '500',
+        fontSize: 11,
+        marginTop: 4,
+        marginLeft: 2,
     },
 });
 

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -14,18 +14,18 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 import * as SecureStore from 'expo-secure-store';
 import { useUserStore } from '../stores/userStore';
 
-import {sendOtpForLogin, api} from '../services/api';
+import { sendOtpForLogin, api } from '../services/api';
 import ToastMessage from '../components/ToastMessage';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
 
-import {COLORS} from '../utils/colors';
+import { COLORS } from '../utils/colors';
 
-export default function LoginScreen({navigation}) {
+export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
     const [errors, setErrors] = useState({});
     const [expoPushToken, setExpoPushToken] = useState(null);
 
@@ -35,7 +35,7 @@ export default function LoginScreen({navigation}) {
 
     const requestNotificationPermission = async () => {
         try {
-            const {status: existingStatus} = await Notifications.getPermissionsAsync();
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
             if (existingStatus !== 'granted') {
                 await Notifications.requestPermissionsAsync();
             }
@@ -46,8 +46,8 @@ export default function LoginScreen({navigation}) {
         }
     };
 
-    const showToast = ({type, title, message}) => {
-        setToast({visible: true, type, title, message});
+    const showToast = ({ type, title, message }) => {
+        setToast({ visible: true, type, title, message });
     };
 
     const handleGoogleLogin = async () => {
@@ -198,7 +198,7 @@ export default function LoginScreen({navigation}) {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor={COLORS.light.bg}/>
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.light.bg} />
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
                 <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -215,16 +215,16 @@ export default function LoginScreen({navigation}) {
                         icon="logo-google"
                         onPress={handleGoogleLogin}
                         style={styles.googleButton}
-                        textStyle={{color: '#000'}}
+                        textStyle={{ color: '#000' }}
                         fullWidth
                         size="large"
                     />
 
                     {/* Separator Section */}
                     <View style={styles.separatorContainer}>
-                        <View style={styles.line}/>
+                        <View style={styles.line} />
                         <Text style={styles.separatorText}>OR</Text>
-                        <View style={styles.line}/>
+                        <View style={styles.line} />
                     </View>
 
                     {/* Email/OTP Section */}
@@ -234,7 +234,7 @@ export default function LoginScreen({navigation}) {
                             placeholder="e.g. rahul.sharma@gmail.com"
                             value={email}
                             onChangeText={(text) => { setEmail(text); setErrors({}); }}
-                            leftIcon="email-outline"
+                            leftIcon="mail-outline"
                             keyboardType="email-address"
                             autoCapitalize="none"
                             error={errors.email}
@@ -245,7 +245,7 @@ export default function LoginScreen({navigation}) {
                             placeholder="Enter your password"
                             value={password}
                             onChangeText={setPassword}
-                            leftIcon="lock-outline"
+                            leftIcon="lock-closed-outline"
                             secureTextEntry={true}
                             error={errors.password}
                         />
@@ -262,7 +262,7 @@ export default function LoginScreen({navigation}) {
 
                     <Button
                         title="Continue as Guest"
-                        onPress={() => navigation.replace('MainLayout', {guest: true})}
+                        onPress={() => navigation.replace('MainLayout', { guest: true })}
                         variant="ghost"
                         fullWidth
                         size="large"
@@ -281,7 +281,7 @@ export default function LoginScreen({navigation}) {
                         type={toast.type}
                         title={toast.title}
                         message={toast.message}
-                        onHide={() => setToast({...toast, visible: false})}
+                        onHide={() => setToast({ ...toast, visible: false })}
                     />
                 )}
             </KeyboardAvoidingView>

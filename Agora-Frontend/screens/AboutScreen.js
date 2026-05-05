@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     Image,
     Linking,
@@ -10,272 +10,189 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Platform,
 } from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {LinearGradient} from 'expo-linear-gradient';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader';
-import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
+import Constants from 'expo-constants';
+import { COLORS } from '../utils/colors';
 
-export default function AboutScreen({navigation}) {
+const features = [
+    {
+        icon: 'shield-checkmark',
+        label: 'Safe & Secure',
+        desc: 'Campus-verified users',
+        detail: 'Every user must sign up with a valid institutional email. Our reporting system and community moderation ensure a safe environment for every transaction.',
+        color: '#3B82F6',
+    },
+    {
+        icon: 'flash',
+        label: 'Fast & Easy',
+        desc: 'List items in seconds',
+        detail: 'Snap a photo, set your price, and reach hundreds of peers instantly. No more cluttered WhatsApp groups or sketchy external sites.',
+        color: '#10B981',
+    },
+    {
+        icon: 'people',
+        label: 'Community',
+        desc: 'Connect with peers',
+        detail: 'Agora is more than an app — it is a campus ecosystem. Meet up at well-known campus spots and foster a real sense of belonging.',
+        color: '#F59E0B',
+    },
+    {
+        icon: 'leaf',
+        label: 'Sustainable',
+        desc: 'Give items a second life',
+        detail: 'Join the circular economy. By trading within campus, you reduce waste and help fellow students save money.',
+        color: '#EC4899',
+    },
+];
+
+const socialButtons = [
+    { icon: 'logo-instagram', label: 'Instagram', url: 'https://instagram.com/agora', color: '#E4405F' },
+    { icon: 'globe-outline', label: 'Website', url: 'https://spicalabs.netlify.app', color: COLORS.primary },
+];
+
+export default function AboutScreen({ navigation }) {
     const insets = useSafeAreaInsets();
-
     const [selectedFeature, setSelectedFeature] = useState(null);
-    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
 
     const openFeature = (feature) => {
         setSelectedFeature(feature);
-        setIsModalVisible(true);
+        setModalVisible(true);
     };
 
-    const handleEmail = () => {
-        Linking.openURL('mailto:hello.spicalabs@gmail.com');
+    const handleLink = (url) => {
+        Linking.openURL(url).catch(err => console.error(err));
     };
-
-    const handleWebsite = () => {
-        Linking.openURL('https://spicalabs.netlify.app/products/agora');
-    };
-
-    const handleSocial = (platform) => {
-        const urls = {
-            instagram: 'https://instagram.com/agora',
-            twitter: 'https://twitter.com/agora',
-            facebook: 'https://facebook.com/agora',
-        };
-        Linking.openURL(urls[platform]);
-    };
-
-    const features = [
-        {
-            icon: 'shield-checkmark',
-            label: 'Safe & Secure',
-            desc: 'Campus-verified users',
-            detail: "Every user on Agora must sign up with a valid college email. We also use a reputation system where you can see a seller's trade history before meeting up.",
-            gradient: ['#3B82F6', '#2563EB']
-        },
-        {
-            icon: 'flash',
-            label: 'Fast & Easy',
-            desc: 'List items in seconds',
-            detail: 'Snap a photo, add a price, and your item is live! No complicated forms—just simple, student-to-student trading.',
-            gradient: ['#10B981', '#059669']
-        },
-        {
-            icon: 'people',
-            label: 'Community',
-            desc: 'Connect with peers',
-            detail: 'Agora is built exclusively for your campus. Meet up at familiar spots like the Library or Canteen for safe, face-to-face transactions.',
-            gradient: ['#F59E0B', '#D97706']
-        },
-        {
-            icon: 'leaf',
-            label: 'Sustainable',
-            desc: 'Give items a second life',
-            detail: 'Reduce waste by recycling textbooks, electronics, and furniture within the campus ecosystem. Better for the planet, better for your wallet.',
-            gradient: ['#EC4899', '#DB2777']
-        },
-    ];
-
-    const socialButtons = [
-        {icon: 'logo-instagram', label: 'Instagram', platform: 'instagram', gradient: ['#E4405F', '#C13584']},
-        {icon: 'logo-twitter', label: 'Twitter', platform: 'twitter', gradient: ['#1DA1F2', '#0C85D0']},
-        {icon: 'logo-facebook', label: 'Facebook', platform: 'facebook', gradient: ['#1877F2', '#0D5DBE']},
-    ];
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content"/>
-            <AppHeader title="About Agora" onBack={() => navigation.goBack()}/>
+            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content" />
+            <AppHeader title="About Agora" onBack={() => navigation.goBack()} />
 
             <ScrollView
                 contentContainerStyle={styles.container}
                 showsVerticalScrollIndicator={false}
             >
-                {/* App Info Card */}
-                <View style={styles.appCard}>
-                    <View style={styles.logoContainer}>
+                {/* Brand Hero */}
+                <View style={styles.heroCard}>
+                    <View style={styles.logoWrapper}>
                         <Image
                             source={require('../assets/LogoApp.png')}
                             style={styles.logo}
                         />
                     </View>
-                    <Text style={styles.title}>Agora</Text>
-                    <Text style={styles.tagline}>Your Campus Marketplace</Text>
-                    <Text style={styles.subtitle}>
-                        Connecting students to buy, sell, and trade items within their college community.
+                    <Text style={styles.heroTitle}>Agora</Text>
+                    <TouchableOpacity
+                        style={styles.studioBadge}
+                        onPress={() => handleLink('https://spicalabs.netlify.app')}
+                        activeOpacity={0.6}
+                    >
+                        <Text style={styles.studioBadgeText}>By Spica Labs</Text>
+                        <Ionicons name="chevron-forward" size={11} color={COLORS.primary} />
+                    </TouchableOpacity>
+                    <Text style={styles.heroSubtitle}>
+                        The peer-to-peer marketplace built exclusively for your campus community.
                     </Text>
                 </View>
 
-                {/* Mission Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Our Mission</Text>
-                    <View style={styles.missionCard}>
-                        <Ionicons
-                            name="megaphone-outline"
-                            size={40}
-                            color={`${COLORS.primary}15`}
-                            style={styles.quoteIcon}
-                        />
-                        <Text style={styles.missionText}>
-                            Agora was built by students, for students. We believe campus life is better when we help
-                            each other out—whether it's passing down a textbook or finding a deal on a cycle. Our
-                            mission is to create a trusted, sustainable marketplace that belongs to the community.
-                        </Text>
-                    </View>
+                {/* The Story */}
+                <SectionTitle>The Story</SectionTitle>
+                <View style={styles.storyCard}>
+                    <Text style={styles.storyText}>
+                        Agora was born out of a simple observation: campus life is expensive and student groups are cluttered.
+                        We created a dedicated space where students can trade safely and help one another.
+                    </Text>
                 </View>
 
-                {/* Features Grid */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Why Choose Agora?</Text>
-                    <View style={styles.featuresGrid}>
-                        {features.map((feature, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.featureCard}
-                                onPress={() => openFeature(feature)}
-                                activeOpacity={0.7}
-                            >
-                                <LinearGradient
-                                    colors={feature.gradient}
-                                    style={styles.featureIcon}
-                                    start={{x: 0, y: 0}}
-                                    end={{x: 1, y: 1}}
-                                >
-                                    <Ionicons name={feature.icon} size={24} color="#fff"/>
-                                </LinearGradient>
-                                <Text style={styles.featureTitle}>{feature.label}</Text>
-                                <Text style={styles.featureText}>{feature.desc}</Text>
-
-                                <Ionicons
-                                    name="information-circle-outline"
-                                    size={14}
-                                    color={COLORS.light.textTertiary}
-                                    style={{marginTop: 8}}
-                                />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-
-                {/* Contact Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Get in Touch</Text>
-                    <View style={styles.contactCard}>
+                {/* Why Agora */}
+                <SectionTitle>Why Agora?</SectionTitle>
+                <View style={styles.featuresGrid}>
+                    {features.map((feature, index) => (
                         <TouchableOpacity
-                            style={styles.contactItem}
-                            onPress={handleEmail}
-                            activeOpacity={0.85}
+                            key={index}
+                            style={styles.featureCard}
+                            onPress={() => openFeature(feature)}
+                            activeOpacity={0.6}
                         >
-                            <LinearGradient
-                                colors={['#8B5CF6', '#7C3AED']}
-                                style={styles.contactIcon}
-                                start={{x: 0, y: 0}}
-                                end={{x: 1, y: 1}}
-                            >
-                                <Ionicons name="mail-outline" size={22} color="#fff"/>
-                            </LinearGradient>
-                            <View style={styles.contactInfo}>
-                                <Text style={styles.contactLabel}>Email Support</Text>
-                                <Text style={styles.contactValue}>hello.spicalabs@gmail.com</Text>
+                            <View style={[styles.featureIconWrapper, { backgroundColor: `${feature.color}12` }]}>
+                                <Ionicons name={feature.icon} size={18} color={feature.color} />
                             </View>
-                            <Ionicons name="chevron-forward" size={20} color={COLORS.light.textTertiary}/>
+                            <Text style={styles.featureLabel}>{feature.label}</Text>
+                            <Text style={styles.featureDesc}>{feature.desc}</Text>
                         </TouchableOpacity>
-
-                        <View style={styles.divider}/>
-
-                        <TouchableOpacity
-                            style={styles.contactItem}
-                            onPress={handleWebsite}
-                            activeOpacity={0.85}
-                        >
-                            <LinearGradient
-                                colors={['#10B981', '#059669']}
-                                style={styles.contactIcon}
-                                start={{x: 0, y: 0}}
-                                end={{x: 1, y: 1}}
-                            >
-                                <Ionicons name="globe-outline" size={22} color="#fff"/>
-                            </LinearGradient>
-                            <View style={styles.contactInfo}>
-                                <Text style={styles.contactLabel}>Website</Text>
-                                <Text style={styles.contactValue}>spicalabs.netlify.app/agora</Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={COLORS.light.textTertiary}/>
-                        </TouchableOpacity>
-                    </View>
+                    ))}
                 </View>
 
-                {/* Legal Links */}
-                <View style={styles.section}>
-                    <View style={styles.legalCard}>
+                {/* Stay Connected */}
+                <SectionTitle>Stay Connected</SectionTitle>
+                <View style={styles.socialRow}>
+                    {socialButtons.map((btn, index) => (
                         <TouchableOpacity
-                            style={styles.legalItem}
-                            onPress={() => navigation.navigate('PrivacyPolicyScreen')}
-                            activeOpacity={0.85}
+                            key={index}
+                            style={styles.socialCard}
+                            onPress={() => handleLink(btn.url)}
+                            activeOpacity={0.6}
                         >
-                            <Ionicons name="shield-outline" size={18} color={COLORS.light.textSecondary}/>
-                            <Text style={styles.legalText}>Privacy Policy</Text>
+                            <View style={[styles.socialIconWrapper, { backgroundColor: `${btn.color}12` }]}>
+                                <Ionicons name={btn.icon} size={18} color={btn.color} />
+                            </View>
+                            <Text style={styles.socialLabel}>{btn.label}</Text>
                         </TouchableOpacity>
+                    ))}
+                </View>
 
-                        <View style={styles.legalDivider}/>
-
-                        <TouchableOpacity
-                            style={styles.legalItem}
-                            onPress={() => navigation.navigate('PrivacyPolicyScreen')}
-                            activeOpacity={0.85}
-                        >
-                            <Ionicons name="document-text-outline" size={18} color={COLORS.light.textSecondary}/>
-                            <Text style={styles.legalText}>Terms of Service</Text>
-                        </TouchableOpacity>
-                    </View>
+                {/* Support & Legal */}
+                <SectionTitle>Support & Legal</SectionTitle>
+                <View style={styles.linksCard}>
+                    <LinkRow
+                        icon="mail-outline"
+                        label="Contact Support"
+                        onPress={() => handleLink('mailto:hello.spicalabs@gmail.com')}
+                    />
+                    <LinkRow
+                        icon="shield-outline"
+                        label="Privacy Policy"
+                        onPress={() => navigation.navigate('PrivacyPolicyScreen')}
+                        isLast
+                    />
                 </View>
 
                 {/* Footer */}
                 <View style={styles.footer}>
-                    <Text style={styles.footerText}>Made with</Text>
-                    <Ionicons name="heart" size={16} color="#EF4444" style={styles.heartIcon}/>
-                    <Text style={styles.footerText}>by the Agora Team</Text>
+                    <Text style={styles.footerText}>Made with </Text>
+                    <Ionicons name="heart" size={13} color={COLORS.error} />
+                    <Text style={styles.footerText}> by Spica Labs</Text>
                 </View>
-
-                <Text style={styles.copyright}>© 2026 Agora. All rights reserved.</Text>
+                <Text style={styles.copyright}>© 2026 Spica Labs · v{Constants.expoConfig.version}</Text>
             </ScrollView>
 
-            {/* Feature Detail Modal */}
-            <Modal
-                visible={isModalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setIsModalVisible(false)}
-            >
+            {/* Feature Modal */}
+            <Modal visible={modalVisible} transparent animationType="fade">
                 <TouchableOpacity
                     style={styles.modalOverlay}
                     activeOpacity={1}
-                    onPress={() => setIsModalVisible(false)}
+                    onPress={() => setModalVisible(false)}
                 >
-                    <View style={[
-                        styles.modalContent,
-                        {paddingBottom: Math.max(insets.bottom, 30)}
-                    ]}>
-                        <View style={styles.modalHandle}/>
-
+                    <View style={[styles.modalCard, { paddingBottom: Math.max(insets.bottom + 16, 32) }]}>
+                        <View style={styles.modalHandle} />
                         {selectedFeature && (
                             <>
-                                <LinearGradient
-                                    colors={selectedFeature.gradient}
-                                    style={styles.modalIcon}
-                                >
-                                    <Ionicons name={selectedFeature.icon} size={32} color="#fff"/>
-                                </LinearGradient>
-
+                                <View style={[styles.modalIconWrapper, { backgroundColor: `${selectedFeature.color}12` }]}>
+                                    <Ionicons name={selectedFeature.icon} size={24} color={selectedFeature.color} />
+                                </View>
                                 <Text style={styles.modalTitle}>{selectedFeature.label}</Text>
-                                <Text style={styles.modalDescription}>{selectedFeature.detail}</Text>
-
+                                <Text style={styles.modalDesc}>{selectedFeature.detail}</Text>
                                 <TouchableOpacity
-                                    style={styles.modalCloseButton}
-                                    onPress={() => setIsModalVisible(false)}
+                                    style={styles.modalBtn}
+                                    activeOpacity={0.7}
+                                    onPress={() => setModalVisible(false)}
                                 >
-                                    <Text style={styles.modalCloseText}>Got it</Text>
+                                    <Text style={styles.modalBtnText}>Got it</Text>
                                 </TouchableOpacity>
                             </>
                         )}
@@ -286,357 +203,342 @@ export default function AboutScreen({navigation}) {
     );
 }
 
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+const SectionTitle = ({ children }) => (
+    <Text style={styles.sectionTitle}>{children}</Text>
+);
+
+const LinkRow = ({ icon, label, onPress, isLast }) => (
+    <TouchableOpacity
+        style={[styles.linkRow, !isLast && styles.linkRowBorder]}
+        onPress={onPress}
+        activeOpacity={0.6}
+    >
+        <View style={[styles.iconWrapper, { backgroundColor: `${COLORS.primary}12` }]}>
+            <Ionicons name={icon} size={18} color={COLORS.primary} />
+        </View>
+        <Text style={styles.linkRowText}>{label}</Text>
+        <Ionicons name="chevron-forward" size={14} color={COLORS.gray300} />
+    </TouchableOpacity>
+);
+
+// ─── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        padding: 20,
-        paddingBottom: 40,
+        padding: 16,
+        paddingBottom: 60,
     },
-    appCard: {
-        backgroundColor: COLORS.white,
-        borderRadius: 20,
-        padding: 32,
-        marginBottom: 24,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    logoContainer: {
-        marginBottom: 16,
-    },
-    logo: {
-        width: 100,
-        height: 100,
-        borderRadius: THEME.borderRadius.full,
-        borderWidth: 3,
-        borderColor: COLORS.light.border,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: '800',
-        color: COLORS.light.text,
-        marginBottom: 4,
-        letterSpacing: -0.5,
-    },
-    tagline: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: COLORS.primary,
-        marginBottom: 12,
-    },
-    subtitle: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
-        textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 20,
-        fontWeight: '500',
-        letterSpacing: -0.1,
-    },
-    versionBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.light.cardElevated,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 12,
-    },
-    versionText: {
-        fontSize: 13,
-        fontWeight: '700',
-        color: COLORS.primary,
-        marginLeft: 6,
-    },
-    section: {
-        marginBottom: 24,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: COLORS.light.text,
-        marginBottom: 12,
-        letterSpacing: -0.3,
-    },
-    missionCard: {
+
+    // Hero
+    heroCard: {
         backgroundColor: COLORS.white,
         borderRadius: 16,
-        padding: 24,
+        paddingVertical: 28,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        marginBottom: 20,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
-        borderLeftWidth: 5,
-        borderLeftColor: COLORS.primary,
-        position: 'relative',
+        borderColor: COLORS.gray100,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
+    },
+    logoWrapper: {
+        width: 72,
+        height: 72,
+        borderRadius: 20,
+        backgroundColor: COLORS.gray50,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 14,
         overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 3,
     },
-    missionText: {
-        fontSize: 15,
+    logo: {
+        width: 64,
+        height: 64,
+        borderRadius: 16,
+    },
+    heroTitle: {
+        fontSize: 26,
+        fontWeight: '700',
         color: COLORS.light.text,
-        lineHeight: 24,
-        fontWeight: '500',
-        fontStyle: 'italic',
+        letterSpacing: -0.8,
+        marginBottom: 8,
     },
-    quoteIcon: {
-        position: 'absolute',
-        top: -5,
-        right: -5,
-        transform: [{rotate: '-15deg'}],
+    studioBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: `${COLORS.primary}10`,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: `${COLORS.primary}20`,
+        marginBottom: 14,
+        gap: 4,
     },
+    studioBadgeText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: COLORS.primary,
+    },
+    heroSubtitle: {
+        fontSize: 13,
+        color: COLORS.gray400,
+        textAlign: 'center',
+        lineHeight: 19,
+    },
+
+    // Section title
+    sectionTitle: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: COLORS.gray400,
+        marginBottom: 10,
+        marginLeft: 4,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+    },
+
+    // Story
+    storyCard: {
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        borderLeftWidth: 3,
+        borderLeftColor: COLORS.primary,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
+    },
+    storyText: {
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 20,
+    },
+
+    // Features grid
     featuresGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
+        gap: 10,
+        marginBottom: 20,
     },
     featureCard: {
-        width: '48%',
+        width: '47%',
         backgroundColor: COLORS.white,
         borderRadius: 16,
-        padding: 20,
-        alignItems: 'center',
+        padding: 14,
+        marginBottom: 0,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        elevation: 2,
+        borderColor: COLORS.gray100,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
     },
-    featureIcon: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    featureTitle: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: COLORS.light.text,
-        textAlign: 'center',
-        marginBottom: 4,
-        letterSpacing: -0.2,
-    },
-    featureText: {
-        fontSize: 12,
-        color: COLORS.light.textSecondary,
-        textAlign: 'center',
-        fontWeight: '500',
-    },
-    contactCard: {
-        backgroundColor: COLORS.white,
-        borderRadius: 18,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        elevation: 2,
-    },
-    contactItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-    },
-    contactIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    contactInfo: {
-        flex: 1,
-    },
-    contactLabel: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: COLORS.light.textSecondary,
-        marginBottom: 2,
-    },
-    contactValue: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.light.text,
-        letterSpacing: -0.2,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: COLORS.light.border,
-        marginHorizontal: 16,
-    },
-    socialCard: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    socialButton: {
-        flex: 1,
-        alignItems: 'center',
-        backgroundColor: COLORS.white,
-        paddingVertical: 20,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        elevation: 2,
-    },
-    socialIcon: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+    featureIconWrapper: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
     },
-    socialText: {
+    featureLabel: {
         fontSize: 13,
-        fontWeight: '700',
+        fontWeight: '600',
+        color: COLORS.light.text,
+        letterSpacing: -0.2,
+        marginBottom: 3,
+    },
+    featureDesc: {
+        fontSize: 11,
+        color: COLORS.gray400,
+    },
+
+    // Social
+    socialRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 20,
+    },
+    socialCard: {
+        flex: 1,
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 14,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        gap: 8,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
+    },
+    socialIconWrapper: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    socialLabel: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: COLORS.light.text,
+    },
+
+    // Links card — mirrors SettingsOptionList exactly
+    linksCard: {
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        overflow: 'hidden',
+        marginBottom: 20,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
+    },
+    linkRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 11,
+        paddingHorizontal: 14,
+        minHeight: 52,
+        gap: 12,
+    },
+    linkRowBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
+    },
+    iconWrapper: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    linkRowText: {
+        flex: 1,
+        fontSize: 15,
+        fontWeight: '500',
         color: COLORS.light.text,
         letterSpacing: -0.2,
     },
-    legalCard: {
-        flexDirection: 'row',
-        backgroundColor: COLORS.white,
-        borderRadius: 16,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        elevation: 2,
-    },
-    legalItem: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-    },
-    legalText: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: COLORS.light.textSecondary,
-        letterSpacing: -0.1,
-    },
-    legalDivider: {
-        width: 1,
-        backgroundColor: COLORS.light.border,
-        marginHorizontal: 12,
-    },
+
+    // Footer
     footer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 8,
-        marginBottom: 8,
     },
     footerText: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
-        fontWeight: '600',
-    },
-    heartIcon: {
-        marginHorizontal: 4,
+        fontSize: 12,
+        color: COLORS.gray400,
     },
     copyright: {
-        fontSize: 12,
-        color: COLORS.light.textTertiary,
+        fontSize: 11,
+        color: COLORS.gray300,
         textAlign: 'center',
-        fontWeight: '500',
-        marginBottom: 20,
+        marginTop: 6,
+        marginBottom: 8,
     },
 
+    // Modal
     modalOverlay: {
         flex: 1,
-        backgroundColor: COLORS.light.overlay,
+        backgroundColor: 'rgba(0,0,0,0.4)',
         justifyContent: 'flex-end',
     },
-    modalContent: {
+    modalCard: {
         backgroundColor: COLORS.white,
-        borderTopLeftRadius: 32,
-        borderTopRightRadius: 32,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
         padding: 24,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
     },
     modalHandle: {
-        width: 40,
+        width: 36,
         height: 4,
-        backgroundColor: COLORS.light.divider,
+        backgroundColor: COLORS.gray200,
         borderRadius: 2,
-        marginBottom: 24,
+        marginBottom: 20,
     },
-    modalIcon: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
+    modalIconWrapper: {
+        width: 52,
+        height: 52,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 16,
+        marginBottom: 14,
     },
     modalTitle: {
-        fontSize: 22,
-        fontWeight: '800',
+        fontSize: 17,
+        fontWeight: '700',
         color: COLORS.light.text,
-        marginBottom: 12,
+        letterSpacing: -0.4,
+        marginBottom: 10,
     },
-    modalDescription: {
-        fontSize: 16,
-        color: COLORS.light.textSecondary,
+    modalDesc: {
+        fontSize: 13,
+        color: COLORS.gray400,
         textAlign: 'center',
-        lineHeight: 24,
+        lineHeight: 20,
         marginBottom: 24,
-        paddingHorizontal: 10,
     },
-    modalCloseButton: {
-        backgroundColor: COLORS.light.cardElevated,
-        paddingHorizontal: 40,
-        paddingVertical: 14,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
+    modalBtn: {
+        backgroundColor: COLORS.primary,
+        paddingVertical: 13,
+        borderRadius: 12,
         width: '100%',
         alignItems: 'center',
     },
-    modalCloseText: {
-        color: COLORS.primary,
-        fontWeight: '800',
-        fontSize: 16,
+    modalBtnText: {
+        color: COLORS.white,
+        fontSize: 15,
+        fontWeight: '600',
     },
 });

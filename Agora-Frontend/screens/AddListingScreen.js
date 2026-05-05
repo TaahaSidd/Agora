@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     Image,
     KeyboardAvoidingView,
@@ -12,16 +12,15 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-
+import {Ionicons} from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 
-import { COLORS } from '../utils/colors';
-import { useUserStore } from "../stores/userStore";
-import { apiPost } from '../services/api';
-import { uploadToCloudinary } from "../utils/upload";
+import {COLORS} from '../utils/colors';
+import {useUserStore} from '../stores/userStore';
+import {apiPost} from '../services/api';
+import {uploadToCloudinary} from '../utils/upload';
 
 import ModalComponent from '../components/Modal';
 import ToastMessage from '../components/ToastMessage';
@@ -30,7 +29,36 @@ import AppHeader from '../components/AppHeader';
 import CustomPicker from '../components/CustomPicker';
 import InfoBox from '../components/InfoBox';
 
-const AddListingScreen = ({ navigation }) => {
+const MAX_IMAGES = 5;
+const MAX_FILE_SIZE_MB = 5;
+
+const categoryItems = [
+    {label: 'Select Category', value: '', icon: null},
+    {label: 'Textbooks & Study Materials', value: 'textbooks', icon: 'book-outline'},
+    {label: 'Electronics & Gadgets', value: 'electronics', icon: 'laptop-outline'},
+    {label: 'Clothing & Accessories', value: 'clothing', icon: 'shirt-outline'},
+    {label: 'Furniture & Dorm Supplies', value: 'furniture', icon: 'bed-outline'},
+    {label: 'Stationery & Office Supplies', value: 'stationery', icon: 'pencil-outline'},
+    {label: 'Sports & Fitness Equipment', value: 'sports', icon: 'basketball-outline'},
+    {label: 'Bicycles & Transportation', value: 'bicycles', icon: 'bicycle-outline'},
+    {label: 'Food & Snacks', value: 'food', icon: 'fast-food-outline'},
+    {label: 'Housing & Roommates', value: 'housing', icon: 'home-outline'},
+    {label: 'Tutoring & Academic Services', value: 'tutoring', icon: 'school-outline'},
+    {label: 'Events & Tickets', value: 'events', icon: 'ticket-outline'},
+    {label: 'Miscellaneous', value: 'miscellaneous', icon: 'apps-outline'},
+];
+
+const conditionItems = [
+    {label: 'Select Condition', value: '', icon: ''},
+    {label: 'New', value: 'NEW', icon: 'sparkles-outline'},
+    {label: 'Used', value: 'USED', icon: 'refresh-outline'},
+    {label: 'Good', value: 'GOOD', icon: 'thumbs-up-outline'},
+    {label: 'Refurbished', value: 'REFURBISHED', icon: 'build-outline'},
+    {label: 'Repaired', value: 'REPAIRED', icon: 'medkit-outline'},
+    {label: 'Damaged', value: 'DAMAGED', icon: 'alert-circle-outline'},
+];
+
+const AddListingScreen = ({navigation}) => {
     const [listing, setListing] = useState({
         title: '',
         description: '',
@@ -43,54 +71,17 @@ const AddListingScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState(false);
-    const [toast, setToast] = useState({ visible: false, type: 'info', message: '' });
+    const [toast, setToast] = useState({visible: false, type: 'info', message: ''});
 
-    const categoryItems = [
-        { label: "Select Category", value: "", icon: null },
-        { label: "Textbooks & Study Materials", value: "textbooks", icon: "book-outline" },
-        { label: "Electronics & Gadgets", value: "electronics", icon: "laptop-outline" },
-        { label: "Clothing & Accessories", value: "clothing", icon: "shirt-outline" },
-        { label: "Furniture & Dorm Supplies", value: "furniture", icon: "bed-outline" },
-        { label: "Stationery & Office Supplies", value: "stationery", icon: "pencil-outline" },
-        { label: "Sports & Fitness Equipment", value: "sports", icon: "basketball-outline" },
-        { label: "Bicycles & Transportation", value: "bicycles", icon: "bicycle-outline" },
-        { label: "Food & Snacks", value: "food", icon: "fast-food-outline" },
-        { label: "Housing & Roommates", value: "housing", icon: "home-outline" },
-        { label: "Tutoring & Academic Services", value: "tutoring", icon: "school-outline" },
-        { label: "Events & Tickets", value: "events", icon: "ticket-outline" },
-        { label: "Miscellaneous", value: "miscellaneous", icon: "apps-outline" },
-    ];
-
-    const conditionItems = [
-        { label: "Select Condition", value: "", icon: "" },
-        { label: "New", value: "NEW", icon: "sparkles-outline" },
-        { label: "Used", value: "USED", icon: "refresh-outline" },
-        { label: "Good", value: "GOOD", icon: "thumbs-up-outline" },
-        { label: "Refurbished", value: "REFURBISHED", icon: "build-outline" },
-        { label: "Repaired", value: "REPAIRED", icon: "medkit-outline" },
-        { label: "Damaged", value: "DAMAGED", icon: "alert-circle-outline" },
-    ];
     const handleChange = (key, value) => {
-        setListing({ ...listing, [key]: value });
-        setErrors((prev) => ({ ...prev, [key]: null }));
+        setListing(prev => ({...prev, [key]: value}));
+        setErrors(prev => ({...prev, [key]: null}));
     };
 
-    const MAX_IMAGES = 5;
-    const MAX_FILE_SIZE_MB = 5;
-
     const pickImages = async () => {
-        console.log('🔍 pickImages called!');
-
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-        console.log('📸 Permission status:', status);
-
+        const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            setToast({
-                visible: true,
-                type: 'error',
-                message: 'Sorry, we need camera roll permissions to upload images!',
-            });
+            setToast({visible: true, type: 'error', message: 'Camera roll permission is required to upload images.'});
             return;
         }
 
@@ -103,90 +94,63 @@ const AddListingScreen = ({ navigation }) => {
 
         if (!result.canceled) {
             const pickedImage = result.assets[0];
-
             try {
                 const fileInfo = await FileSystem.getInfoAsync(pickedImage.uri);
-
                 if (fileInfo.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-                    setToast({
-                        visible: true,
-                        type: 'error',
-                        message: `Image too large! Please select one under ${MAX_FILE_SIZE_MB}MB.`,
-                    });
+                    setToast({visible: true, type: 'error', message: `Image too large. Max size is ${MAX_FILE_SIZE_MB}MB.`});
                     return;
                 }
             } catch (e) {
                 console.warn('FileSystem info failed:', e);
             }
-
-            const newImages = [...listing.images, pickedImage.uri];
-            handleChange('images', newImages);
+            handleChange('images', [...listing.images, pickedImage.uri]);
         }
     };
 
     const removeImage = (index) => {
-        const newImages = listing.images.filter((_, i) => i !== index);
-        handleChange('images', newImages);
+        handleChange('images', listing.images.filter((_, i) => i !== index));
     };
 
     const validateFields = () => {
-        const validationErrors = {};
-        if (!listing.title.trim()) validationErrors.title = 'Title is required';
-        if (!listing.description.trim()) {
-            validationErrors.description = 'Description is required';
-        } else if (listing.description.length < 20) {
-            validationErrors.description = 'Description must be at least 20 characters';
-        } else if (listing.description.length > 800) {
-            validationErrors.description = 'Description cannot exceed 800 characters';
-        }
-        if (!listing.price.trim() || isNaN(listing.price)) validationErrors.price = 'Valid price is required';
-        if (!listing.category) validationErrors.category = 'Category is required';
-        if (!listing.condition) validationErrors.condition = 'Condition is required';
-        if (listing.images.length === 0) validationErrors.images = 'At least one product image is required';
-        setErrors(validationErrors);
-        return Object.keys(validationErrors).length === 0;
+        const errs = {};
+        if (!listing.title.trim()) errs.title = 'Title is required';
+        if (!listing.description.trim()) errs.description = 'Description is required';
+        else if (listing.description.length < 20) errs.description = 'Description must be at least 20 characters';
+        else if (listing.description.length > 800) errs.description = 'Description cannot exceed 800 characters';
+        if (!listing.price.trim() || isNaN(listing.price)) errs.price = 'Valid price is required';
+        if (!listing.category) errs.category = 'Category is required';
+        if (!listing.condition) errs.condition = 'Condition is required';
+        if (listing.images.length === 0) errs.images = 'At least one image is required';
+        setErrors(errs);
+        return Object.keys(errs).length === 0;
     };
 
     const handleCreate = async () => {
         if (!validateFields()) return;
-
-        const { currentUser, fetchUser, setCelebrationPending } = useUserStore.getState();
+        const {currentUser, fetchUser, setCelebrationPending} = useUserStore.getState();
         const roleBefore = currentUser?.role;
-
         setLoading(true);
         try {
-            const uploadPromises = listing.images.map(imageUri => uploadToCloudinary(imageUri));
-            const cloudinaryUrls = await Promise.all(uploadPromises);
-
-            const payload = {
+            const cloudinaryUrls = await Promise.all(listing.images.map(uri => uploadToCloudinary(uri)));
+            const response = await apiPost('/listing/create', {
                 title: listing.title,
                 description: listing.description,
                 price: Number(listing.price),
                 category: listing.category,
                 itemCondition: listing.condition.toUpperCase(),
                 images: cloudinaryUrls,
-            };
-
-            const response = await apiPost("/listing/create", payload);
-
+            });
             if (response) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 await fetchUser();
                 const updatedUser = useUserStore.getState().currentUser;
-
                 if (roleBefore === 'STUDENT' && updatedUser?.role === 'SELLER') {
                     setCelebrationPending(true);
                 }
-
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 setModalVisible(true);
             }
         } catch (error) {
-            console.log("Error creating listing:", error.message || error);
-            setToast({
-                visible: true,
-                type: 'error',
-                message: `Error uploading listing! Please try again later`,
-            });
+            setToast({visible: true, type: 'error', message: 'Error creating listing. Please try again.'});
         } finally {
             setLoading(false);
         }
@@ -194,71 +158,68 @@ const AddListingScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor={COLORS.white} barStyle="dark-content" />
-            <AppHeader title="Add Your Listing" onBack={() => navigation.goBack()} />
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content"/>
+            <AppHeader title="New Listing" onBack={() => navigation.goBack()}/>
 
             {toast.visible && (
                 <ToastMessage
                     type={toast.type}
                     message={toast.message}
-                    onHide={() => setToast({ ...toast, visible: false })}
+                    onHide={() => setToast({...toast, visible: false})}
                 />
             )}
 
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1 }}
+                style={{flex: 1}}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
             >
                 <ScrollView
                     contentContainerStyle={styles.container}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Header Info */}
-                    <View style={styles.headerInfo}>
-                        <Text style={styles.headerTitle}>Create New Listing</Text>
-                        <Text style={styles.headerSubtitle}>Enter the item details to reach more buyers</Text>
+                    {/* Hero */}
+                    <View style={styles.hero}>
+                        <Text style={styles.heroTitle}>Create New Listing</Text>
+                        <Text style={styles.heroSubtitle}>Enter item details to reach buyers on campus</Text>
                     </View>
 
-                    {/* Multiple Image Upload Section */}
+                    {/* Photos */}
                     <View style={styles.section}>
                         <View style={styles.labelRow}>
-                            <Text style={styles.sectionLabel}>Product Photos *</Text>
-                            <Text style={styles.imageCount}>
-                                {listing.images.length}/{MAX_IMAGES}
-                            </Text>
+                            <Text style={styles.fieldLabel}>Product Photos *</Text>
+                            <View style={styles.countPill}>
+                                <Text style={styles.countText}>{listing.images.length}/{MAX_IMAGES}</Text>
+                            </View>
                         </View>
 
-                        {/* Images Grid */}
                         <View style={styles.imagesGrid}>
-                            {/* Existing Images */}
-                            {listing.images.map((imageUri, index) => (
+                            {listing.images.map((uri, index) => (
                                 <View key={index} style={styles.imageCard}>
-                                    <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
+                                    <Image source={{uri}} style={styles.uploadedImage}/>
                                     {index === 0 && (
                                         <View style={styles.primaryBadge}>
-                                            <Text style={styles.primaryText}>Primary</Text>
+                                            <Text style={styles.primaryBadgeText}>Cover</Text>
                                         </View>
                                     )}
                                     <TouchableOpacity
-                                        style={styles.removeButton}
+                                        style={styles.removeBtn}
                                         onPress={() => removeImage(index)}
                                         activeOpacity={0.7}
                                     >
-                                        <Ionicons name="close-circle" size={24} color="#EF4444" />
+                                        <Ionicons name="close-circle" size={20} color={COLORS.error}/>
                                     </TouchableOpacity>
                                 </View>
                             ))}
 
-                            {/* Add More Button */}
                             {listing.images.length < MAX_IMAGES && (
                                 <TouchableOpacity
-                                    style={[styles.addImageCard, errors.images && listing.images.length === 0 && styles.inputError]}
+                                    style={[styles.addImageCard, errors.images && styles.fieldError]}
                                     onPress={pickImages}
-                                    activeOpacity={0.7}
+                                    activeOpacity={0.6}
                                 >
-                                    <View style={styles.uploadIcon}>
-                                        <Ionicons name="add" size={32} color={COLORS.primary} />
+                                    <View style={styles.addIconWrapper}>
+                                        <Ionicons name="add" size={22} color={COLORS.primary}/>
                                     </View>
                                     <Text style={styles.addImageText}>Add Photo</Text>
                                 </TouchableOpacity>
@@ -266,48 +227,46 @@ const AddListingScreen = ({ navigation }) => {
                         </View>
 
                         {listing.images.length === 0 && (
-                            <Text style={styles.helperText}>
-                                <Ionicons name="information-circle" size={14} color={COLORS.light.textSecondary} />
-                                {' '}First image is your cover photo. Make it your best one!
-                            </Text>
+                            <Text style={styles.helperText}>First image will be your cover photo</Text>
                         )}
                         {errors.images && <Text style={styles.errorText}>{errors.images}</Text>}
                     </View>
 
-                    {/* Basic Info Section */}
+                    {/* Title */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionLabel}>Title *</Text>
-                        <View style={[styles.inputContainer, errors.title && styles.inputError]}>
-                            <Ionicons name="pricetag-outline" size={20} color={COLORS.light.textTertiary} style={styles.inputIcon} />
+                        <Text style={styles.fieldLabel}>Title *</Text>
+                        <View style={[styles.inputRow, errors.title && styles.fieldError]}>
+                            <Ionicons name="pricetag-outline" size={16} color={COLORS.gray400} style={styles.inputIcon}/>
                             <TextInput
                                 style={styles.input}
                                 placeholder="e.g. iPhone 13 Pro"
-                                placeholderTextColor={COLORS.light.textTertiary}
+                                placeholderTextColor={COLORS.gray400}
                                 value={listing.title}
                                 onChangeText={(text) => handleChange('title', text)}
                                 maxLength={50}
                                 returnKeyType="next"
                             />
-                            <Text
-                                style={[
-                                    styles.counterText,
-                                    { color: listing.title.length > 45 ? '#EF4444' : COLORS.light.textSecondary }
-                                ]}
-                            >{listing.title.length}/50</Text>
+                            <Text style={[styles.counter, listing.title.length > 45 && styles.counterWarn]}>
+                                {listing.title.length}/50
+                            </Text>
                         </View>
                         {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
                     </View>
 
+                    {/* Description */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionLabel}>Description *</Text>
-                        <View
-                            style={[styles.inputContainer, styles.textAreaContainer, errors.description && styles.inputError]}>
-                            <Ionicons name="document-text-outline" size={20} color={COLORS.light.textTertiary}
-                                style={[styles.inputIcon, { alignSelf: 'flex-start', marginTop: 12 }]} />
+                        <Text style={styles.fieldLabel}>Description *</Text>
+                        <View style={[styles.inputRow, styles.textAreaRow, errors.description && styles.fieldError]}>
+                            <Ionicons
+                                name="document-text-outline"
+                                size={16}
+                                color={COLORS.gray400}
+                                style={[styles.inputIcon, {alignSelf: 'flex-start', marginTop: 13}]}
+                            />
                             <TextInput
                                 style={[styles.input, styles.textArea]}
-                                placeholder="Describe your item (e.g. any scratches, original packaging)..."
-                                placeholderTextColor={COLORS.light.textTertiary}
+                                placeholder="Describe your item — any scratches, original packaging, etc."
+                                placeholderTextColor={COLORS.gray400}
                                 multiline
                                 numberOfLines={5}
                                 value={listing.description}
@@ -315,89 +274,75 @@ const AddListingScreen = ({ navigation }) => {
                                 textAlignVertical="top"
                                 maxLength={800}
                             />
-                            <Text style={{
-                                textAlign: 'right',
-                                color: listing.description.length > 750 ? '#EF4444' : COLORS.light.textSecondary,
-                                marginTop: 12
-                            }}>
+                            <Text style={[
+                                styles.counter,
+                                {alignSelf: 'flex-end', marginBottom: 12},
+                                listing.description.length > 750 && styles.counterWarn,
+                            ]}>
                                 {listing.description.length}/800
                             </Text>
                         </View>
                         {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
                     </View>
 
+                    {/* Price */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionLabel}>Price (₹) *</Text>
-                        <View style={[styles.inputContainer, errors.price && styles.inputError]}>
-                            <Ionicons name="cash-outline" size={20} color={COLORS.light.textTertiary} style={styles.inputIcon} />
+                        <Text style={styles.fieldLabel}>Price (₹) *</Text>
+                        <View style={[styles.inputRow, errors.price && styles.fieldError]}>
+                            <Ionicons name="cash-outline" size={16} color={COLORS.gray400} style={styles.inputIcon}/>
                             <TextInput
                                 style={styles.input}
                                 placeholder="0.00"
-                                placeholderTextColor={COLORS.light.textTertiary}
+                                placeholderTextColor={COLORS.gray400}
                                 keyboardType="numeric"
                                 value={listing.price}
                                 onChangeText={(text) => {
                                     const value = text.replace(/[^0-9.]/g, '');
                                     handleChange('price', value);
-
-                                    const numericValue = Number(value);
-                                    if (value === '') {
-                                        setErrors((prev) => ({ ...prev, price: 'Price is required' }));
-                                    } else if (numericValue < 10) {
-                                        setErrors((prev) => ({ ...prev, price: 'Min price is ₹10' }));
-                                    } else if (numericValue > 1000000) {
-                                        setErrors((prev) => ({ ...prev, price: 'Max price is ₹10,00,000' }));
-                                    } else {
-                                        setErrors((prev) => ({ ...prev, price: null }));
-                                    }
+                                    const num = Number(value);
+                                    if (!value) setErrors(p => ({...p, price: 'Price is required'}));
+                                    else if (num < 10) setErrors(p => ({...p, price: 'Min price is ₹10'}));
+                                    else if (num > 1000000) setErrors(p => ({...p, price: 'Max price is ₹10,00,000'}));
+                                    else setErrors(p => ({...p, price: null}));
                                 }}
                             />
                         </View>
-
                         {listing.price && !errors.price && (
-                            <Text style={styles.formattedPrice}>
-                                Preview: ₹{Number(listing.price).toLocaleString('en-IN')}
+                            <Text style={styles.pricePreview}>
+                                ₹{Number(listing.price).toLocaleString('en-IN')}
                             </Text>
                         )}
-
                         {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
-
-                        {!errors.price && !listing.price && touched && (
-                            <Text style={styles.helperText}>Enter a price between ₹10 and ₹10,00,000</Text>
-                        )}
                     </View>
 
-                    {/* Category & Condition */}
+                    {/* Category */}
                     <View style={styles.section}>
                         <CustomPicker
                             label="Category *"
                             value={listing.category}
                             items={categoryItems}
-                            onValueChange={(value) => handleChange('category', value)}
+                            onValueChange={(v) => handleChange('category', v)}
                             icon="grid-outline"
                             placeholder="Select Category"
                             error={errors.category}
                         />
                     </View>
 
+                    {/* Condition */}
                     <View style={styles.section}>
                         <CustomPicker
                             label="Condition *"
                             value={listing.condition}
                             items={conditionItems}
-                            onValueChange={(value) => handleChange('condition', value)}
+                            onValueChange={(v) => handleChange('condition', v)}
                             icon="shield-checkmark-outline"
                             placeholder="Select Condition"
                             error={errors.condition}
                         />
                     </View>
 
-                    {/* Info Box */}
-                    <InfoBox
-                        text="Your listing will go live instantly for everyone on campus!"
-                    />
+                    <InfoBox text="Your listing will go live instantly for everyone on campus!"/>
 
-                    {/* Submit Button */}
                     <Button
                         title="Create Listing"
                         onPress={handleCreate}
@@ -421,7 +366,6 @@ const AddListingScreen = ({ navigation }) => {
                         navigation.replace('MainLayout');
                     }}
                 />
-
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -433,196 +377,177 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        padding: 20,
+        padding: 16,
         paddingBottom: 60,
     },
 
-    headerInfo: {
-        marginBottom: 24,
-    },
-
-    headerTitle: {
-        fontSize: 28,
-        fontWeight: '800',
-        color: COLORS.light.text,
-        marginBottom: 4,
-        letterSpacing: -0.5,
-    },
-
-    headerSubtitle: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
-        fontWeight: '500',
-    },
-
-    section: {
+    // Hero
+    hero: {
         marginBottom: 20,
+        paddingHorizontal: 4,
+    },
+    heroTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: COLORS.light.text,
+        letterSpacing: -0.5,
+        marginBottom: 4,
+    },
+    heroSubtitle: {
+        fontSize: 13,
+        color: COLORS.gray400,
     },
 
+    // Section
+    section: {
+        marginBottom: 16,
+    },
     labelRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        justifyContent: 'space-between',
+        marginBottom: 8,
     },
-
-    sectionLabel: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.light.text,
+    fieldLabel: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: COLORS.gray400,
         marginBottom: 6,
     },
-
-    imageCount: {
-        fontSize: 13,
-        fontWeight: '700',
+    countPill: {
+        backgroundColor: `${COLORS.primary}12`,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+    },
+    countText: {
+        fontSize: 11,
+        fontWeight: '600',
         color: COLORS.primary,
-        backgroundColor: COLORS.primaryLightest,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
     },
 
+    // Images grid
     imagesGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 10,
+        gap: 8,
     },
-
     imageCard: {
         width: '31%',
         aspectRatio: 1,
         borderRadius: 12,
         overflow: 'hidden',
-        position: 'relative',
-        backgroundColor: COLORS.white,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
+        backgroundColor: COLORS.gray100,
     },
-
     uploadedImage: {
         width: '100%',
         height: '100%',
     },
-
     primaryBadge: {
         position: 'absolute',
         top: 6,
         left: 6,
         backgroundColor: COLORS.primary,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 6,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 5,
     },
-
-    primaryText: {
+    primaryBadgeText: {
         color: COLORS.white,
-        fontSize: 9,
-        fontWeight: '800',
+        fontSize: 8,
+        fontWeight: '700',
         textTransform: 'uppercase',
+        letterSpacing: 0.3,
     },
-
-    removeButton: {
+    removeBtn: {
         position: 'absolute',
-        top: 6,
-        right: 6,
+        top: 5,
+        right: 5,
         backgroundColor: COLORS.white,
-        borderRadius: 12,
+        borderRadius: 10,
     },
-
     addImageCard: {
         width: '31%',
         aspectRatio: 1,
         borderRadius: 12,
-        borderWidth: 2,
-        borderColor: COLORS.light.border,
+        borderWidth: 1.5,
+        borderColor: COLORS.gray100,
         borderStyle: 'dashed',
         backgroundColor: COLORS.white,
         justifyContent: 'center',
         alignItems: 'center',
+        gap: 6,
     },
-
-    uploadIcon: {
-        width: 50,
-        height: 50,
-        borderRadius: 24,
-        backgroundColor: COLORS.primaryLightest,
+    addIconWrapper: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: `${COLORS.primary}12`,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
     },
-
     addImageText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: COLORS.light.textSecondary,
-    },
-
-    helperText: {
-        fontSize: 12,
-        color: COLORS.light.textSecondary,
-        marginTop: 8,
+        fontSize: 11,
         fontWeight: '500',
+        color: COLORS.gray400,
     },
 
-    inputContainer: {
+    // Inputs
+    inputRow: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: COLORS.white,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: COLORS.light.border,
-        paddingHorizontal: 16,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        paddingHorizontal: 12,
+        minHeight: 46,
     },
-
-    textAreaContainer: {
+    textAreaRow: {
         alignItems: 'flex-start',
     },
-
     inputIcon: {
-        marginRight: 12,
+        marginRight: 8,
     },
-
     input: {
         flex: 1,
-        fontSize: 15,
+        fontSize: 14,
         color: COLORS.light.text,
-        paddingVertical: 14,
-        fontWeight: '500',
+        paddingVertical: 12,
+        fontWeight: '400',
     },
-
     textArea: {
-        minHeight: 120,
-        paddingTop: 14,
-        paddingBottom: 14,
+        minHeight: 110,
+        paddingTop: 12,
+        paddingBottom: 12,
     },
-
-    counterText: {
-        textAlign: 'right',
-        fontSize: 13,
-        fontWeight: '500',
-        color: COLORS.light.textSecondary,
+    counter: {
+        fontSize: 11,
+        color: COLORS.gray400,
     },
-
-    inputError: {
+    counterWarn: {
+        color: COLORS.error,
+    },
+    fieldError: {
         borderColor: COLORS.error,
-        borderWidth: 2,
     },
-
     errorText: {
         color: COLORS.error,
-        fontSize: 12,
-        marginTop: 2,
-        marginLeft: 4,
-        fontWeight: '500',
-    },
-
-    formattedPrice: {
-        fontSize: 14,
-        color: '#10B981',
+        fontSize: 11,
         marginTop: 4,
+        fontWeight: '400',
+    },
+    helperText: {
+        fontSize: 11,
+        color: COLORS.gray400,
+        marginTop: 6,
+    },
+    pricePreview: {
+        fontSize: 13,
+        color: '#10B981',
+        marginTop: 5,
         fontWeight: '600',
-        paddingLeft: 4
+        paddingLeft: 4,
     },
 });
 

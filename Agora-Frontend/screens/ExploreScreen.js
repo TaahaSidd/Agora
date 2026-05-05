@@ -1,5 +1,5 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {useFocusEffect} from '@react-navigation/native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
     Animated,
     Dimensions,
@@ -11,11 +11,11 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {useListings} from '../hooks/useListings';
-import {useNotificationCount} from '../hooks/useNotificationCount';
-import {useUserStore} from '../stores/userStore';
+import { useListings } from '../hooks/useListings';
+import { useNotificationCount } from '../hooks/useNotificationCount';
+import { useUserStore } from '../stores/userStore';
 
 import Card from '../components/Cards';
 import FeaturedCard from '../components/FeaturedCard';
@@ -25,42 +25,43 @@ import Tag from '../components/Tag';
 import DynamicHeader from '../components/DynamicHeader';
 import AnimatedSearchBar from '../components/AnimatedSearchBar';
 import SafetyBanner from "../components/SafetyBanner";
+import GameBanner from '../components/GameBanner';
 
 import ErrorStateSVG from '../assets/svg/ErrorState.svg';
 import EmptySVG from '../assets/svg/EmptyState.svg';
 
-import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
+import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const SkeletonCard = () => (<View style={styles.skeletonCard}>
-    <View style={styles.skeletonImage}/>
+    <View style={styles.skeletonImage} />
     <View style={styles.skeletonContent}>
-        <View style={styles.skeletonTitle}/>
-        <View style={styles.skeletonPrice}/>
+        <View style={styles.skeletonTitle} />
+        <View style={styles.skeletonPrice} />
     </View>
 </View>);
 
 const SkeletonFeaturedCard = () => (<View style={styles.skeletonFeatured}>
-    <View style={styles.skeletonFeaturedImage}/>
-    <View style={styles.skeletonFeaturedTitle}/>
-    <View style={styles.skeletonFeaturedPrice}/>
+    <View style={styles.skeletonFeaturedImage} />
+    <View style={styles.skeletonFeaturedTitle} />
+    <View style={styles.skeletonFeaturedPrice} />
 </View>);
 
 const SkeletonNearestCard = () => (<View style={styles.skeletonNearest}>
-    <View style={styles.skeletonNearestImage}/>
+    <View style={styles.skeletonNearestImage} />
     <View style={styles.skeletonNearestContent}>
-        <View style={styles.skeletonNearestTitle}/>
-        <View style={styles.skeletonNearestPrice}/>
-        <View style={styles.skeletonNearestCollege}/>
+        <View style={styles.skeletonNearestTitle} />
+        <View style={styles.skeletonNearestPrice} />
+        <View style={styles.skeletonNearestCollege} />
     </View>
 </View>);
 
 // Empty State Component
-const EmptyState = ({SvgComponent, title, subtitle, actionText, onAction}) => (<View style={styles.emptyState}>
+const EmptyState = ({ SvgComponent, title, subtitle, actionText, onAction }) => (<View style={styles.emptyState}>
     <View style={styles.emptyIconContainer}>
-        {SvgComponent ? <SvgComponent width={200} height={200}/> : null}
+        {SvgComponent ? <SvgComponent width={100} height={100} /> : null}
     </View>
     <Text style={styles.emptyTitle}>{title}</Text>
     <Text style={styles.emptySubtitle}>{subtitle}</Text>
@@ -74,14 +75,14 @@ const EmptyState = ({SvgComponent, title, subtitle, actionText, onAction}) => (<
     />)}
 </View>);
 
-const ExploreScreen = ({navigation, scrollY}) => {
-    const {items, loading, error, refetch} = useListings();
+const ExploreScreen = ({ navigation, scrollY }) => {
+    const { items, loading, error, refetch } = useListings();
     const [refreshing, setRefreshing] = useState(false);
     const [userLocation, setUserLocation] = useState(null);
 
-    const {currentUser, loading: userLoading, isGuest, fetchUser} = useUserStore();
+    const { currentUser, loading: userLoading, isGuest, fetchUser } = useUserStore();
     const userId = currentUser?.id ?? null;
-    const {unreadCount, refresh} = useNotificationCount(userId, userLoading, isGuest, 60000);
+    const { unreadCount, refresh } = useNotificationCount(userId, userLoading, isGuest, 60000);
 
     useEffect(() => {
         if (!currentUser && !userLoading) {
@@ -103,7 +104,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
         label: "Textbooks & Study Materials",
         value: "textbooks",
         icon: "book-outline"
-    }, {label: "Electronics & Gadgets", value: "electronics", icon: "laptop-outline"}, {
+    }, { label: "Electronics & Gadgets", value: "electronics", icon: "laptop-outline" }, {
         label: "Clothing & Accessories",
         value: "clothing",
         icon: "shirt-outline"
@@ -119,15 +120,15 @@ const ExploreScreen = ({navigation, scrollY}) => {
         label: "Sports & Fitness Equipment",
         value: "sports",
         icon: "basketball-outline"
-    }, {label: "Bicycles & Transportation", value: "bicycles", icon: "bicycle-outline"}, {
+    }, { label: "Bicycles & Transportation", value: "bicycles", icon: "bicycle-outline" }, {
         label: "Food & Snacks",
         value: "food",
         icon: "fast-food-outline"
-    }, {label: "Housing & Roommates", value: "housing", icon: "home-outline"}, {
+    }, { label: "Housing & Roommates", value: "housing", icon: "home-outline" }, {
         label: "Tutoring & Academic Services",
         value: "tutoring",
         icon: "school-outline"
-    }, {label: "Events & Tickets", value: "events", icon: "ticket-outline"}, {
+    }, { label: "Events & Tickets", value: "events", icon: "ticket-outline" }, {
         label: "Miscellaneous",
         value: "miscellaneous",
         icon: "apps-outline"
@@ -167,14 +168,14 @@ const ExploreScreen = ({navigation, scrollY}) => {
             </View>
             <View style={styles.headerActions}>
                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}
-                                  activeOpacity={0.7}>
-                    <Icon name="notifications-outline" size={22} color={COLORS.light.text}/>
+                    activeOpacity={0.7}>
+                    <Icon name="notifications-outline" size={22} color={COLORS.light.text} />
                 </TouchableOpacity>
             </View>
         </View>
 
         <View style={styles.section}>
-            <View style={styles.skeletonBanner}/>
+            <View style={styles.skeletonBanner} />
         </View>
 
         <View style={styles.section}>
@@ -182,13 +183,10 @@ const ExploreScreen = ({navigation, scrollY}) => {
                 <Text style={styles.sectionTitle}>Categories</Text>
             </View>
             <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false}
-                                 contentContainerStyle={styles.categoriesContainer}>
+                contentContainerStyle={styles.categoriesContainer}>
                 {previewCategories.map(item => (<Tag key={item.value} label={item.label} type="category"
-                                                     icon={{
-                                                         library: "Ionicons",
-                                                         name: item.icon,
-                                                         color: COLORS.primary
-                                                     }}/>))}
+                    icon={item.icon}
+                />))}
             </Animated.ScrollView>
         </View>
 
@@ -197,8 +195,8 @@ const ExploreScreen = ({navigation, scrollY}) => {
                 <Text style={styles.sectionTitle}>Hot on campus</Text>
             </View>
             <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false}
-                                 contentContainerStyle={styles.horizontalList}>
-                {[1, 2, 3].map(i => <SkeletonFeaturedCard key={i}/>)}
+                contentContainerStyle={styles.horizontalList}>
+                {[1, 2, 3].map(i => <SkeletonFeaturedCard key={i} />)}
             </Animated.ScrollView>
         </View>
 
@@ -207,8 +205,8 @@ const ExploreScreen = ({navigation, scrollY}) => {
                 <Text style={styles.sectionTitle}>Newly listed</Text>
             </View>
             <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false}
-                                 contentContainerStyle={styles.horizontalList}>
-                {[1, 2].map(i => <SkeletonNearestCard key={i}/>)}
+                contentContainerStyle={styles.horizontalList}>
+                {[1, 2].map(i => <SkeletonNearestCard key={i} />)}
             </Animated.ScrollView>
         </View>
 
@@ -217,7 +215,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                 <Text style={styles.sectionTitle}>Explore More</Text>
             </View>
             <View style={styles.exploreGrid}>
-                {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i}/>)}
+                {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
             </View>
         </View>
     </>);
@@ -231,12 +229,12 @@ const ExploreScreen = ({navigation, scrollY}) => {
             </View>
             <View style={styles.headerActions}>
                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Search')}
-                                  activeOpacity={0.7}>
-                    <Icon name="search-outline" size={22} color={COLORS.light.text}/>
+                    activeOpacity={0.7}>
+                    <Icon name="search-outline" size={22} color={COLORS.light.text} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}
-                                  activeOpacity={0.7}>
-                    <Icon name="notifications-outline" size={22} color={COLORS.light.text}/>
+                    activeOpacity={0.7}>
+                    <Icon name="notifications-outline" size={22} color={COLORS.light.text} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -257,12 +255,12 @@ const ExploreScreen = ({navigation, scrollY}) => {
             </View>
             <View style={styles.headerActions}>
                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Search')}
-                                  activeOpacity={0.7}>
-                    <Icon name="search-outline" size={22} color={COLORS.light.text}/>
+                    activeOpacity={0.7}>
+                    <Icon name="search-outline" size={22} color={COLORS.light.text} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}
-                                  activeOpacity={0.7}>
-                    <Icon name="notifications-outline" size={22} color={COLORS.light.text}/>
+                    activeOpacity={0.7}>
+                    <Icon name="notifications-outline" size={22} color={COLORS.light.text} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -274,7 +272,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
     </>);
 
     return (
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
             <SafeAreaView style={styles.container}>
                 <StatusBar
                     backgroundColor="dark"
@@ -283,10 +281,10 @@ const ExploreScreen = ({navigation, scrollY}) => {
                 />
 
                 <Animated.ScrollView
-                    contentContainerStyle={{flexGrow: 1}}
+                    contentContainerStyle={{ flexGrow: 1 }}
                     scrollEventThrottle={16}
                     showsVerticalScrollIndicator={false}
-                    onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {useNativeDriver: true})}
+                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
                     refreshControl={<RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
@@ -300,7 +298,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                         {/* Header */}
                         <View style={styles.header}>
                             <View>
-                                <DynamicHeader/>
+                                <DynamicHeader />
                             </View>
                             <View style={styles.headerActions}>
                                 <TouchableOpacity
@@ -308,7 +306,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                                     onPress={() => navigation.navigate('Notification')}
                                     activeOpacity={0.7}
                                 >
-                                    <Icon name="notifications-outline" size={22} color={COLORS.light.text}/>
+                                    <Icon name="notifications-outline" size={22} color={COLORS.light.text} />
                                     {unreadCount > 0 && (<View style={styles.notificationBadge}>
                                         <Text style={styles.badgeText}>
                                             {unreadCount > 9 ? '9+' : unreadCount}
@@ -341,20 +339,25 @@ const ExploreScreen = ({navigation, scrollY}) => {
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={styles.categoriesContainer}
                             >
-                                {previewCategories.map(item => (<Tag
-                                    key={item.value}
-                                    label={item.label}
-                                    type="category"
-                                    icon={{
-                                        library: "Ionicons", name: item.icon, color: COLORS.primary
-                                    }}
-                                    onPress={() => navigation.navigate("CategoryScreen", {
-                                        categoryId: item.value, categoryName: item.label,
-                                    })}
-                                />))}
-                                {remainingCount > 0 && (<Tag label={`+${remainingCount} more`} type="category"/>)}
+                                {previewCategories.map(item => (
+                                    <Tag
+                                        key={item.value}
+                                        label={item.label}
+                                        type="category"
+                                        icon={item.icon}
+                                        onPress={() => navigation.navigate('CategoryScreen', {
+                                            categoryId: item.value,
+                                            categoryName: item.label,
+                                        })}
+                                    />
+                                ))}
+                                {remainingCount > 0 && (<Tag label={`+${remainingCount} more`} type="category" />)}
                             </Animated.ScrollView>
                         </View>
+
+                        {/* <GameBanner
+                            onPress={() => navigation.navigate('WordleGame')}
+                        /> */}
 
                         {/* From your college */}
                         <View style={styles.section}>
@@ -362,7 +365,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                                 <View style={styles.titleWithIcon}>
                                     <Text style={styles.sectionTitle}>Hot on Campus</Text>
                                     <View style={styles.recommendedBadge}>
-                                        <Icon name="flame" size={14} color="#EF4444"/>
+                                        <Icon name="flame" size={14} color="#EF4444" />
                                     </View>
                                 </View>
                             </View>
@@ -375,7 +378,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                                 {collegeItems.slice(0, 6).map(item => (<FeaturedCard
                                     key={item.id}
                                     item={item}
-                                    onPress={() => navigation.navigate('ProductDetailsScreen', {item})}
+                                    onPress={() => navigation.navigate('ProductDetailsScreen', { item })}
                                 />))}
                             </Animated.ScrollView>) : (<View style={styles.emptySection}>
                                 <Text style={styles.emptySectionText}>
@@ -389,7 +392,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                             <View style={styles.sectionHeader}>
                                 <View style={styles.titleWithIcon}>
                                     <Text style={styles.sectionTitle}>Newly Listed</Text>
-                                    <Icon name="sparkles" size={16} color={COLORS.primary} style={{marginLeft: 6}}/>
+                                    <Icon name="sparkles" size={16} color={COLORS.primary} style={{ marginLeft: 6 }} />
 
                                 </View>
                             </View>
@@ -401,9 +404,9 @@ const ExploreScreen = ({navigation, scrollY}) => {
                                 data={newlyListedItems}
                                 contentContainerStyle={styles.horizontalList}
                                 keyExtractor={(item) => item.id.toString()}
-                                renderItem={({item}) => (<NearestCard
+                                renderItem={({ item }) => (<NearestCard
                                     item={item}
-                                    onPress={() => navigation.navigate('ProductDetailsScreen', {item})}
+                                    onPress={() => navigation.navigate('ProductDetailsScreen', { item })}
                                 />)}
                                 getItemLayout={(data, index) => ({
                                     length: width * 0.9 + 40, offset: (width * 0.9 + 16) * index, index,
@@ -413,7 +416,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
 
                         {/* Referral Banner */}
                         <View style={styles.section}>
-                            <SafetyBanner onPress={() => navigation.navigate('SafetyCenterScreen')}/>
+                            <SafetyBanner onPress={() => navigation.navigate('SafetyCenterScreen')} />
                         </View>
 
                         {/* Explore */}
@@ -431,11 +434,11 @@ const ExploreScreen = ({navigation, scrollY}) => {
                                 data={items.slice(0, 8)}
                                 keyExtractor={(item) => item.id.toString()}
                                 numColumns={2}
-                                columnWrapperStyle={{justifyContent: 'space-between', marginBottom: 6}}
-                                renderItem={({item}) => (<Card
+                                columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 2 }}
+                                renderItem={({ item }) => (<Card
                                     item={item}
                                     horizontal={false}
-                                    onPress={() => navigation.navigate('ProductDetailsScreen', {item})}
+                                    onPress={() => navigation.navigate('ProductDetailsScreen', { item })}
                                 />)}
                                 ListFooterComponent={() => (items.length > 6 ? (<View style={styles.showAllContainer}>
                                     <TouchableOpacity
@@ -444,7 +447,7 @@ const ExploreScreen = ({navigation, scrollY}) => {
                                         activeOpacity={0.7}
                                     >
                                         <Text style={styles.showAllButtonText}>View All Listings</Text>
-                                        <Icon name="arrow-forward" size={18} color={COLORS.primary}/>
+                                        <Icon name="arrow-forward" size={18} color={COLORS.primary} />
                                     </TouchableOpacity>
                                 </View>) : null)}
                                 showsVerticalScrollIndicator={false}
@@ -714,7 +717,7 @@ const styles = StyleSheet.create({
         height: 120,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: THEME.spacing['3xl'],
+        marginBottom: -28,
     },
     emptyTitle: {
         fontSize: THEME.fontSize['2xl'],

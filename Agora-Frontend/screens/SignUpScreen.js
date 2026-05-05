@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -10,21 +10,21 @@ import {
     View,
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import {GoogleSignin, statusCodes} from '@react-native-google-signin/google-signin';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import * as SecureStore from "expo-secure-store";
 
-import {api, signup} from '../services/api';
+import { api, signup } from '../services/api';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 import ToastMessage from '../components/ToastMessage';
-import {COLORS} from "../utils/colors";
-import {useUserStore} from "../stores/userStore";
+import { COLORS } from "../utils/colors";
+import { useUserStore } from "../stores/userStore";
 
-export default function SignUpScreen({navigation}) {
+export default function SignUpScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
     const [errors, setErrors] = useState({});
     const [expoPushToken, setExpoPushToken] = useState(null);
 
@@ -34,7 +34,7 @@ export default function SignUpScreen({navigation}) {
 
     const requestNotificationPermission = async () => {
         try {
-            const {status: existingStatus} = await Notifications.getPermissionsAsync();
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
             if (existingStatus !== 'granted') {
                 await Notifications.requestPermissionsAsync();
             }
@@ -45,8 +45,8 @@ export default function SignUpScreen({navigation}) {
         }
     };
 
-    const showToast = ({type, title, message}) => {
-        setToast({visible: true, type, title, message});
+    const showToast = ({ type, title, message }) => {
+        setToast({ visible: true, type, title, message });
     };
 
     const handleGoogleSignUp = async () => {
@@ -193,7 +193,7 @@ export default function SignUpScreen({navigation}) {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor={COLORS.light.bg}/>
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.light.bg} />
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
                 <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
 
@@ -209,27 +209,28 @@ export default function SignUpScreen({navigation}) {
                         icon="logo-google"
                         onPress={handleGoogleSignUp}
                         style={styles.googleButtonOverride}
-                        textStyle={{color: '#000'}}
+                        textStyle={{ color: '#000' }}
                         fullWidth
                         size="large"
                     />
 
                     <View style={styles.separatorContainer}>
-                        <View style={styles.line}/>
+                        <View style={styles.line} />
                         <Text style={styles.separatorText}>OR</Text>
-                        <View style={styles.line}/>
+                        <View style={styles.line} />
                     </View>
 
                     <View style={styles.inputSection}>
                         <InputField
                             label="Email Address"
+
                             placeholder="name@college.edu"
                             value={email}
                             onChangeText={(text) => {
                                 setEmail(text);
-                                setErrors({...errors, email: null});
+                                setErrors({ ...errors, email: null });
                             }}
-                            leftIcon="email-outline"
+                            leftIcon="mail-outline"
                             keyboardType="email-address"
                             autoCapitalize="none"
                             error={errors.email}
@@ -240,9 +241,9 @@ export default function SignUpScreen({navigation}) {
                             value={password}
                             onChangeText={(text) => {
                                 setPassword(text);
-                                setErrors({...errors, password: null});
+                                setErrors({ ...errors, password: null });
                             }}
-                            leftIcon="lock-outline"
+                            leftIcon="lock-closed-outline"
                             secureTextEntry
                             error={errors.password}
                         />
@@ -270,7 +271,7 @@ export default function SignUpScreen({navigation}) {
                         type={toast.type}
                         title={toast.title}
                         message={toast.message}
-                        onHide={() => setToast({...toast, visible: false})}
+                        onHide={() => setToast({ ...toast, visible: false })}
                     />
                 )}
             </KeyboardAvoidingView>

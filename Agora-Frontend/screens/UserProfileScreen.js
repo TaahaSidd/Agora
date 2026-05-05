@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
     RefreshControl,
     SafeAreaView,
     ScrollView,
@@ -8,6 +7,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,12 +20,7 @@ import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
 
 const UserProfileScreen = ({ navigation, route }) => {
-    const {
-        currentUser,
-        loading: userLoading,
-        isGuest,
-        fetchUser,
-    } = useUserStore();
+    const { currentUser, loading: userLoading, isGuest, fetchUser } = useUserStore();
     const { profileImage } = route.params || {};
     const [refreshing, setRefreshing] = useState(false);
 
@@ -39,12 +34,11 @@ const UserProfileScreen = ({ navigation, route }) => {
         setRefreshing(false);
     };
 
-
     if (userLoading) {
         return (
-            <SafeAreaView style={styles.loadingContainer}>
+            <SafeAreaView style={styles.safeArea}>
                 <AppHeader title="My Profile" onBack={() => navigation.goBack()} />
-                <View style={styles.loadingContent}>
+                <View style={styles.centered}>
                     <LoadingSpinner />
                 </View>
             </SafeAreaView>
@@ -53,10 +47,12 @@ const UserProfileScreen = ({ navigation, route }) => {
 
     if (!currentUser || isGuest) {
         return (
-            <SafeAreaView style={styles.loadingContainer}>
+            <SafeAreaView style={styles.safeArea}>
                 <AppHeader title="My Profile" onBack={() => navigation.goBack()} />
-                <View style={styles.emptyState}>
-                    <Ionicons name="person-outline" size={80} color={COLORS.light.textTertiary} />
+                <View style={styles.centered}>
+                    <View style={styles.emptyIconWrapper}>
+                        <Ionicons name="person-outline" size={28} color={COLORS.gray400} />
+                    </View>
                     <Text style={styles.emptyTitle}>Sign in Required</Text>
                     <Text style={styles.emptyText}>Please log in to view your profile</Text>
                 </View>
@@ -71,16 +67,14 @@ const UserProfileScreen = ({ navigation, route }) => {
                 onBack={() => navigation.goBack()}
                 rightComponent={
                     <TouchableOpacity
-                        onPress={() =>
-                            navigation.navigate('EditProfileScreen', {
-                                user: currentUser,
-                                profileImage: currentUser?.avatar
-                            })
-                        }
+                        onPress={() => navigation.navigate('EditProfileScreen', {
+                            user: currentUser,
+                            profileImage: currentUser?.avatar,
+                        })}
                         style={styles.editButton}
-                        activeOpacity={0.7}
+                        activeOpacity={0.6}
                     >
-                        <Ionicons name="create-outline" size={22} color={COLORS.primary} />
+                        <Ionicons name="create-outline" size={18} color={COLORS.primary} />
                     </TouchableOpacity>
                 }
             />
@@ -105,73 +99,84 @@ const UserProfileScreen = ({ navigation, route }) => {
                             cachePolicy="disk"
                         />
                         <View style={styles.verifiedBadge}>
-                            <Ionicons name="checkmark-circle" size={28} color={COLORS.success} />
+                            <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
                         </View>
                     </View>
-
-                    <Text style={styles.userName}>{currentUser.name || 'User'}</Text>
-                    <Text style={styles.userEmail}>{currentUser.email || 'email@example.com'}</Text>
+                    <Text style={styles.userName}>
+                        {currentUser.name || 'User'}
+                    </Text>
+                    <Text style={styles.userEmail}>
+                        {currentUser.email || 'email@example.com'}
+                    </Text>
                 </View>
 
-                {/* Personal Information Card */}
-                <View style={styles.card}>
-                    <View style={styles.cardHeader}>
-                        <View style={styles.iconCircle}>
-                            <Ionicons name="person" size={20} color={COLORS.primary} />
-                        </View>
-                        <Text style={styles.cardTitle}>Personal Information</Text>
-                    </View>
+                {/* Personal Information */}
+                <InfoCard
+                    iconName="person"
+                    iconColor={COLORS.primary}
+                    title="Personal Information"
+                >
+                    <InfoRow
+                        icon="person-outline"
+                        label="Full Name"
+                        value={currentUser.name || 'N/A'}
+                    />
+                    <InfoRow
+                        icon="mail-outline"
+                        label="Email"
+                        value={currentUser.email || 'N/A'}
+                    />
+                    <InfoRow
+                        icon="call-outline"
+                        label="Phone"
+                        value={currentUser.mobileNumber || 'Not provided'}
+                        isLast
+                    />
+                </InfoCard>
 
-                    <View style={styles.infoItem}>
-                        <View style={styles.infoLeft}>
-                            <Ionicons name="person-outline" size={18} color={COLORS.light.textTertiary} />
-                            <Text style={styles.infoLabel}>Full Name</Text>
-                        </View>
-                        <Text style={styles.infoValue}>{currentUser.name || 'N/A'}</Text>
-                    </View>
-
-                    <View style={styles.infoItem}>
-                        <View style={styles.infoLeft}>
-                            <Ionicons name="mail-outline" size={18} color={COLORS.light.textTertiary} />
-                            <Text style={styles.infoLabel}>Email</Text>
-                        </View>
-                        <Text style={styles.infoValue} numberOfLines={1}>{currentUser.email || 'N/A'}</Text>
-                    </View>
-
-                    <View style={[styles.infoItem, styles.infoItemLast]}>
-                        <View style={styles.infoLeft}>
-                            <Ionicons name="call-outline" size={18} color={COLORS.light.textTertiary} />
-                            <Text style={styles.infoLabel}>Phone</Text>
-                        </View>
-                        <Text style={styles.infoValue}>
-                            {currentUser.mobileNumber || 'Not provided'}
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Academic Information Card */}
-                <View style={styles.card}>
-                    <View style={styles.cardHeader}>
-                        <View style={[styles.iconCircle, { backgroundColor: COLORS.warning + '15' }]}>
-                            <Ionicons name="school" size={20} color={COLORS.warning} />
-                        </View>
-                        <Text style={styles.cardTitle}>College Information</Text>
-                    </View>
-
-                    <View style={[styles.infoItem, styles.infoItemLast]}>
-                        <View style={styles.infoLeft}>
-                            <Ionicons name="school-outline" size={18} color={COLORS.light.textTertiary} />
-                            <Text style={styles.infoLabel}>College</Text>
-                        </View>
-                        <Text style={styles.infoValue} numberOfLines={1}>
-                            {currentUser.collegeName || 'N/A'}
-                        </Text>
-                    </View>
-                </View>
+                {/* College Information */}
+                <InfoCard
+                    iconName="school"
+                    iconColor={COLORS.warning}
+                    title="College Information"
+                >
+                    <InfoRow
+                        icon="school-outline"
+                        label="College"
+                        value={currentUser.collegeName || 'N/A'}
+                        isLast
+                    />
+                </InfoCard>
             </ScrollView>
         </SafeAreaView>
     );
 };
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+const InfoCard = ({ iconName, iconColor, title, children }) => (
+    <View style={styles.card}>
+        <View style={styles.cardHeader}>
+            <View style={[styles.iconWrapper, { backgroundColor: `${iconColor}12` }]}>
+                <Ionicons name={iconName} size={18} color={iconColor} />
+            </View>
+            <Text style={styles.cardTitle}>{title}</Text>
+        </View>
+        {children}
+    </View>
+);
+
+const InfoRow = ({ icon, label, value, isLast }) => (
+    <View style={[styles.infoRow, !isLast && styles.infoRowBorder]}>
+        <View style={styles.infoLeft}>
+            <Ionicons name={icon} size={16} color={COLORS.gray400} />
+            <Text style={styles.infoLabel}>{label}</Text>
+        </View>
+        <Text style={styles.infoValue} numberOfLines={1}>{value}</Text>
+    </View>
+);
+
+// ─── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
     safeArea: {
@@ -179,142 +184,159 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     scrollContainer: {
-        paddingBottom: THEME.spacing['3xl'],
+        paddingTop: 8,
+        paddingBottom: 40,
     },
-    loadingContainer: {
-        flex: 1,
-        backgroundColor: COLORS.light.bg,
-    },
-    loadingContent: {
+    centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 40,
     },
-    emptyState: {
-        flex: 1,
-        justifyContent: 'center',
+
+    // Empty state
+    emptyIconWrapper: {
+        width: 64,
+        height: 64,
+        borderRadius: 20,
+        backgroundColor: COLORS.gray100,
         alignItems: 'center',
-        paddingHorizontal: THEME.spacing['2xl'],
+        justifyContent: 'center',
+        marginBottom: 16,
     },
     emptyTitle: {
-        fontSize: THEME.fontSize.xl,
-        fontWeight: THEME.fontWeight.bold,
+        fontSize: 16,
+        fontWeight: '600',
         color: COLORS.light.text,
-        marginTop: THEME.spacing.lg,
-        marginBottom: THEME.spacing[2],
+        marginBottom: 6,
+        letterSpacing: -0.3,
     },
     emptyText: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.light.textSecondary,
+        fontSize: 13,
+        color: COLORS.gray400,
         textAlign: 'center',
+        lineHeight: 19,
     },
+
+    // Edit button
     editButton: {
         width: 36,
         height: 36,
-        borderRadius: 18,
-        backgroundColor: COLORS.primary + '15',
+        borderRadius: 10,
+        backgroundColor: `${COLORS.primary}12`,
         alignItems: 'center',
         justifyContent: 'center',
     },
+
+    // Profile header
     profileHeader: {
         alignItems: 'center',
-        paddingVertical: THEME.spacing['2xl'],
-        paddingHorizontal: THEME.spacing.md,
+        paddingVertical: 24,
+        paddingHorizontal: 20,
     },
     avatarContainer: {
         position: 'relative',
-        marginBottom: THEME.spacing.md,
+        marginBottom: 14,
     },
     avatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: COLORS.light.card,
-        borderWidth: 3,
-        borderColor: COLORS.light.border,
+        width: 84,
+        height: 84,
+        borderRadius: 24,
+        backgroundColor: COLORS.gray100,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
     },
     verifiedBadge: {
         position: 'absolute',
-        bottom: 0,
-        right: 0,
-        backgroundColor: COLORS.light.bg,
-        borderRadius: 14,
+        bottom: -3,
+        right: -3,
+        backgroundColor: COLORS.white,
+        borderRadius: 10,
+        padding: 1,
     },
     userName: {
-        fontSize: THEME.fontSize['2xl'],
-        fontWeight: THEME.fontWeight.bold,
+        fontSize: 20,
+        fontWeight: '700',
         color: COLORS.light.text,
-        marginBottom: THEME.spacing[1],
-        textAlign: 'center',
+        letterSpacing: -0.5,
+        marginBottom: 3,
     },
     userEmail: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.light.textSecondary,
-        fontWeight: THEME.fontWeight.medium,
-        textAlign: 'center',
+        fontSize: 13,
+        color: COLORS.gray400,
+        fontWeight: '400',
     },
+
+    // Cards
     card: {
-        backgroundColor: COLORS.light.card,
-        marginHorizontal: THEME.spacing.md,
-        marginBottom: THEME.spacing.md,
-        borderRadius: THEME.borderRadius.lg,
-        padding: THEME.spacing.md,
+        backgroundColor: COLORS.white,
+        marginHorizontal: 16,
+        marginBottom: 12,
+        borderRadius: 16,
+        padding: 16,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
-        // Light theme shadow
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        borderColor: COLORS.gray100,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 1,
+            },
+        }),
     },
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: THEME.spacing.md,
-        gap: THEME.spacing[3],
+        marginBottom: 14,
+        gap: 10,
     },
-    iconCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: COLORS.primary + '15',
+    iconWrapper: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
     cardTitle: {
-        fontSize: THEME.fontSize.base,
-        fontWeight: THEME.fontWeight.bold,
+        fontSize: 14,
+        fontWeight: '600',
         color: COLORS.light.text,
+        letterSpacing: -0.2,
     },
-    infoItem: {
+
+    // Info rows
+    infoRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: THEME.spacing[3],
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.light.border,
+        paddingVertical: 11,
+        minHeight: 42,
     },
-    infoItemLast: {
-        borderBottomWidth: 0,
+    infoRowBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
     infoLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: THEME.spacing[2],
-        flex: 1,
+        gap: 8,
     },
     infoLabel: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.light.textTertiary,
-        fontWeight: THEME.fontWeight.medium,
+        fontSize: 13,
+        color: COLORS.gray400,
+        fontWeight: '400',
     },
     infoValue: {
-        fontSize: THEME.fontSize.sm,
-        fontWeight: THEME.fontWeight.semibold,
+        fontSize: 13,
+        fontWeight: '500',
         color: COLORS.light.text,
+        letterSpacing: -0.1,
+        maxWidth: '55%',
         textAlign: 'right',
-        flex: 1,
     },
 });
 

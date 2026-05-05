@@ -194,7 +194,7 @@ const SearchScreen = ({ navigation }) => {
                             <View style={styles.emptyContainer}>
                                 {isSearching ? (
                                     <>
-                                        <RoadSVG width={180} height={180} />
+                                        <RoadSVG width={140} height={140} />
                                         <Text style={styles.emptyTitle}>No results found</Text>
                                         <Text style={styles.emptySubtitle}>Try different keywords</Text>
                                     </>
@@ -269,8 +269,16 @@ const styles = StyleSheet.create({
 
     loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
     loadingText: { marginTop: 12, fontSize: 14, color: COLORS.light.textSecondary },
-    emptyContainer: { alignItems: 'center', paddingTop: 80 },
-    emptyRecentContainer: { alignItems: 'center' },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyRecentContainer: {
+        alignItems: 'center',
+        marginTop: 100,
+    },
+
     emptyTitle: { fontSize: 20, fontWeight: "bold", color: COLORS.light.text, marginTop: 16 },
     emptySubtitle: { fontSize: 14, color: COLORS.light.textSecondary, marginTop: 8 },
 });

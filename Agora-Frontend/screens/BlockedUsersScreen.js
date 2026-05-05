@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
     FlatList,
     StatusBar,
     StyleSheet,
@@ -8,14 +7,14 @@ import {
     TouchableOpacity,
     View,
     Image,
+    Platform,
 } from 'react-native';
 import { useModeration } from '../hooks/useModeration';
-import { THEME } from '../utils/theme';
-import { COLORS } from "../utils/colors";
+import { COLORS } from '../utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 
 import AppHeader from '../components/AppHeader';
-import ToastMessage from "../components/ToastMessage";
+import ToastMessage from '../components/ToastMessage';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const BlockedUsersScreen = ({ navigation }) => {
@@ -23,16 +22,14 @@ const BlockedUsersScreen = ({ navigation }) => {
     const [blockedList, setBlockedList] = useState([]);
     const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
 
-    const showToast = ({ type, title, message }) => {
+    const showToast = ({ type, title, message }) =>
         setToast({ visible: true, type, title, message });
-    };
-
-    const loadData = async () => {
-        const data = await fetchBlockedUsers();
-        setBlockedList(data.blocked || []);
-    };
 
     useEffect(() => {
+        const loadData = async () => {
+            const data = await fetchBlockedUsers();
+            setBlockedList(data.blocked || []);
+        };
         loadData();
     }, []);
 
@@ -42,78 +39,51 @@ const BlockedUsersScreen = ({ navigation }) => {
             showToast({
                 type: 'success',
                 title: 'User Unblocked',
-                message: `${user.name}'s listings will now show up in your feed.`
+                message: `${user.name}'s listings will now appear in your feed.`,
             });
         });
     };
 
-    const ListHeader = () => (
-        <View style={styles.headerSection}>
-            <Text style={styles.listTitle}>Privacy Control</Text>
-            <Text style={styles.subtitle}>
-                Users in this list cannot message you or see your listings.
-                You will not see their content in your feed.
-            </Text>
-        </View>
-    );
-
-    const renderItem = ({ item }) => (
-        <View style={styles.card}>
-            <View style={styles.userInfo}>
-                {item.profilePic ? (
-                    <Image source={{ uri: item.profilePic }} style={styles.avatar} />
-                ) : (
-                    <View style={styles.avatarPlaceholder}>
-                        <Text style={styles.avatarText}>
-                            {item.name?.charAt(0).toUpperCase() || 'U'}
-                        </Text>
-                    </View>
-                )}
-
-                <View style={styles.textContainer}>
-                    <Text style={styles.userName} numberOfLines={1}>{item.name || 'User'}</Text>
-                    <Text style={styles.userStatus}>Blocked</Text>
-                </View>
-            </View>
-
-            <TouchableOpacity
-                onPress={() => handleUnblock(item)}
-                activeOpacity={0.7}
-                style={styles.unblockButton}
-            >
-                <Text style={styles.unblockButtonText}>Unblock</Text>
-            </TouchableOpacity>
-        </View>
-    );
-
     return (
-        <View style={styles.mainContainer}>
-            <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-
-            <AppHeader
-                title="Blocked Users"
-                onBack={() => navigation.goBack()}
-            />
+        <View style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.light.bg} />
+            <AppHeader title="Blocked Users" onBack={() => navigation.goBack()} />
 
             <FlatList
                 data={blockedList}
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={styles.listContent}
-                ListHeaderComponent={ListHeader}
+                showsVerticalScrollIndicator={false}
+                ListHeaderComponent={
+                    <View style={styles.hero}>
+                        <Text style={styles.heroTitle}>Privacy Control</Text>
+                        <Text style={styles.heroSubtitle}>
+                            Users in this list cannot message you or see your listings. You will not see their content in your feed.
+                        </Text>
+                    </View>
+                }
                 ListEmptyComponent={
                     loading ? (
-                        <LoadingSpinner />
+                        <View style={styles.centered}>
+                            <LoadingSpinner />
+                        </View>
                     ) : (
-                        <View style={styles.emptyContainer}>
-                            <View style={styles.emptyIconCircle}>
-                                <Ionicons name="shield-checkmark-outline" size={40} color={COLORS.primary} />
+                        <View style={styles.centered}>
+                            <View style={styles.emptyIconWrapper}>
+                                <Ionicons name="shield-checkmark-outline" size={28} color={COLORS.primary} />
                             </View>
-                            <Text style={styles.emptyText}>Clean Slate</Text>
-                            <Text style={styles.emptySubtext}>You haven't blocked anyone yet.</Text>
+                            <Text style={styles.emptyTitle}>Clean Slate</Text>
+                            <Text style={styles.emptyText}>You haven't blocked anyone yet.</Text>
                         </View>
                     )
                 }
-                renderItem={renderItem}
+                renderItem={({ item, index }) => (
+                    <BlockedUserRow
+                        item={item}
+                        onUnblock={() => handleUnblock(item)}
+                        isLast={index === blockedList.length - 1}
+                    />
+                )}
             />
 
             {toast.visible && (
@@ -128,121 +98,180 @@ const BlockedUsersScreen = ({ navigation }) => {
     );
 };
 
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+const BlockedUserRow = ({ item, onUnblock, isLast }) => (
+    <View style={[styles.row, !isLast && styles.rowBorder]}>
+        <View style={styles.userInfo}>
+            {item.profilePic ? (
+                <Image source={{ uri: item.profilePic }} style={styles.avatar} />
+            ) : (
+                <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarInitial}>
+                        {item.name?.charAt(0).toUpperCase() || 'U'}
+                    </Text>
+                </View>
+            )}
+            <View style={styles.textContainer}>
+                <Text style={styles.userName} numberOfLines={1}>{item.name || 'User'}</Text>
+                <Text style={styles.userStatus}>Blocked</Text>
+            </View>
+        </View>
+
+        <TouchableOpacity
+            onPress={onUnblock}
+            activeOpacity={0.6}
+            style={styles.unblockBtn}
+        >
+            <Text style={styles.unblockBtnText}>Unblock</Text>
+        </TouchableOpacity>
+    </View>
+);
+
+// ─── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-    mainContainer: {
+    container: {
         flex: 1,
         backgroundColor: COLORS.light.bg,
-    },
-    headerSection: {
-        marginTop: 20,
-        marginBottom: 24,
-    },
-    listTitle: {
-        color: COLORS.light.text,
-        fontSize: 22,
-        fontWeight: '800',
-    },
-    subtitle: {
-        color: COLORS.light.textSecondary,
-        fontSize: 14,
-        lineHeight: 20,
-        marginTop: 8,
     },
     listContent: {
         paddingHorizontal: 16,
         paddingBottom: 40,
     },
-    card: {
+
+    // Hero
+    hero: {
+        marginTop: 8,
+        marginBottom: 16,
+        paddingHorizontal: 4,
+    },
+    heroTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: COLORS.light.text,
+        letterSpacing: -0.5,
+        marginBottom: 6,
+    },
+    heroSubtitle: {
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 19,
+    },
+
+    // List card wrapper
+    listCard: {
         backgroundColor: COLORS.white,
         borderRadius: 16,
-        padding: 12,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        overflow: 'hidden',
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: { elevation: 1 },
+        }),
+    },
+
+    // Rows — flat list style like NotificationScreen
+    row: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
+        paddingVertical: 10,
+        backgroundColor: COLORS.light.bg,
+    },
+    rowBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
     userInfo: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
         marginRight: 12,
+        gap: 12,
+    },
+    avatar: {
+        width: 42,
+        height: 42,
+        borderRadius: 13,
+        backgroundColor: COLORS.gray100,
+    },
+    avatarPlaceholder: {
+        width: 42,
+        height: 42,
+        borderRadius: 13,
+        backgroundColor: `${COLORS.primary}12`,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    avatarInitial: {
+        color: COLORS.primary,
+        fontSize: 16,
+        fontWeight: '600',
     },
     textContainer: {
         flex: 1,
     },
-    avatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        marginRight: 12,
-    },
-    avatarPlaceholder: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: COLORS.light.bg,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-    },
-    avatarText: {
-        color: COLORS.primary,
-        fontSize: 18,
-        fontWeight: '700',
-    },
     userName: {
+        fontSize: 14,
+        fontWeight: '600',
         color: COLORS.light.text,
-        fontSize: 16,
-        fontWeight: '700',
+        letterSpacing: -0.2,
+        marginBottom: 2,
     },
     userStatus: {
+        fontSize: 11,
         color: COLORS.error,
+        fontWeight: '500',
+    },
+
+    // Unblock button
+    unblockBtn: {
+        paddingHorizontal: 14,
+        paddingVertical: 7,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: `${COLORS.primary}30`,
+        backgroundColor: `${COLORS.primary}08`,
+    },
+    unblockBtnText: {
+        color: COLORS.primary,
         fontSize: 12,
         fontWeight: '600',
-        marginTop: 2,
     },
-    unblockButton: {
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 10,
-        backgroundColor: COLORS.white,
-        borderWidth: 1,
-        borderColor: COLORS.primary,
-    },
-    unblockButtonText: {
-        color: COLORS.primary,
-        fontSize: 13,
-        fontWeight: '700',
-    },
-    emptyContainer: {
+
+    // Empty & loading
+    centered: {
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 80,
     },
-    emptyIconCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: COLORS.primary + '10',
-        justifyContent: 'center',
+    emptyIconWrapper: {
+        width: 64,
+        height: 64,
+        borderRadius: 20,
+        backgroundColor: COLORS.white,
         alignItems: 'center',
-        marginBottom: 20,
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    emptyTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: COLORS.light.text,
+        letterSpacing: -0.3,
+        marginBottom: 6,
     },
     emptyText: {
-        color: COLORS.light.text,
-        fontSize: 20,
-        fontWeight: '800',
-    },
-    emptySubtext: {
-        color: COLORS.light.textSecondary,
-        fontSize: 14,
+        fontSize: 13,
+        color: COLORS.gray400,
         textAlign: 'center',
-        marginTop: 8,
-        paddingHorizontal: 40,
     },
 });
 

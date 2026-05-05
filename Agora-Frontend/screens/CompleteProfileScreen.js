@@ -7,20 +7,18 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
-import { THEME } from '../utils/theme';
-import { COLORS } from "../utils/colors";
-import { useUserStore } from "../stores/userStore";
+import { COLORS } from '../utils/colors';
+import { useUserStore } from '../stores/userStore';
 import { completeProfile, searchColleges } from '../services/api';
 
-import ToastMessage from "../components/ToastMessage";
+import ToastMessage from '../components/ToastMessage';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
-import PhoneInputField from "../components/PhoneInputField";
+import PhoneInputField from '../components/PhoneInputField';
 
 const CompleteProfileScreen = ({ navigation }) => {
     const { currentUser } = useUserStore();
@@ -54,13 +52,12 @@ const CompleteProfileScreen = ({ navigation }) => {
             try {
                 const data = await searchColleges(collegeQuery.trim());
                 setCollegeResults(data);
-            } catch (error) {
-                setToast({ visible: true, type: 'error', title: 'Error', message: 'Failed to search colleges' });
+            } catch {
+                setToast({ visible: true, type: 'error', title: 'Error', message: 'Failed to search colleges.' });
             } finally {
                 setLoadingColleges(false);
             }
         }, 150);
-
         return () => clearTimeout(debounce);
     }, [collegeQuery]);
 
@@ -77,21 +74,17 @@ const CompleteProfileScreen = ({ navigation }) => {
 
     const handleContinue = async () => {
         if (!isFormValid) return;
-
         setLoading(true);
         try {
             const token = await SecureStore.getItemAsync('accessToken');
-
-            const profileData = {
+            const result = await completeProfile(token, {
                 userEmail: currentUser.userEmail,
                 firstName: firstName.trim(),
                 lastName: lastName.trim(),
                 phoneNumber: phoneNumber.trim(),
                 college: selectedCollege.collegeName,
-                expoPushToken: null
-            };
-
-            const result = await completeProfile(token, profileData);
+                expoPushToken: null,
+            });
 
             if (result) {
                 if (result.jwt) await SecureStore.setItemAsync('accessToken', result.jwt);
@@ -106,20 +99,11 @@ const CompleteProfileScreen = ({ navigation }) => {
                     collegeId: result.collegeId,
                     verificationStatus: result.verificationStatus,
                 };
-
                 await SecureStore.setItemAsync('currentUser', JSON.stringify(updatedUser));
                 useUserStore.setState({ currentUser: updatedUser, isGuest: false });
 
-                setToast({
-                    visible: true,
-                    type: 'success',
-                    title: 'Welcome!',
-                    message: 'Your profile is complete',
-                });
-
-                setTimeout(() => {
-                    navigation.replace('MainLayout');
-                }, 1500);
+                setToast({ visible: true, type: 'success', title: 'Welcome!', message: 'Your profile is complete.' });
+                setTimeout(() => navigation.replace('MainLayout'), 1500);
             }
         } catch (error) {
             setToast({
@@ -137,34 +121,30 @@ const CompleteProfileScreen = ({ navigation }) => {
         <SafeAreaView style={styles.safeArea}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.container}
+                style={{ flex: 1 }}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scrollContent}
+                    contentContainerStyle={styles.container}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
-                    <View style={styles.header}>
-                        <View style={styles.iconContainer}>
-                            <MaterialCommunityIcons
-                                name="account-check-outline"
-                                size={THEME.iconSize['4xl']}
-                                color={COLORS.primary}
-                            />
-                        </View>
-                        <Text style={styles.title}>Complete Your Profile</Text>
-                        <Text style={styles.subtitle}>
-                            Join your campus community. Just a few more details to get started.
+                    {/* Hero */}
+                    <View style={styles.hero}>
+                        <Text style={styles.heroTitle}>Complete Your Profile</Text>
+                        <Text style={styles.heroSubtitle}>
+                            Join your campus community — just a few more details to get started.
                         </Text>
                     </View>
 
+                    {/* Verified email badge */}
                     {currentUser?.userEmail && (
                         <View style={styles.verifiedBadge}>
-                            <MaterialCommunityIcons name="email-check" size={18} color="#22C55E" />
+                            <Ionicons name="checkmark-circle" size={15} color={COLORS.success} />
                             <Text style={styles.verifiedText}>{currentUser.userEmail}</Text>
                         </View>
                     )}
 
+                    {/* Form */}
                     <View style={styles.form}>
                         <View style={styles.nameRow}>
                             <View style={{ flex: 1 }}>
@@ -173,21 +153,22 @@ const CompleteProfileScreen = ({ navigation }) => {
                                     placeholder="e.g. Rahul"
                                     value={firstName}
                                     onChangeText={setFirstName}
-                                    leftIcon="account-outline"
+                                    leftIcon="person-outline"
                                 />
                             </View>
-                            <View style={{ width: 12 }} />
+                            <View style={{ width: 10 }} />
                             <View style={{ flex: 1 }}>
                                 <InputField
                                     label="Last Name *"
                                     placeholder="e.g. Sharma"
                                     value={lastName}
                                     onChangeText={setLastName}
-                                    leftIcon="account-outline"
+                                    leftIcon="person-outline"
                                 />
                             </View>
                         </View>
 
+                        {/* College search */}
                         <View style={styles.dropdownWrapper}>
                             <InputField
                                 label="College *"
@@ -199,14 +180,14 @@ const CompleteProfileScreen = ({ navigation }) => {
                                 }}
                                 leftIcon="school-outline"
                                 editable={!selectedCollege}
-                                rightIcon={selectedCollege ? "close-circle" : undefined}
+                                rightIcon={selectedCollege ? 'close-circle' : undefined}
                                 onRightIconPress={() => {
                                     setSelectedCollege(null);
                                     setCollegeQuery('');
                                 }}
                             />
-                            <Text style={{ fontSize: 11, color: COLORS.light.textTertiary, marginTop: -10, marginBottom: 16, marginLeft: 4 }}>
-                                Start typing at least 2 letters to search your college
+                            <Text style={styles.helperText}>
+                                Type at least 2 letters to search
                             </Text>
 
                             {collegeQuery.length > 0 && collegeResults.length > 0 && !selectedCollege && (
@@ -218,27 +199,26 @@ const CompleteProfileScreen = ({ navigation }) => {
                                     </View>
                                     <ScrollView
                                         style={{ maxHeight: 220 }}
-                                        nestedScrollEnabled={true}
-                                        showsVerticalScrollIndicator={true}
+                                        nestedScrollEnabled
+                                        showsVerticalScrollIndicator={false}
                                     >
                                         {collegeResults.map((item, index) => (
                                             <TouchableOpacity
                                                 key={item.id}
                                                 style={[
                                                     styles.dropdownItem,
-                                                    index === collegeResults.length - 1 && styles.dropdownItemLast
+                                                    index === collegeResults.length - 1 && styles.dropdownItemLast,
                                                 ]}
                                                 onPress={() => handleCollegeSelect(item)}
-                                                activeOpacity={0.7}
+                                                activeOpacity={0.6}
                                             >
-                                                <View style={styles.dropdownIconContainer}>
-                                                    <Ionicons name="school" size={18} color={COLORS.primary} />
+                                                <View style={styles.dropdownIconWrapper}>
+                                                    <Ionicons name="school-outline" size={16} color={COLORS.primary} />
                                                 </View>
-                                                <Text style={styles.dropdownText} numberOfLines={2}>
+                                                <Text style={styles.dropdownItemText} numberOfLines={2}>
                                                     {item.collegeName}
                                                 </Text>
-                                                <Ionicons name="chevron-forward" size={16}
-                                                    color={COLORS.light.textTertiary} />
+                                                <Ionicons name="chevron-forward" size={14} color={COLORS.gray300} />
                                             </TouchableOpacity>
                                         ))}
                                     </ScrollView>
@@ -251,10 +231,11 @@ const CompleteProfileScreen = ({ navigation }) => {
                             value={phoneNumber}
                             onChangeText={setPhoneNumber}
                             placeholder="98765 43210"
-                            error={phoneNumber.length > 0 && phoneNumber.length < 10 ? "Enter 10 digits" : null}
+                            error={phoneNumber.length > 0 && phoneNumber.length < 10 ? 'Enter 10 digits' : null}
                         />
                     </View>
 
+                    {/* Footer */}
                     <View style={styles.footer}>
                         <Button
                             title="Finish Setup"
@@ -265,30 +246,26 @@ const CompleteProfileScreen = ({ navigation }) => {
                             iconPosition="right"
                             loading={loading}
                             disabled={!isFormValid || loading}
-                            fullWidth={true}
+                            fullWidth
                         />
-                        <View style={styles.securityNoteContainer}>
-                            <MaterialCommunityIcons
-                                name="shield-check-outline"
-                                size={14}
-                                color={COLORS.gray600}
-                            />
-                            <Text style={styles.securityNote}>
+                        <View style={styles.securityNote}>
+                            <Ionicons name="shield-checkmark-outline" size={13} color={COLORS.gray400} />
+                            <Text style={styles.securityNoteText}>
                                 Your real name helps verified students trust you.
                             </Text>
                         </View>
                     </View>
-
-                    {toast.visible && (
-                        <ToastMessage
-                            type={toast.type}
-                            title={toast.title}
-                            message={toast.message}
-                            onHide={() => setToast({ ...toast, visible: false })}
-                        />
-                    )}
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            {toast.visible && (
+                <ToastMessage
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                    onHide={() => setToast({ ...toast, visible: false })}
+                />
+            )}
         </SafeAreaView>
     );
 };
@@ -299,79 +276,65 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        flex: 1,
+        paddingHorizontal: 20,
+        paddingTop: 40,
+        paddingBottom: 40,
     },
-    scrollContent: {
-        paddingHorizontal: THEME.spacing.screenPadding,
-        paddingTop: THEME.spacing['4xl'],
-        paddingBottom: THEME.spacing.xl,
+
+    // Hero
+    hero: {
+        marginBottom: 20,
     },
-    header: {
-        alignItems: 'center',
-        marginBottom: THEME.spacing.lg,
-    },
-    iconContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: THEME.borderRadius.full,
-        backgroundColor: COLORS.primary + '10',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: THEME.spacing.md,
-    },
-    title: {
-        fontSize: THEME.fontSize['2xl'],
-        fontWeight: THEME.fontWeight.bold,
+    heroTitle: {
+        fontSize: 22,
+        fontWeight: '700',
         color: COLORS.light.text,
-        textAlign: 'center',
-        marginBottom: THEME.spacing.sm,
+        letterSpacing: -0.5,
+        marginBottom: 6,
     },
-    subtitle: {
-        fontSize: THEME.fontSize.base,
-        color: COLORS.light.textSecondary,
-        textAlign: 'center',
-        paddingHorizontal: THEME.spacing.md,
-        lineHeight: THEME.lineHeight.normal * THEME.fontSize.base,
+    heroSubtitle: {
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 19,
     },
+
+    // Verified badge
     verifiedBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#F0FDF4', // Light green bg
-        borderRadius: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        marginBottom: THEME.spacing.xl,
-        borderWidth: 1,
-        borderColor: '#DCFCE7',
         gap: 8,
+        backgroundColor: `${COLORS.success}10`,
+        borderWidth: 1,
+        borderColor: `${COLORS.success}25`,
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        marginBottom: 24,
     },
     verifiedText: {
-        fontSize: THEME.fontSize.sm,
-        color: '#166534', // Dark green text
-        fontWeight: THEME.fontWeight.medium,
+        fontSize: 13,
+        color: COLORS.success,
+        fontWeight: '500',
+        flex: 1,
     },
-    form: {},
+
+    // Form
+    form: {
+        gap: 4,
+    },
     nameRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
     },
-    footer: {
-        marginTop: THEME.spacing['4xl'],
-        gap: THEME.spacing.md,
+    helperText: {
+        fontSize: 11,
+        color: COLORS.gray400,
+        marginTop: -8,
+        marginBottom: 12,
+        marginLeft: 2,
     },
-    securityNoteContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: THEME.spacing.sm,
-        gap: 6,
-    },
-    securityNote: {
-        fontSize: THEME.fontSize.xs,
-        color: COLORS.gray600,
-        textAlign: 'center',
-    },
+
+    // College dropdown
     dropdownWrapper: {
         position: 'relative',
         zIndex: 999,
@@ -382,58 +345,77 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         backgroundColor: COLORS.white,
-        borderRadius: 16,
-        maxHeight: 280,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 15,
-        shadowOffset: { width: 0, height: 8 },
-        zIndex: 999,
+        borderRadius: 14,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: COLORS.gray100,
         overflow: 'hidden',
+        zIndex: 999,
         elevation: 10,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+            },
+        }),
     },
     dropdownHeader: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        backgroundColor: '#F9FAFB',
-        borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        paddingHorizontal: 14,
+        paddingVertical: 9,
+        backgroundColor: COLORS.gray50,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
     dropdownHeaderText: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: COLORS.light.textTertiary,
+        fontSize: 10,
+        fontWeight: '600',
+        color: COLORS.gray400,
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        letterSpacing: 0.6,
     },
     dropdownItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
-        gap: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
+        gap: 10,
     },
     dropdownItemLast: {
         borderBottomWidth: 0,
     },
-    dropdownIconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        backgroundColor: `${COLORS.primary}10`,
+    dropdownIconWrapper: {
+        width: 32,
+        height: 32,
+        borderRadius: 9,
+        backgroundColor: `${COLORS.primary}12`,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    dropdownText: {
+    dropdownItemText: {
         flex: 1,
-        fontSize: 15,
+        fontSize: 13,
         color: COLORS.light.text,
         fontWeight: '500',
-        lineHeight: 20,
+        lineHeight: 18,
+    },
+
+    // Footer
+    footer: {
+        marginTop: 32,
+        gap: 14,
+    },
+    securityNote: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+    },
+    securityNoteText: {
+        fontSize: 11,
+        color: COLORS.gray400,
     },
 });
 

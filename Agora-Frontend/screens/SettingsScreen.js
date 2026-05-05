@@ -9,15 +9,17 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
+    Platform,
 } from 'react-native';
 
 import { apiDelete, apiPost, api } from '../services/api';
 import { useProfileImage } from '../hooks/useProfileImage';
-import { useUserStore } from "../stores/userStore";
+import { useUserStore } from '../stores/userStore';
+import Constants from 'expo-constants';
+
 
 import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
 
 import ModalComponent from '../components/Modal';
 import Button from '../components/Button';
@@ -25,20 +27,19 @@ import ToastMessage from '../components/ToastMessage';
 import QuickActions from '../components/QuickActions';
 import SettingsOptionList from '../components/SettingsOptionList';
 import ProfileSection from '../components/ProfileSection';
-import Icon from "react-native-vector-icons/Ionicons";
+import { Ionicons } from '@expo/vector-icons';
 
 const SettingsScreen = ({ navigation, scrollY }) => {
     const { currentUser: user, loading, isGuest, fetchUser, clearAuthData } = useUserStore();
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-    const { profileImage } = useProfileImage();
-    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
     const [collegeModalVisible, setCollegeModalVisible] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const { profileImage } = useProfileImage();
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
 
-    const showToast = ({ type, title, message }) => {
+    const showToast = ({ type, title, message }) =>
         setToast({ visible: true, type, title, message });
-    };
 
     useEffect(() => {
         fetchUser();
@@ -48,17 +49,14 @@ const SettingsScreen = ({ navigation, scrollY }) => {
         setLogoutModalVisible(false);
         try {
             const refreshToken = await SecureStore.getItemAsync('refreshToken');
-            if (refreshToken) {
-                await apiPost('/auth/logout', { refreshToken });
-            }
+            if (refreshToken) await apiPost('/auth/logout', { refreshToken });
         } catch (err) {
-            console.error('Logout API failed, proceeding with local cleanup:', err);
+            console.error('Logout API failed:', err);
         } finally {
             await SecureStore.deleteItemAsync('authToken');
             await SecureStore.deleteItemAsync('accessToken');
             await SecureStore.deleteItemAsync('refreshToken');
             await SecureStore.deleteItemAsync('currentUser');
-
             useUserStore.getState().clearAuthData();
             api.defaults.headers.common['Authorization'] = '';
             navigation.replace('Login');
@@ -69,64 +67,16 @@ const SettingsScreen = ({ navigation, scrollY }) => {
         try {
             setIsDeleting(true);
             await apiDelete('/profile/me');
-
-            showToast({
-                type: 'success',
-                title: 'Account Deleted',
-                message: 'Your data has been successfully removed.'
-            });
-
+            showToast({ type: 'success', title: 'Account Deleted', message: 'Your data has been successfully removed.' });
             setTimeout(async () => {
                 await clearAuthData();
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Login' }],
-                });
+                navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
             }, 2000);
-
-        } catch (error) {
+        } catch {
             setIsDeleting(false);
-            showToast({
-                type: 'error',
-                title: 'Error',
-                message: 'Failed to delete account. Try again later.'
-            });
+            showToast({ type: 'error', title: 'Error', message: 'Failed to delete account. Try again later.' });
         }
     };
-
-    const CampusInfoModal = () => (
-        <Modal
-            animationType="fade"
-            transparent={true}
-            visible={collegeModalVisible}
-            onRequestClose={() => setCollegeModalVisible(false)}
-        >
-            <View style={styles.modalOverlay}>
-                <View style={styles.campusCard}>
-                    <View style={styles.iconCircle}>
-                        <Icon name="school" size={40} color="#fff" />
-                    </View>
-
-                    <Text style={styles.campusTitle}>Welcome to the Club</Text>
-                    <Text style={styles.campusName}>
-                        {user?.collegeName || "Our Favorite Campus"}
-                    </Text>
-
-                    <Text style={styles.campusMessage}>
-                        Hey {user?.firstName || 'Legend'}! You’re officially part of the Agora community.
-                        Verified students, safe campus trading, and built for you.
-                    </Text>
-
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={() => setCollegeModalVisible(false)}
-                    >
-                        <Text style={styles.closeButtonText}>Awesome!</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </Modal>
-    );
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -141,32 +91,23 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                 )}
                 scrollEventThrottle={16}
             >
-                <View style={styles.headerSection}>
-                    <Text style={styles.header}>Settings</Text>
-                    <Text style={styles.subHeader}>Manage your account and preferences</Text>
+                {/* Header */}
+                <View style={styles.hero}>
+                    <Text style={styles.heroTitle}>Settings</Text>
+                    <Text style={styles.heroSubtitle}>Manage your account and preferences</Text>
                 </View>
 
-                {/* Profile Section now handles loading internally or via placeholders */}
                 <ProfileSection
-                    user={isGuest ? { firstName: 'Guest', lastName: 'User', email: 'guest@Agora' } : user}
+                    user={isGuest ? { firstName: 'Guest', lastName: 'User', email: 'guest@agora' } : user}
                     profileImage={isGuest ? 'https://i.pravatar.cc/100?img=1' : profileImage || user?.avatar}
                     verified={!isGuest}
                     loading={loading && !user}
                     buttonLabel={isGuest ? 'Login to Continue' : 'View Profile'}
-                    onButtonPress={() => {
-                        if (isGuest) {
-                            navigation.replace('Login');
-                        } else {
-                            navigation.navigate('UserProfileScreen');
-                        }
-                    }}
-                    onPress={isGuest ? () => {
-                        showToast({
-                            type: 'info',
-                            title: 'Profile Locked',
-                            message: 'Login to unlock your profile features'
-                        });
-                    } : () => navigation.navigate('UserProfileScreen')}
+                    onButtonPress={() => isGuest ? navigation.replace('Login') : navigation.navigate('UserProfileScreen')}
+                    onPress={isGuest
+                        ? () => showToast({ type: 'info', title: 'Profile Locked', message: 'Login to unlock your profile features' })
+                        : () => navigation.navigate('UserProfileScreen')
+                    }
                 />
 
                 <QuickActions
@@ -175,19 +116,15 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                         {
                             icon: 'heart',
                             label: 'Favorites',
-                            gradient: ['#EC4899', '#DB2777'],
-                            onPress: () => {
-                                if (isGuest) {
-                                    showToast({ type: 'info', title: 'Sign in required', message: 'Please log in to view your favorites.' });
-                                    return;
-                                }
-                                navigation.navigate('FavoritesScreen');
-                            },
+                            iconColor: '#EC4899',
+                            onPress: () => isGuest
+                                ? showToast({ type: 'info', title: 'Sign in required', message: 'Please log in to view your favorites.' })
+                                : navigation.navigate('FavoritesScreen'),
                         },
                         {
                             icon: 'shield-checkmark',
                             label: 'Safety Center',
-                            gradient: ['#6366F1', '#4F46E5'],
+                            iconColor: '#6366F1',
                             onPress: () => navigation.navigate('SafetyCenterScreen'),
                         },
                     ]}
@@ -198,25 +135,24 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                     options={[
                         {
                             icon: 'language',
-                            iconType: 'ion',
                             label: 'Language',
-                            gradient: ['#6366F1', '#4F46E5'],
+                            iconColor: '#6366F1',
                             value: 'English',
-                            onPress: () => { },
+                            onPress: () =>
+                                showToast({
+                                    type: 'info',
+                                    title: 'Coming Soon',
+                                    message: 'Multi-language support is coming soon.',
+                                }),
                         },
                         {
                             icon: 'school',
-                            iconType: 'ion',
                             label: 'My Campus',
-                            gradient: ['#10B981', '#059669'],
+                            iconColor: '#10B981',
                             value: loading ? 'Loading...' : (isGuest ? 'Guest Access' : (user?.collegeName || 'Not Set')),
-                            onPress: () => {
-                                if (isGuest) {
-                                    showToast({ type: 'info', title: 'Login Required', message: 'Sign in to join your college community!' });
-                                } else {
-                                    setCollegeModalVisible(true);
-                                }
-                            },
+                            onPress: () => isGuest
+                                ? showToast({ type: 'info', title: 'Login Required', message: 'Sign in to join your college community!' })
+                                : setCollegeModalVisible(true),
                         },
                     ]}
                 />
@@ -226,18 +162,16 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                     options={[
                         {
                             icon: 'ban',
-                            iconType: 'ion',
                             label: 'Blocked Users',
+                            iconColor: COLORS.error,
                             description: 'Manage users you have blocked',
-                            gradient: ['#EF4444', '#B91C1C'],
                             onPress: () => navigation.navigate('BlockedUsersScreen'),
                         },
                         {
                             icon: 'flag',
-                            iconType: 'ion',
                             label: 'Report History',
+                            iconColor: '#F59E0B',
                             description: 'Track the status of your reports',
-                            gradient: ['#F59E0B', '#D97706'],
                             onPress: () => navigation.navigate('ReportHistoryScreen'),
                         },
                     ]}
@@ -246,34 +180,29 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                 <SettingsOptionList
                     title="Support & About"
                     options={[
-                        { icon: 'megaphone-outline', iconType: 'ion', label: "What's New", gradient: ['#10B981', '#059669'], onPress: () => navigation.navigate('WhatsNewScreen') },
-                        { icon: 'help-outline', iconType: 'material', label: 'FAQ', gradient: ['#F59E0B', '#D97706'], onPress: () => navigation.navigate('FAQScreen') },
-                        { icon: 'headset', iconType: 'ion', label: 'Support', gradient: ['#3B82F6', '#2563EB'], onPress: () => navigation.navigate('SupportScreen') },
-                        { icon: 'shield-checkmark', iconType: 'ion', label: 'Privacy Policy', gradient: ['#8B5CF6', '#7C3AED'], onPress: () => navigation.navigate('PrivacyPolicyScreen') },
-                        { icon: 'information-circle', iconType: 'ion', label: 'About', gradient: ['#6B7280', '#4B5563'], onPress: () => navigation.navigate('AboutScreen') },
+                        { icon: 'megaphone-outline', iconColor: '#10B981', label: "What's New", onPress: () => navigation.navigate('WhatsNewScreen') },
+                        { icon: 'help-circle-outline', iconColor: '#F59E0B', label: 'FAQ', onPress: () => navigation.navigate('FAQScreen') },
+                        { icon: 'headset', iconColor: '#3B82F6', label: 'Support', onPress: () => navigation.navigate('SupportScreen') },
+                        { icon: 'shield-checkmark', iconColor: '#8B5CF6', label: 'Privacy Policy', onPress: () => navigation.navigate('PrivacyPolicyScreen') },
+                        { icon: 'information-circle', iconColor: COLORS.gray400, label: 'About', onPress: () => navigation.navigate('AboutScreen') },
                     ]}
                 />
 
                 <SettingsOptionList
-                    title="Account Actions"
+                    title="Account"
                     options={[
                         {
                             icon: 'trash-outline',
-                            iconType: 'ion',
                             label: 'Delete Account',
+                            iconColor: COLORS.error,
                             description: 'Permanently remove your data',
-                            gradient: ['#FF416C', '#FF4B2B'],
-                            onPress: () => {
-                                if (isGuest) return;
-                                setDeleteModalVisible(true);
-                            },
+                            destructive: true,
+                            onPress: () => { if (!isGuest) setDeleteModalVisible(true); },
                         },
                     ]}
                 />
 
-                <View style={styles.versionContainer}>
-                    <Text style={styles.versionText}>Agora v1.0.0</Text>
-                </View>
+                <Text style={styles.version}>Agora v{Constants.expoConfig.version}</Text>
 
                 {!isGuest && (
                     <Button
@@ -281,14 +210,36 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                         variant="danger"
                         size="large"
                         icon="log-out-outline"
-                        iconPosition='left'
-                        fullWidth={true}
+                        iconPosition="left"
+                        fullWidth
                         onPress={() => setLogoutModalVisible(true)}
                     />
                 )}
             </Animated.ScrollView>
 
-            {/* Modals & Overlays */}
+            {/* Campus Modal */}
+            <Modal visible={collegeModalVisible} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.campusCard}>
+                        <View style={styles.campusIconWrapper}>
+                            <Ionicons name="school" size={24} color={COLORS.white} />
+                        </View>
+                        <Text style={styles.campusTitle}>Welcome to the Club</Text>
+                        <Text style={styles.campusName}>{user?.collegeName || 'Our Favorite Campus'}</Text>
+                        <Text style={styles.campusMessage}>
+                            Hey {user?.firstName || 'Legend'}! You're officially part of the Agora community. Verified students, safe campus trading, built for you.
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.campusBtn}
+                            activeOpacity={0.7}
+                            onPress={() => setCollegeModalVisible(false)}
+                        >
+                            <Text style={styles.campusBtnText}>Awesome!</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             <ModalComponent
                 visible={logoutModalVisible}
                 type="logout"
@@ -300,8 +251,6 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                 onSecondaryPress={() => setLogoutModalVisible(false)}
             />
 
-            <CampusInfoModal />
-
             <ModalComponent
                 visible={deleteModalVisible}
                 type="delete"
@@ -309,10 +258,7 @@ const SettingsScreen = ({ navigation, scrollY }) => {
                 message="This action is permanent. All your listings and data will be removed forever."
                 primaryButtonText="Delete Permanently"
                 secondaryButtonText="Cancel"
-                onPrimaryPress={() => {
-                    setDeleteModalVisible(false);
-                    handleDeleteAccount();
-                }}
+                onPrimaryPress={() => { setDeleteModalVisible(false); handleDeleteAccount(); }}
                 onSecondaryPress={() => setDeleteModalVisible(false)}
             />
 
@@ -326,10 +272,10 @@ const SettingsScreen = ({ navigation, scrollY }) => {
             )}
 
             {isDeleting && (
-                <View style={styles.globalLoadingOverlay}>
-                    <View style={styles.loadingCard}>
-                        <ActivityIndicator size="large" color="#FF416C" />
-                        <Text style={styles.loadingText}>Deleting your account...</Text>
+                <View style={styles.deletingOverlay}>
+                    <View style={styles.deletingCard}>
+                        <ActivityIndicator size="large" color={COLORS.error} />
+                        <Text style={styles.deletingText}>Deleting your account...</Text>
                     </View>
                 </View>
             )}
@@ -343,125 +289,134 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        padding: THEME.spacing.screenPadding,
-        paddingBottom: THEME.spacing['3xl'],
+        padding: 16,
+        paddingBottom: 48,
     },
-    headerSection: {
-        marginBottom: THEME.spacing.sectionGap,
-        marginTop: THEME.spacing.sectionGap,
+
+    // Hero
+    hero: {
+        marginTop: 20,
+        marginBottom: 20,
+        paddingHorizontal: 4,
     },
-    header: {
-        fontSize: THEME.fontSize['4xl'],
-        fontWeight: THEME.fontWeight.extrabold,
+    heroTitle: {
+        fontSize: 22,
+        fontWeight: '700',
         color: COLORS.light.text,
-        letterSpacing: THEME.letterSpacing.tight,
-        marginBottom: THEME.spacing[1],
+        letterSpacing: -0.5,
+        marginBottom: 4,
     },
-    subHeader: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.light.textSecondary,
-        fontWeight: THEME.fontWeight.medium,
+    heroSubtitle: {
+        fontSize: 13,
+        color: COLORS.gray400,
     },
-    versionContainer: {
-        alignItems: 'center',
-        marginVertical: THEME.spacing.lg,
+
+    // Version
+    version: {
+        fontSize: 12,
+        color: COLORS.gray300,
+        textAlign: 'center',
+        marginVertical: 16,
     },
-    versionText: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.light.textTertiary,
-        fontWeight: THEME.fontWeight.medium,
-    },
-    globalLoadingOverlay: {
+
+    // Deleting overlay
+    deletingOverlay: {
         position: 'absolute',
         top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backgroundColor: 'rgba(255,255,255,0.85)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
     },
-    loadingCard: {
-        backgroundColor: COLORS.light.card,
+    deletingCard: {
+        backgroundColor: COLORS.white,
         padding: 24,
         borderRadius: 16,
         alignItems: 'center',
         gap: 12,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 16,
+            },
+            android: { elevation: 4 },
+        }),
     },
-    loadingText: {
-        color: COLORS.light.text,
-        fontSize: 14,
+    deletingText: {
+        fontSize: 13,
         fontWeight: '600',
+        color: COLORS.light.text,
     },
+
+    // Campus modal
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 24,
     },
     campusCard: {
-        backgroundColor: COLORS.light.card,
-        borderRadius: 24,
+        backgroundColor: COLORS.white,
+        borderRadius: 20,
         padding: 24,
         width: '100%',
         alignItems: 'center',
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+            },
+            android: { elevation: 8 },
+        }),
     },
-    iconCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+    campusIconWrapper: {
+        width: 52,
+        height: 52,
+        borderRadius: 16,
         backgroundColor: '#10B981',
-        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
-        marginTop: -60,
-        borderWidth: 5,
-        borderColor: COLORS.light.bg,
+        justifyContent: 'center',
+        marginBottom: 16,
     },
     campusTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: COLORS.light.textSecondary,
-        marginBottom: 8,
-        textAlign: 'center',
+        fontSize: 13,
+        fontWeight: '500',
+        color: COLORS.gray400,
+        marginBottom: 4,
     },
     campusName: {
-        fontSize: 22,
-        fontWeight: '800',
-        color: '#10B981',
+        fontSize: 18,
+        fontWeight: '700',
+        color: COLORS.light.text,
         textAlign: 'center',
-        marginBottom: 16,
-        width: '100%',
+        marginBottom: 12,
+        letterSpacing: -0.4,
     },
     campusMessage: {
-        fontSize: 15,
-        lineHeight: 22,
-        color: COLORS.light.textSecondary,
+        fontSize: 13,
+        lineHeight: 19,
+        color: COLORS.gray400,
         textAlign: 'center',
-        marginBottom: 24,
-        width: '100%',
+        marginBottom: 20,
     },
-    closeButton: {
+    campusBtn: {
         backgroundColor: '#10B981',
-        paddingVertical: 14,
-        paddingHorizontal: 40,
-        borderRadius: THEME.borderRadius.full,
+        paddingVertical: 13,
+        borderRadius: 12,
         width: '100%',
         alignItems: 'center',
     },
-    closeButtonText: {
-        color: '#fff',
-        fontWeight: '700',
-        fontSize: 16,
+    campusBtnText: {
+        color: COLORS.white,
+        fontWeight: '600',
+        fontSize: 15,
     },
 });
 

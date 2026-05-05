@@ -18,6 +18,7 @@ import { apiGet } from '../services/api';
 import AppHeader from '../components/AppHeader';
 import Card from '../components/Cards';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ListingFilterModal from '../components/ListingFilterModal';
 import Button from '../components/Button';
 
 import { COLORS } from '../utils/colors';
@@ -265,7 +266,7 @@ const AllListingsScreen = ({ navigation }) => {
             )}
 
             {/* Filter Bottom Sheet */}
-            <Modal visible={filterModalVisible} transparent animationType="fade">
+            {/* <Modal visible={filterModalVisible} transparent animationType="fade">
                 <View style={styles.modalOverlay}>
                     <Pressable style={styles.modalOverlayTouchable} onPress={() => setFilterModalVisible(false)} />
                     <View style={styles.bottomSheet}>
@@ -331,7 +332,32 @@ const AllListingsScreen = ({ navigation }) => {
                         </View>
                     </View>
                 </View>
-            </Modal>
+            </Modal> */}
+
+            <ListingFilterModal
+                visible={filterModalVisible}
+                onClose={() => setFilterModalVisible(false)}
+                onApply={handleApplyFilters}
+                onReset={handleResetFilters}
+                filters={{
+                    selectedCategory,
+                    selectedCondition,
+                    priceRange,
+                    sortBy
+                }}
+                setters={{
+                    setSelectedCategory,
+                    setSelectedCondition,
+                    setPriceRange,
+                    setSortBy
+                }}
+                options={{
+                    categories,
+                    conditions,
+                    priceRanges,
+                    sortOptions
+                }}
+            />
         </SafeAreaView>
     );
 };

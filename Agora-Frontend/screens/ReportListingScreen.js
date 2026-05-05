@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     Image,
     SafeAreaView,
@@ -10,133 +10,123 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {COLORS} from '../utils/colors';
-
-import {useReport} from '../hooks/useReport';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../utils/colors';
+import { useReport } from '../hooks/useReport';
 
 import AppHeader from '../components/AppHeader';
 import ToastMessage from '../components/ToastMessage';
 import Button from '../components/Button';
 import ModalComponent from '../components/Modal';
-import InfoBox from "../components/InfoBox";
-import {THEME} from '../utils/theme';
+import InfoBox from '../components/InfoBox';
 
-const ReportListingScreen = ({navigation, route}) => {
-    const {listingId, listingTitle, listingImage} = route.params;
+const REPORT_REASONS = [
+    { id: 'counterfeit', title: 'Counterfeit Product', desc: 'Fake or replica items', icon: 'close-circle-outline', color: COLORS.error },
+    { id: 'misleading', title: 'Misleading Description', desc: 'False or inaccurate information', icon: 'alert-circle-outline', color: COLORS.warning },
+    { id: 'inappropriate', title: 'Inappropriate Content', desc: 'Offensive images or text', icon: 'eye-off-outline', color: COLORS.error },
+    { id: 'prohibited', title: 'Prohibited Item', desc: 'Item not allowed to be sold', icon: 'ban-outline', color: COLORS.error },
+    { id: 'pricing', title: 'Pricing Issue', desc: 'Price gouging or unreasonable pricing', icon: 'cash-outline', color: COLORS.warning },
+    { id: 'duplicate', title: 'Duplicate Listing', desc: 'Same item listed multiple times', icon: 'copy-outline', color: COLORS.primary },
+    { id: 'spam', title: 'Spam', desc: 'Irrelevant or repetitive posting', icon: 'megaphone-outline', color: COLORS.warning },
+    { id: 'other', title: 'Other', desc: 'Something else', icon: 'ellipsis-horizontal-outline', color: COLORS.gray400 },
+];
+
+const ReportListingScreen = ({ navigation, route }) => {
+    const { listingId, listingTitle, listingImage } = route.params;
+    const { submitReport, loading } = useReport();
+
     const [selectedReason, setSelectedReason] = useState('');
     const [additionalDetails, setAdditionalDetails] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const {submitReport, loading} = useReport();
-    const [toast, setToast] = useState({visible: false, type: '', title: '', message: ''});
+    const [toast, setToast] = useState({ visible: false, type: '', title: '', message: '' });
 
-    const reportReasons = [
-        { id: 'counterfeit', title: 'Counterfeit Product', description: 'Fake or replica items', icon: 'close-circle-outline', color: '#EF4444' },
-        { id: 'misleading', title: 'Misleading Description', description: 'False or inaccurate information', icon: 'alert-circle-outline', color: '#F59E0B' },
-        { id: 'inappropriate', title: 'Inappropriate Content', description: 'Offensive images or text', icon: 'eye-off-outline', color: '#DC2626' },
-        { id: 'prohibited', title: 'Prohibited Item', description: 'Item not allowed to be sold', icon: 'ban-outline', color: '#EF4444' },
-        { id: 'pricing', title: 'Pricing Issue', description: 'Price gouging or unreasonable pricing', icon: 'cash-outline', color: '#F59E0B' },
-        { id: 'duplicate', title: 'Duplicate Listing', description: 'Same item listed multiple times', icon: 'copy-outline', color: '#8B5CF6' },
-        { id: 'spam', title: 'Spam', description: 'Irrelevant or repetitive posting', icon: 'megaphone-outline', color: '#F59E0B' },
-        { id: 'other', title: 'Other', description: 'Something else', icon: 'ellipsis-horizontal-outline', color: '#6B7280' },
-    ];
+    const showToast = (type, title, message) => setToast({ visible: true, type, title, message });
 
     const handleSubmit = async () => {
         if (!selectedReason) {
-            setToast({
-                visible: true,
-                type: 'error',
-                title: 'Required',
-                message: 'Please select a reason for reporting',
-            });
+            showToast('error', 'Required', 'Please select a reason for reporting.');
             return;
         }
-
-        const success = await submitReport("LISTING", selectedReason, listingId, additionalDetails);
-
-        if (success) {
-            setShowSuccessModal(true);
-        } else {
-            setToast({
-                visible: true,
-                type: 'error',
-                title: 'Error',
-                message: 'Failed to submit report. Please try again.',
-            });
-        }
+        const success = await submitReport('LISTING', selectedReason, listingId, additionalDetails);
+        if (success) setShowSuccessModal(true);
+        else showToast('error', 'Error', 'Failed to submit report. Please try again.');
     };
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content"/>
-            <AppHeader title="Report Listing" onBack={() => navigation.goBack()}/>
+            <StatusBar backgroundColor={COLORS.light.bg} barStyle="dark-content" />
+            <AppHeader title="Report Listing" onBack={() => navigation.goBack()} />
 
             <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-                {/* Listing Preview */}
-                <View style={styles.listingPreview}>
-                    {listingImage && (
+
+                {/* Listing preview */}
+                <View style={styles.preview}>
+                    {listingImage ? (
                         <Image
-                            source={typeof listingImage === 'string' ? {uri: listingImage} : listingImage}
-                            style={styles.listingImage}
+                            source={typeof listingImage === 'string' ? { uri: listingImage } : listingImage}
+                            style={styles.previewImage}
                         />
+                    ) : (
+                        <View style={[styles.previewImage, styles.previewPlaceholder]}>
+                            <Ionicons name="image-outline" size={24} color={COLORS.gray400} />
+                        </View>
                     )}
-                    <View style={styles.listingInfo}>
-                        <Text style={styles.listingTitle} numberOfLines={2}>{listingTitle || 'Listing'}</Text>
-                        <View style={styles.reportingBadge}>
-                            <Ionicons name="flag" size={12} color={COLORS.error}/>
-                            <Text style={styles.reportingText}>Reporting this listing</Text>
+                    <View style={styles.previewInfo}>
+                        <Text style={styles.previewTitle} numberOfLines={2}>
+                            {listingTitle || 'Listing'}
+                        </Text>
+                        <View style={styles.reportBadge}>
+                            <Ionicons name="flag" size={10} color={COLORS.error} />
+                            <Text style={styles.reportBadgeText}>Reporting this listing</Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Reason Selection */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>What's wrong with this listing? *</Text>
-                    {reportReasons.map((reason) => (
-                        <TouchableOpacity
-                            key={reason.id}
-                            style={[
-                                styles.reasonCard,
-                                selectedReason === reason.id && styles.reasonCardSelected,
-                            ]}
-                            onPress={() => setSelectedReason(reason.id)}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.reasonIconCircle, {backgroundColor: `${reason.color}10`}]}>
-                                <Ionicons name={reason.icon} size={24} color={reason.color}/>
-                            </View>
-                            <View style={styles.reasonContent}>
-                                <Text style={styles.reasonTitle}>{reason.title}</Text>
-                                <Text style={styles.reasonDescription}>{reason.description}</Text>
-                            </View>
-                            <View style={[styles.radioButton, selectedReason === reason.id && styles.radioButtonActive]}>
-                                {selectedReason === reason.id && <View style={styles.radioButtonInner}/>}
-                            </View>
-                        </TouchableOpacity>
-                    ))}
+                {/* Reason selection */}
+                <Text style={styles.sectionLabel}>What's wrong with this listing?</Text>
+                <View style={styles.reasons}>
+                    {REPORT_REASONS.map((reason) => {
+                        const selected = selectedReason === reason.id;
+                        return (
+                            <TouchableOpacity
+                                key={reason.id}
+                                style={[styles.reasonRow, selected && styles.reasonRowSelected]}
+                                onPress={() => setSelectedReason(reason.id)}
+                                activeOpacity={0.6}
+                            >
+                                <View style={[styles.reasonIcon, { backgroundColor: `${reason.color}12` }]}>
+                                    <Ionicons name={reason.icon} size={18} color={reason.color} />
+                                </View>
+                                <View style={styles.reasonText}>
+                                    <Text style={styles.reasonTitle}>{reason.title}</Text>
+                                    <Text style={styles.reasonDesc}>{reason.desc}</Text>
+                                </View>
+                                <View style={[styles.radio, selected && styles.radioSelected]}>
+                                    {selected && <View style={styles.radioInner} />}
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
-                {/* Additional Details */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Additional Details (Optional)</Text>
-                    <View style={styles.textAreaContainer}>
-                        <Ionicons name="document-text-outline" size={20} color={COLORS.light.textTertiary} style={styles.textAreaIcon}/>
-                        <TextInput
-                            style={styles.textArea}
-                            placeholder="Help us understand the issue better..."
-                            placeholderTextColor={COLORS.light.textTertiary}
-                            multiline
-                            numberOfLines={5}
-                            value={additionalDetails}
-                            onChangeText={setAdditionalDetails}
-                            textAlignVertical="top"
-                            maxLength={500}
-                        />
-                    </View>
-                    <Text style={styles.characterCount}>{additionalDetails.length}/500</Text>
+                {/* Additional details */}
+                <Text style={[styles.sectionLabel, { marginTop: 8 }]}>Additional Details (Optional)</Text>
+                <View style={styles.textAreaWrapper}>
+                    <TextInput
+                        style={styles.textArea}
+                        placeholder="Help us understand the issue better..."
+                        placeholderTextColor={COLORS.gray400}
+                        multiline
+                        numberOfLines={5}
+                        value={additionalDetails}
+                        onChangeText={setAdditionalDetails}
+                        textAlignVertical="top"
+                        maxLength={500}
+                    />
+                    <Text style={styles.charCount}>{additionalDetails.length}/500</Text>
                 </View>
 
-                <InfoBox text="Our team will review this report. False reports may affect your account standing." />
+                <InfoBox text="Our moderation team will review this report within 24 hours. False reports may lead to account restrictions." />
 
                 <Button
                     title="Submit Report"
@@ -146,7 +136,8 @@ const ReportListingScreen = ({navigation, route}) => {
                     onPress={handleSubmit}
                     loading={loading}
                     disabled={!selectedReason || loading}
-                    style={[!selectedReason && styles.submitButtonDisabled]}
+                    fullWidth
+                    style={{ marginTop: 8 }}
                 />
             </ScrollView>
 
@@ -154,8 +145,8 @@ const ReportListingScreen = ({navigation, route}) => {
                 visible={showSuccessModal}
                 type="success"
                 title="Report Submitted"
-                message="We've received your report and will investigate this listing. Thank you for helping maintain quality."
-                primaryButtonText="Done"
+                message="Thank you for helping keep Agora safe. Our team will investigate this listing shortly."
+                primaryButtonText="Back to Marketplace"
                 onPrimaryPress={() => {
                     setShowSuccessModal(false);
                     navigation.goBack();
@@ -167,7 +158,7 @@ const ReportListingScreen = ({navigation, route}) => {
                     type={toast.type}
                     title={toast.title}
                     message={toast.message}
-                    onHide={() => setToast({...toast, visible: false})}
+                    onHide={() => setToast(p => ({ ...p, visible: false }))}
                 />
             )}
         </SafeAreaView>
@@ -180,147 +171,147 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.light.bg,
     },
     container: {
-        padding: 20,
-        paddingBottom: 50,
+        padding: 16,
+        paddingBottom: 40,
     },
-    listingPreview: {
+
+    // Preview
+    preview: {
         flexDirection: 'row',
-        backgroundColor: COLORS.light.card,
+        backgroundColor: COLORS.white,
         borderRadius: 16,
-        padding: 14,
+        padding: 12,
         marginBottom: 24,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
-        shadowColor: "#000",
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
-        elevation: 2,
+        borderColor: COLORS.gray100,
+        gap: 12,
     },
-    listingImage: {
-        width: 80,
-        height: 80,
+    previewImage: {
+        width: 64,
+        height: 64,
         borderRadius: 12,
-        backgroundColor: COLORS.light.bgTertiary,
+        backgroundColor: COLORS.gray100,
     },
-    listingInfo: {
-        flex: 1,
-        marginLeft: 14,
+    previewPlaceholder: {
+        alignItems: 'center',
         justifyContent: 'center',
     },
-    listingTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: COLORS.light.text,
-        marginBottom: 8,
-        lineHeight: 22,
+    previewInfo: {
+        flex: 1,
+        justifyContent: 'center',
+        gap: 6,
     },
-    reportingBadge: {
+    previewTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: COLORS.light.text,
+        lineHeight: 20,
+    },
+    reportBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FEF2F2', // Light error bg
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
+        gap: 4,
+        backgroundColor: `${COLORS.error}12`,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
         alignSelf: 'flex-start',
     },
-    reportingText: {
-        fontSize: 12,
+    reportBadgeText: {
+        fontSize: 10,
         color: COLORS.error,
-        fontWeight: '700',
-        marginLeft: 5,
+        fontWeight: '600',
     },
-    section: {
-        marginBottom: 24,
-    },
+
+    // Section label
     sectionLabel: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.light.textSecondary,
+        fontSize: 11,
+        fontWeight: '600',
+        color: COLORS.gray400,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
         marginBottom: 12,
     },
-    reasonCard: {
+
+    // Reasons
+    reasons: {
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        marginBottom: 24,
+        overflow: 'hidden',
+    },
+    reasonRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.light.card,
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
-        borderWidth: 1.5,
-        borderColor: COLORS.light.border,
+        padding: 14,
+        gap: 12,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
-    reasonCardSelected: {
-        borderColor: COLORS.primary,
-        backgroundColor: '#EFF6FF', // Light blue bg
+    reasonRowSelected: {
+        backgroundColor: `${COLORS.primary}06`,
     },
-    reasonIconCircle: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+    reasonIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 14,
     },
-    reasonContent: {
+    reasonText: {
         flex: 1,
+        gap: 2,
     },
     reasonTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: COLORS.light.text,
-        marginBottom: 2,
-    },
-    reasonDescription: {
         fontSize: 13,
-        color: COLORS.light.textSecondary,
-        fontWeight: '500',
+        fontWeight: '600',
+        color: COLORS.light.text,
     },
-    radioButton: {
-        width: 22,
-        height: 22,
-        borderRadius: 11,
+    reasonDesc: {
+        fontSize: 11,
+        color: COLORS.gray400,
+    },
+    radio: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
         borderWidth: 2,
-        borderColor: COLORS.light.border,
+        borderColor: COLORS.gray200,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    radioButtonActive: {
+    radioSelected: {
         borderColor: COLORS.primary,
     },
-    radioButtonInner: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+    radioInner: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
         backgroundColor: COLORS.primary,
     },
-    textAreaContainer: {
-        flexDirection: 'row',
-        backgroundColor: COLORS.light.card,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: COLORS.light.border,
-        padding: 16,
-    },
-    textAreaIcon: {
-        marginRight: 12,
-        marginTop: 2,
+
+    // Text area
+    textAreaWrapper: {
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        padding: 12,
+        marginBottom: 16,
     },
     textArea: {
-        flex: 1,
-        fontSize: 15,
+        fontSize: 13,
         color: COLORS.light.text,
         minHeight: 100,
-        fontWeight: '500',
+        lineHeight: 20,
     },
-    characterCount: {
-        fontSize: 12,
-        color: COLORS.light.textTertiary,
+    charCount: {
+        fontSize: 11,
+        color: COLORS.gray400,
         textAlign: 'right',
-        marginTop: 6,
-        fontWeight: '500',
-    },
-    submitButtonDisabled: {
-        opacity: 0.5,
+        marginTop: 4,
     },
 });
 
