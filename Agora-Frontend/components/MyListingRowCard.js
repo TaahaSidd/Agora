@@ -1,207 +1,150 @@
-import React, {useRef, useState} from 'react';
-import {View, Text, Image, TouchableOpacity, StyleSheet, Animated, PanResponder} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {Ionicons} from '@expo/vector-icons';
-import {LinearGradient} from 'expo-linear-gradient';
-import {getTimeAgo} from '../utils/dateUtils';
-import {COLORS} from '../utils/colors';
-import {formatPrice} from "../utils/formatters";
+import React, { useRef, useState } from 'react';
+import { Animated, Image, Platform, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { getTimeAgo } from '../utils/dateUtils';
+import { COLORS } from '../utils/colors';
+import { formatPrice } from '../utils/formatters';
 
-const MyListingRowCard = ({item, onEdit, onDelete}) => {
+const STATUS_MAP = {
+    AVAILABLE: { label: 'Active', color: '#10B981' },
+    SOLD: { label: 'Sold', color: COLORS.error },
+    DEACTIVATED: { label: 'Deactivated', color: COLORS.gray400 },
+    RESERVED: { label: 'Reserved', color: '#F59E0B' },
+    RENTED: { label: 'Rented', color: '#3B82F6' },
+    EXCHANGED: { label: 'Exchanged', color: '#8B5CF6' },
+};
+
+const SWIPE_THRESHOLD = 70;
+const SWIPE_OPEN = -160;
+
+const MyListingRowCard = ({ item, onEdit, onDelete }) => {
     const navigation = useNavigation();
     const translateX = useRef(new Animated.Value(0)).current;
     const [isSwipeOpen, setIsSwipeOpen] = useState(false);
 
     if (!item) return null;
 
-    const getStatusInfo = (status) => {
-        switch (status) {
-            case 'AVAILABLE':
-                return {
-                    label: 'ACTIVE',
-                    gradient: ['#10B981', '#059669'],
-                    icon: 'checkmark-circle'
-                };
-            case 'SOLD':
-                return {
-                    label: 'SOLD',
-                    gradient: ['#EF4444', '#DC2626'],
-                    icon: 'cash'
-                };
-            case 'DEACTIVATED':
-                return {
-                    label: 'DEACTIVATED',
-                    gradient: ['#6B7280', '#4B5563'],
-                    icon: 'pause-circle'
-                };
-            case 'RESERVED':
-                return {
-                    label: 'RESERVED',
-                    gradient: ['#F59E0B', '#D97706'],
-                    icon: 'bookmark'
-                };
-            case 'RENTED':
-                return {
-                    label: 'RENTED',
-                    gradient: ['#3B82F6', '#2563EB'],
-                    icon: 'calendar'
-                };
-            case 'EXCHANGED':
-                return {
-                    label: 'EXCHANGED',
-                    gradient: ['#8B5CF6', '#7C3AED'],
-                    icon: 'swap-horizontal'
-                };
-            default:
-                return {
-                    label: 'UNKNOWN',
-                    gradient: ['#6B7280', '#4B5563'],
-                    icon: 'help-circle'
-                };
-        }
-    };
+    const status = STATUS_MAP[item.itemStatus] || { label: 'Unknown', color: COLORS.gray400 };
 
-    const statusInfo = getStatusInfo(item.itemStatus);
-
-    const panResponder = useRef(
-        PanResponder.create({
-            onMoveShouldSetPanResponder: (_, gesture) =>
-                Math.abs(gesture.dx) > Math.abs(gesture.dy) && Math.abs(gesture.dx) > 10,
-            onPanResponderMove: (_, gesture) => {
-                if (gesture.dx < 0) translateX.setValue(Math.max(gesture.dx, -170));
-            },
-            onPanResponderRelease: (_, gesture) => {
-                if (gesture.dx < -70) {
-                    setIsSwipeOpen(true);
-                    Animated.spring(translateX, {
-                        toValue: -170,
-                        useNativeDriver: true,
-                        tension: 80,
-                        friction: 10,
-                    }).start();
-                } else {
-                    setIsSwipeOpen(false);
-                    Animated.spring(translateX, {
-                        toValue: 0,
-                        useNativeDriver: true,
-                        tension: 80,
-                        friction: 10,
-                    }).start();
-                }
-            },
-        })
-    ).current;
+    const panResponder = useRef(PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > Math.abs(g.dy) && Math.abs(g.dx) > 10,
+        onPanResponderMove: (_, g) => {
+            if (g.dx < 0) translateX.setValue(Math.max(g.dx, SWIPE_OPEN));
+        },
+        onPanResponderRelease: (_, g) => {
+            const open = g.dx < -SWIPE_THRESHOLD;
+            setIsSwipeOpen(open);
+            Animated.spring(translateX, {
+                toValue: open ? SWIPE_OPEN : 0,
+                useNativeDriver: true,
+                tension: 80,
+                friction: 10,
+            }).start();
+        },
+    })).current;
 
     const handlePress = () => {
         if (isSwipeOpen) {
             setIsSwipeOpen(false);
-            Animated.spring(translateX, {toValue: 0, useNativeDriver: true}).start();
+            Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
         } else {
-            navigation.navigate('ProductDetailsScreen', {item});
+            navigation.navigate('ProductDetailsScreen', { item });
         }
     };
 
+    const imageSource = item.images?.length
+        ? (typeof item.images[0] === 'string' ? { uri: item.images[0] } : item.images[0])
+        : require('../assets/no-image.jpg');
+
     return (
         <View style={styles.container}>
-            {/* Swipe Actions */}
-            <View style={styles.actionContainer}>
-                <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={onEdit}
-                    activeOpacity={0.8}
-                >
-                    <LinearGradient
-                        colors={['#3B82F6', '#2563EB']}
-                        style={styles.actionGradient}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 1}}
-                    >
-                        <Ionicons name="create-outline" size={20} color="#fff"/>
-                        <Text style={styles.actionText}>Edit</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={onDelete}
-                    activeOpacity={0.8}
-                >
-                    <LinearGradient
-                        colors={['#EF4444', '#DC2626']}
-                        style={styles.actionGradient}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 1}}
-                    >
-                        <Ionicons name="trash-outline" size={20} color="#fff"/>
-                        <Text style={styles.actionText}>Delete</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
+            {/* Card row */}
+            <View style={styles.card}>
+                <View style={styles.imageWrapper}>
+                    <Image source={imageSource} style={styles.image} resizeMode="cover" />
+                    <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
+                        <View style={styles.statusDot} />
+                        <Text style={styles.statusText}>{status.label}</Text>
+                    </View>
+                </View>
+                <View style={styles.content}>
+                    <Text style={styles.title} numberOfLines={2}>
+                        {item.name || item.title || 'Untitled'}
+                    </Text>
+                    <Text style={styles.price}>{formatPrice(item.price)}</Text>
+                    <View style={styles.timeRow}>
+                        <Ionicons name="time-outline" size={11} color={COLORS.gray400} />
+                        <Text style={styles.timeText}>
+                            {item.postDate ? getTimeAgo(item.postDate) : 'Recent'}
+                        </Text>
+                    </View>
+                </View>
             </View>
 
-            {/* Card */}
-            <Animated.View style={[styles.card, {transform: [{translateX}]}]} {...panResponder.panHandlers}>
-                <TouchableOpacity style={styles.cardContent} onPress={handlePress} activeOpacity={0.85}>
-                    {/* Image */}
-                    <View style={styles.imageWrapper}>
-                        <Image
-                            source={item.images?.length ? item.images[0] : require('../assets/no-image.jpg')}
-                            style={styles.image}
-                            resizeMode="cover"
-                        />
-
-                        {/* Gradient Overlay */}
-                        <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.3)']}
-                            style={styles.imageGradient}
-                        />
-
-                        {/* Status Badge */}
-                        <View style={styles.statusBadgeContainer}>
-                            <LinearGradient
-                                colors={statusInfo.gradient}
-                                style={styles.statusBadge}
-                                start={{x: 0, y: 0}}
-                                end={{x: 1, y: 1}}
-                            >
-                                <Ionicons name={statusInfo.icon} size={10} color="#fff"/>
-                                <Text style={styles.statusText}>{statusInfo.label}</Text>
-                            </LinearGradient>
-                        </View>
-                    </View>
-
-                    {/* Content */}
-                    <View style={styles.contentSection}>
-                        {/* Title */}
-                        <Text style={styles.title} numberOfLines={2}>
-                            {item.name || item.title || 'Untitled'}
-                        </Text>
-
-                        {/* Price */}
-                        <Text style={styles.price}>
-                            {formatPrice(item.price)}
-                        </Text>
-
-                        {/* Time */}
-                        <View style={styles.timeRow}>
-                            <Ionicons name="time-outline" size={13} color={COLORS.light.textTertiary}/>
-                            <Text style={styles.timeText}>
-                                {item.postDate ? getTimeAgo(item.postDate) : 'Recent'}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <Ionicons name="chevron-forward" size={18} color={COLORS.light.textTertiary}/>
+            {/* Action bar below */}
+            <View style={styles.actionBar}>
+                <TouchableOpacity style={styles.editAction} onPress={onEdit} activeOpacity={0.7}>
+                    <Ionicons name="create-outline" size={14} color={COLORS.info} />
+                    <Text style={[styles.actionLabel, { color: COLORS.info }]}>Edit</Text>
                 </TouchableOpacity>
-            </Animated.View>
+                <View style={styles.actionDivider} />
+                <TouchableOpacity style={styles.deleteAction} onPress={onDelete} activeOpacity={0.7}>
+                    <Ionicons name="trash-outline" size={14} color={COLORS.error} />
+                    <Text style={[styles.actionLabel, { color: COLORS.error }]}>Delete</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        position: 'relative',
         marginBottom: 12,
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        overflow: 'hidden',
     },
-    actionContainer: {
+    card: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        padding: 10,
+        gap: 12,
+    },
+    actionBar: {
+        flexDirection: 'row',
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: COLORS.gray100,
+    },
+    editAction: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 10,
+    },
+    deleteAction: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 10,
+    },
+    actionDivider: {
+        width: StyleSheet.hairlineWidth,
+        backgroundColor: COLORS.gray100,
+    },
+    actionLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    // Swipe actions
+    actions: {
         position: 'absolute',
         right: 0,
         top: 0,
@@ -210,106 +153,106 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-end',
         zIndex: 1,
-        gap: 8,
+        gap: 6,
+        paddingRight: 4,
     },
-    actionButton: {
-        width: 75,
-        borderRadius: 16,
+    editBtn: {
+        width: 70,
         height: '100%',
-        overflow: 'hidden',
-    },
-    actionGradient: {
-        flex: 1,
-        justifyContent: 'center',
+        borderRadius: 14,
+        backgroundColor: COLORS.info,
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+    },
+    deleteBtn: {
+        width: 70,
+        height: '100%',
+        borderRadius: 14,
+        backgroundColor: COLORS.error,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
     },
     actionText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '700',
-        marginTop: 4,
-        letterSpacing: 0.2,
+        color: COLORS.white,
+        fontSize: 11,
+        fontWeight: '600',
     },
-    card: {
-        backgroundColor: COLORS.white,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-        overflow: 'hidden',
-        zIndex: 2,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 1,
-    },
-    cardContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        gap: 12,
-    },
+
+    // // Card — matches Cards component
+    // card: {
+    //     backgroundColor: COLORS.white,
+    //     borderRadius: 16,
+    //     borderWidth: 1,
+    //     borderColor: COLORS.gray100,
+    //     zIndex: 2,
+    //     ...Platform.select({
+    //         ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8 },
+    //         android: { elevation: 1 },
+    //     }),
+    // },
+    // cardContent: {
+    //     flexDirection: 'row',
+    //     alignItems: 'flex-start', padding: 10,
+    //     gap: 12,
+    // },
+
+    // Image — matches Cards component
     imageWrapper: {
-        width: 100,
-        height: 100,
+        width: 90,
+        height: 90,
         borderRadius: 12,
         overflow: 'hidden',
-        backgroundColor: COLORS.light.bg,
-        position: 'relative',
+        backgroundColor: COLORS.gray100,
     },
     image: {
         width: '100%',
         height: '100%',
     },
-    imageGradient: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 30,
-    },
-    statusBadgeContainer: {
-        position: 'absolute',
-        top: 6,
-        left: 6,
-    },
+
+    // Status badge — exact same as Cards og tag
     statusBadge: {
+        position: 'absolute',
+        bottom: 6,
+        left: 6,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 7,
-        paddingVertical: 4,
+        gap: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
         borderRadius: 6,
-        gap: 3,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.3,
-        shadowRadius: 2,
-        elevation: 2,
+    },
+    statusDot: {
+        width: 5,
+        height: 5,
+        borderRadius: 3,
+        backgroundColor: COLORS.white,
     },
     statusText: {
-        color: '#fff',
         fontSize: 9,
-        fontWeight: '800',
+        fontWeight: '700',
+        color: COLORS.white,
         letterSpacing: 0.3,
-        textTransform: 'uppercase',
     },
-    contentSection: {
+
+    // Content
+    content: {
         flex: 1,
-        justifyContent: 'space-between',
+        gap: 4,
     },
     title: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: COLORS.light.text,
+        letterSpacing: -0.2,
+        lineHeight: 18,
+    },
+    price: {
         fontSize: 15,
         fontWeight: '700',
         color: COLORS.light.text,
-        lineHeight: 20,
-        marginBottom: 4,
         letterSpacing: -0.3,
-    },
-    price: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: COLORS.primary,
-        letterSpacing: -0.4,
     },
     timeRow: {
         flexDirection: 'row',
@@ -317,10 +260,8 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     timeText: {
-        fontSize: 12,
-        color: COLORS.light.textTertiary,
-        fontWeight: '500',
-        letterSpacing: -0.1,
+        fontSize: 11,
+        color: COLORS.gray400,
     },
 });
 

@@ -1,180 +1,138 @@
-import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-import { useAverageRating } from "../hooks/useAverageRating";
-import { COLORS } from "../utils/colors";
-import { THEME } from "../utils/theme";
-import { LinearGradient } from "expo-linear-gradient";
+import React from 'react';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {useAverageRating} from '../hooks/useAverageRating';
+import {COLORS} from '../utils/colors';
 
-const SellerCard = ({ seller, onPress }) => {
-    const { rating, loading } = useAverageRating('seller', seller.id);
+const getRatingStyle = (rating) => {
+    if (rating >= 4.5) return {color: COLORS.success, bg: `${COLORS.success}12`};
+    if (rating >= 3.5) return {color: COLORS.info,    bg: `${COLORS.info}12`};
+    if (rating >= 2.5) return {color: COLORS.warning, bg: `${COLORS.warning}12`};
+    return                    {color: COLORS.error,   bg: `${COLORS.error}12`};
+};
 
-    // Updated Rating Styles for Light Mode
-    const getRatingStyle = (rating) => {
-        if (rating >= 4.5) {
-            return {
-                bg: COLORS.success + '15', // Light green tint
-                text: COLORS.success,
-                border: COLORS.success + '30',
-            };
-        } else if (rating >= 3.5) {
-            return {
-                bg: COLORS.info + '15', // Light blue tint
-                text: COLORS.info,
-                border: COLORS.info + '30',
-            };
-        } else if (rating >= 2.5) {
-            return {
-                bg: COLORS.warning + '15', // Light orange tint
-                text: COLORS.warning,
-                border: COLORS.warning + '30',
-            };
-        } else {
-            return {
-                bg: COLORS.error + '15', // Light red tint
-                text: COLORS.error,
-                border: COLORS.error + '30',
-            };
-        }
-    };
-
+const SellerCard = ({seller, onPress}) => {
+    const {rating, loading} = useAverageRating('seller', seller.id);
     const ratingValue = rating || 0;
-    const ratingStyle = getRatingStyle(ratingValue);
-    const sellerAvatar = seller?.profileImage || require("../assets/defaultProfile.png");
+    const {color, bg} = getRatingStyle(ratingValue);
+    const avatar = seller?.profileImage || require('../assets/defaultProfile.png');
 
     return (
         <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
-            {/* Left: Avatar Section */}
-            <View style={styles.avatarContainer}>
+            {/* Avatar */}
+            <View style={styles.avatarWrapper}>
                 <Image
-                    source={typeof sellerAvatar === "string" ? { uri: sellerAvatar } : sellerAvatar}
+                    source={typeof avatar === 'string' ? {uri: avatar} : avatar}
                     style={styles.avatar}
                 />
                 {seller?.isVerified && (
-                    <View style={styles.verifiedBadge}>
-                        <Icon name="checkmark-circle" size={20} color={COLORS.success} />
+                    <View style={styles.verifiedDot}>
+                        <Ionicons name="checkmark-circle" size={18} color={COLORS.success}/>
                     </View>
                 )}
             </View>
 
-            {/* Middle: Info Section */}
+            {/* Info */}
             <View style={styles.info}>
-                {/* Row 1: Name (Now has full width) */}
-                <View style={styles.nameRow}>
-                    <Text style={styles.name} numberOfLines={1}>
-                        {seller.firstName} {seller.lastName}
-                    </Text>
-                </View>
+                <Text style={styles.name} numberOfLines={1}>
+                    {seller.firstName} {seller.lastName}
+                </Text>
 
-                {/* Row 2: Metadata Badges (Grouped together) */}
-                <View style={styles.statsRow}>
+                <View style={styles.badgeRow}>
                     <View style={styles.sellerBadge}>
-                        <LinearGradient
-                            colors={['#6366F1', '#4F46E5']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.pillGradient}
-                        >
-                            <Icon name="cart-outline" size={10} color="#fff" />
-                            <Text style={styles.pillText}>CAMPUS SELLER</Text>
-                        </LinearGradient>
+                        <Ionicons name="storefront-outline" size={10} color={COLORS.primary}/>
+                        <Text style={styles.sellerBadgeText}>Campus Seller</Text>
                     </View>
 
-                    <View style={[
-                        styles.ratingBadge,
-                        {
-                            backgroundColor: ratingStyle.bg,
-                            borderColor: ratingStyle.border,
-                        }
-                    ]}>
-                        <Icon name="star" size={10} color={ratingStyle.text} />
-                        <Text style={[styles.ratingText, { color: ratingStyle.text }]}>
-                            {loading ? '...' : ratingValue.toFixed(1)}
+                    <View style={[styles.ratingBadge, {backgroundColor: bg}]}>
+                        <Ionicons name="star" size={10} color={color}/>
+                        <Text style={[styles.ratingText, {color}]}>
+                            {loading ? '–' : ratingValue.toFixed(1)}
                         </Text>
                     </View>
                 </View>
             </View>
 
-            {/* Right: Action Icon */}
-            <Icon name="chevron-forward" size={20} color={COLORS.light.textTertiary} />
+            <Ionicons name="chevron-forward" size={14} color={COLORS.gray300}/>
         </TouchableOpacity>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: COLORS.white,
-        borderRadius: THEME.borderRadius.lg,
-        padding: THEME.spacing.md,
+        borderRadius: 16,
+        padding: 12,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
+        borderColor: COLORS.gray100,
+        gap: 12,
     },
-    avatarContainer: {
-        position: "relative",
-        marginRight: THEME.spacing[3],
+
+    // Avatar
+    avatarWrapper: {
+        position: 'relative',
     },
     avatar: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: COLORS.light.bg,
-        borderWidth: 2,
-        borderColor: COLORS.light.border,
+        width: 52,
+        height: 52,
+        borderRadius: 16,
+        backgroundColor: COLORS.gray100,
     },
-    verifiedBadge: {
-        position: "absolute",
+    verifiedDot: {
+        position: 'absolute',
         bottom: -2,
         right: -2,
         backgroundColor: COLORS.white,
-        borderRadius: 12,
+        borderRadius: 10,
     },
+
+    // Info
     info: {
         flex: 1,
-    },
-    nameRow: {
-        marginBottom: 6,
+        gap: 5,
     },
     name: {
-        fontSize: THEME.fontSize.lg,
-        fontWeight: THEME.fontWeight.bold,
+        fontSize: 14,
+        fontWeight: '600',
         color: COLORS.light.text,
-        letterSpacing: -0.4,
+        letterSpacing: -0.3,
     },
-    statsRow: {
+    badgeRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 6,
     },
+
+    // Seller badge
     sellerBadge: {
-        marginRight: 8,
-    },
-    pillGradient: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 6,
         gap: 4,
+        backgroundColor: `${COLORS.primary}12`,
+        paddingHorizontal: 7,
+        paddingVertical: 3,
+        borderRadius: 6,
     },
-    pillText: {
-        color: '#fff',
-        fontSize: 9,
-        fontWeight: '900',
-        letterSpacing: 0.5,
+    sellerBadgeText: {
+        fontSize: 10,
+        fontWeight: '600',
+        color: COLORS.primary,
     },
+
+    // Rating badge
     ratingBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
-        borderWidth: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 3,
+        paddingHorizontal: 7,
+        paddingVertical: 3,
+        borderRadius: 6,
     },
     ratingText: {
         fontSize: 10,
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
 });
 

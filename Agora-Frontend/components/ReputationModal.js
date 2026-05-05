@@ -1,100 +1,95 @@
 import React from 'react';
-import {Modal, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {COLORS} from '../utils/colors';
 
+const getVibe = (score) => {
+    if (!score || score === 0) return {
+        title: 'Rising Seller',
+        msg: 'New to Agora! Be among the first to trade and leave a review.',
+        icon: 'leaf-outline',
+        color: COLORS.info,
+    };
+    if (score >= 4.5) return {
+        title: 'Campus Elite',
+        msg: 'Highly trusted. This seller has a consistent track record of great trades.',
+        icon: 'shield-checkmark',
+        color: COLORS.success,
+    };
+    if (score >= 3.5) return {
+        title: 'Verified Reliable',
+        msg: 'A solid choice. Most students are happy with their transactions.',
+        icon: 'checkmark-circle-outline',
+        color: COLORS.info,
+    };
+    if (score >= 2.5) return {
+        title: 'Casual Seller',
+        msg: 'Active on campus. Remember to check item photos and descriptions.',
+        icon: 'person-outline',
+        color: COLORS.gray400,
+    };
+    return {
+        title: 'Trade with Care',
+        msg: 'Lower rating detected. Always meet in busy public spots like the Library or Canteen.',
+        icon: 'alert-circle-outline',
+        color: COLORS.warning,
+    };
+};
+
 const ReputationModal = ({visible, onClose, rating, onRatePress, isOwnProfile, isGuest, onAuthPress}) => {
     const insets = useSafeAreaInsets();
-    const getVibe = (score, reviewCount = 0) => {
-
-        if (reviewCount === 0 || score === 0) return {
-            title: "Rising Seller",
-            msg: "New to Agora! Be among the first to trade and leave a review.",
-            icon: "leaf-outline",
-            color: COLORS.info
-        };
-        if (score >= 4.5) return {
-            title: "Campus Elite",
-            msg: "Highly trusted. This seller has a consistent track record of great trades.",
-            icon: "shield-checkmark",
-            color: COLORS.success
-        };
-
-        if (score >= 3.5) return {
-            title: "Verified Reliable",
-            msg: "A solid choice. Most students are happy with their transactions.",
-            icon: "checkmark-circle-outline",
-            color: COLORS.info
-        };
-        if (score >= 2.5) return {
-            title: "Casual Seller",
-            msg: "Active on campus. Remember to check item photos and descriptions.",
-            icon: "person-outline",
-            color: COLORS.dark.textSecondary
-        };
-
-        return {
-            title: "Trade with Care",
-            msg: "Lower rating detected. Always meet in busy public spots like the Library or Canteen.",
-            icon: "alert-circle-outline",
-            color: COLORS.warning
-        };
-    };
-
     const vibe = getVibe(rating || 0);
 
     const handleAction = () => {
-        if (isGuest) {
-            onClose();
-            onAuthPress();
-        } else {
-            onRatePress();
-        }
+        onClose();
+        if (isGuest) onAuthPress?.();
+        else onRatePress?.();
     };
 
     return (
-        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
             <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-                <View style={[
-                    styles.content,
-                    {paddingBottom: Math.max(insets.bottom, 30)}
-                ]}>
+                <View style={[styles.sheet, {paddingBottom: Math.max(insets.bottom, 24)}]}>
+                    {/* Handle */}
                     <View style={styles.handle}/>
-                    <View style={[styles.iconCircle, {backgroundColor: vibe.color + '20'}]}>
-                        <Ionicons name={vibe.icon} size={40} color={vibe.color}/>
+
+                    {/* Icon */}
+                    <View style={[styles.iconWrapper, {backgroundColor: `${vibe.color}12`}]}>
+                        <Ionicons name={vibe.icon} size={28} color={vibe.color}/>
                     </View>
 
+                    {/* Text */}
                     <Text style={[styles.title, {color: vibe.color}]}>
-                        {isGuest ? "Join the Community" : vibe.title}
+                        {isGuest ? 'Join the Community' : vibe.title}
                     </Text>
-
                     <Text style={styles.message}>
                         {isGuest
-                            ? "Want to help other students? Sign up to leave ratings and share your trading experience!"
+                            ? 'Sign up to leave ratings and share your trading experience with other students!'
                             : isOwnProfile
-                                ? "This is how other students see your trading reputation on campus."
+                                ? 'This is how other students see your trading reputation on campus.'
                                 : vibe.msg}
                     </Text>
 
-                    {/* Show the button if it's not their own profile */}
+                    {/* CTA */}
                     {!isOwnProfile && (
                         <TouchableOpacity
-                            style={[styles.cta, isGuest && styles.guestCta]}
+                            style={[styles.cta, isGuest && {backgroundColor: COLORS.primary, borderColor: COLORS.primary}]}
                             onPress={handleAction}
+                            activeOpacity={0.7}
                         >
-                            <Text style={[styles.ctaText, isGuest && styles.guestCtaText]}>
-                                {isGuest ? "Login to Rate" : "Rate this Seller"}
+                            <Text style={[styles.ctaText, isGuest && {color: COLORS.white}]}>
+                                {isGuest ? 'Login to Rate' : 'Rate this Seller'}
                             </Text>
                             <Ionicons
-                                name={isGuest ? "log-in-outline" : "chevron-forward"}
-                                size={16}
-                                color={isGuest ? "#fff" : COLORS.primary}
+                                name={isGuest ? 'log-in-outline' : 'chevron-forward'}
+                                size={14}
+                                color={isGuest ? COLORS.white : COLORS.primary}
                             />
                         </TouchableOpacity>
                     )}
 
-                    <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+                    <TouchableOpacity onPress={onClose} activeOpacity={0.6} style={styles.closeBtn}>
                         <Text style={styles.closeBtnText}>Close</Text>
                     </TouchableOpacity>
                 </View>
@@ -106,73 +101,83 @@ const ReputationModal = ({visible, onClose, rating, onRatePress, isOwnProfile, i
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)', // Standard light-theme overlay
-        justifyContent: 'flex-end'
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'flex-end',
     },
-    content: {
-        backgroundColor: COLORS.white, // Changed from dark.card
+    sheet: {
+        backgroundColor: COLORS.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
-        padding: 24,
+        padding: 20,
         alignItems: 'center',
-        paddingBottom: Platform.OS === 'ios' ? 34 : 24
     },
+
+    // Handle
     handle: {
-        width: 40,
+        width: 36,
         height: 4,
-        backgroundColor: COLORS.light.border, // Changed from dark.divider
+        backgroundColor: COLORS.gray200,
         borderRadius: 2,
-        marginBottom: 20
+        marginBottom: 20,
     },
-    iconCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        justifyContent: 'center',
+
+    // Icon
+    iconWrapper: {
+        width: 64,
+        height: 64,
+        borderRadius: 20,
         alignItems: 'center',
-        marginBottom: 16
-        // Background color handled dynamically via vibe.color + '20'
+        justifyContent: 'center',
+        marginBottom: 14,
     },
+
+    // Text
     title: {
-        fontSize: 22,
-        fontWeight: '900',
-        marginBottom: 8
+        fontSize: 17,
+        fontWeight: '700',
+        letterSpacing: -0.3,
+        marginBottom: 8,
+        textAlign: 'center',
     },
     message: {
-        fontSize: 14,
-        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
+        fontSize: 13,
+        color: COLORS.gray400,
         textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 24
+        lineHeight: 19,
+        marginBottom: 20,
+        paddingHorizontal: 8,
     },
+
+    // CTA
     cta: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.light.bg, // Changed from dark.cardElevated
+        gap: 6,
+        backgroundColor: COLORS.white,
         paddingHorizontal: 20,
-        paddingVertical: 12,
-        borderRadius: 12,
+        paddingVertical: 11,
+        borderRadius: 10,
         borderWidth: 1,
-        borderColor: COLORS.light.border, // Changed from dark.border
-        gap: 8
+        borderColor: COLORS.gray100,
+        marginBottom: 4,
+        width: '100%',
+        justifyContent: 'center',
     },
     ctaText: {
         color: COLORS.primary,
-        fontWeight: '800'
+        fontWeight: '600',
+        fontSize: 14,
     },
+
+    // Close
     closeBtn: {
-        marginTop: 20
+        marginTop: 12,
+        paddingVertical: 6,
     },
     closeBtnText: {
-        color: COLORS.light.textTertiary, // Changed from dark.textTertiary
-        fontWeight: '600'
-    },
-    guestCta: {
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
-    },
-    guestCtaText: {
-        color: '#fff',
+        fontSize: 13,
+        color: COLORS.gray400,
+        fontWeight: '500',
     },
 });
 

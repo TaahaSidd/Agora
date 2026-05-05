@@ -5,64 +5,55 @@ import {LinearGradient} from 'expo-linear-gradient';
 import {COLORS} from '../utils/colors';
 import {formatPrice} from '../utils/formatters';
 
-
 const FeaturedCard = ({item, onPress}) => {
     return (
-        <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => onPress?.(item)}>
-            {/* Image Container */}
-            <View style={styles.imageContainer}>
+        <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.7}
+            onPress={() => onPress?.(item)}
+        >
+            {/* Image */}
+            <View style={styles.imageWrapper}>
                 <Image
-                    source={
-                        item.images && item.images.length
-                            ? item.images[0]
-                            : require('../assets/no-image.jpg')
-                    }
+                    source={item.images?.length ? item.images[0] : require('../assets/no-image.jpg')}
                     style={styles.image}
                     resizeMode="cover"
                 />
 
-                {/* Gradient Overlay */}
+                {/* Bottom gradient for text readability */}
                 <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.7)']}
-                    style={styles.gradientOverlay}
+                    colors={['transparent', 'rgba(0,0,0,0.55)']}
+                    style={styles.gradient}
                 />
 
-                {/* Featured Badge */}
+                {/* Featured badge */}
                 <View style={styles.featuredBadge}>
+                    <Ionicons name="star" size={9} color="#fff"/>
                     <Text style={styles.featuredText}>FEATURED</Text>
                 </View>
 
-                {/* Category Badge - Bottom Left */}
-                {item.category && (
-                    <View style={styles.categoryBadge}>
-                        <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>
-                    </View>
-                )}
-
-                {/* Distance Badge - Bottom Right */}
-                {item.distance && (
-                    <View style={styles.distanceBadge}>
-                        <Text style={styles.distanceText}>{item.distance}</Text>
-                    </View>
-                )}
-
-                {/* Status Badge (if sold/available) */}
+                {/* Sold badge */}
                 {item.itemStatus === 'SOLD' && (
                     <View style={styles.soldBadge}>
                         <Text style={styles.soldText}>SOLD</Text>
                     </View>
                 )}
+
+                {/* Category — bottom left on image */}
+                {item.category && (
+                    <View style={styles.categoryBadge}>
+                        <Text style={styles.categoryText}>{item.category}</Text>
+                    </View>
+                )}
             </View>
 
-            {/* Info Section */}
+            {/* Info */}
             <View style={styles.info}>
-                <Text numberOfLines={2} style={styles.title}>{item.name}</Text>
+                <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
                 <View style={styles.priceRow}>
-                    <View style={styles.priceContainer}>
-                        <Text style={styles.price}>{formatPrice(item.price)}</Text>
-                    </View>
-                    <View style={styles.arrowCircle}>
-                        <Ionicons name="arrow-forward" size={16} color="#fff"/>
+                    <Text style={styles.price}>{formatPrice(item.price)}</Text>
+                    <View style={styles.arrowBtn}>
+                        <Ionicons name="arrow-forward" size={14} color={COLORS.white}/>
                     </View>
                 </View>
             </View>
@@ -72,141 +63,108 @@ const FeaturedCard = ({item, onPress}) => {
 
 const styles = StyleSheet.create({
     card: {
-        width: 240,
-        borderRadius: 24,
-        backgroundColor: COLORS.white,
-        marginRight: 16,
-        padding: 12,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-        elevation: 2,
+        width: 220,
+        marginRight: 12,
     },
-    imageContainer: {
+
+    // Image
+    imageWrapper: {
         width: '100%',
-        height: 240,
-        position: 'relative',
+        height: 260,
         borderRadius: 16,
         overflow: 'hidden',
+        backgroundColor: COLORS.gray100,
     },
     image: {
         width: '100%',
         height: '100%',
     },
-    gradientOverlay: {
+    gradient: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
         height: 80,
     },
+
+    // Badges
     featuredBadge: {
         position: 'absolute',
-        top: 14,
-        left: 14,
-        backgroundColor: 'rgba(0,0,0,0.75)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 8,
+        top: 10,
+        left: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
     },
     featuredText: {
-        color: '#fff',
-        fontSize: 11,
+        color: COLORS.white,
+        fontSize: 9,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
+    soldBadge: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: COLORS.error,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    soldText: {
+        color: COLORS.white,
+        fontSize: 9,
         fontWeight: '700',
         letterSpacing: 0.5,
     },
     categoryBadge: {
         position: 'absolute',
-        bottom: 14,
-        left: 14,
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 8,
+        bottom: 10,
+        left: 10,
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
     },
     categoryText: {
-        color: '#000',
-        fontSize: 11,
-        fontWeight: '700',
-        letterSpacing: 0.5,
+        color: COLORS.light.text,
+        fontSize: 10,
+        fontWeight: '600',
+        letterSpacing: 0.3,
+        textTransform: 'uppercase',
     },
-    distanceBadge: {
-        position: 'absolute',
-        bottom: 14,
-        right: 14,
-        backgroundColor: 'rgba(0,0,0,0.75)',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 8,
-    },
-    distanceText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '700',
-    },
-    soldBadge: {
-        position: 'absolute',
-        top: 14,
-        right: 14,
-        backgroundColor: '#EF4444',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 8,
-    },
-    soldText: {
-        color: '#fff',
-        fontSize: 11,
-        fontWeight: '800',
-        letterSpacing: 0.5,
-    },
+
+    // Info
     info: {
-        paddingTop: 12,
-        paddingHorizontal: 4,
+        paddingTop: 8,
+        paddingHorizontal: 2,
     },
     title: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: COLORS.light.text, // Changed from dark.textSecondary
-        marginBottom: 4,
-        lineHeight: 24,
-        letterSpacing: -0.3,
-    },
-    locationText: {
-        fontSize: 13,
-        color: COLORS.light.textSecondary,
-        fontWeight: '500',
-        marginBottom: 12,
-        letterSpacing: -0.1,
+        fontSize: 14,
+        fontWeight: '600',
+        color: COLORS.light.text,
+        letterSpacing: -0.2,
+        marginBottom: 6,
     },
     priceRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-    priceContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
     price: {
-        fontSize: 22,
-        fontWeight: '800',
-        color: COLORS.primary,
-        letterSpacing: -0.5,
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.light.text,
+        letterSpacing: -0.4,
     },
-    viewContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    viewCount: {
-        fontSize: 13,
-        color: COLORS.light.textSecondary,
-        fontWeight: '600',
-    },
-    arrowCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+    arrowBtn: {
+        width: 30,
+        height: 30,
+        borderRadius: 10,
         backgroundColor: COLORS.primary,
         alignItems: 'center',
         justifyContent: 'center',

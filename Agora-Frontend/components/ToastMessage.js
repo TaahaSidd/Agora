@@ -1,175 +1,92 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../utils/colors';
-import { THEME } from '../utils/theme';
+
+const TYPE_MAP = {
+    success: COLORS.success,
+    error: COLORS.error,
+    warning: COLORS.warning,
+    info: COLORS.info,
+};
 
 const ToastMessage = ({
-                          type = 'info',
-                          title,
-                          message,
-                          onHide,
-                          duration = 3000,
-                          position = 'top',
-                      }) => {
+    type = 'info',
+    title,
+    message,
+    onHide,
+    duration = 3000,
+    position = 'top',
+}) => {
     const slideAnim = useRef(new Animated.Value(position === 'top' ? -100 : 100)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        // Slide in
         Animated.parallel([
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                tension: 65,
-                friction: 8,
-                useNativeDriver: true,
-            }),
-            Animated.timing(opacityAnim, {
-                toValue: 1,
-                duration: 200,
-                useNativeDriver: true,
-            }),
+            Animated.spring(slideAnim, { toValue: 0, tension: 65, friction: 8, useNativeDriver: true }),
+            Animated.timing(opacityAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
         ]).start();
 
-        // Auto hide
-        const timer = setTimeout(() => {
-            hideToast();
-        }, duration);
-
+        const timer = setTimeout(hideToast, duration);
         return () => clearTimeout(timer);
     }, []);
 
     const hideToast = () => {
         Animated.parallel([
-            Animated.timing(slideAnim, {
-                toValue: position === 'top' ? -100 : 100,
-                duration: 200,
-                useNativeDriver: true,
-            }),
-            Animated.timing(opacityAnim, {
-                toValue: 0,
-                duration: 200,
-                useNativeDriver: true,
-            }),
-        ]).start(() => onHide && onHide());
+            Animated.timing(slideAnim, { toValue: position === 'top' ? -100 : 100, duration: 200, useNativeDriver: true }),
+            Animated.timing(opacityAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+        ]).start(() => onHide?.());
     };
 
-    const getToastStyle = () => {
-        switch (type) {
-            case 'success':
-                return {
-                    backgroundColor: COLORS.success,
-                    textColor: '#FFFFFF',
-                };
-            case 'error':
-                return {
-                    backgroundColor: COLORS.error,
-                    textColor: '#FFFFFF',
-                };
-            case 'warning':
-                return {
-                    backgroundColor: COLORS.warning,
-                    textColor: '#FFFFFF',
-                };
-            case 'info':
-            default:
-                return {
-                    backgroundColor: COLORS.info,
-                    textColor: '#FFFFFF',
-                };
-        }
-    };
-
-    const toastStyle = getToastStyle();
+    const bg = TYPE_MAP[type] || TYPE_MAP.info;
 
     return (
         <Animated.View
             style={[
                 styles.container,
-                position === 'top' ? styles.topPosition : styles.bottomPosition,
-                {
-                    backgroundColor: toastStyle.backgroundColor,
-                    transform: [{ translateY: slideAnim }],
-                    opacity: opacityAnim,
-                },
+                position === 'top' ? styles.top : styles.bottom,
+                { backgroundColor: bg, transform: [{ translateY: slideAnim }], opacity: opacityAnim },
             ]}
         >
-            <View style={styles.content}>
-                <View style={styles.textContainer}>
-                    {title && (
-                        <Text style={[styles.title, { color: toastStyle.textColor }]} numberOfLines={1}>
-                            {title}
-                        </Text>
-                    )}
-                    {message && (
-                        <Text style={[styles.message, { color: toastStyle.textColor }]} numberOfLines={2}>
-                            {message}
-                        </Text>
-                    )}
-                </View>
-
-                <TouchableOpacity
-                    onPress={hideToast}
-                    style={styles.closeButton}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                    <Ionicons name="close" size={18} color={toastStyle.textColor} />
-                </TouchableOpacity>
-            </View>
+            {title && <Text style={styles.title} numberOfLines={1}>{title}</Text>}
+            {message && <Text style={styles.message} numberOfLines={2}>{message}</Text>}
         </Animated.View>
     );
 };
+
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
         left: 16,
         right: 16,
-        borderRadius: THEME.borderRadius.lg,
-        // Refined shadow for Light Mode to prevent it from looking "muddy"
-        shadowColor: "#000",
-        shadowOpacity: 0.15,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 16,
-        elevation: 8,
+        borderRadius: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         zIndex: 9999,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.12,
+                shadowRadius: 12,
+            },
+            android: { elevation: 6 },
+        }),
     },
-    topPosition: {
-        // Slightly adjusted for modern Notch/Dynamic Island spacing
-        top: Platform.OS === 'ios' ? 64 : 50,
-    },
-    bottomPosition: {
-        bottom: Platform.OS === 'ios' ? 60 : 40,
-    },
-    content: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: THEME.spacing[4],
-        paddingVertical: THEME.spacing[3] + 2,
-    },
-    textContainer: {
-        flex: 1,
-    },
+    top: { top: Platform.OS === 'ios' ? 64 : 50 },
+    bottom: { bottom: Platform.OS === 'ios' ? 60 : 40 },
     title: {
-        fontWeight: THEME.fontWeight.bold,
-        fontSize: THEME.fontSize.base,
+        fontSize: 13,
+        fontWeight: '700',
+        color: COLORS.white,
         marginBottom: 2,
-        letterSpacing: THEME.letterSpacing.tight,
+        letterSpacing: -0.2,
     },
     message: {
-        fontSize: THEME.fontSize.sm,
-        lineHeight: 18,
-        fontWeight: THEME.fontWeight.medium,
-        opacity: 0.95,
-    },
-    closeButton: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: THEME.spacing[2],
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        fontSize: 12,
+        fontWeight: '400',
+        color: COLORS.white,
+        lineHeight: 17,
+        opacity: 0.9,
     },
 });
 

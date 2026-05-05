@@ -1,39 +1,38 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {LinearGradient} from 'expo-linear-gradient';
-import {THEME} from '../utils/theme';
-import {COLORS} from '../utils/colors';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../utils/colors';
 
-export default function QuickActions({title, actions}) {
+export default function QuickActions({ title, actions }) {
     return (
         <View style={styles.section}>
             {title && <Text style={styles.sectionTitle}>{title}</Text>}
             <View style={styles.actionsContainer}>
-                {actions.map((action, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={styles.actionButton}
-                        activeOpacity={0.8}
-                        onPress={action.onPress}
-                    >
-                        <LinearGradient
-                            colors={action.gradient || [action.bgColor, action.bgColor]}
-                            start={{x: 0, y: 0}}
-                            end={{x: 1, y: 1}}
-                            style={styles.iconCircle}
-                        >
-                            <Ionicons name={action.icon} size={20} color="#fff"/>
-                        </LinearGradient>
+                {actions.map((action, index) => {
+                    const themeColor = action.iconColor || (action.gradient ? action.gradient[0] : COLORS.primary);
 
-                        <View style={styles.textContainer}>
-                            {action.number !== undefined && (
-                                <Text style={styles.statNumber}>{action.number}</Text>
-                            )}
-                            <Text style={styles.label} numberOfLines={1}>{action.label}</Text>
-                        </View>
-                    </TouchableOpacity>
-                ))}
+                    return (
+                        <TouchableOpacity
+                            key={index}
+                            style={styles.actionButton}
+                            activeOpacity={0.6}
+                            onPress={action.onPress}
+                        >
+                            <View style={[styles.iconWrapper, { backgroundColor: `${themeColor}12` }]}>
+                                <Ionicons name={action.icon} size={18} color={themeColor} />
+                            </View>
+
+                            <View style={styles.textContainer}>
+                                {action.number !== undefined && (
+                                    <Text style={styles.statNumber}>{action.number}</Text>
+                                )}
+                                <Text style={styles.label} numberOfLines={1}>
+                                    {action.label}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
         </View>
     );
@@ -41,47 +40,51 @@ export default function QuickActions({title, actions}) {
 
 const styles = StyleSheet.create({
     section: {
-        marginBottom: 24,
+        marginBottom: 20,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: COLORS.light.text, // Changed from dark.text
-        marginBottom: 16,
-        letterSpacing: -0.3,
+        fontSize: 11,
+        fontWeight: '600',
+        color: COLORS.gray400,
+        marginBottom: 6,
+        marginLeft: 4,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
     },
     actionsContainer: {
         flexDirection: 'row',
-        gap: 12,
+        gap: 10,
     },
     actionButton: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.white, // Changed from dark.card
-        paddingVertical: 14,
+        backgroundColor: COLORS.white,
+        paddingVertical: 11,
         paddingHorizontal: 12,
-        borderRadius: 14,
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: COLORS.light.border, // Changed from dark.border
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        borderColor: COLORS.gray100,
+        minHeight: 52,
         gap: 10,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 1,
+            },
+        }),
     },
-    iconCircle: {
-        width: 42,
-        height: 42,
-        borderRadius: 21,
+    iconWrapper: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 3},
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
     },
     textContainer: {
         flex: 1,
@@ -89,15 +92,15 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 12,
-        fontWeight: '600',
-        color: COLORS.light.textSecondary,
+        fontWeight: '500',
+        color: COLORS.gray400,
         letterSpacing: -0.1,
     },
     statNumber: {
-        fontSize: 20,
-        fontWeight: '800',
+        fontSize: 17,
+        fontWeight: '700',
         color: COLORS.light.text,
         letterSpacing: -0.5,
-        marginBottom: 2,
+        marginBottom: 1,
     },
 });

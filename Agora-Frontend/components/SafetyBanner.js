@@ -1,43 +1,37 @@
 import React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {LinearGradient} from 'expo-linear-gradient';
-import {Ionicons} from '@expo/vector-icons';
-import {COLORS} from "../utils/colors";
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../utils/colors';
 
-const SafetyBanner = ({onPress}) => {
+const SafetyBanner = ({ onPress }) => {
     return (
         <TouchableOpacity
             onPress={onPress}
-            activeOpacity={0.85}
+            activeOpacity={0.7}
             style={styles.container}
         >
             <LinearGradient
-                // Changed to a trustworthy Indigo/Blue theme
-                colors={['#4F46E5', '#3730A3']}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
+                colors={['#4F46E5', '#6366F1']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={styles.banner}
             >
-                {/* Decorative circle remains for visual depth */}
-                <View style={styles.decorCircle}/>
+                <View style={styles.decorCircle} />
 
                 <View style={styles.content}>
-                    {/* Left - Icon & Text */}
-                    <View style={styles.leftSection}>
-                        <View style={styles.iconCircle}>
-                            {/* Changed to Shield icon */}
-                            <Ionicons name="shield-checkmark" size={22} color="#4F46E5"/>
-                        </View>
-                        <View style={{flex: 1}}>
-                            <Text style={styles.title}>Trade Safely on Campus</Text>
-                            <Text style={styles.subtitle} numberOfLines={1}>
-                                Meet in public spots like the Canteen or Library
-                            </Text>
-                        </View>
+                    <View style={styles.iconWrapper}>
+                        <Ionicons name="shield-checkmark" size={20} color="#4F46E5" />
                     </View>
 
-                    {/* Right - Chevron */}
-                    <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.8)"/>
+                    <View style={styles.textContainer}>
+                        <Text style={styles.title}>Trade Safely on Campus</Text>
+                        <Text style={styles.subtitle} numberOfLines={1}>
+                            Meet in public spots like the Canteen or Library
+                        </Text>
+                    </View>
+
+                    <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.7)" />
                 </View>
             </LinearGradient>
         </TouchableOpacity>
@@ -46,58 +40,54 @@ const SafetyBanner = ({onPress}) => {
 
 const styles = StyleSheet.create({
     container: {
-        // Ensuring container doesn't clash with white backgrounds
-        backgroundColor: 'transparent',
-        marginBottom: 16,
+        shadowColor: '#4F46E5',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 4,
     },
     banner: {
         width: '100%',
-        height: 75,
+        paddingVertical: 14,
+        paddingHorizontal: 14,
         borderRadius: 16,
-        padding: 14,
-        position: 'relative',
         overflow: 'hidden',
-        elevation: 2,
     },
     decorCircle: {
         position: 'absolute',
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-        top: -30,
-        right: -30,
+        backgroundColor: 'rgba(255,255,255,0.07)',
+        top: -35,
+        right: -35,
     },
     content: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        zIndex: 1,
+        gap: 12,
     },
-    leftSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    iconCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: COLORS.white, // Changed to white variable
+    iconWrapper: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: COLORS.white,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 14,
+        flexShrink: 0,
+    },
+    textContainer: {
+        flex: 1,
     },
     title: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '700',
-        letterSpacing: 0.3,
+        color: COLORS.white,
+        fontSize: 14,
+        fontWeight: '600',
+        letterSpacing: -0.1,
     },
     subtitle: {
-        color: 'rgba(255, 255, 255, 0.85)',
+        color: 'rgba(255,255,255,0.75)',
         fontSize: 12,
-        fontWeight: '400',
         marginTop: 2,
     },
 });

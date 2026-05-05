@@ -1,53 +1,83 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import {Ionicons, MaterialIcons} from '@expo/vector-icons';
-import {LinearGradient} from 'expo-linear-gradient';
-import {COLORS} from '../utils/colors';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { COLORS } from '../utils/colors';
+import { THEME } from '../utils/theme';
 
-export default function SettingsOptionList({title, options}) {
+export default function SettingsOptionList({ title, options }) {
     return (
         <View style={styles.section}>
             {title && <Text style={styles.sectionTitle}>{title}</Text>}
+
             <View style={styles.optionsCard}>
                 {options.map((option, index) => {
                     const isLast = index === options.length - 1;
+                    const themeColor = option.iconColor || (option.gradient ? option.gradient[0] : COLORS.primary);
 
                     return (
                         <TouchableOpacity
                             key={index}
-                            style={[
-                                styles.optionItem,
-                                isLast && styles.lastItem
-                            ]}
-                            activeOpacity={0.7}
+                            style={[styles.optionItem, !isLast && styles.borderBottom]}
+                            activeOpacity={0.6}
                             onPress={option.onPress}
+                            disabled={option.disabled}
                         >
                             <View style={styles.optionLeft}>
-                                <LinearGradient
-                                    colors={option.gradient || [option.bgColor, option.bgColor]}
-                                    style={styles.optionIconCircle}
-                                    start={{x: 0, y: 0}}
-                                    end={{x: 1, y: 1}}
-                                >
+                                <View style={[styles.iconWrapper, { backgroundColor: `${themeColor}12` }]}>
                                     {option.iconType === 'material' ? (
-                                        <MaterialIcons name={option.icon} size={20} color="#fff"/>
+                                        <MaterialIcons
+                                            name={option.icon}
+                                            size={18}
+                                            color={option.disabled ? COLORS.gray300 : themeColor}
+                                        />
                                     ) : (
-                                        <Ionicons name={option.icon} size={20} color="#fff"/>
+                                        <Ionicons
+                                            name={option.icon}
+                                            size={18}
+                                            color={option.disabled ? COLORS.gray300 : themeColor}
+                                        />
                                     )}
-                                </LinearGradient>
-                                <View style={styles.optionTextContainer}>
-                                    <Text style={styles.optionText}>{option.label}</Text>
+                                </View>
+
+                                <View style={styles.textContainer}>
+                                    <Text
+                                        style={[
+                                            styles.optionText,
+                                            option.disabled && styles.optionTextDisabled,
+                                            option.destructive && styles.optionTextDestructive,
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {option.label}
+                                    </Text>
                                     {option.description && (
-                                        <Text style={styles.optionDescription}>{option.description}</Text>
+                                        <Text style={styles.optionDescription} numberOfLines={1}>
+                                            {option.description}
+                                        </Text>
                                     )}
                                 </View>
                             </View>
 
                             <View style={styles.optionRight}>
                                 {option.value && (
-                                    <Text style={styles.optionValue} numberOfLines={1}>{option.value}</Text>
+                                    <Text style={styles.optionValue} numberOfLines={1}>
+                                        {option.value}
+                                    </Text>
                                 )}
-                                <Ionicons name="chevron-forward" size={18} color={COLORS.dark.textTertiary}/>
+                                {option.badge && (
+                                    <View style={[styles.badge, { backgroundColor: `${themeColor}12` }]}>
+                                        <Text style={[styles.badgeText, { color: themeColor }]}>
+                                            {option.badge}
+                                        </Text>
+                                    </View>
+                                )}
+                                {!option.hideChevron && (
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={14}
+                                        color={option.disabled ? COLORS.gray200 : COLORS.gray300}
+                                    />
+                                )}
                             </View>
                         </TouchableOpacity>
                     );
@@ -59,83 +89,100 @@ export default function SettingsOptionList({title, options}) {
 
 const styles = StyleSheet.create({
     section: {
-        marginBottom: 24,
+        marginBottom: 20,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: COLORS.light.text,
-        marginBottom: 14,
-        letterSpacing: -0.3,
+        fontSize: 11,
+        fontWeight: '600',
+        color: COLORS.gray400,
+        marginBottom: 6,
+        marginLeft: 4,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
     },
     optionsCard: {
         backgroundColor: COLORS.white,
-        borderRadius: 18,
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
+        borderColor: COLORS.gray100,
         overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 2,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 1,
+            },
+        }),
     },
     optionItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.light.border,
+        paddingVertical: 11,
+        paddingHorizontal: 14,
+        minHeight: 52,
     },
-    lastItem: {
-        borderBottomWidth: 0,
+    borderBottom: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
     optionLeft: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
     },
-    optionIconCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+    iconWrapper: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 14,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
+        marginRight: 12,
     },
-    optionTextContainer: {
+    textContainer: {
         flex: 1,
     },
     optionText: {
         fontSize: 15,
-        fontWeight: '600',
+        fontWeight: '500',
         color: COLORS.light.text,
         letterSpacing: -0.2,
     },
+    optionTextDisabled: {
+        color: COLORS.gray300,
+    },
+    optionTextDestructive: {
+        color: COLORS.danger,
+    },
     optionDescription: {
         fontSize: 12,
-        color: COLORS.light.textTertiary,
-        marginTop: 2,
-        fontWeight: '500',
-        letterSpacing: -0.1,
+        color: COLORS.gray400,
+        marginTop: 1,
+        fontWeight: '400',
     },
     optionRight: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
+        marginLeft: 8,
     },
     optionValue: {
         fontSize: 13,
-        color: COLORS.light.textSecondary, // Swapped from dark.textSecondary
+        color: COLORS.gray400,
+        fontWeight: '400',
+    },
+    badge: {
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 999,
+    },
+    badgeText: {
+        fontSize: 11,
         fontWeight: '600',
-        maxWidth: 100,
-        letterSpacing: -0.1,
+        letterSpacing: 0.2,
     },
 });

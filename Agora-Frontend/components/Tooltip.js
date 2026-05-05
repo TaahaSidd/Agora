@@ -5,11 +5,10 @@ import { COLORS } from '../utils/colors';
 
 const Tooltip = ({
     message,
-    position = 'bottom', // 'top', 'bottom', 'left', 'right'
+    position = 'bottom',
     visible = true,
     onClose,
     showArrow = true,
-    icon = 'hand-left-outline',
     style,
 }) => {
     const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -38,30 +37,28 @@ const Tooltip = ({
     return (
         <Animated.View
             style={[
-                styles.tooltipContainer,
-                position === 'top' && styles.tooltipTop,
-                position === 'bottom' && styles.tooltipBottom,
-                position === 'left' && styles.tooltipLeft,
-                position === 'right' && styles.tooltipRight,
+                styles.container,
+                position === 'top' && styles.posTop,
+                position === 'bottom' && styles.posBottom,
+                position === 'left' && styles.posLeft,
+                position === 'right' && styles.posRight,
                 { transform: [{ scale: scaleAnim }], opacity: opacityAnim },
                 style,
             ]}
         >
-            <View style={styles.tooltip}>
-                {icon && (
-                    <Ionicons name={icon} size={20} color="#fff" style={styles.icon} />
-                )}
-                <Text style={styles.tooltipText}>{message}</Text>
+            <View style={styles.bubble}>
+                <Text style={styles.message}>{message}</Text>
                 {onClose && (
                     <TouchableOpacity
                         onPress={onClose}
-                        style={styles.closeButton}
+                        style={styles.closeBtn}
                         activeOpacity={0.7}
                     >
-                        <Ionicons name="close" size={16} color="#fff" />
+                        <Ionicons name="close" size={14} color={COLORS.white} />
                     </TouchableOpacity>
                 )}
             </View>
+
             {showArrow && (
                 <View style={[
                     styles.arrow,
@@ -76,60 +73,50 @@ const Tooltip = ({
 };
 
 const styles = StyleSheet.create({
-    tooltipContainer: {
+    container: {
         position: 'absolute',
         zIndex: 1000,
     },
-    tooltipTop: {
-        bottom: '100%',
-        marginBottom: 12,
-    },
-    tooltipBottom: {
-        top: '100%',
-        marginTop: 12,
-    },
-    tooltipLeft: {
-        right: '100%',
-        marginRight: 12,
-    },
-    tooltipRight: {
-        left: '100%',
-        marginLeft: 12,
-    },
-    tooltip: {
+
+    // Position
+    posTop: { bottom: '100%', marginBottom: 12 },
+    posBottom: { top: '100%', marginTop: 12 },
+    posLeft: { right: '100%', marginRight: 12 },
+    posRight: { left: '100%', marginLeft: 12 },
+
+    // Bubble
+    bubble: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.primary, // Branding remains for visibility
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 12,
-        // Refined shadow for light mode
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 6,
-        },
-        shadowOpacity: 0.2, // Reduced from 0.3 for a cleaner look
-        shadowRadius: 10,
-        elevation: 8,
-        maxWidth: 250,
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 12,
+        paddingVertical: 9,
+        borderRadius: 10,
+        maxWidth: 240,
+        gap: 8,
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 6,
     },
-    icon: {
-        marginRight: 8,
-    },
-    tooltipText: {
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: '600',
+    message: {
+        color: COLORS.white,
+        fontSize: 12,
+        fontWeight: '500',
         flexShrink: 1,
-        lineHeight: 18,
+        lineHeight: 17,
     },
-    closeButton: {
-        marginLeft: 8,
-        padding: 4,
-        backgroundColor: 'rgba(255, 255, 255, 0.15)', // Added subtle contrast
-        borderRadius: 8,
+    closeBtn: {
+        width: 20,
+        height: 20,
+        borderRadius: 6,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
+
+    // Arrow
     arrow: {
         width: 0,
         height: 0,
@@ -138,48 +125,48 @@ const styles = StyleSheet.create({
     },
     arrowTop: {
         position: 'absolute',
-        top: -8,
+        top: -7,
         left: '50%',
-        marginLeft: -8,
-        borderLeftWidth: 8,
-        borderRightWidth: 8,
-        borderBottomWidth: 8,
+        marginLeft: -7,
+        borderLeftWidth: 7,
+        borderRightWidth: 7,
+        borderBottomWidth: 7,
         borderLeftColor: 'transparent',
         borderRightColor: 'transparent',
         borderBottomColor: COLORS.primary,
     },
     arrowBottom: {
         position: 'absolute',
-        bottom: -8,
+        bottom: -7,
         left: '50%',
-        marginLeft: -8,
-        borderLeftWidth: 8,
-        borderRightWidth: 8,
-        borderTopWidth: 8,
+        marginLeft: -7,
+        borderLeftWidth: 7,
+        borderRightWidth: 7,
+        borderTopWidth: 7,
         borderLeftColor: 'transparent',
         borderRightColor: 'transparent',
         borderTopColor: COLORS.primary,
     },
     arrowLeft: {
         position: 'absolute',
-        left: -8,
+        left: -7,
         top: '50%',
-        marginTop: -8,
-        borderTopWidth: 8,
-        borderBottomWidth: 8,
-        borderRightWidth: 8,
+        marginTop: -7,
+        borderTopWidth: 7,
+        borderBottomWidth: 7,
+        borderRightWidth: 7,
         borderTopColor: 'transparent',
         borderBottomColor: 'transparent',
         borderRightColor: COLORS.primary,
     },
     arrowRight: {
         position: 'absolute',
-        right: -8,
+        right: -7,
         top: '50%',
-        marginTop: -8,
-        borderTopWidth: 8,
-        borderBottomWidth: 8,
-        borderLeftWidth: 8,
+        marginTop: -7,
+        borderTopWidth: 7,
+        borderBottomWidth: 7,
+        borderLeftWidth: 7,
         borderTopColor: 'transparent',
         borderBottomColor: 'transparent',
         borderLeftColor: COLORS.primary,

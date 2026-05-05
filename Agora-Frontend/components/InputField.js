@@ -2,23 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Ionicons } from '@expo/vector-icons';
 
 const InputField = ({
-                        label,
-                        value,
-                        onChangeText,
-                        placeholder,
-                        secureTextEntry = false,
-                        keyboardType = 'default',
-                        style,
-                        inputStyle,
-                        error,
-                        leftIcon,
-                        maxLength,
-                        showCharCount = false,
-                        disabled = false,
-                    }) => {
+    label,
+    value,
+    onChangeText,
+    placeholder,
+    secureTextEntry = false,
+    keyboardType = 'default',
+    style,
+    inputStyle,
+    error,
+    leftIcon,
+    maxLength,
+    showCharCount = false,
+    disabled = false,
+}) => {
     const [isFocused, setIsFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -71,10 +71,10 @@ const InputField = ({
                     <View style={styles.innerContainer}>
                         {leftIcon && (
                             <View style={styles.leftIconContainer}>
-                                <MaterialCommunityIcons
+                                <Ionicons
                                     name={leftIcon}
-                                    size={22}
-                                    color={isFocused ? COLORS.primary : COLORS.light.textTertiary}
+                                    size={20}
+                                    color={isFocused ? COLORS.primary : COLORS.gray400}
                                 />
                             </View>
                         )}
@@ -104,9 +104,9 @@ const InputField = ({
                                 onPress={() => setShowPassword((prev) => !prev)}
                                 activeOpacity={0.7}
                             >
-                                <MaterialCommunityIcons
-                                    name={showPassword ? 'eye' : 'eye-off'}
-                                    size={22}
+                                <Ionicons
+                                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                                    size={20}
                                     color={COLORS.primary}
                                 />
                             </TouchableOpacity>

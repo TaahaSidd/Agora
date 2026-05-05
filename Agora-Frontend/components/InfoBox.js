@@ -1,65 +1,41 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import {Ionicons} from '@expo/vector-icons';
 import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
 
-export default function InfoBox({text, icon = "information-circle", type = "info"}) {
+const TYPE_MAP = {
+    info:    {bg: `${COLORS.primary}10`,  border: `${COLORS.primary}20`,  color: COLORS.primary},
+    warning: {bg: `${COLORS.warning}10`,  border: `${COLORS.warning}20`,  color: COLORS.warning},
+    error:   {bg: `${COLORS.error}10`,    border: `${COLORS.error}20`,    color: COLORS.error},
+    success: {bg: `${COLORS.success}10`,  border: `${COLORS.success}20`,  color: COLORS.success},
+};
 
-    const getTypeStyles = () => {
-        switch (type) {
-            case 'warning':
-                return {
-                    bg: COLORS.warning + '10',
-                    border: COLORS.warning + '20',
-                    iconColor: COLORS.warning,
-                };
-            case 'error':
-                return {
-                    bg: COLORS.error + '10',
-                    border: COLORS.error + '20',
-                    iconColor: COLORS.error,
-                };
-            case 'success':
-                return {
-                    bg: COLORS.success + '10',
-                    border: COLORS.success + '20',
-                    iconColor: COLORS.success,
-                };
-            case 'info':
-            default:
-                return {
-                    bg: COLORS.primary + '10',
-                    border: COLORS.primary + '20',
-                    iconColor: COLORS.primary,
-                };
-        }
-    };
-
-    const typeStyles = getTypeStyles();
+export default function InfoBox({text, icon = 'information-circle', type = 'info'}) {
+    const {bg, border, color} = TYPE_MAP[type] || TYPE_MAP.info;
 
     return (
-        <View style={[styles.infoBox, {backgroundColor: typeStyles.bg, borderColor: typeStyles.border}]}>
-            <Ionicons name={icon} size={20} color={typeStyles.iconColor}/>
-            <Text style={styles.infoText}>{text}</Text>
+        <View style={[styles.container, {backgroundColor: bg, borderColor: border}]}>
+            <Ionicons name={icon} size={16} color={color}/>
+            <Text style={styles.text}>{text}</Text>
         </View>
     );
 }
+
 const styles = StyleSheet.create({
-    infoBox: {
+    container: {
         flexDirection: 'row',
-        padding: THEME.spacing.sm + 2,
-        borderRadius: THEME.borderRadius.md,
-        marginBottom: THEME.spacing.md,
-        gap: THEME.spacing[2],
-        borderWidth: 1,
         alignItems: 'flex-start',
+        gap: 10,
+        padding: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        marginBottom: 16,
     },
-    infoText: {
+    text: {
         flex: 1,
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.light.textSecondary,
-        lineHeight: THEME.fontSize.sm * 1.4,
-        fontWeight: THEME.fontWeight.medium,
+        fontSize: 12,
+        color: COLORS.gray400,
+        lineHeight: 18,
+        fontWeight: '400',
     },
 });

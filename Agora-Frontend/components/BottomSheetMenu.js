@@ -1,29 +1,71 @@
 import React from 'react';
-import {Modal, Platform, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {Ionicons} from '@expo/vector-icons';
-import {COLORS} from '../utils/colors';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../utils/colors';
+
+const USER_OPTIONS = (onShare, onReport, onBlock) => [
+    {
+        label: 'Share Profile',
+        desc: 'Share with your friends',
+        icon: 'share-outline',
+        color: '#3B82F6',
+        action: onShare,
+    },
+    {
+        label: 'Report User',
+        desc: 'Report inappropriate behavior',
+        icon: 'flag-outline',
+        color: '#F59E0B',
+        action: onReport,
+    },
+    {
+        label: 'Block User',
+        desc: "You won't see their content",
+        icon: 'ban-outline',
+        color: COLORS.error,
+        action: onBlock,
+    },
+];
+
+const LISTING_OPTIONS = (onShare, onReport) => [
+    {
+        label: 'Share Listing',
+        desc: 'Share this listing with others',
+        icon: 'share-outline',
+        color: '#3B82F6',
+        action: onShare,
+    },
+    {
+        label: 'Report Listing',
+        desc: 'Report inappropriate content',
+        icon: 'flag-outline',
+        color: '#F59E0B',
+        action: onReport,
+    },
+];
 
 const BottomSheetMenu = ({
-                             visible,
-                             onClose,
-                             type = 'user',
-                             onShare,
-                             onReport,
-                             onBlock,
-                             title = 'Options',
-                             isGuest,
-                             onAuthRequired,
-                         }) => {
+    visible,
+    onClose,
+    type = 'user',
+    onShare,
+    onReport,
+    onBlock,
+    title = 'Options',
+    isGuest,
+    onAuthRequired,
+}) => {
     const insets = useSafeAreaInsets();
 
+    const allOptions = type === 'user'
+        ? USER_OPTIONS(onShare, onReport, onBlock)
+        : LISTING_OPTIONS(onShare, onReport);
+
+    const options = allOptions.filter(o => o.action != null);
+
     const handleAction = (item) => {
-        if (item.label.includes('Share')) {
-            onClose();
-            item.action?.();
-            return;
-        }
-        if (isGuest) {
+        if (isGuest && !item.label.includes('Share')) {
             onClose();
             onAuthRequired?.();
             return;
@@ -32,210 +74,151 @@ const BottomSheetMenu = ({
         item.action?.();
     };
 
-    const userOptions = [
-        {
-            label: 'Share Profile',
-            description: 'Share with your friends',
-            icon: 'share-outline',
-            iconBg: '#DBEAFE',
-            iconColor: '#3B82F6',
-            action: onShare,
-        },
-        {
-            label: 'Report User',
-            description: 'Report inappropriate behavior',
-            icon: 'flag-outline',
-            iconBg: '#FEF3C7',
-            iconColor: '#F59E0B',
-            action: onReport,
-        },
-        {
-            label: 'Block User',
-            description: "You won't see their content",
-            icon: 'ban-outline',
-            iconBg: '#FEE2E2',
-            iconColor: '#EF4444',
-            labelColor: '#EF4444',
-            action: onBlock,
-        },
-    ];
-
-    const listingOptions = [
-        {
-            label: 'Share Listing',
-            description: 'Share this listing with others',
-            icon: 'share-outline',
-            iconBg: '#DBEAFE',
-            iconColor: '#3B82F6',
-            action: onShare,
-        },
-        {
-            label: 'Report Listing',
-            description: 'Report inappropriate content',
-            icon: 'flag-outline',
-            iconBg: '#FEF3C7',
-            iconColor: '#F59E0B',
-            action: onReport,
-        },
-    ];
-
-    const options = (type === 'user' ? userOptions : listingOptions).filter(item => item.action !== null && item.action !== undefined);
-
-
     return (
         <Modal
             visible={visible}
             transparent
-            animationType="fade"
+            animationType="slide"
             onRequestClose={onClose}
         >
             <TouchableOpacity
-                style={styles.modalOverlay}
+                style={styles.overlay}
                 activeOpacity={1}
                 onPress={onClose}
             >
-                <View style={[
-                    styles.bottomSheet,
-                    {paddingBottom: Math.max(insets.bottom, 24)}
-                ]}>
-                    <View style={styles.sheetHandle}/>
-                    <View style={styles.sheetHeader}>
-                        <Text style={styles.sheetTitle}>{title}</Text>
-                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color="#6B7280"/>
+                <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 24) }]}>
+                    {/* Handle */}
+                    <View style={styles.handle} />
+
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <Text style={styles.title}>{title}</Text>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.6}>
+                            <Ionicons name="close" size={16} color={COLORS.gray400} />
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.menuOptions}>
-                        {options.map((item, index) => (
-                            <React.Fragment key={index}>
-                                <TouchableOpacity
-                                    key={index}
-                                    style={[
-                                        styles.menuOption,
-                                        (isGuest && !item.label.includes('Share')) && {opacity: 0.6}
-                                    ]}
-                                    onPress={() => handleAction(item)}
-                                    activeOpacity={0.7}
-                                >
-                                    <View
-                                        style={[
-                                            styles.menuIconCircle,
-                                            {backgroundColor: item.iconBg},
-                                        ]}
+                    {/* Options */}
+                    <View style={styles.options}>
+                        {options.map((item, index) => {
+                            const locked = isGuest && !item.label.includes('Share');
+                            const isLast = index === options.length - 1;
+                            return (
+                                <React.Fragment key={index}>
+                                    <TouchableOpacity
+                                        style={[styles.option, locked && { opacity: 0.5 }]}
+                                        onPress={() => handleAction(item)}
+                                        activeOpacity={0.6}
                                     >
-                                        <Ionicons name={item.icon} size={22} color={item.iconColor}/>
-                                    </View>
-                                    <View style={styles.menuTextContainer}>
-                                        <Text
-                                            style={[
-                                                styles.menuTitle,
-                                                item.labelColor ? {color: item.labelColor} : {},
-                                            ]}
-                                        >
-                                            {item.label}
-                                        </Text>
-                                        <Text style={styles.menuDescription}>{item.description}</Text>
-                                    </View>
-                                    {isGuest && !item.label.includes('Share') ? (
-                                        <Ionicons name="lock-closed" size={18} color="#9CA3AF"/>
-                                    ) : (
-                                        <Ionicons name="chevron-forward" size={20} color="#D1D5DB"/>
-                                    )}
-                                </TouchableOpacity>
-                                {index !== options.length - 1 && <View style={styles.menuDivider}/>}
-                            </React.Fragment>
-                        ))}
+                                        <View style={[styles.iconWrapper, { backgroundColor: `${item.color}12` }]}>
+                                            <Ionicons name={item.icon} size={18} color={item.color} />
+                                        </View>
+                                        <View style={styles.optionText}>
+                                            <Text style={[styles.optionLabel, { color: item.color === COLORS.error ? COLORS.error : COLORS.light.text }]}>
+                                                {item.label}
+                                            </Text>
+                                            <Text style={styles.optionDesc}>{item.desc}</Text>
+                                        </View>
+                                        <Ionicons
+                                            name={locked ? 'lock-closed' : 'chevron-forward'}
+                                            size={14}
+                                            color={COLORS.gray300}
+                                        />
+                                    </TouchableOpacity>
+                                    {!isLast && <View style={styles.divider} />}
+                                </React.Fragment>
+                            );
+                        })}
                     </View>
                 </View>
             </TouchableOpacity>
         </Modal>
     );
 };
+
 const styles = StyleSheet.create({
-    modalOverlay: {
+    overlay: {
         flex: 1,
-        // Using a softer semi-transparent black for light mode
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
         justifyContent: 'flex-end',
     },
-    bottomSheet: {
-        // Pure white background for the sheet
+    sheet: {
         backgroundColor: COLORS.white,
-        borderTopLeftRadius: 28, // Slightly more rounded for premium feel
-        borderTopRightRadius: 28,
-        paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
     },
-    sheetHandle: {
+
+    // Handle
+    handle: {
         width: 36,
-        height: 5,
-        // Using light border color for the drag handle
-        backgroundColor: COLORS.light.border,
-        borderRadius: 3,
+        height: 4,
+        backgroundColor: COLORS.gray200,
+        borderRadius: 2,
         alignSelf: 'center',
-        marginTop: 10,
-        marginBottom: 10,
+        marginTop: 12,
+        marginBottom: 4,
     },
-    sheetHeader: {
+
+    // Header
+    header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.light.border,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
-    sheetTitle: {
-        fontSize: 18,
-        fontWeight: '800',
+    title: {
+        fontSize: 15,
+        fontWeight: '600',
         color: COLORS.light.text,
-        letterSpacing: -0.5,
+        letterSpacing: -0.3,
     },
-    closeButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: COLORS.light.bg, // Soft gray background
+    closeBtn: {
+        width: 30,
+        height: 30,
+        borderRadius: 9,
+        backgroundColor: COLORS.gray100,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    menuOptions: {
-        paddingTop: 4,
+
+    // Options
+    options: {
+        paddingVertical: 4,
     },
-    menuOption: {
+    option: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        gap: 12,
     },
-    menuIconCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+    iconWrapper: {
+        width: 38,
+        height: 38,
+        borderRadius: 11,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 14,
-        // Background colors are provided in the options array (e.g., #DBEAFE)
     },
-    menuTextContainer: {
+    optionText: {
         flex: 1,
+        gap: 2,
     },
-    menuTitle: {
-        fontSize: 16,
-        fontWeight: '700',
+    optionLabel: {
+        fontSize: 14,
+        fontWeight: '600',
         color: COLORS.light.text,
-        marginBottom: 1,
     },
-    menuDescription: {
-        fontSize: 13,
-        color: COLORS.light.textSecondary,
-        fontWeight: '500',
+    optionDesc: {
+        fontSize: 11,
+        color: COLORS.gray400,
     },
-    menuDivider: {
-        height: 1,
-        backgroundColor: COLORS.light.border,
-        marginHorizontal: 20,
-        opacity: 0.6,
+    divider: {
+        height: StyleSheet.hairlineWidth,
+        backgroundColor: COLORS.gray100,
+        marginHorizontal: 16,
     },
 });
 

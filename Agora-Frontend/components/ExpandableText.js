@@ -1,72 +1,57 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-import { COLORS } from "../utils/colors";
-import { THEME } from "../utils/theme";
+import React, {useState} from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {COLORS} from '../utils/colors';
 
-const ExpandableText = ({ text, numberOfLines = 3, style }) => {
+const ExpandableText = ({text, numberOfLines = 3, style}) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [shouldShowButton, setShouldShowButton] = useState(false);
 
     if (!text) return null;
 
-    const toggleExpanded = () => setIsExpanded(!isExpanded);
-
     return (
-        <View style={styles.container}>
+        <View>
             <Text
                 style={[styles.text, style]}
                 numberOfLines={isExpanded ? 0 : numberOfLines}
                 onTextLayout={(e) => {
-                    // Check if text is truncated
-                    if (e.nativeEvent.lines.length >= numberOfLines) {
-                        setShouldShowButton(true);
-                    }
+                    if (e.nativeEvent.lines.length >= numberOfLines) setShouldShowButton(true);
                 }}
             >
                 {text}
             </Text>
-
             {shouldShowButton && (
                 <TouchableOpacity
-                    onPress={toggleExpanded}
-                    activeOpacity={0.7}
-                    style={styles.toggleButton}
+                    onPress={() => setIsExpanded(p => !p)}
+                    activeOpacity={0.6}
+                    style={styles.toggle}
                 >
-                    <Text style={styles.toggleText}>
-                        {isExpanded ? "Show Less" : "Read More"}
-                    </Text>
-                    <Icon
-                        name={isExpanded ? "chevron-up" : "chevron-down"}
-                        size={16}
-                        color={COLORS.primary}
-                    />
+                    <Text style={styles.toggleText}>{isExpanded ? 'Show Less' : 'Read More'}</Text>
+                    <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={14} color={COLORS.primary}/>
                 </TouchableOpacity>
             )}
         </View>
     );
 };
+
 const styles = StyleSheet.create({
-    container: {
-    },
     text: {
-        fontSize: THEME.fontSize.sm,
-        color: COLORS.light.textSecondary,
-        lineHeight: THEME.fontSize.sm * THEME.lineHeight.relaxed,
-        fontWeight: THEME.fontWeight.medium,
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 20,
+        fontWeight: '400',
     },
-    toggleButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
-        marginTop: THEME.spacing[2],
-        paddingVertical: THEME.spacing[1],
+    toggle: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        marginTop: 8,
+        gap: 4,
     },
     toggleText: {
-        fontSize: THEME.fontSize.sm,
+        fontSize: 13,
         color: COLORS.primary,
-        fontWeight: THEME.fontWeight.bold,
-        marginRight: THEME.spacing[1],
+        fontWeight: '600',
     },
 });
 

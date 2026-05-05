@@ -1,79 +1,71 @@
-import React from "react";
-import {StyleSheet, Text, View} from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-import {COLORS} from "../utils/colors";
-import {THEME} from "../utils/theme";
+import React from 'react';
+import {StyleSheet, Text, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {COLORS} from '../utils/colors';
 
-const SafetyTips = ({style}) => {
-    const tips = [
-        "Meet at a busy campus spot (Canteen/Library)",
-        "Check item thoroughly before any payment",
-        "No advance payments — pay only at pickup",
-        "Keep all chats on Agora for your safety",
-    ];
+const TIPS = [
+    'Meet at a busy campus spot (Canteen/Library)',
+    'Check item thoroughly before any payment',
+    'No advance payments — pay only at pickup',
+    'Keep all chats on Agora for your safety',
+];
 
-    return (
-        <View style={[styles.container, style]}>
-            {/* Simple Header */}
-            <View style={styles.header}>
-                <Icon name="shield-checkmark-outline" size={20} color="#10B981"/>
-                <Text style={styles.title}>Safety Tips</Text>
-            </View>
-
-            {/* Clean List */}
-            <View style={styles.tips}>
-                {tips.map((tip, index) => (
-                    <View key={index} style={styles.tipRow}>
-                        <View style={styles.dot}/>
-                        <Text style={styles.tipText}>{tip}</Text>
-                    </View>
-                ))}
-            </View>
+const SafetyTips = ({style}) => (
+    <View style={[styles.container, style]}>
+        <View style={styles.header}>
+            <Ionicons name="shield-checkmark-outline" size={20} color={COLORS.success}/>
+            <Text style={styles.title}>Safety Tips</Text>
         </View>
-    );
-};
+        <View style={styles.tips}>
+            {TIPS.map((tip, i) => (
+                <View key={i} style={styles.tipRow}>
+                    <View style={styles.dot}/>
+                    <Text style={styles.tipText}>{tip}</Text>
+                </View>
+            ))}
+        </View>
+    </View>
+);
 
 const styles = StyleSheet.create({
     container: {
         backgroundColor: COLORS.white,
-        borderRadius: THEME.borderRadius.lg,
+        borderRadius: 16,
         padding: 20,
         marginVertical: 16,
         borderWidth: 1,
-        borderColor: COLORS.light.border,
+        borderColor: COLORS.gray100,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 16,
+        gap: 10,
     },
     title: {
-        fontSize: 18,
+        fontSize: 15,
         fontWeight: '600',
         color: COLORS.light.text,
-        marginLeft: 12,
     },
-    tips: {
-        gap: 12,
-    },
+    tips: {gap: 12},
     tipRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
+        gap: 10,
     },
     dot: {
         width: 6,
         height: 6,
         borderRadius: 3,
-        backgroundColor: '#10B981',
+        backgroundColor: COLORS.success,
         marginTop: 6,
-        marginRight: 12,
     },
     tipText: {
         flex: 1,
-        fontSize: 14,
-        color: COLORS.light.textSecondary,
-        lineHeight: 20,
-        fontWeight: '500',
+        fontSize: 13,
+        color: COLORS.gray400,
+        lineHeight: 19,
+        fontWeight: '400',
     },
 });
 

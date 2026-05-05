@@ -1,83 +1,70 @@
-import React from "react";
-import {View, Text, StyleSheet} from "react-native";
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { COLORS } from '../utils/colors';
 
-import {COLORS} from "../utils/colors";
-import {THEME} from "../utils/theme";
+const STATUS_MAP = {
+    AVAILABLE: { text: 'Available', color: COLORS.success },
+    SOLD: { text: 'Sold', color: COLORS.error },
+    DEACTIVATED: { text: 'Deactivated', color: COLORS.gray400 },
+    RESERVED: { text: 'Reserved', color: COLORS.warning },
+    RENTED: { text: 'Rented', color: COLORS.info },
+    EXCHANGED: { text: 'Exchanged', color: COLORS.primary },
+};
 
-const ProductDetailItem = ({label, value, type}) => {
-    const isAvailability = type === "availability";
-
-    const statusMap = {
-        AVAILABLE: {text: "Available", color: COLORS.success},
-        SOLD: {text: "Sold", color: COLORS.error},
-        DEACTIVATED: {text: "Deactivated", color: COLORS.gray400},
-        RESERVED: {text: "Reserved", color: COLORS.warning},
-        RENTED: {text: "Rented", color: COLORS.info},
-        EXCHANGED: {text: "Exchanged", color: COLORS.category.books},
-    };
-
-    const status = statusMap[value] || {text: value || "Unknown", color: COLORS.gray500};
+const ProductDetailItem = ({ label, value, type }) => {
+    const isAvailability = type === 'availability';
+    const status = STATUS_MAP[value] || { text: value || 'Unknown', color: COLORS.gray400 };
 
     return (
-        <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{label}</Text>
+        <View style={styles.row}>
+            <Text style={styles.label}>{label}</Text>
             {isAvailability ? (
-                <View style={[
-                    styles.availabilityBadge,
-                    {
-                        backgroundColor: status.color + '15',
-                        borderColor: status.color + '30',
-                    }
-                ]}>
-                    <View style={[styles.statusDot, {backgroundColor: status.color}]}/>
-                    <Text style={[styles.availabilityText, {color: status.color}]}>
-                        {status.text}
-                    </Text>
+                <View style={[styles.badge, { backgroundColor: `${status.color}12` }]}>
+                    <View style={[styles.dot, { backgroundColor: status.color }]} />
+                    <Text style={[styles.badgeText, { color: status.color }]}>{status.text}</Text>
                 </View>
             ) : (
-                <Text style={styles.detailValue}>{value}</Text>
+                <Text style={styles.value}>{value}</Text>
             )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    detailRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingVertical: THEME.spacing[1],
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
-    detailLabel: {
-        fontSize: THEME.fontSize.sm,
-        // Changed to light mode tertiary (soft gray)
-        color: COLORS.light.textTertiary,
-        fontWeight: THEME.fontWeight.medium,
+    label: {
+        fontSize: 13,
+        color: COLORS.gray400,
+        fontWeight: '500',
     },
-    detailValue: {
-        fontSize: THEME.fontSize.sm,
+    value: {
+        fontSize: 13,
         color: COLORS.light.text,
-        fontWeight: THEME.fontWeight.semibold,
+        fontWeight: '600',
     },
-    availabilityBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: THEME.spacing[3],
-        paddingVertical: THEME.spacing[2],
-        borderRadius: THEME.borderRadius.pill,
-        borderWidth: 1,
+    badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+        gap: 5,
     },
-    statusDot: {
-        width: 6,
-        height: 6,
+    dot: {
+        width: 5,
+        height: 5,
         borderRadius: 3,
-        marginRight: THEME.spacing[2],
     },
-    availabilityText: {
-        fontSize: THEME.fontSize.xs,
-        fontWeight: THEME.fontWeight.bold,
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
+    badgeText: {
+        fontSize: 11,
+        fontWeight: '600',
     },
 });
 

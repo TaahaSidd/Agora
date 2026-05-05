@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     View,
     Text,
@@ -8,8 +8,8 @@ import {
     ScrollView,
     Pressable,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../utils/colors';
+import {Ionicons} from '@expo/vector-icons';
+import {COLORS} from '../utils/colors';
 
 const CustomPicker = ({
     label,
@@ -17,8 +17,8 @@ const CustomPicker = ({
     items,
     onValueChange,
     icon,
-    placeholder = "Select an option",
-    error
+    placeholder = 'Select an option',
+    error,
 }) => {
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -34,33 +34,21 @@ const CustomPicker = ({
         <View style={styles.container}>
             {label && <Text style={styles.label}>{label}</Text>}
 
-            {/* Picker Button */}
+            {/* Trigger */}
             <TouchableOpacity
-                style={[styles.pickerButton, error && styles.pickerButtonError]}
+                style={[styles.trigger, error && styles.triggerError]}
                 onPress={() => setModalVisible(true)}
-                activeOpacity={0.7}
+                activeOpacity={0.6}
             >
-                <View style={styles.pickerContent}>
+                <View style={styles.triggerLeft}>
                     {icon && (
-                        <Ionicons
-                            name={icon}
-                            size={20}
-                            color="#9CA3AF"
-                            style={styles.icon}
-                        />
+                        <Ionicons name={icon} size={16} color={COLORS.gray500}/>
                     )}
-                    <Text style={[
-                        styles.pickerText,
-                        !value && styles.placeholderText
-                    ]}>
+                    <Text style={[styles.triggerText, !value && styles.placeholder]}>
                         {displayText}
                     </Text>
                 </View>
-                <Ionicons
-                    name="chevron-down"
-                    size={20}
-                    color="#9CA3AF"
-                />
+                <Ionicons name="chevron-down" size={14} color={COLORS.gray500}/>
             </TouchableOpacity>
 
             {error && <Text style={styles.errorText}>{error}</Text>}
@@ -69,62 +57,62 @@ const CustomPicker = ({
             <Modal
                 visible={modalVisible}
                 transparent
-                animationType="fade"
+                animationType="slide"
                 onRequestClose={() => setModalVisible(false)}
             >
                 <Pressable
-                    style={styles.modalOverlay}
+                    style={styles.overlay}
                     onPress={() => setModalVisible(false)}
                 >
                     <Pressable
-                        style={styles.modalContent}
+                        style={styles.sheet}
                         onPress={(e) => e.stopPropagation()}
                     >
+                        {/* Handle */}
+                        <View style={styles.handle}/>
+
                         {/* Header */}
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>
-                                {label || 'Select'}
-                            </Text>
+                        <View style={styles.sheetHeader}>
+                            <Text style={styles.sheetTitle}>{label || 'Select'}</Text>
                             <TouchableOpacity
                                 onPress={() => setModalVisible(false)}
-                                style={styles.closeButton}
-                                activeOpacity={0.7}
+                                style={styles.closeBtn}
+                                activeOpacity={0.6}
                             >
-                                <Ionicons name="close" size={24} color="#6B7280" />
+                                <Ionicons name="close" size={16} color={COLORS.gray400}/>
                             </TouchableOpacity>
                         </View>
 
-                        {/* Options List */}
+                        {/* Options */}
                         <ScrollView
-                            style={styles.optionsList}
+                            contentContainerStyle={styles.optionsList}
                             showsVerticalScrollIndicator={false}
                         >
                             {items.map((item, index) => {
                                 const isSelected = value === item.value;
-                                const isDisabled = item.value === "";
+                                const isDisabled = item.value === '';
 
                                 return (
                                     <TouchableOpacity
                                         key={index}
                                         style={[
-                                            styles.optionItem,
-                                            isSelected && styles.optionItemSelected,
-                                            index === items.length - 1 && styles.lastItem,
+                                            styles.option,
+                                            isSelected && styles.optionSelected,
                                         ]}
                                         onPress={() => !isDisabled && handleSelect(item.value)}
-                                        activeOpacity={0.7}
+                                        activeOpacity={0.6}
                                         disabled={isDisabled}
                                     >
-                                        <View style={styles.optionContent}>
+                                        <View style={styles.optionLeft}>
                                             {item.icon && (
                                                 <View style={[
-                                                    styles.optionIconContainer,
-                                                    isSelected && { backgroundColor: '#EFF6FF' }
+                                                    styles.optionIconWrapper,
+                                                    isSelected && {backgroundColor: `${COLORS.primary}12`},
                                                 ]}>
                                                     <Ionicons
                                                         name={item.icon}
-                                                        size={22}
-                                                        color={isSelected ? COLORS.primary : '#6B7280'}
+                                                        size={18}
+                                                        color={isSelected ? COLORS.primary : COLORS.gray400}
                                                     />
                                                 </View>
                                             )}
@@ -136,14 +124,13 @@ const CustomPicker = ({
                                                 {item.label}
                                             </Text>
                                         </View>
+
                                         {isSelected && (
-                                            <View style={styles.checkmarkContainer}>
-                                                <Ionicons
-                                                    name="checkmark-circle"
-                                                    size={24}
-                                                    color={COLORS.primary}
-                                                />
-                                            </View>
+                                            <Ionicons
+                                                name="checkmark-circle"
+                                                size={18}
+                                                color={COLORS.primary}
+                                            />
                                         )}
                                     </TouchableOpacity>
                                 );
@@ -155,176 +142,151 @@ const CustomPicker = ({
         </View>
     );
 };
+
 const styles = StyleSheet.create({
     container: {},
 
+    // Label
     label: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.light.text,
-        marginBottom: 10,
+        fontSize: 12,
+        fontWeight: '500',
+        color: COLORS.gray400,
+        marginBottom: 6,
     },
 
-    pickerButton: {
+    // Trigger button
+    trigger: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: COLORS.white,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: COLORS.light.border,
-        paddingHorizontal: 16,
-        height: 52,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 1,
+        backgroundColor: COLORS.gray50,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        paddingHorizontal: 12,
+        height: 46,
     },
-
-    pickerButtonError: {
+    triggerError: {
         borderColor: COLORS.error,
-        borderWidth: 2,
     },
-
-    pickerContent: {
+    triggerLeft: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 8,
         flex: 1,
     },
-
-    icon: {
-        marginRight: 12,
-    },
-
-    pickerText: {
-        fontSize: 15,
+    triggerText: {
+        fontSize: 14,
         fontWeight: '500',
         color: COLORS.light.text,
         flex: 1,
     },
-
-    placeholderText: {
-        color: COLORS.light.textTertiary,
-        fontWeight: '500',
+    placeholder: {
+        color: COLORS.gray500,
+        fontWeight: '400',
     },
-
     errorText: {
-        fontSize: 13,
+        fontSize: 11,
         color: COLORS.error,
-        marginTop: 6,
-        marginLeft: 4,
-        fontWeight: '500',
+        marginTop: 5,
+        fontWeight: '400',
     },
 
-    modalOverlay: {
+    // Bottom sheet
+    overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
         justifyContent: 'flex-end',
     },
-
-    modalContent: {
+    sheet: {
         backgroundColor: COLORS.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
-        maxHeight: '80%',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 8,
+        maxHeight: '60%',
+        paddingBottom: 32,
     },
-
-    modalHeader: {
+    handle: {
+        width: 36,
+        height: 4,
+        backgroundColor: COLORS.gray200,
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginTop: 12,
+        marginBottom: 4,
+    },
+    sheetHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.light.border,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.gray100,
     },
-
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: '800',
+    sheetTitle: {
+        fontSize: 15,
+        fontWeight: '600',
         color: COLORS.light.text,
         letterSpacing: -0.3,
     },
-
-    closeButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: COLORS.light.bg,
+    closeBtn: {
+        width: 30,
+        height: 30,
+        borderRadius: 9,
+        backgroundColor: COLORS.gray100,
         alignItems: 'center',
         justifyContent: 'center',
     },
 
+    // Options
     optionsList: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         paddingTop: 8,
-        paddingBottom: 20,
+        paddingBottom: 8,
+        gap: 4,
     },
-
-    optionItem: {
+    option: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 16,
-        paddingHorizontal: 16,
-        borderRadius: 12,
-        marginBottom: 8,
-        backgroundColor: COLORS.light.bg,
+        paddingVertical: 11,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'transparent',
+        minHeight: 46,
     },
-
-    optionItemSelected: {
-        backgroundColor: COLORS.white,
-        borderWidth: 1.5,
-        borderColor: COLORS.primary,
+    optionSelected: {
+        backgroundColor: `${COLORS.primary}08`,
+        borderColor: `${COLORS.primary}25`,
     },
-
-    lastItem: {
-        marginBottom: 40,
-    },
-
-    optionContent: {
+    optionLeft: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 10,
         flex: 1,
     },
-
-    optionIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: COLORS.white,
+    optionIconWrapper: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        backgroundColor: COLORS.gray100,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
     },
-
     optionText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: COLORS.light.textSecondary,
+        fontSize: 14,
+        fontWeight: '500',
+        color: COLORS.light.text,
         flex: 1,
     },
-
     optionTextSelected: {
         color: COLORS.primary,
-        fontWeight: '700',
+        fontWeight: '600',
     },
-
     optionTextDisabled: {
-        color: COLORS.light.textTertiary,
-    },
-
-    checkmarkContainer: {
-        marginLeft: 8,
+        color: COLORS.gray300,
     },
 });
-
 
 export default CustomPicker;

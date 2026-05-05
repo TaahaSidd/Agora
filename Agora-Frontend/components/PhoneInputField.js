@@ -4,13 +4,13 @@ import { COLORS } from '../utils/colors';
 import { THEME } from '../utils/theme';
 
 const PhoneInputField = ({
-                             label = 'Phone Number',
-                             value,
-                             onChangeText,
-                             placeholder = '98765 43210',
-                             style,
-                             error,
-                         }) => {
+    label = 'Phone Number',
+    value,
+    onChangeText,
+    placeholder = '98765 43210',
+    style,
+    error,
+}) => {
     const [isFocused, setIsFocused] = useState(false);
     const shakeAnim = useRef(new Animated.Value(0)).current;
 

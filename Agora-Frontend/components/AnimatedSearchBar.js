@@ -1,12 +1,11 @@
-import React, {useEffect, useRef} from 'react';
-import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {COLORS} from '../utils/colors';
-import {THEME} from '../utils/theme';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../utils/colors';
 
-const AnimatedSearchBar = ({onPress}) => {
-    const searchTerms = ['"books"', '"laptops"', '"furniture"', '"phones"', '"bikes"', '"textbooks"', '"electronics"', '"clothing"'];
+const SEARCH_TERMS = ['"books"', '"laptops"', '"furniture"', '"phones"', '"bikes"', '"textbooks"', '"electronics"', '"clothing"'];
 
+const AnimatedSearchBar = ({ onPress }) => {
     const [currentIndex, setCurrentIndex] = React.useState(0);
     const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -17,8 +16,7 @@ const AnimatedSearchBar = ({onPress}) => {
                 duration: 300,
                 useNativeDriver: true,
             }).start(() => {
-                setCurrentIndex((prev) => (prev + 1) % searchTerms.length);
-
+                setCurrentIndex(prev => (prev + 1) % SEARCH_TERMS.length);
                 Animated.timing(fadeAnim, {
                     toValue: 1,
                     duration: 300,
@@ -26,29 +24,16 @@ const AnimatedSearchBar = ({onPress}) => {
                 }).start();
             });
         }, 3000);
-
         return () => clearInterval(interval);
     }, []);
 
     return (
-        <TouchableOpacity
-            style={styles.container}
-            onPress={onPress}
-            activeOpacity={0.8}
-        >
-            <Ionicons
-                name="search"
-                size={20}
-                color={COLORS.light.textTertiary}
-                style={styles.icon}
-            />
-
-            <View style={styles.placeholderContainer}>
-                <Text style={styles.searchPrefix}>Search for </Text>
-                <Animated.Text
-                    style={[styles.searchTerm, {opacity: fadeAnim}]}
-                >
-                    {searchTerms[currentIndex]}
+        <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+            <Ionicons name="search" size={16} color={COLORS.gray400} style={styles.icon} />
+            <View style={styles.placeholder}>
+                <Text style={styles.prefix}>Search for </Text>
+                <Animated.Text style={[styles.term, { opacity: fadeAnim }]}>
+                    {SEARCH_TERMS[currentIndex]}
                 </Animated.Text>
             </View>
         </TouchableOpacity>
@@ -57,50 +42,34 @@ const AnimatedSearchBar = ({onPress}) => {
 
 const styles = StyleSheet.create({
     container: {
-        flexDirection: "row",
-        alignItems: "center",
-        // Switched from #0A0A0A to your white/elevated color
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: COLORS.white,
-        borderRadius: THEME.borderRadius.full,
-        paddingHorizontal: 18,
-        paddingVertical: 14, // Slightly tighter to match modern light UI
-        minHeight: 52,
-        // Using your light border color
-        borderWidth: 1.5,
-        borderColor: COLORS.light.border,
-        // Softened the shadow for white mode
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
-        elevation: 2,
+        borderRadius: 999,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: COLORS.gray100,
+        elevation: 1,
     },
-
     icon: {
-        marginRight: 12,
-        // Changed to light mode text color
-        color: COLORS.light.textTertiary,
+        marginRight: 10,
     },
-
-    placeholderContainer: {
+    placeholder: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
     },
-
-    searchPrefix: {
-        fontSize: 15,
-        fontWeight: '500',
-        // Changed to light mode text secondary
-        color: COLORS.light.textSecondary,
-        letterSpacing: -0.2,
+    prefix: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: COLORS.gray400,
     },
-
-    searchTerm: {
-        fontSize: 15,
-        fontWeight: '700', // Matches your AddListing label weight
+    term: {
+        fontSize: 14,
+        fontWeight: '600',
         color: COLORS.primary,
-        letterSpacing: -0.3,
+        letterSpacing: -0.2,
     },
 });
 

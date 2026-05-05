@@ -1,67 +1,57 @@
 import React from 'react';
 import {Dimensions, Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
-import {LinearGradient} from 'expo-linear-gradient';
-
 import {COLORS} from '../utils/colors';
 import {formatPrice} from '../utils/formatters';
 
-
 const {width} = Dimensions.get('window');
 
-export default function NearestCard({item, onPress}) {
+export default function NewListingCard({item, onPress}) {
     return (
         <TouchableOpacity
             style={styles.card}
             onPress={onPress}
-            activeOpacity={0.85}
+            activeOpacity={0.7}
         >
-            {/* Image Section */}
-            <View style={styles.imageContainer}>
+            {/* Image */}
+            <View style={styles.imageWrapper}>
                 <Image
-                    source={
-                        item.images && item.images.length
-                            ? item.images[0]
-                            : require('../assets/no-image.jpg')
-                    }
+                    source={item.images?.length ? item.images[0] : require('../assets/no-image.jpg')}
                     style={styles.image}
                     resizeMode="cover"
                 />
-
-                {/* Gradient Overlay */}
-                <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.5)']}
-                    style={styles.gradientOverlay}
-                />
-
-                {/* Status Badge */}
                 {item.itemStatus === 'SOLD' && (
                     <View style={styles.soldBadge}>
                         <Text style={styles.soldText}>SOLD</Text>
                     </View>
                 )}
+                <View style={styles.newBadge}>
+                    <View style={styles.newDot}/>
+                    <Text style={styles.newText}>NEW</Text>
+                </View>
             </View>
 
-            {/* Content Section */}
-            <View style={styles.textContainer}>
-                <Text style={styles.title} numberOfLines={2}>
-                    {item.name || item.title}
-                </Text>
+            {/* Content */}
+            <View style={styles.content}>
+                <Text style={styles.title} numberOfLines={2}>{item.name || item.title}</Text>
 
-                {/* College/Location */}
-                {item.college?.city && (
-                    <Text style={styles.location} numberOfLines={1}>
-                        {item.college.city}
-                    </Text>
+                {item.category && (
+                    <View style={styles.categoryPill}>
+                        <Text style={styles.categoryText}>{item.category}</Text>
+                    </View>
                 )}
 
-                {/* Price Row */}
-                <View style={styles.bottomRow}>
-                    <View style={styles.priceContainer}>
-                        <Text style={styles.price}>{formatPrice(item.price)}</Text>
+                {item.college?.name && (
+                    <View style={styles.locationRow}>
+                        <Ionicons name="location-outline" size={11} color={COLORS.gray400}/>
+                        <Text style={styles.location} numberOfLines={1}>{item.college.name}</Text>
                     </View>
-                    <View style={styles.arrowCircle}>
-                        <Ionicons name="arrow-forward" size={14} color="#fff"/>
+                )}
+
+                <View style={styles.bottomRow}>
+                    <Text style={styles.price}>{formatPrice(item.price)}</Text>
+                    <View style={styles.arrowBtn}>
+                        <Ionicons name="arrow-forward" size={13} color={COLORS.white}/>
                     </View>
                 </View>
             </View>
@@ -72,97 +62,118 @@ export default function NearestCard({item, onPress}) {
 const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
-        alignItems: 'center',
-        width: width * 0.90,
-        backgroundColor: COLORS.white, // Changed from dark.card
-        borderRadius: 20,
-        marginBottom: 12,
-        marginRight: 20,
-        padding: 10,
-        borderWidth: 1,
-        borderColor: COLORS.light.border,
-        elevation: 2,
+        alignItems: 'flex-start',  // ← top aligned
+        width: width * 0.88,
+        marginRight: 12,
+        marginBottom: 4,
     },
-    imageContainer: {
-        position: 'relative',
-        width: 110,
-        height: 110,
-        borderRadius: 16,
-        backgroundColor: COLORS.light.bg, // Changed from dark.cardElevated
+
+    // Image
+    imageWrapper: {
+        width: 105,
+        height: 105,
+        borderRadius: 14,
         overflow: 'hidden',
+        backgroundColor: COLORS.gray100,
+        flexShrink: 0,
     },
     image: {
         width: '100%',
         height: '100%',
     },
-    gradientOverlay: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 40,
-    },
     soldBadge: {
         position: 'absolute',
-        top: 8,
-        left: 8,
-        backgroundColor: '#EF4444',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
+        top: 6,
+        left: 6,
+        backgroundColor: COLORS.error,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 5,
     },
     soldText: {
-        color: '#fff',
-        fontSize: 11,
-        fontWeight: '800',
-        letterSpacing: 0.5,
+        color: COLORS.white,
+        fontSize: 8,
+        fontWeight: '700',
+        letterSpacing: 0.4,
     },
-    textContainer: {
+    newBadge: {
+        position: 'absolute',
+        bottom: 6,
+        left: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 5,
+    },
+    newDot: {
+        width: 5,
+        height: 5,
+        borderRadius: 3,
+        backgroundColor: '#10B981',
+    },
+    newText: {
+        color: COLORS.white,
+        fontSize: 8,
+        fontWeight: '700',
+        letterSpacing: 0.4,
+    },
+
+    // Content
+    content: {
         flex: 1,
-        marginLeft: 14,
-        justifyContent: 'space-between',
-        paddingVertical: 6,
+        marginLeft: 12,
+        gap: 5,
     },
     title: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: COLORS.light.text, // Changed from dark.textSecondary
-        lineHeight: 21,
-        marginBottom: 4,
-        letterSpacing: -0.3,
+        fontSize: 13,
+        fontWeight: '600',
+        color: COLORS.light.text,
+        letterSpacing: -0.2,
+        lineHeight: 18,
+    },
+    categoryPill: {
+        alignSelf: 'flex-start',
+        backgroundColor: `${COLORS.primary}12`,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+    },
+    categoryText: {
+        fontSize: 10,
+        fontWeight: '600',
+        color: COLORS.primary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.3,
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3,
     },
     location: {
-        fontSize: 13,
-        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
-        fontWeight: '500',
-        marginBottom: 10,
-        letterSpacing: -0.1,
+        fontSize: 11,
+        color: COLORS.gray400,
+        flex: 1,
     },
     bottomRow: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    priceContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
+        marginTop: 2,
     },
     price: {
-        fontSize: 20,
-        fontWeight: '800',
-        color: COLORS.primary, // Changed from gray400
-        letterSpacing: -0.5,
+        fontSize: 15,
+        fontWeight: '700',
+        color: COLORS.light.text,
+        letterSpacing: -0.4,
     },
-    viewCount: {
-        fontSize: 13,
-        color: COLORS.light.textSecondary, // Changed from dark.textSecondary
-        fontWeight: '600',
-    },
-    arrowCircle: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+    arrowBtn: {
+        width: 28,
+        height: 28,
+        borderRadius: 9,
         backgroundColor: COLORS.primary,
         alignItems: 'center',
         justifyContent: 'center',
