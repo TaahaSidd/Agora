@@ -12,6 +12,8 @@ import { FavoritesProvider } from './context/FavoritesContext';
 import { useUserStore } from './stores/userStore';
 import { ChatBlockingProvider } from "./context/ChatBlockingProvider";
 
+import WhatsNewOverlay from './components/WhatsNewOverlay';
+
 import SplashScreen from './screens/SplashScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import SignUpScreen from './screens/SignUpScreen';
@@ -50,7 +52,12 @@ import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
 import SupportScreen from './screens/SupportScreen';
 import AboutScreen from './screens/AboutScreen';
 
+import WordleGame from './games/WordleGame';
+
 import { COLORS } from './utils/colors';
+
+const TAB = { animation: 'none' };
+const SLIDE = { animation: 'slide_from_right' };
 
 const Stack = createNativeStackNavigator();
 
@@ -164,50 +171,56 @@ export default function App() {
             <FavoritesProvider>
                 <ChatBlockingProvider>
                     <NavigationContainer ref={navigationRef}>
+
+                        <WhatsNewOverlay />
+
                         <Stack.Navigator
-                            screenOptions={{ headerShown: false }}
+                            screenOptions={{ headerShown: false, animation: 'none' }}
                             initialRouteName={initialRoute}
                         >
-                            {/* Auth Screens */}
+                            {/* ── Auth & onboarding (no animation) ── */}
                             <Stack.Screen name="Splash" component={SplashScreen} />
                             <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-                            <Stack.Screen name="SignUp" component={SignUpScreen} />
                             <Stack.Screen name="Login" component={LoginScreen} />
                             <Stack.Screen name="LoginOtp" component={LoginScreenOtp} />
                             <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
                             <Stack.Screen name="OTPVerificationScreen" component={OTPVerificationScreen} />
                             <Stack.Screen name="CompleteProfileScreen" component={CompleteProfileScreen} />
                             <Stack.Screen name="SignUpFlow" component={SignUpFlowWrapper} />
+                            <Stack.Screen name="SignUp" component={SignUpScreen} />
 
-                            {/* Main App Screens */}
-                            <Stack.Screen name="MainLayout" component={MainLayout} />
-                            <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
-                            <Stack.Screen name="CategoriesScreen" component={CategoriesScreen} />
-                            <Stack.Screen name="MakeOfferScreen" component={MakeOfferScreen} />
-                            <Stack.Screen name="Search" component={SearchScreen} />
-                            <Stack.Screen name="Notification" component={NotificationScreen} />
-                            <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-                            <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
-                            <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-                            <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
-                            <Stack.Screen name="AddListingScreen" component={AddListingScreen} />
-                            <Stack.Screen name="AllListingsScreen" component={AllListingsScreen} />
-                            <Stack.Screen name="CategoryScreen" component={CategoryScreen} />
-                            <Stack.Screen name="MyListingsScreen" component={MyListingsScreen} />
-                            <Stack.Screen name="EditListingScreen" component={EditListingScreen} />
-                            <Stack.Screen name="ReportUserScreen" component={ReportUserScreen} />
-                            <Stack.Screen name="UserRatingScreen" component={UserRatingScreen} />
-                            <Stack.Screen name="SafetyCenterScreen" component={SafetyCenterScreen} />
-                            <Stack.Screen name="AllReviewsScreen" component={AllReviewsScreen} />
-                            <Stack.Screen name="ReportListingScreen" component={ReportListingScreen} />
-                            <Stack.Screen name="BlockedUsersScreen" component={BlockedUsersScreen} />
-                            <Stack.Screen name="FavoritesScreen" component={FavoritesScreen} />
-                            <Stack.Screen name="ReportHistoryScreen" component={ReportHistoryScreen} />
-                            <Stack.Screen name="FAQScreen" component={FAQScreen} />
-                            <Stack.Screen name="SupportScreen" component={SupportScreen} />
-                            <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
-                            <Stack.Screen name="WhatsNewScreen" component={WhatsNewScreen} />
-                            <Stack.Screen name="AboutScreen" component={AboutScreen} />
+                            {/* ── Main tabs (no animation) ── */}
+                            <Stack.Screen name="MainLayout" component={MainLayout} options={TAB} />
+
+                            {/* ── Detail / drill-down screens (slide) ── */}
+                            <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} options={SLIDE} />
+                            <Stack.Screen name="CategoriesScreen" component={CategoriesScreen} options={SLIDE} />
+                            <Stack.Screen name="CategoryScreen" component={CategoryScreen} options={SLIDE} />
+                            <Stack.Screen name="AllListingsScreen" component={AllListingsScreen} options={SLIDE} />
+                            <Stack.Screen name="MakeOfferScreen" component={MakeOfferScreen} options={SLIDE} />
+                            <Stack.Screen name="Search" component={SearchScreen} options={SLIDE} />
+                            <Stack.Screen name="Notification" component={NotificationScreen} options={SLIDE} />
+                            <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} options={SLIDE} />
+                            <Stack.Screen name="AddListingScreen" component={AddListingScreen} options={SLIDE} />
+                            <Stack.Screen name="EditListingScreen" component={EditListingScreen} options={SLIDE} />
+                            <Stack.Screen name="MyListingsScreen" component={MyListingsScreen} options={SLIDE} />
+                            <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={SLIDE} />
+                            <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} options={SLIDE} />
+                            <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} options={SLIDE} />
+                            <Stack.Screen name="AllReviewsScreen" component={AllReviewsScreen} options={SLIDE} />
+                            <Stack.Screen name="UserRatingScreen" component={UserRatingScreen} options={SLIDE} />
+                            <Stack.Screen name="BlockedUsersScreen" component={BlockedUsersScreen} options={SLIDE} />
+                            <Stack.Screen name="ReportUserScreen" component={ReportUserScreen} options={SLIDE} />
+                            <Stack.Screen name="ReportListingScreen" component={ReportListingScreen} options={SLIDE} />
+                            <Stack.Screen name="ReportHistoryScreen" component={ReportHistoryScreen} options={SLIDE} />
+                            <Stack.Screen name="FavoritesScreen" component={FavoritesScreen} options={SLIDE} />
+                            <Stack.Screen name="SafetyCenterScreen" component={SafetyCenterScreen} options={SLIDE} />
+                            <Stack.Screen name="FAQScreen" component={FAQScreen} options={SLIDE} />
+                            <Stack.Screen name="SupportScreen" component={SupportScreen} options={SLIDE} />
+                            <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} options={SLIDE} />
+                            <Stack.Screen name="AboutScreen" component={AboutScreen} options={SLIDE} />
+                            <Stack.Screen name="WordleGame" component={WordleGame} options={SLIDE} />
+                            <Stack.Screen name="WhatsNewScreen" component={WhatsNewScreen} options={SLIDE} />
                         </Stack.Navigator>
                     </NavigationContainer>
                 </ChatBlockingProvider>
@@ -222,6 +235,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: COLORS.dark?.bg || '#000',
+        backgroundColor: COLORS.light.bg,
     },
 });
