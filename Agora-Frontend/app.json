@@ -2,7 +2,7 @@
   "expo": {
     "name": "Agora – Student Marketplace",
     "slug": "Agora-Frontend",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/LogoApp.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/LogoApp.png",
         "backgroundColor": "#001F3F"
       },
-      "versionCode": 2,
+      "versionCode": 3,
       "edgeToEdgeEnabled": true,
       "package": "com.Agora.App",
       "googleServicesFile": "./google-services.json",
