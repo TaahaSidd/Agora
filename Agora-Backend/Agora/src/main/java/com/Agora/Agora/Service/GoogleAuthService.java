@@ -1,7 +1,7 @@
 package com.Agora.Agora.Service;
 
 import com.Agora.Agora.Dto.Request.GoogleSignInRequest;
-import com.Agora.Agora.Dto.Response.GoogleTokenResponse;;
+import com.Agora.Agora.Dto.Response.GoogleTokenResponse;
 import com.Agora.Agora.Dto.Response.GoogleUserInfo;
 import com.Agora.Agora.Dto.Response.LoginResponseDto;
 import com.Agora.Agora.Jwt.JwtTokenProvider;
